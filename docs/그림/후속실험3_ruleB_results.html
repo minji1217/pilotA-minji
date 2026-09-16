@@ -1,0 +1,137 @@
+<!DOCTYPE html><html lang="ko"><head><meta charset="utf-8"><title>후속실험 3 — 규칙 B 결과</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+.viz-root{color-scheme:light;
+ --surface-1:#fcfcfb;--plane:#f9f9f7;--text-primary:#0b0b0b;--text-secondary:#52514e;--muted:#898781;
+ --grid:#e1e0d9;--axis:#c3c2b7;--ring:rgba(11,11,11,.10);
+ --ls:#B85042;--ls-lt:#E6C4BD;--lq:#0E7CAA;--lq-lt:#B3D9EA;--good:#2C7A5A;--warn:#C9772F}
+@media (prefers-color-scheme:dark){:root:where(:not([data-theme="light"])) .viz-root{color-scheme:dark;
+ --surface-1:#1a1a19;--plane:#0d0d0d;--text-primary:#fff;--text-secondary:#c3c2b7;--muted:#898781;
+ --grid:#2c2c2a;--axis:#383835;--ring:rgba(255,255,255,.10);
+ --ls:#D4756A;--ls-lt:#6B403A;--lq:#2E98C8;--lq-lt:#1E4A5E}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--plane,#f9f9f7);font-family:'Noto Sans KR',system-ui,sans-serif}
+.viz-root{background:var(--plane);color:var(--text-primary);padding:32px 36px 26px}
+h1{font-size:23px;margin:0 0 5px;letter-spacing:-.4px}
+.sub{font-size:12.5px;color:var(--text-secondary);margin:0;line-height:1.6;max-width:1150px}
+.warn{background:#FBF3EA;border-left:4px solid var(--warn);border-radius:8px;padding:12px 16px;margin:16px 0 4px;
+      font-size:12px;color:var(--text-secondary);line-height:1.6}
+.warn b{color:var(--text-primary)}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:20px}
+.panel{background:var(--surface-1);border:1px solid var(--ring);border-radius:10px;padding:14px 16px 10px}
+.ptitle{font-size:13px;font-weight:700;margin:0 0 1px}
+.pnote{font-size:10.5px;color:var(--muted);margin:0 0 9px;font-family:'IBM Plex Mono',monospace}
+.leg{display:flex;gap:15px;font-size:11px;color:var(--text-secondary);margin-bottom:8px}
+.leg i{display:inline-block;width:15px;height:9px;border-radius:2px;margin-right:5px;vertical-align:middle;font-style:normal}
+.row{display:grid;grid-template-columns:96px 1fr;gap:9px;align-items:center;margin-bottom:7px}
+.row.hl{background:#EAF4EE;margin-left:-8px;margin-right:-8px;padding:3px 8px;border-radius:5px}
+.lab{text-align:right;font-size:11px;line-height:1.2}
+.bars{display:flex;flex-direction:column;gap:2px}
+.bar{position:relative;height:11px}
+.fill{position:absolute;top:0;height:100%;border-radius:0 2px 2px 0}
+.val{position:absolute;top:50%;transform:translateY(-50%);font-size:10px;font-family:'IBM Plex Mono',monospace;
+     color:var(--text-secondary);white-space:nowrap;padding-left:4px}
+.axis{display:grid;grid-template-columns:96px 1fr;gap:9px;margin-top:7px;border-top:1px solid var(--grid);padding-top:4px}
+.ticks{position:relative;height:12px}
+.ticks span{position:absolute;font-size:9.5px;color:var(--muted);font-family:'IBM Plex Mono',monospace;transform:translateX(-50%)}
+svg{display:block;width:100%;height:auto}
+.tick{font-size:9.5px;fill:var(--muted);font-family:'IBM Plex Mono',monospace}
+.foot{margin-top:20px;font-size:12.5px;color:var(--text-secondary);line-height:1.8;
+      border-left:3px solid var(--good);padding-left:14px;max-width:1180px}
+.foot b{color:var(--text-primary)}
+</style></head><body><div class="viz-root" data-palette="#B85042,#0E7CAA">
+<h1>후속실험 3 — 정답 규칙을 바로잡고 15개 조건을 다시 돌렸다</h1>
+<p class="sub">정답지가 <b>0(확인된 없음)</b>과 <b>NA(모름)</b>를 갈라 놓은 것을 확인하고, NA를 평가에서 빼는 원래 규칙으로 되돌렸다.
+①②④는 <b>125행</b>(양성률 84%), ③ 자연+혼재만 <b>418행</b>(양성률 18.4%)을 채점한다. LQ는 229행으로 변화 없다.
+가중평균 AUC · lam_gamma=10 · 3000 epoch · seed 0.</p>
+<div class="warn" id="warn"></div>
+<div class="two" id="app"></div>
+<div class="two" id="app2"></div>
+<div class="foot" id="foot"></div>
+</div>
+<script>
+const D={"cond": [{"No": "1", "이름": "3번 b4", "ls_raw": 0.7968643805993205, "ls_zp": 0.7968643805993205, "ls_area": 0.0, "ls_post": 0.7348110390279065, "ls_gain": -0.062053341571414, "mse_ls": 0.2793319734473521, "bias_ls": -0.3078073789381724, "base_ls": 0.84, "lq_raw": 0.715445570663787, "lq_zp": 0.715445570663787, "lq_area": 0.0, "lq_post": 0.7503757454557128, "lq_gain": 0.0349301747919258, "mse_lq": 0.2280262782090792, "bias_lq": -0.1803958406016257, "base_lq": 0.4759825327510917, "n_ls": 125, "n_lq": 229, "c_LS": NaN, "c_LQ": NaN, "a_LS": 0.7274190934799594, "b_LS": 3.954071169803808, "a_LQ": 0.5044058479070177, "b_LQ": 1.0587060034026514, "label": "1 3번 b4"}, {"No": "2", "이름": "3번 b10", "ls_raw": 0.7968643805993205, "ls_zp": 0.7968643805993205, "ls_area": 0.0, "ls_post": 0.7634924312635156, "ls_gain": -0.0333719493358048, "mse_ls": 0.2510062807398157, "bias_ls": -0.2103040080561456, "base_ls": 0.84, "lq_raw": 0.715445570663787, "lq_zp": 0.715445570663787, "lq_area": 0.0, "lq_post": 0.7662982008386088, "lq_gain": 0.0508526301748217, "mse_lq": 0.2427722398723853, "bias_lq": -0.2039158925688065, "base_lq": 0.4759825327510917, "n_ls": 125, "n_lq": 229, "c_LS": NaN, "c_LQ": NaN, "a_LS": 1.568403632675413, "b_LS": 9.522993449631365, "a_LQ": 0.5036324030079448, "b_LQ": 0.9051038253663326, "label": "2 3번 b10"}, {"No": "3", "이름": "6번 b10", "ls_raw": 0.7968643805993205, "ls_zp": 0.7968643805993205, "ls_area": 0.0, "ls_post": 0.7505792400370713, "ls_gain": -0.0462851405622491, "mse_ls": 0.2524140657985036, "bias_ls": -0.2111290477389198, "base_ls": 0.84, "lq_raw": 0.8372328435881067, "lq_zp": 0.8372328435881067, "lq_area": 0.0, "lq_post": 0.775312447971764, "lq_gain": -0.0619203956163426, "mse_lq": 0.2408705471471037, "bias_lq": -0.2041973127268158, "base_lq": 0.4759825327510917, "n_ls": 125, "n_lq": 229, "c_LS": NaN, "c_LQ": NaN, "a_LS": 1.582856784429489, "b_LS": 9.588503781595774, "a_LQ": 0.5054128561243995, "b_LQ": -0.3364140951384531, "label": "3 6번 b10"}, {"No": "4", "이름": "3번 자연혼재", "ls_raw": 0.8882617351397255, "ls_zp": 0.8882617351397255, "ls_area": 0.0, "ls_post": 0.8473746499104803, "ls_gain": -0.0408870852292452, "mse_ls": 0.1404156863563215, "bias_ls": 0.1508961155759333, "base_ls": 0.1842105263157894, "lq_raw": 0.715445570663787, "lq_zp": 0.715445570663787, "lq_area": 0.0, "lq_post": 0.7662982008386088, "lq_gain": 0.0508526301748217, "mse_lq": 0.2427722398723853, "bias_lq": -0.2039158925688065, "base_lq": 0.4759825327510917, "n_ls": 418, "n_lq": 229, "c_LS": NaN, "c_LQ": NaN, "a_LS": 1.568403632675413, "b_LS": 9.522993449631365, "a_LQ": 0.5036324030079448, "b_LQ": 0.9051038253663326, "label": "4 3번 자연혼재"}, {"No": "5", "이름": "6번 자연혼재", "ls_raw": 0.8882617351397255, "ls_zp": 0.8882617351397255, "ls_area": 0.0, "ls_post": 0.8481457114288896, "ls_gain": -0.0401160237108358, "mse_ls": 0.1371212718010325, "bias_ls": 0.1476869689204099, "base_ls": 0.1842105263157894, "lq_raw": 0.8372328435881067, "lq_zp": 0.8372328435881067, "lq_area": 0.0, "lq_post": 0.775312447971764, "lq_gain": -0.0619203956163426, "mse_lq": 0.2408705471471037, "bias_lq": -0.2041973127268158, "base_lq": 0.4759825327510917, "n_ls": 418, "n_lq": 229, "c_LS": NaN, "c_LQ": NaN, "a_LS": 1.582856784429489, "b_LS": 9.588503781595774, "a_LQ": 0.5054128561243995, "b_LQ": -0.3364140951384531, "label": "5 6번 자연혼재"}, {"No": "A", "이름": "fixed", "ls_raw": 0.7968643805993205, "ls_zp": 0.8399598393574298, "ls_area": 0.0430954587581092, "ls_post": 0.8550200803212852, "ls_gain": 0.0150602409638553, "mse_ls": 0.0998487663732678, "bias_ls": 0.0061859941832526, "base_ls": 0.84, "lq_raw": 0.715445570663787, "lq_zp": 0.7698132442003763, "lq_area": 0.0543676735365893, "lq_post": 0.7811638620211699, "lq_gain": 0.0113506178207936, "mse_lq": 0.2497435455511018, "bias_lq": 0.2562676233067474, "base_lq": 0.4759825327510917, "n_ls": 125, "n_lq": 229, "c_LS": 1.0, "c_LQ": 1.0, "a_LS": 1.0, "b_LS": 0.0, "a_LQ": 1.0, "b_LQ": 0.0, "label": "A fixed"}, {"No": "B", "이름": "tied", "ls_raw": 0.7968643805993205, "ls_zp": 0.8399598393574298, "ls_area": 0.0430954587581092, "ls_post": 0.8204252909072185, "ls_gain": -0.0195345484502112, "mse_ls": 0.2147855366271819, "bias_ls": -0.2703524960405016, "base_ls": 0.84, "lq_raw": 0.715445570663787, "lq_zp": 0.7698132442003763, "lq_area": 0.0543676735365893, "lq_post": 0.7871013373621009, "lq_gain": 0.0172880931617245, "mse_lq": 0.2529894925057961, "bias_lq": -0.2293429645422477, "base_lq": 0.4759825327510917, "n_ls": 125, "n_lq": 229, "c_LS": 0.8890630358122407, "c_LQ": 0.5042456068699199, "a_LS": 0.8890630358122407, "b_LS": 4.913802665460381, "a_LQ": 0.5042456068699199, "b_LQ": 0.8037535238086804, "label": "B tied"}, {"No": "C", "이름": "bounded", "ls_raw": 0.7968643805993205, "ls_zp": 0.8162676346411286, "ls_area": 0.019403254041808, "ls_post": 0.8030867057975491, "ls_gain": -0.0131809288435794, "mse_ls": 0.256347104280172, "bias_ls": -0.2691445587496691, "base_ls": 0.84, "lq_raw": 0.715445570663787, "lq_zp": 0.7708815568191858, "lq_area": 0.0554359861553988, "lq_post": 0.7812510185045455, "lq_gain": 0.0103694616853596, "mse_lq": 0.2506867966278058, "bias_lq": -0.2142641875148332, "base_lq": 0.4759825327510917, "n_ls": 125, "n_lq": 229, "c_LS": 1.0, "c_LQ": 1.0, "a_LS": 1.9766451434571248, "b_LS": 11.063044786600129, "a_LQ": 0.5076031407489251, "b_LQ": 0.8302828512779357, "label": "C bounded"}, {"No": "D", "이름": "free", "ls_raw": 0.7968643805993205, "ls_zp": 0.7968643805993205, "ls_area": 0.0, "ls_post": 0.7710225517454433, "ls_gain": -0.0258418288538772, "mse_ls": 0.25265216745466, "bias_ls": -0.1917256198165663, "base_ls": 0.84, "lq_raw": 0.715445570663787, "lq_zp": 0.7784457535241298, "lq_area": 0.0630001828603428, "lq_post": 0.7813957150778135, "lq_gain": 0.0029499615536836, "mse_lq": 0.2411452087850049, "bias_lq": -0.2079445798010062, "base_lq": 0.4759825327510917, "n_ls": 125, "n_lq": 229, "c_LS": 0.0062676832952768, "c_LQ": 0.7820254320263271, "a_LS": 1.8616153745419104, "b_LS": 11.492543883093449, "a_LQ": 0.5038246365008456, "b_LQ": 0.9129131690871476, "label": "D free"}, {"No": "E", "이름": "a1-c05", "ls_raw": 0.7968643805993205, "ls_zp": 0.8162676346411286, "ls_area": 0.019403254041808, "ls_post": 0.7914684378539801, "ls_gain": -0.0247991967871484, "mse_ls": 0.4191938525760641, "bias_ls": -0.4942922925468241, "base_ls": 0.84, "lq_raw": 0.715445570663787, "lq_zp": 0.7570032442862361, "lq_area": 0.0415576736224491, "lq_post": 0.7913576504333986, "lq_gain": 0.0343544061471624, "mse_lq": 0.1932071299132106, "bias_lq": -0.1030772039249623, "base_lq": 0.4759825327510917, "n_ls": 125, "n_lq": 229, "c_LS": 0.5, "c_LQ": 0.5, "a_LS": 1.0, "b_LS": 0.0, "a_LQ": 1.0, "b_LQ": 0.0, "label": "E c=0.5"}, {"No": "F", "이름": "a1-c2", "ls_raw": 0.7968643805993205, "ls_zp": 0.8679358459478941, "ls_area": 0.0710714653485735, "ls_post": 0.8657939450108125, "ls_gain": -0.0021419009370815, "mse_ls": 0.1442996419327227, "bias_ls": 0.1463608846378705, "base_ls": 0.84, "lq_raw": 0.715445570663787, "lq_zp": 0.7686894582468381, "lq_area": 0.0532438875830511, "lq_post": 0.7681273604980395, "lq_gain": -0.0005620977487985, "mse_lq": 0.4896167745585785, "bias_lq": 0.5007791235939936, "base_lq": 0.4759825327510917, "n_ls": 125, "n_lq": 229, "c_LS": 2.0, "c_LQ": 2.0, "a_LS": 1.0, "b_LS": 0.0, "a_LQ": 1.0, "b_LQ": 0.0, "label": "F c=2"}, {"No": "G", "이름": "lq-c05", "ls_raw": 0.7968643805993205, "ls_zp": 0.8399598393574298, "ls_area": 0.0430954587581092, "ls_post": 0.8550200803212852, "ls_gain": 0.0150602409638553, "mse_ls": 0.0994073025277471, "bias_ls": 0.0076548553637766, "base_ls": 0.84, "lq_raw": 0.715445570663787, "lq_zp": 0.7570032442862361, "lq_area": 0.0415576736224491, "lq_post": 0.7905010056344223, "lq_gain": 0.0334977613481861, "mse_lq": 0.1929188856756437, "bias_lq": -0.1055842100631908, "base_lq": 0.4759825327510917, "n_ls": 125, "n_lq": 229, "c_LS": 1.0, "c_LQ": 0.5, "a_LS": 1.0, "b_LS": 0.0, "a_LQ": 1.0, "b_LQ": 0.0, "label": "G LQ c=0.5"}, {"No": "H", "이름": "lq-c075", "ls_raw": 0.7968643805993205, "ls_zp": 0.8399598393574298, "ls_area": 0.0430954587581092, "ls_post": 0.8506693440428382, "ls_gain": 0.0107095046854084, "mse_ls": 0.0997649079420881, "bias_ls": 0.0065844150854692, "base_ls": 0.84, "lq_raw": 0.715445570663787, "lq_zp": 0.7725097545303329, "lq_area": 0.0570641838665458, "lq_post": 0.7954588992722339, "lq_gain": 0.022949144741901, "mse_lq": 0.1867685792322648, "bias_lq": 0.1041476237795492, "base_lq": 0.4759825327510917, "n_ls": 125, "n_lq": 229, "c_LS": 1.0, "c_LQ": 0.75, "a_LS": 1.0, "b_LS": 0.0, "a_LQ": 1.0, "b_LQ": 0.0, "label": "H LQ c=0.75"}, {"No": "I", "이름": "lq-c-free", "ls_raw": 0.7968643805993205, "ls_zp": 0.8399598393574298, "ls_area": 0.0430954587581092, "ls_post": 0.8550200803212852, "ls_gain": 0.0150602409638553, "mse_ls": 0.0993319630371059, "bias_ls": 0.0080140598146835, "base_ls": 0.84, "lq_raw": 0.715445570663787, "lq_zp": 0.7547224351413069, "lq_area": 0.0392768644775198, "lq_post": 0.7731792081282929, "lq_gain": 0.018456772986986, "mse_lq": 0.215476651432244, "bias_lq": -0.1658233394545835, "base_lq": 0.4759825327510917, "n_ls": 125, "n_lq": 229, "c_LS": 1.0, "c_LQ": 0.4337486710059368, "a_LS": 1.0, "b_LS": 0.0, "a_LQ": 1.0, "b_LQ": 0.0, "label": "I LQ c 학습"}, {"No": "J", "이름": "b-only", "ls_raw": 0.7968643805993205, "ls_zp": 0.8399598393574298, "ls_area": 0.0430954587581092, "ls_post": 0.8234708063021315, "ls_gain": -0.0164890330552982, "mse_ls": 0.2218293968185284, "bias_ls": -0.2729773504885197, "base_ls": 0.84, "lq_raw": 0.715445570663787, "lq_zp": 0.7698132442003763, "lq_area": 0.0543676735365893, "lq_post": 0.8099853097180639, "lq_gain": 0.0401720655176875, "mse_lq": 0.2217175699235435, "bias_lq": -0.1922137031066942, "base_lq": 0.4759825327510917, "n_ls": 125, "n_lq": 229, "c_LS": 1.0, "c_LQ": 1.0, "a_LS": 1.0, "b_LS": 5.532767742701953, "a_LQ": 1.0, "b_LQ": 2.689181086233802, "label": "J b만 학습"}], "sweep_ls": [{"c_ls": 0.5, "bias_ls": -0.49755421823061186, "mse_ls": 0.4229181477693678}, {"c_ls": 0.75, "bias_ls": -0.2177441798865655, "mse_ls": 0.19460370645001654}, {"c_ls": 1.0, "bias_ls": 0.006468757851519557, "mse_ls": 0.09973784157985348}, {"c_ls": 1.25, "bias_ls": 0.10619467818283708, "mse_ls": 0.1103083685957041}, {"c_ls": 1.5, "bias_ls": 0.13555024138204244, "mse_ls": 0.13265754187366735}, {"c_ls": 1.75, "bias_ls": 0.14302155436747296, "mse_ls": 0.1413797299042388}, {"c_ls": 2.0, "bias_ls": 0.14635385218262262, "mse_ls": 0.1442951929535584}], "sweep_lq": [{"c_lq": 0.5, "bias_lq": -0.1054988886372061, "mse_lq": 0.19329377944292528}, {"c_lq": 0.75, "bias_lq": 0.10387331972798794, "mse_lq": 0.18650030421993005}, {"c_lq": 1.0, "bias_lq": 0.2560556918963564, "mse_lq": 0.24931194191544764}, {"c_lq": 1.25, "bias_lq": 0.3612479073866175, "mse_lq": 0.3329907232543502}, {"c_lq": 1.5, "bias_lq": 0.4271011976368045, "mse_lq": 0.39993356022340326}, {"c_lq": 1.75, "bias_lq": 0.4730715609363915, "mse_lq": 0.4512091891390946}, {"c_lq": 2.0, "bias_lq": 0.500784855984935, "mse_lq": 0.4896265960907145}]}, C=D.cond;
+const pct=(v,lo,hi)=>((v-lo)/(hi-lo)*100);
+function fmt(v,d=3){return (v>=0?"+":"−")+Math.abs(v).toFixed(d);}
+
+function paired(title,note,pk,ok,col,colLt,lo,hi,hlSet){
+  let h=`<div class="panel"><p class="ptitle">${title}</p><p class="pnote">${note}</p>`
+       +`<div class="leg"><span><i style="background:${colLt}"></i>자기 prior</span>`
+       +`<span><i style="background:${col}"></i>posterior</span></div>`;
+  for(const d of C){
+    const g=d[ok]-d[pk], hl=hlSet.has(d.No);
+    h+=`<div class="row${hl?" hl":""}"><div class="lab">${d.label}</div><div class="bars">`
+      +`<div class="bar"><div class="fill" style="left:0;width:${pct(d[pk],lo,hi)}%;background:${colLt}"></div>`
+      +`<div class="val" style="left:${pct(d[pk],lo,hi)}%">${d[pk].toFixed(3)}</div></div>`
+      +`<div class="bar"><div class="fill" style="left:0;width:${pct(d[ok],lo,hi)}%;background:${col}"></div>`
+      +`<div class="val" style="left:${pct(d[ok],lo,hi)}%">${d[ok].toFixed(3)} <b style="color:${g>=0?"var(--good)":"var(--muted)"}">${fmt(g)}</b></div></div>`
+      +`</div></div>`;
+  }
+  h+=`<div class="axis"><div></div><div class="ticks">`;
+  for(let t=lo;t<=hi+1e-9;t+=(hi-lo)/4) h+=`<span style="left:${pct(t,lo,hi)}%">${t.toFixed(2)}</span>`;
+  return h+`</div></div></div>`;
+}
+
+function diverge(title,note,key,col,base,lim){
+  let h=`<div class="panel"><p class="ptitle">${title}</p><p class="pnote">${note}</p>`;
+  for(const d of C){
+    const v=Math.max(-lim,Math.min(lim,d[key])), z=pct(0,-lim,lim), w=Math.abs(pct(v,-lim,lim)-z);
+    const left=v>=0?z:z-w, ok=Math.abs(d[key])<0.02;
+    h+=`<div class="row${ok?" hl":""}"><div class="lab">${d.label}</div><div class="bars">`
+      +`<div class="bar" style="height:13px"><div class="fill" style="left:${left}%;width:${w}%;background:${col};border-radius:2px"></div>`
+      // 막대가 축을 거의 채우면 라벨을 막대 안에 흰 글씨로 넣는다. 밖에 두면 행 이름과 겹친다.
+      +(Math.abs(v)>0.82*lim
+        ? `<div class="val" style="left:${left}%;color:#fff;padding-left:5px">${fmt(d[key])}</div></div>`
+        : `<div class="val" style="left:${v>=0?left+w:left}%;${v>=0?"":"transform:translate(-100%,-50%);padding:0 4px 0 0"}">${fmt(d[key])}</div></div>`)
+      +`</div></div>`;
+  }
+  h+=`<div class="axis"><div></div><div class="ticks">`;
+  for(const t of [-lim,-lim/2,0,lim/2,lim]) h+=`<span style="left:${pct(t,-lim,lim)}%">${t.toFixed(2)}</span>`;
+  return h+`</div></div></div>`;
+}
+
+function line(title,note,rows,xk,yk,col,refs,mark,xlab){
+  const W=560,H=210,P={t:12,r:16,b:28,l:46},IW=W-P.l-P.r,IH=H-P.t-P.b;
+  const xs=rows.map(r=>r[xk]), ys=rows.map(r=>r[yk]);
+  let lo=Math.min(...ys,...refs.map(r=>r.v)), hi=Math.max(...ys,...refs.map(r=>r.v));
+  const pad=(hi-lo)*0.16||0.01; lo-=pad; hi+=pad;
+  const X=v=>(v-Math.min(...xs))/(Math.max(...xs)-Math.min(...xs))*IW, Y=v=>IH-(v-lo)/(hi-lo)*IH;
+  let g=`<svg viewBox="0 0 ${W} ${H}"><g transform="translate(${P.l},${P.t})">`;
+  for(let i=0;i<4;i++){const v=lo+(hi-lo)*i/3;
+    g+=`<line x1="0" y1="${Y(v).toFixed(1)}" x2="${IW}" y2="${Y(v).toFixed(1)}" stroke="var(--grid)"/>`
+     +`<text class="tick" x="-8" y="${(Y(v)+3.4).toFixed(1)}" text-anchor="end">${v.toFixed(2)}</text>`;}
+  refs.forEach(r=>g+=`<line x1="0" y1="${Y(r.v).toFixed(1)}" x2="${IW}" y2="${Y(r.v).toFixed(1)}" stroke="var(--axis)" stroke-width="1.5" stroke-dasharray="4 3"/>`
+     +`<text class="tick" x="${IW}" y="${(Y(r.v)-5).toFixed(1)}" text-anchor="end">${r.label}</text>`);
+  if(mark!=null) g+=`<line x1="${X(mark).toFixed(1)}" y1="0" x2="${X(mark).toFixed(1)}" y2="${IH}" stroke="${col}" stroke-width="1.5" stroke-dasharray="2 3" opacity=".8"/>`
+     +`<text class="tick" x="${(X(mark)+4).toFixed(1)}" y="11" fill="${col}" style="font-weight:600">c = ${mark}</text>`;
+  g+=`<path d="M ${rows.map(r=>`${X(r[xk]).toFixed(1)},${Y(r[yk]).toFixed(1)}`).join(" L ")}" fill="none" stroke="${col}" stroke-width="2.5" stroke-linecap="round"/>`;
+  rows.forEach(r=>g+=`<circle cx="${X(r[xk]).toFixed(1)}" cy="${Y(r[yk]).toFixed(1)}" r="3.4" fill="${col}" stroke="var(--surface-1)" stroke-width="2"/>`);
+  xs.forEach(v=>g+=`<text class="tick" x="${X(v).toFixed(1)}" y="${IH+15}" text-anchor="middle">${v}</text>`);
+  g+=`<text class="tick" x="${IW/2}" y="${IH+26}" text-anchor="middle">${xlab}</text></g></svg>`;
+  return `<div class="panel"><p class="ptitle">${title}</p><p class="pnote">${note}</p>${g}</div>`;
+}
+
+const win=new Set(["A","G","H","I"]);
+document.getElementById("warn").innerHTML =
+ `<b>읽기 전에.</b> LS 평가가 125행 · 양성 105 / 음성 20 · 이벤트 5개뿐이다(③만 418행).
+  음성이 20행이라 AUC 차이는 통계적으로 잘 구분되지 않는다 — A의 보탠양 +0.015도
+  부트스트랩 95% 구간이 [−0.041, +0.073]으로 0을 포함한다. <b>편향과 MSE가 더 믿을 만한 지표다.</b>`;
+document.getElementById("app").innerHTML =
+  paired("산사태 LS — 자기 prior vs posterior","가중평균 AUC · 초록 배경 = posterior가 prior를 넘은 조건","ls_zp","ls_post","var(--ls)","var(--ls-lt)",0.70,0.92,win)
++ paired("액상화 LQ — 자기 prior vs posterior","가중평균 AUC · 229행 · 규칙 변경과 무관","lq_zp","lq_post","var(--lq)","var(--lq-lt)",0.70,0.85,new Set(["J","E","G"]));
+document.getElementById("app2").innerHTML =
+  diverge("LS 예측 편향","평균 예측확률 − 실제 양성률 · 초록 배경 = |편향| < 0.02","bias_ls","var(--ls)",0,0.52)
++ diverge("LQ 예측 편향","0이 정답 · 초록 배경 = |편향| < 0.02","bias_lq","var(--lq)",0,0.52);
+document.getElementById("app2").innerHTML +=
+  line("c 스윕 — 산사태 LS 편향","c를 0.5~2.0으로 훑었다 · 49점 · 0이 정답",D.sweep_ls,"c_ls","bias_ls","var(--ls)",[{v:0,label:"0"}],1.0,"c_LS")
++ line("c 스윕 — 액상화 LQ 편향","같은 격자 · 두 hazard의 c는 서로 간섭하지 않는다",D.sweep_lq,"c_lq","bias_lq","var(--lq)",[{v:0,label:"0"}],0.625,"c_LQ");
+document.getElementById("foot").innerHTML =
+ `<b>1. 유도식 c = 1 이 산사태에서 정확히 맞는다.</b> 편향이 0을 지나는 곳이 c<sub>LS</sub> ≈ <b>0.993</b>이고 MSE 최소도 c<sub>LS</sub> = 1.0(0.0997)이다.
+  A fixed의 편향은 +0.006, MSE 0.0998로 기저확률 0.1344를 크게 밑돈다. "칸끼리 독립" 가정이 산사태에서는 성립한다.<br>
+  <b>2. 액상화는 c를 낮춰야 한다.</b> c<sub>LQ</sub> ≈ <b>0.626</b>에서 편향이 0을 지난다. 액상화 감수성이 충적층을 따라 공간적으로 상관돼
+  유효 칸 수가 명목보다 적다는 뜻이다. H(c<sub>LQ</sub>=0.75)가 LQ MSE 0.1868로 1위다.<br>
+  <b>3. b를 학습하면 오히려 나빠진다.</b> B · C · J는 편향 −0.27, MSE 0.21~0.26으로 최악이다. 양성률 84%짜리 좁은 집합에서
+  b가 확률을 끌어내리는 쪽으로 학습된다.<br>
+  <b>4. A · G · H · I는 피해 데이터가 보탠다</b>(+0.011 ~ +0.015). 네 조건 모두 c<sub>LS</sub>=1이고 b=0 고정이다. 다만 위 경고대로
+  이 차이는 통계적으로 구분되지 않는다.`;
+</script></body></html>
