@@ -80,10 +80,10 @@ const SWM_LQ  = [0.1933,0.1865,0.2493,0.3330,0.3999,0.4512,0.4896];
   s.addText("유도식 c = 1 이" + NL + "산사태에서는 맞았다", { x: M, y: 2.15, w: 11.4, h: 2.0, isTextBox: true, margin: 0,
     fontFace: KR, fontSize: 42, bold: true, color: BG, lineSpacing: 54 });
   s.addText("면적 항을 유도한 대로 두었을 때(a=1, b=0, c=1) 산사태 예측 편향이 +0.006이다." + NL +
-            "액상화만 c를 0.62로 낮춰야 한다 — 두 hazard가 서로 다른 c를 원한다.", {
+            "액상화는 c를 1보다 낮춰야 한다 — 두 hazard가 서로 다른 c를 원한다.", {
     x: M, y: 4.35, w: 11.4, h: 0.8, isTextBox: true, margin: 0,
     fontFace: KR, fontSize: 14, color: "AFC0CB", lineSpacing: 22 });
-  const kpi = [["15","실험 조건"],["125","LS 평가 행"],["418","③ 평가 행"],["49","c 스윕 격자"]];
+  const kpi = [["15","실험 조건"],["125","LS 평가 행"],["20","LS 평가 음성 행"],["418","③ 평가 행"]];
   kpi.forEach(([v,l],i)=>{
     const x = M + i*2.5;
     s.addText(v, { x, y: 5.52, w: 2.3, h: 0.72, isTextBox: true, margin: 0,
@@ -99,9 +99,9 @@ const SWM_LQ  = [0.1933,0.1865,0.2493,0.3330,0.3999,0.4512,0.4896];
   head(s, "요약", "네 가지 결론", false);
   const items = [
     ["1", "유도식 c = 1 이 산사태에서 정확히 맞는다",
-     "편향이 0을 지나는 곳이 c_LS ≈ 0.99, MSE 최소도 c_LS = 1.0이다. A fixed의 편향 +0.006 / MSE 0.0998로 기저확률 0.1344를 크게 밑돈다. “격자 칸끼리 독립” 가정이 산사태에서는 성립한다.", LS],
-    ["2", "액상화는 c 를 0.62로 낮춰야 한다",
-     "c_LQ ≈ 0.62에서 편향이 0을 지난다. 액상화 감수성이 충적층을 따라 공간적으로 상관돼 유효 칸 수가 명목보다 적다는 뜻이다. 두 hazard가 서로 다른 c를 원한다.", LQ],
+     "c를 바꿔 본 세 조건이 c = 1을 가리킨다. E(c=0.5) 편향 −0.494 · A(c=1) +0.006 · F(c=2) +0.146. A는 MSE도 0.0998로 기저확률 0.1344를 크게 밑돈다. “격자 칸끼리 독립” 가정이 산사태에서는 성립한다.", LS],
+    ["2", "액상화는 c 를 1보다 낮춰야 한다",
+     "G(c_LQ=0.5) 편향 −0.106 · H(0.75) +0.104 · A(1.0) +0.256. 편향이 0을 지나는 자리가 0.5와 0.75 사이에 있다. 액상화 감수성이 충적층을 따라 상관돼 유효 칸 수가 명목보다 적다는 뜻이다.", LQ],
     ["3", "b 를 학습하면 오히려 나빠진다",
      "b·a를 학습하는 B·C·J가 편향 −0.27, MSE 0.21~0.26으로 최악이다. prior의 자유도를 늘리는 것이 답이 아니다.", WARN],
     ["4", "피해 데이터의 기여는 판정할 수 없다",
@@ -154,7 +154,7 @@ const SWM_LQ  = [0.1933,0.1865,0.2493,0.3330,0.3999,0.4512,0.4896];
     x: M, y: 1.78, w: 12.1, h: 0.32, isTextBox: true, margin: 0, fontFace: KR, fontSize: 12.5, color: INK2 });
   s.addTable([
     ["규칙","양성","음성","평가 제외","적용"].map(t=>({text:t,options:{bold:true,color:INK,fill:{color:BG2},fontSize:10.5}})),
-    ["LS 기본","ls_flag = 1\n(또는 면적 > 0)","ls_flag = 0\n(또는 면적 = 0)","NA","① ② ④ ⑤"],
+    ["LS 기본","ls_flag = 1\n(또는 면적 > 0)","ls_flag = 0\n(또는 면적 = 0)","NA","① ② ④"],
     ["LS 자연+혼재","ls_type ∈ {자연, 혼재}","그 밖 전부\n(인공·불명·빈칸·NA)","없음","③ (4·5번)"],
     ["LQ — jshis_flag","1","0 과 NA","없음","구마모토·훗카이도·노토반도"],
     ["LQ — lq_flag","1","0","NA","나머지 6개 이벤트"],
@@ -209,24 +209,23 @@ const SWM_LQ  = [0.1933,0.1865,0.2493,0.3330,0.3999,0.4512,0.4896];
 /* ══════════ 6. 실험 지도 ══════════ */
 {
   const s = slideBase(false);
-  head(s, "실험", "네 갈래 15개 조건", false);
+  head(s, "실험", "세 갈래 15개 조건", false);
   const groups = [
     ["②","교수님 피드백 — b 범위","3개","b 상한을 4 / 10으로 넓혀 안쪽에서 멈추는지 본다","교수님 지시",LS],
     ["③","자연+혼재 GT 재평가","2개","②의 모델을 그대로 두고 LS 정답만 자연사면으로 좁힌다","교수님 지시",GOOD],
     ["④","면적 항","10개","z = a·log p̄ + b + c·log k 의 a·b·c를 어떻게 다룰지","A~F 지시 / G~J 추가",LQ],
-    ["⑤","면적 계수 c 훑기","49점+","c를 0.5~2.0 격자로 돌려 최적값을 찾는다","④ 결과를 보고 추가",WARN],
   ];
   groups.forEach(([n,t,cnt,d,src,c],i)=>{
-    const y = 2.0 + i*1.22;
-    card(s, { x: M, y, w: 12.1, h: 1.05, fill: BG2 });
-    s.addShape(pres.ShapeType.ellipse, { x: M+0.3, y: y+0.3, w: 0.46, h: 0.46, fill: { color: c } });
-    s.addText(n, { x: M+0.3, y: y+0.36, w: 0.46, h: 0.34, isTextBox: true, margin: 0,
+    const y = 2.25 + i*1.45;
+    card(s, { x: M, y, w: 12.1, h: 1.25, fill: BG2 });
+    s.addShape(pres.ShapeType.ellipse, { x: M+0.3, y: y+0.4, w: 0.46, h: 0.46, fill: { color: c } });
+    s.addText(n, { x: M+0.3, y: y+0.46, w: 0.46, h: 0.34, isTextBox: true, margin: 0,
       align: "center", fontFace: KR, fontSize: 14, bold: true, color: "FFFFFF" });
-    s.addText(t, { x: M+0.95, y: y+0.18, w: 5.0, h: 0.34, isTextBox: true, margin: 0,
+    s.addText(t, { x: M+0.95, y: y+0.28, w: 5.0, h: 0.34, isTextBox: true, margin: 0,
       fontFace: KR, fontSize: 15, bold: true, color: INK });
-    s.addText(cnt + " · " + src, { x: M+0.95, y: y+0.56, w: 5.0, h: 0.3, isTextBox: true, margin: 0,
+    s.addText(cnt + " · " + src, { x: M+0.95, y: y+0.68, w: 5.0, h: 0.3, isTextBox: true, margin: 0,
       fontFace: KR, fontSize: 11, color: INK3 });
-    s.addText(d, { x: M+6.2, y: y+0.34, w: 5.6, h: 0.5, isTextBox: true, margin: 0,
+    s.addText(d, { x: M+6.2, y: y+0.42, w: 5.6, h: 0.6, isTextBox: true, margin: 0,
       fontFace: KR, fontSize: 12, color: INK2, lineSpacing: 16 });
   });
   s.addText("모두 같은 데이터 · 같은 seed · lam_gamma = 10.  정답은 학습에 쓰지 않으므로 ③은 학습을 다시 하지 않는다.", {
@@ -312,9 +311,8 @@ const SWM_LQ  = [0.1933,0.1865,0.2493,0.3330,0.3999,0.4512,0.4896];
     ["추가","H","lq-c075","avg-lq-c075","1.00","0.00","1.00","1.00","0.00","0.75","0","액상화 쪽만 0.75 (LS는 A와 동일)"],
     ["추가","I","lq-c-free","avg-lq-c-free","1.00","0.00","1.00","1.00","0.00","→0.43","1","액상화 쪽 c만 데이터가 고른다"],
     ["요청","J","b-only","avg-b-only","1.00","→5.53","1.00","1.00","→2.69","1.00","2","순위는 유도식대로, 확률 높이만 보정"],
-    ["⑤ 결과","K","lq-c062","avg-lq-c062","1.00","0.00","1.00","1.00","0.00","0.62","0","⑤ 스윕이 찾아낸 최적점을 정식 조건으로"],
   ];
-  const fill = { "지시":"FAFCFD", "추가":"FFF6EC", "요청":"EAF4EE", "⑤ 결과":"E8F1F6" };
+  const fill = { "지시":"FAFCFD", "추가":"FFF6EC", "요청":"EAF4EE" };
   s.addTable([
     ["출처","","이름","브랜치 followup3-","a_LS","b_LS","c_LS","a_LQ","b_LQ","c_LQ","학습","무엇을 보려는 조건인가"].map((h,i)=>
       ({text:h,options:{bold:true,color:INK,fill:{color:BG2},align:i>=4&&i<=10?"right":"left",fontSize:9.5}})),
@@ -327,7 +325,7 @@ const SWM_LQ  = [0.1933,0.1865,0.2493,0.3330,0.3999,0.4512,0.4896];
     x: M, y: 5.98, w: 12.1, h: 0.3, isTextBox: true, margin: 0, fontFace: KR, fontSize: 11, color: INK2 });
   s.addText("→ 가 붙은 값은 고정값이 아니라 학습 결과다.  범위는 a ∈ [0.5, 2] · b ∈ [−20, 20] · c ∈ [0, 2].  예: I 는 “c_LQ 를 [0,2]에서 학습” 이 설계이고 0.43 은 돌려서 나온 답이다.", {
     x: M, y: 6.3, w: 12.1, h: 0.3, isTextBox: true, margin: 0, fontFace: KR, fontSize: 10, bold: true, color: LQ });
-  s.addText("출처 —  회색: 교수님이 지시하신 A~F     주황: 실험 도중 만든 G·H·I     초록: 요청으로 추가한 J     파랑: ⑤ 스윕이 찾아낸 K", {
+  s.addText("출처 —  회색: 교수님이 지시하신 A~F     주황: 실험 도중 만든 G·H·I     초록: 요청으로 추가한 J", {
     x: M, y: 6.62, w: 12.1, h: 0.3, isTextBox: true, margin: 0, fontFace: KR, fontSize: 11, bold: true, color: WARN });
   s.addText("b를 학습하는 B·C·D·J만 log k를 평균 중심화한다(m = LS 8.042 / LQ 6.656). b=0 고정 조건은 중심화하지 않는다 — 빼면 유도식이 깨진다.", {
     x: M, y: 6.94, w: 12.1, h: 0.3, isTextBox: true, margin: 0, fontFace: KR, fontSize: 10.5, color: INK3 });
@@ -372,50 +370,15 @@ const SWM_LQ  = [0.1933,0.1865,0.2493,0.3330,0.3999,0.4512,0.4896];
     s.addText(d, { x: M+3.1, y, w: 9.0, h: 0.66, isTextBox:true, margin:0,
       fontFace:KR, fontSize:11.5, color:INK2, lineSpacing:16 });
   });
-  s.addText("⑤ 스윕이 나중에 실제 교차점을 c_LQ ≈ 0.618 로 확정했다.  G(0.5)와 H(0.75)가 정답을 사이에 두고 있었고, 선형 추정 0.643은 0.02 차이로 맞았다.  반면 I가 학습한 0.434는 아래로 지나쳤다.", {
+  s.addText("결과로 보면 G(0.5)가 −0.106, H(0.75)가 +0.104로 정답을 사이에 두고 0.1씩 빗나갔다.  I가 학습한 0.434는 −0.166으로 더 아래다 — 우도에 맡기면 눈금이 맞는 자리로 가지 않는다.", {
     x: M, y: 6.95, w: 12.1, h: 0.52, isTextBox: true, margin: 0,
     fontFace: KR, fontSize: 11.5, bold: true, color: GOOD, lineSpacing: 16 });
-}
-
-/* ══════════ 10. 갈래 ⑤ — 스윕을 실제로 어떻게 돌렸나 ══════════ */
-{
-  const s = slideBase(false);
-  head(s, "갈래 ⑤", "c 스윕을 실제로 어떻게 돌렸나 — 여섯 단계", false);
-  s.addText("④에서 c를 0.5 / 1 / 2 세 점으로만 봤다. 그 사이가 비어 있으니 “유도값 1이 맞다”고 말할 근거가 약하다. 그래서 c를 직접 훑었다. 브랜치 followup3-area-sweep · tools/sweep_c.py.", {
-    x: M, y: 1.76, w: 12.1, h: 0.44, isTextBox: true, margin: 0, fontFace: KR, fontSize: 12.5, color: INK2, lineSpacing: 17 });
-
-  const steps = [
-    ["1", "손잡이를 하나만 남긴다",
-     "AreaPrior에 mode=\"grid\"를 새로 만들어 a = 1 · b = 0 을 못박고 c_LS · c_LQ 만 인자로 받게 했다. prior에서 학습하는 값이 0개다 — 결과가 달라지면 원인은 c 하나뿐이다."],
-    ["2", "격자를 정한다",
-     "거친 격자: c_LS × c_LQ ∈ {0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0} → 49점.  미세 격자: 거기서 읽은 최적점 둘레를 0.05 간격으로 → 16점.  모두 65점."],
-    ["3", "점마다 처음부터 다시 학습한다",
-     "c가 prior를 바꾸면 posterior도 바뀐다. 그래서 회귀·우도 44개 파라미터를 c마다 새로 적합한다(3000에폭, seed 0). 한 점에 14초, 65점에 15분."],
-    ["4", "점마다 네 숫자를 적는다",
-     "예측 편향 · MSE · 자기 prior AUC · posterior AUC. 행별 예측도 CSV로 남겨 뒀다 — 정답 규칙이 바뀌어도 재학습 없이 채점만 다시 할 수 있게."],
-    ["5", "격자가 맞는지 먼저 검증한다",
-     "격자점 (1.0, 1.0)은 조건 A와, (1.0, 0.5)는 G와, (1.0, 0.75)는 H와 같은 모형이어야 한다. 실제로 소수 넷째 자리까지 일치했다 — 그래야 나머지 점도 믿을 수 있다."],
-    ["6", "편향이 0을 지나는 자리를 읽는다",
-     "LS는 c ≈ 0.99, LQ는 c ≈ 0.618. MSE 최소도 같은 자리인지 확인한다(LS 1.0에서 0.0997 / LQ 0.625에서 0.1765). 그 값으로 정식 브랜치를 만들어 다시 돌린 것이 조건 K다."],
-  ];
-  steps.forEach(([n, t, d], i) => {
-    const y = 2.34 + i * 0.79;
-    s.addShape(pres.ShapeType.ellipse, { x: M, y: y + 0.06, w: 0.36, h: 0.36, fill: { color: i === 5 ? GOOD : LQ } });
-    s.addText(n, { x: M, y: y + 0.11, w: 0.36, h: 0.28, isTextBox: true, margin: 0,
-      align: "center", fontFace: NUM, fontSize: 14, bold: true, color: "FFFFFF" });
-    s.addText(t, { x: M + 0.52, y: y + 0.02, w: 2.75, h: 0.34, isTextBox: true, margin: 0,
-      fontFace: KR, fontSize: 12.5, bold: true, color: INK });
-    s.addText(d, { x: M + 3.35, y: y, w: 8.75, h: 0.72, isTextBox: true, margin: 0,
-      fontFace: KR, fontSize: 11.5, color: INK2, lineSpacing: 16 });
-  });
-  s.addText("두 hazard의 c는 서로 간섭하지 않는다 — 한쪽 c를 0.5~2.0으로 바꿔도 다른 쪽 편향은 0.004 안에서만 움직인다. 그래서 c_LS와 c_LQ를 따로 골라도 된다.", {
-    x: M, y: 7.1, w: 12.1, h: 0.3, isTextBox: true, margin: 0, fontFace: KR, fontSize: 11, color: INK3 });
 }
 
 /* ══════════ 10-1. 왜 b 를 0 으로 못박았나 ══════════ */
 {
   const s = slideBase(false);
-  head(s, "갈래 ⑤", "마지막 실험은 왜 b 를 0 으로 못박았나", false);
+  head(s, "갈래 ④", "대부분의 조건이 왜 b 를 0 으로 못박았나", false);
   s.addText("z = a · log p̄  +  b  +  c · log k", {
     x: M, y: 1.70, w: 7.0, h: 0.34, isTextBox: true, margin: 0, fontFace: NUM, fontSize: 15, bold: true, color: INK });
   s.addText("b 는 모든 행에 똑같이 더해지는 상수다. hazard 안에서 순위를 전혀 바꾸지 않고 확률 높이만 통째로 올린다 — 즉 “눈금”만 만지는 손잡이다.", {
@@ -427,57 +390,19 @@ const SWM_LQ  = [0.1933,0.1865,0.2493,0.3330,0.3999,0.4512,0.4896];
      "b ≠ 0 은 유도에서 나온 값이 아니라 우리가 덧붙이는 자유 손잡이다.", INK3],
     ["②", "b 를 학습시키면 눈금이 오히려 망가진다",
      "실측: b 를 학습하는 B · C · D · J 의 LS 편향은 −0.19 ~ −0.27 로 표에서 최악이다." + NL +
-     "b = 0 인 A · G · H · I · K 는 +0.002 ~ +0.008 이다." + NL +
+     "b = 0 인 A · G · H · I 는 +0.006 ~ +0.008 이다." + NL +
      "정답은 학습에 안 들어가므로(규칙 ①) b 를 눈금 쪽으로 당기는 힘이 없다. b 는 피해 건수 우도만 보고 움직인다.", LS],
     ["③", "b 가 자유로우면 c 를 잴 수 없다",
      "c · log k 에서 log k 는 평균 6.656 · 표준편차 1.202 다. c 를 움직이면 전체가 같이 올라가는 몫이 퍼짐의 5.5배다." + NL +
-     "즉 c 도 거의 b 처럼 행동한다. 둘 다 자유면 “편향 0”을 만드는 (b, c) 짝이 무수히 많아 c 가 특정되지 않는다." + NL +
-     "b 를 0 에 박아야 편향이 c 를 가리키는 자가 된다.", LQ],
+     "즉 c 도 거의 b 처럼 행동한다. 둘 다 자유면 “편향 0”을 만드는 (b, c) 짝이 무수히 많아 어느 쪽이 맞는지 가릴 수 없다." + NL +
+     "b 를 0 에 박아야 편향이 c 를 가리키는 자가 된다 — E · F · G · H · I 가 그래서 전부 b = 0 이다.", LQ],
   ];
   why.forEach(([n, t, d, col], i) => {
     const y = 2.50 + i * 1.56;
     note(s, M, y, 12.1, 1.50, n + "  " + t, d, col);
   });
-  s.addText("그래서 순서가 이렇게 됐다 —  J 가 “b 가 올바른 손잡이인가”를 실제로 시험했고, 편향 −0.273 으로 답은 아니오였다.  ⑤ 는 b 를 0 에 두고 c 만 움직인다.", {
+  s.addText("J 가 바로 “b 가 올바른 손잡이인가”를 시험한 조건이었고, 편향 −0.273 으로 답은 아니오였다.  눈금을 고치려면 b 가 아니라 c 를 움직여야 한다.", {
     x: M, y: 7.16, w: 12.1, h: 0.28, isTextBox: true, margin: 0, fontFace: KR, fontSize: 11.5, bold: true, color: GOOD });
-}
-
-/* ══════════ 10-2. ⑤ 편향을 실제로 어떻게 재는가 ══════════ */
-{
-  const s = slideBase(false);
-  head(s, "갈래 ⑤", "편향을 실제로 어떻게 재고, 그걸로 무엇을 정하나", false);
-  s.addText("실제 양성률은 정답이라 c와 무관하게 고정이다(LS 105/125 = 0.840, LQ 109/229 = 0.476). c를 바꾸면 모델이 내놓는 평균 예측확률만 움직인다. 그 둘의 차이가 편향이다.", {
-    x: M, y: 1.78, w: 12.1, h: 0.5, isTextBox: true, margin: 0, fontFace: KR, fontSize: 12.5, color: INK2, lineSpacing: 17 });
-  const rows = [
-    ["0.50","0.342","0.840","−0.498","0.370","0.476","−0.105"],
-    ["0.75","0.622","0.840","−0.218","0.580","0.476","+0.104"],
-    ["1.00","0.846","0.840","+0.006","0.732","0.476","+0.256"],
-    ["1.25","0.946","0.840","+0.106","0.837","0.476","+0.361"],
-    ["1.50","0.976","0.840","+0.136","0.903","0.476","+0.427"],
-    ["1.75","0.983","0.840","+0.143","0.949","0.476","+0.473"],
-    ["2.00","0.986","0.840","+0.146","0.977","0.476","+0.501"],
-  ];
-  s.addTable([
-    ["c","LS 평균예측","LS 실제","LS 편향","LQ 평균예측","LQ 실제","LQ 편향"].map(h=>
-      ({text:h,options:{bold:true,color:INK,fill:{color:BG2},align:"right",fontSize:11}})),
-    ...rows.map(r=>r.map((c,i)=>({text:c,
-      options:{align:"right",fontFace:NUM,
-               bold:(i===3&&r[0]==="1.00"),
-               color:(i===3&&r[0]==="1.00")?GOOD:INK2,
-               fill:{color:r[0]==="1.00"?"EAF4EE":BG}}}))),
-  ], { x: M, y: 2.4, w: 9.0, colW:[1.0,1.5,1.2,1.3,1.5,1.2,1.3], rowH:0.36,
-       fontFace:KR, fontSize:11, valign:"middle", border:{type:"solid",color:"E3E9EC",pt:1} });
-  note(s, 9.85, 2.4, 2.85, 2.9, "c 가 커지면",
-    "c·log k 항이 커져 z 가 커지고 sigmoid(z) 가 1 에 붙는다." + NL + NL +
-    "즉 c 가 클수록 모델이 “확률이 높다”고 말한다.", INK3);
-  note(s, M, 5.45, 5.9, 1.72, "편향 = 0 인 c 를 고른다",
-    "확률 예측이 쓸모 있으려면 “30%라고 한 곳에서 실제로 30%쯤 일어나야” 한다. 평균부터 안 맞으면 그 확률을 숫자로 쓸 수 없다." + NL +
-    "LS는 1.00 근처, LQ는 0.50과 0.75 사이에서 0을 지난다.", GOOD);
-  note(s, 6.82, 5.45, 5.9, 1.72, "MSE 최소도 같은 자리인지 본다",
-    "편향만 0이고 MSE가 나쁘면 “평균만 맞고 개별 예측은 엉망”일 수 있다." + NL +
-    "LS는 c=1.0에서 MSE 0.0997, LQ는 c=0.625에서 0.1765로 둘 다 같은 자리다 — 믿을 만하다.", LQ);
-  s.addText("편향과 MSE는 평가 행 전체를 모아 한 번 계산한다(평균이므로).  AUC만 이벤트별로 재서 행 수로 가중평균한다.", {
-    x: M, y: 7.24, w: 12.1, h: 0.26, isTextBox: true, margin: 0, fontFace: KR, fontSize: 10.5, color: INK3 });
 }
 
 /* ══════════ 11-12. 결과 — prior vs posterior ══════════ */
@@ -535,108 +460,6 @@ pairSlide("결과", "액상화 LQ — 자기 prior vs posterior",
     x: M, y: 6.82, w: 12.1, h: 0.3, isTextBox:true, margin:0, fontFace:KR, fontSize:12, bold:true, color:INK });
 }
 
-/* ══════════ 14. 결과 — c 스윕 ══════════ */
-{
-  const s = slideBase(false);
-  head(s, "갈래 ⑤ 결과", "산사태는 c = 1, 액상화는 c = 0.62", false);
-  s.addText("c를 0.5부터 2.0까지 직접 돌린 결과다. 편향이 0을 지나는 자리가 두 hazard에서 크게 다르다.", {
-    x: M, y: 1.78, w: 12.1, h: 0.32, isTextBox: true, margin: 0, fontFace: KR, fontSize: 12.5, color: INK2 });
-  s.addChart(pres.ChartType.line, [
-    { name: "산사태 LS", labels: C_AXIS, values: SW_LS },
-    { name: "액상화 LQ", labels: C_AXIS, values: SW_LQ },
-  ], { x: M, y: 2.3, w: 5.9, h: 3.1, chartColors:[LS,LQ], ...chartFrame(),
-       showLegend:true, legendPos:"t", legendFontFace:KR, legendFontSize:11, legendColor:INK2,
-       lineSize:3, lineSmooth:false, valAxisMinVal:-0.55, valAxisMaxVal:0.55, valAxisLabelFormatCode:"0.0" });
-  s.addText("예측 편향 — 0이 정답.  가로축 c", { x: M, y: 5.45, w: 5.9, h: 0.28, isTextBox:true, margin:0,
-    align:"center", fontFace:KR, fontSize:10.5, color:INK3 });
-  s.addChart(pres.ChartType.line, [
-    { name: "산사태 LS", labels: C_AXIS, values: SWM_LS },
-    { name: "액상화 LQ", labels: C_AXIS, values: SWM_LQ },
-  ], { x: 6.82, y: 2.3, w: 5.9, h: 3.1, chartColors:[LS,LQ], ...chartFrame(),
-       showLegend:true, legendPos:"t", legendFontFace:KR, legendFontSize:11, legendColor:INK2,
-       lineSize:3, lineSmooth:false, valAxisMinVal:0.0, valAxisMaxVal:0.55, valAxisLabelFormatCode:"0.0" });
-  s.addText("MSE — 낮을수록 좋음.  기저확률 LS 0.1344 / LQ 0.2494", { x: 6.82, y: 5.45, w: 5.9, h: 0.28,
-    isTextBox:true, margin:0, align:"center", fontFace:KR, fontSize:10.5, color:INK3 });
-  note(s, M, 5.82, 5.9, 1.32, "산사태 — 유도값이 맞는다",
-    "편향 0 교차 c_LS ≈ 0.99, MSE 최소 c_LS = 1.0 (0.0997). “칸끼리 독립” 가정이 성립한다.", LS);
-  note(s, 6.82, 5.82, 5.9, 1.32, "액상화 — 낮춰야 한다",
-    "편향 0 교차 c_LQ ≈ 0.62, MSE 최소 0.625 (0.1765). 감수성이 충적층을 따라 상관돼 유효 칸 수가 적다.", LQ);
-}
-
-
-/* ══════════ 14-2. 조건 K ══════════ */
-{
-  const s = slideBase(false);
-  head(s, "갈래 ⑤ 결과", "찾은 값을 실제 조건으로 돌려봤다 — 조건 K", false);
-  s.addText("스윕은 격자 위의 곡선일 뿐이다. 거기서 읽은 c_LS = 1.0 · c_LQ = 0.62 를 실제 조건으로 한 번 돌려 확인했다. prior에서 학습하는 값은 여전히 0개다.", {
-    x: M, y: 1.78, w: 12.1, h: 0.5, isTextBox: true, margin: 0, fontFace: KR, fontSize: 12.5, color: INK2, lineSpacing: 17 });
-  const rows = [
-    ["K","c_LQ = 0.62","0.8550","0.0996","+0.007","0.7902","0.1764","+0.002"],
-    ["H","c_LQ = 0.75","0.8507","0.0998","+0.007","0.7955","0.1868","+0.104"],
-    ["G","c_LQ = 0.50","0.8550","0.0994","+0.008","0.7905","0.1929","−0.106"],
-    ["I","c_LQ = 0.43","0.8550","0.0993","+0.008","0.7732","0.2155","−0.166"],
-    ["A","c_LQ = 1.00","0.8550","0.0998","+0.006","0.7812","0.2497","+0.256"],
-  ];
-  s.addTable([
-    ["","조건","LS AUC","LS MSE","LS 편향","LQ AUC","LQ MSE","LQ 편향"].map((h,i)=>
-      ({text:h,options:{bold:true,color:INK,fill:{color:BG2},align:i>=2?"right":"left",fontSize:11}})),
-    ...rows.map(r=>r.map((c,i)=>({text:c,
-      options:{align:i>=2?"right":"left",fontFace:i>=2?NUM:KR,
-               bold:r[0]==="K",color:r[0]==="K"?INK:INK2,
-               fill:{color:r[0]==="K"?"EAF4EE":BG}}}))),
-  ], { x: M, y: 2.42, w: 10.2, colW:[0.5,1.7,1.4,1.4,1.4,1.4,1.4,1.0], rowH:0.42,
-       fontFace:KR, fontSize:11, valign:"middle", border:{type:"solid",color:"E3E9EC",pt:1} });
-  s.addText("LS는 c_LS = 1 로 모두 같아서 A · G · I 와 동일하다.  달라지는 것은 LQ 쪽뿐이다.", {
-    x: M, y: 5.05, w: 10.2, h: 0.3, isTextBox: true, margin: 0, fontFace: KR, fontSize: 11, color: INK3 });
-  note(s, M, 5.45, 5.9, 1.55, "LQ 눈금이 확실히 좋아진다",
-    "편향 +0.104(H) → +0.002,  MSE 0.1868(H) → 0.1764." + NL +
-    "두 hazard 모두 편향이 0.007 안에 드는 조건은 K 하나뿐이다.", GOOD);
-  note(s, 6.82, 5.45, 5.9, 1.55, "스윕이 한 일",
-    "G(0.5)와 H(0.75)가 정답을 사이에 두고 더듬고 있었다. 스윕이 그 사이를 촘촘히 훑어 0.62로 좁혔고, K가 그것을 확인했다.", LQ);
-}
-
-/* ══════════ 14-3. 조건 K 그래프 ══════════ */
-{
-  const s = slideBase(false);
-  head(s, "갈래 ⑤ 결과", "조건 K 를 그림으로 — c 는 순위가 아니라 눈금을 만진다", false);
-  s.addText("0.50 ~ 0.75 구간만 확대한 그림이다. 움직이는 값은 c_LQ 하나뿐이고 c_LS = 1.0 · a = 1 · b = 0 은 전부 고정이다. 실제로 브랜치를 만들어 돌린 조건은 G(0.50) · K(0.62) · H(0.75) 셋이고, 나머지 점은 스윕이다.", {
-    x: M, y: 1.76, w: 12.1, h: 0.46, isTextBox: true, margin: 0, fontFace: KR, fontSize: 12.5, color: INK2, lineSpacing: 17 });
-
-  const CK   = ["0.50","0.55","0.60","0.62","0.65","0.70","0.75"];
-  const KBIA = [-0.1056,-0.0600,-0.0156,0.0016,0.0267,0.0667,0.1041];
-  const KMSE = [0.1929,0.1823,0.1771,0.1764,0.1767,0.1801,0.1868];
-  const ONLY_K = v => [null,null,null,v,null,null,null];
-
-  s.addChart(pres.ChartType.line, [
-    { name: "LQ 편향", labels: CK, values: KBIA },
-    { name: "조건 K",  labels: CK, values: ONLY_K(0.0016) },
-  ], { x: M, y: 2.28, w: 5.9, h: 2.88, chartColors:[LQ, GOOD], ...chartFrame(),
-       lineSize:3, lineSmooth:false, lineDataSymbolSize:7,
-       valAxisMinVal:-0.13, valAxisMaxVal:0.13, valAxisLabelFormatCode:"0.00",
-       valAxisMajorUnit:0.05 });
-  s.addText("예측 편향 — 0 이 정답.  가로축 c_LQ", { x: M, y: 5.20, w: 5.9, h: 0.28,
-    isTextBox:true, margin:0, align:"center", fontFace:KR, fontSize:10.5, color:INK3 });
-
-  s.addChart(pres.ChartType.line, [
-    { name: "LQ MSE", labels: CK, values: KMSE },
-    { name: "조건 K", labels: CK, values: ONLY_K(0.1764) },
-  ], { x: 6.82, y: 2.28, w: 5.9, h: 2.88, chartColors:[LQ, GOOD], ...chartFrame(),
-       lineSize:3, lineSmooth:false, lineDataSymbolSize:7,
-       valAxisMinVal:0.17, valAxisMaxVal:0.20, valAxisLabelFormatCode:"0.000",
-       valAxisMajorUnit:0.01 });
-  s.addText("MSE — 낮을수록 좋음.  기저확률만 답하면 0.2494", { x: 6.82, y: 5.20, w: 5.9, h: 0.28,
-    isTextBox:true, margin:0, align:"center", fontFace:KR, fontSize:10.5, color:INK3 });
-
-  note(s, M, 5.56, 5.9, 1.64, "두 곡선이 같은 자리를 가리킨다",
-    "편향은 0.62 에서 0 을 지나고 MSE도 0.62 ~ 0.625 에서 최소다." + NL +
-    "G(0.50)는 −0.106, H(0.75)는 +0.104 — 두 기존 조건이 정답을 사이에 두고 0.1 씩 빗나가 있었다.", GOOD);
-  note(s, 6.82, 5.56, 5.9, 1.64, "AUC 로는 이 차이가 안 보인다",
-    "c_LQ 를 네 배 키워도 자기 prior AUC 폭은 0.023 뿐이다." + NL +
-    "같은 구간에서 편향은 0.607 움직인다. c 를 AUC 로 고르면 안 된다.", LQ);
-  s.addText("이 그림 밖에서는 훨씬 크게 벌어진다 —  A(c = 1.0) 편향 +0.256 · MSE 0.2497,  c = 2.0 에서는 편향 +0.501 · MSE 0.4896.", {
-    x: M, y: 7.24, w: 12.1, h: 0.26, isTextBox: true, margin: 0, fontFace: KR, fontSize: 10.5, color: INK3 });
-}
-
 /* ══════════ 15. 전체 결과 표 ══════════ */
 {
   const s = slideBase(false);
@@ -676,8 +499,8 @@ pairSlide("결과", "액상화 LQ — 자기 prior vs posterior",
 /* ══════════ 15-2. 정답 규칙이 순위를 뒤집는다 ══════════ */
 {
   const s = slideBase(false);
-  head(s, "갈래 ③ × ④", "A~K 를 자연+혼재 정답으로도 채점했다 — 순위가 뒤집힌다", false);
-  s.addText("④·⑤의 열한 조건을 ③의 자연+혼재 정답(418행)으로 다시 채점했다. 모델은 한 줄도 바뀌지 않았고 채점 기준만 바꿨다. 그런데 좋은 조건과 나쁜 조건이 정확히 자리를 바꾼다.", {
+  head(s, "갈래 ③ × ④", "A~J 를 자연+혼재 정답으로도 채점했다 — 순위가 뒤집힌다", false);
+  s.addText("④의 열 조건을 ③의 자연+혼재 정답(418행)으로 다시 채점했다. 모델은 한 줄도 바뀌지 않았고 채점 기준만 바꿨다. 그런데 좋은 조건과 나쁜 조건이 정확히 자리를 바꾼다.", {
     x: M, y: 1.76, w: 12.1, h: 0.44, isTextBox: true, margin: 0, fontFace: KR, fontSize: 12.5, color: INK2, lineSpacing: 17 });
   const rows = [
     ["C","bounded","0.8031","0.2563","−0.269","0.8812","0.1028","+0.076","b 학습 — 확률 높이를 낮출 수 있다"],
@@ -689,7 +512,6 @@ pairSlide("결과", "액상화 LQ — 자기 prior vs posterior",
     ["G","LQ c=0.5","0.8550","0.0994","+0.008","0.8577","0.4166","+0.504","b = 0 고정"],
     ["H","LQ c=0.75","0.8507","0.0998","+0.007","0.8536","0.4165","+0.503","b = 0 고정"],
     ["I","LQ c 학습","0.8550","0.0993","+0.008","0.8585","0.4167","+0.504","b = 0 고정"],
-    ["K","LQ c=0.62","0.8550","0.0996","+0.007","0.8559","0.4166","+0.503","b = 0 고정 — ⑤가 찾은 조건"],
     ["F","c=2","0.8658","0.1443","+0.146","0.8130","0.7738","+0.782","면적을 두 배로 — 양쪽 다 과대"],
   ];
   s.addTable([
@@ -702,7 +524,7 @@ pairSlide("결과", "액상화 LQ — 자기 prior vs posterior",
                bold:(i===3&&parseFloat(c)<0.1344)||(i===6&&parseFloat(c)<0.1503),
                color:(i===3&&parseFloat(c)<0.1344)||(i===6&&parseFloat(c)<0.1503)?GOOD:INK2,
                fill:{color:i>=2&&i<=4?"FDFAF9":i>=5&&i<=7?"F8FBFC":BG}}}))),
-  ], { x: M, y: 2.58, w: 12.1, colW:[0.42,1.35,0.95,0.95,0.95,0.95,0.95,0.95,4.63], rowH:0.27,
+  ], { x: M, y: 2.58, w: 12.1, colW:[0.42,1.35,0.95,0.95,0.95,0.95,0.95,0.95,4.63], rowH:0.28,
        fontFace:KR, fontSize:10.5, valign:"middle", border:{type:"solid",color:"E3E9EC",pt:1} });
   s.addText("기본 정답 (125행 · 양성률 84.0%)", { x: M+1.77, y: 2.28, w: 2.85, h: 0.26, isTextBox:true, margin:0,
     align:"center", fontFace:KR, fontSize:11, bold:true, color:LS });
@@ -719,11 +541,11 @@ pairSlide("결과", "액상화 LQ — 자기 prior vs posterior",
 
 /* ══════════ 19-2. 자연+혼재 재채점 — prior vs posterior 그래프 ══════════ */
 {
-  const AJ = ["A fixed","B tied","C bounded","D free","E c=0.5","F c=2","G LQ c=0.5","H LQ c=0.75","I LQ c 학습","J b만 학습","K LQ c=0.62"];
-  const BZP  = [0.8400,0.8400,0.8163,0.7969,0.8163,0.8679,0.8400,0.8400,0.8400,0.8400,0.8400];
-  const BPO  = [0.8550,0.8204,0.8031,0.7710,0.7915,0.8658,0.8550,0.8507,0.8550,0.8235,0.8550];
-  const NZP  = [0.8703,0.8703,0.8889,0.8882,0.8891,0.8105,0.8703,0.8703,0.8703,0.8703,0.8703];
-  const NPO  = [0.8541,0.8389,0.8812,0.8599,0.8419,0.8130,0.8577,0.8536,0.8585,0.8391,0.8559];
+  const AJ = ["A fixed","B tied","C bounded","D free","E c=0.5","F c=2","G LQ c=0.5","H LQ c=0.75","I LQ c 학습","J b만 학습"];
+  const BZP  = [0.8400,0.8400,0.8163,0.7969,0.8163,0.8679,0.8400,0.8400,0.8400,0.8400];
+  const BPO  = [0.8550,0.8204,0.8031,0.7710,0.7915,0.8658,0.8550,0.8507,0.8550,0.8235];
+  const NZP  = [0.8703,0.8703,0.8889,0.8882,0.8891,0.8105,0.8703,0.8703,0.8703,0.8703];
+  const NPO  = [0.8541,0.8389,0.8812,0.8599,0.8419,0.8130,0.8577,0.8536,0.8585,0.8391];
   const s = slideBase(false);
   head(s, "갈래 ③ × ④", "정답을 바꾸면 prior 자체가 올라간다 — AUC로 보면", false);
   s.addText("같은 모델, 같은 자기 prior 식이다. 정답만 바꿨는데 prior AUC가 0.840 → 0.870으로 오른다. 자연사면 붕괴만 양성으로 세면 USGS 사전모형이 원래 맞히던 것을 제대로 인정받기 때문이다.", {
@@ -750,7 +572,7 @@ pairSlide("결과", "액상화 LQ — 자기 prior vs posterior",
     align:"center", fontFace:KR, fontSize:11, bold:true, color:LQ });
   note(s, M, 5.94, 12.1, 1.50, "prior가 오르는 만큼 posterior는 못 따라간다",
     "자기 prior는 0.840 → 0.870(A 기준)으로 +0.030 오르는데 posterior는 0.855 → 0.854로 제자리다. 그래서 기본에서 +0.015이던 보탠양이 자연+혼재에서는 −0.016으로 부호가 바뀐다. " +
-    "예외는 C로, prior 0.889 · posterior 0.881 · 보탠양 −0.008 로 양쪽 모두 가장 작게 깎는다.  ⑤가 찾은 K도 여기서는 −0.014로 같이 깎인다 — c_LQ를 고친 것이 LS 채점에는 도움이 되지 않는다.", WARN);
+    "예외는 C로, prior 0.889 · posterior 0.881 · 보탠양 −0.008 로 양쪽 모두 가장 작게 깎는다.", WARN);
 }
 
 /* ══════════ 16. 한계와 다음 ══════════ */
@@ -759,8 +581,8 @@ pairSlide("결과", "액상화 LQ — 자기 prior vs posterior",
   head(s, "마무리", "한계와 다음", true);
   const items = [
     ["LS 평가가 125행 · 음성 20행 · 이벤트 5개뿐이다", "이번 판의 가장 큰 제약이다. NA 304행을 되살리려면 「조사 대상이었음이 확인되나 기록 없음」과 「조사 여부 불명」을 근거별로 갈라야 한다. location_note가 구조화되어 있어 149행은 분류 가능하고, 면적 시트 4개(155행)는 원자료를 다시 봐야 한다.", LS],
-    ["③과 ④·⑤를 결합하지 않았다", "A~J는 전부 기본 규칙 125행으로만 채점했다. predictions_*.csv에 418행 전부의 예측이 있으므로 재학습 없이 재채점만 하면 된다.", WARN],
-    ["c_LS = 1.0, c_LQ ≈ 0.62 를 정식 조건으로 안 돌렸다", "스윕 격자 위의 점으로만 확인했다. 브랜치를 만들어 정식 조건으로 올려야 한다.", GOOD],
+    ["c 의 최적값을 확정하지 않았다", "c를 바꿔 본 것은 0.5 · 0.75 · 1.0 · 2.0 몇 점뿐이다. LS는 1 근처, LQ는 0.5와 0.75 사이로 보이지만 정확한 자리는 모른다. 편향이 0을 지나는 c와 MSE가 최소인 c가 같은 자리인지도 확인하지 않았다.", WARN],
+    ["C·D 의 a_LS 가 상한에 붙었다", "C는 1.977, D는 1.862로 범위 [0.5, 2.0]의 위쪽 끝이다. 찾은 값이 아니라 잘린 값일 수 있다. C를 “자연+혼재에서 유일하게 버티는 조건”으로 인용할 때 같이 말해야 한다.", GOOD],
     ["LQ 최대집계 + 면적 항을 안 해봤다", "가장 좋은 LQ prior(0.8372)와 면적 항을 한 번도 같이 쓰지 않았다. λ = p̄·k 유도가 평균집계를 전제하므로 이론 정리가 먼저다.", LQ],
     ["왜 b를 학습하면 나빠지는지 모른다", "B·C·J의 편향이 −0.27이다. 양성률 84%짜리 좁은 집합에서 우도가 b를 어느 방향으로 끄는지 확인이 필요하다.", INK3],
   ];
@@ -783,7 +605,6 @@ pairSlide("결과", "액상화 LQ — 자기 prior vs posterior",
   s.addText("이전 판은 LS 정답의 NA를 0으로 세었다(418행). 정답지 정의를 확인한 뒤 NA를 평가에서 빼는 원래 규칙으로 되돌렸고, 다음이 뒤집혔다. 모델은 하나도 바뀌지 않았다 — 채점만 바뀌었다.", {
     x: M, y: 1.78, w: 12.1, h: 0.5, isTextBox: true, margin: 0, fontFace: KR, fontSize: 12.5, color: INK2, lineSpacing: 17 });
   const rows = [
-    ["최적 c_LS","0.62","0.99  ≈ 유도값 1"],
     ["A fixed 편향","+0.436  (크게 과대예측)","+0.006"],
     ["E c=0.5 편향","−0.097","−0.494  (무너짐)"],
     ["b 학습 (B·C·J) 편향","+0.08 ~ +0.09  (양호)","−0.27  (최악)"],
