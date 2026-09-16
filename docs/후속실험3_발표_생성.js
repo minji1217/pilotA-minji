@@ -534,8 +534,8 @@ pairSlide("결과", "액상화 LQ — 자기 prior vs posterior",
     x: M, y: 5.84, w: 12.1, h: 0.3, isTextBox: true, margin: 0, fontFace: KR, fontSize: 10.5, color: INK3 });
   note(s, M, 6.16, 5.9, 1.30, "b = 0 고정 조건이 뒤집히는 이유",
     "A·G·H·I는 확률 높이가 묶여 있어 양성률 84%에는 맞지만 18.4%에는 +0.50 과대예측이 된다. b를 학습하는 C는 거기에 맞춰 내려간다.", WARN);
-  note(s, 6.82, 6.16, 5.9, 1.30, "순위(AUC)는 그나마 안정적이다",
-    "자연+혼재에서도 C가 AUC 0.8812로 1위, 보탠양 −0.008로 가장 작다. 눈금(MSE·편향)이 기준에 훨씬 민감하다.", GOOD);
+  note(s, 6.82, 6.16, 5.9, 1.30, "C 의 1위는 추가된 음성 293행이 만든 것이다",
+    "같은 125행에 라벨만 바꾸면 C의 prior도 0.816 → 0.746으로 떨어진다. 다음 장 참고.", WARN);
 }
 
 
@@ -547,8 +547,8 @@ pairSlide("결과", "액상화 LQ — 자기 prior vs posterior",
   const NZP  = [0.8703,0.8703,0.8889,0.8882,0.8891,0.8105,0.8703,0.8703,0.8703,0.8703];
   const NPO  = [0.8541,0.8389,0.8812,0.8599,0.8419,0.8130,0.8577,0.8536,0.8585,0.8391];
   const s = slideBase(false);
-  head(s, "갈래 ③ × ④", "정답을 바꾸면 prior 자체가 올라간다 — AUC로 보면", false);
-  s.addText("같은 모델, 같은 자기 prior 식이다. 정답만 바꿨는데 prior AUC가 0.840 → 0.870으로 오른다. 자연사면 붕괴만 양성으로 세면 USGS 사전모형이 원래 맞히던 것을 제대로 인정받기 때문이다.", {
+  head(s, "갈래 ③ × ④", "prior 가 올라간 것은 정답이 아니라 평가 집합 때문이다", false);
+  s.addText("자연+혼재로 바꾸면 prior AUC가 0.840 → 0.870으로 오른다. 그런데 이 변화에는 두 가지가 섞여 있다 — ① 양성을 자연사면으로 좁힌 것, ② NA 293행을 음성으로 집어넣어 행이 125 → 418로 늘어난 것. 아래에서 둘을 갈랐다.", {
     x: M, y: 1.78, w: 12.1, h: 0.5, isTextBox: true, margin: 0, fontFace: KR, fontSize: 12.5, color: INK2, lineSpacing: 17 });
   s.addChart(pres.ChartType.bar, [
     { name: "자기 prior", labels: AJ, values: BZP },
@@ -570,9 +570,10 @@ pairSlide("결과", "액상화 LQ — 자기 prior vs posterior",
        valAxisMinVal:0.72, valAxisMaxVal:0.92, valAxisLabelFormatCode:"0.00" });
   s.addText("자연+혼재 정답 — 418행 · 양성률 18.4%", { x: 6.82, y: 5.60, w: 5.9, h: 0.28, isTextBox:true, margin:0,
     align:"center", fontFace:KR, fontSize:11, bold:true, color:LQ });
-  note(s, M, 5.94, 12.1, 1.50, "prior가 오르는 만큼 posterior는 못 따라간다",
-    "자기 prior는 0.840 → 0.870(A 기준)으로 +0.030 오르는데 posterior는 0.855 → 0.854로 제자리다. 그래서 기본에서 +0.015이던 보탠양이 자연+혼재에서는 −0.016으로 부호가 바뀐다. " +
-    "예외는 C로, prior 0.889 · posterior 0.881 · 보탠양 −0.008 로 양쪽 모두 가장 작게 깎는다.", WARN);
+  note(s, M, 5.94, 12.1, 1.50, "같은 125행에서 라벨만 바꿔 보면 prior 는 오히려 떨어진다",
+    "A 기준 — 기본 0.8400  →  같은 125행에 자연+혼재 라벨만 0.7199  →  418행 전부 0.8703.  C도 0.8163 → 0.7458 → 0.8889 로 똑같은 모양이다. " +
+    "즉 상승분은 전부 ②(음성 293행 추가)가 만든 것이고, ①(양성을 좁힌 것) 자체는 prior를 −0.12 나쁘게 만든다. " +
+    "“USGS가 자연사면 붕괴를 더 잘 맞힌다”는 해석은 근거가 없다.", WARN);
 }
 
 /* ══════════ 16. 한계와 다음 ══════════ */
