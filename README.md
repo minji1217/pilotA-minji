@@ -1,3 +1,41 @@
+> ### 이 저장소에 대해
+>
+> `minji1217/pilotA`에서 **분리해 나온 개인 작업 저장소**입니다.
+> 원본은 후배와 함께 쓰고 있어 같은 브랜치 이름이 서로 덮어써질 수 있었고,
+> 그것을 피하려고 2026-09-16에 브랜치 25개를 커밋 해시 그대로 미러링했습니다.
+>
+> - **여기(`pilotA-minji`)**: 민지 쪽 작업. 앞으로의 커밋은 이쪽에 쌓입니다.
+> - **원본(`pilotA`)**: 후배 쪽 작업. 분리 시점까지의 이력은 양쪽이 동일합니다.
+>
+> 데이터(`raw/`, `validation/`, `outputs/`)는 `.gitignore`에 있어 저장소에 포함되지 않습니다.
+> 재현하려면 원천 xlsx 3개를 따로 넣고 `python tools/build_dataset.py --area-from-usgs`를 먼저 돌립니다.
+>
+> <details><summary><b>브랜치 지도 (25개)</b></summary>
+>
+> | 브랜치 | 내용 |
+> |---|---|
+> | `main` | 모델 코드 본체 (loader / prior / regression / likelihood / marginal / train / eval) |
+> | `followup1-1-wood` | 후속실험 1 계열. 후속실험 3의 **"3번 기준"** — LQ prior를 **평균**으로 집계 |
+> | `followup1-2-mtn`, `followup1-covariates` | 후속실험 1 계열 |
+> | `followup2-1-wood` | 후속실험 2 계열. 후속실험 3의 **"6번 기준"** — LQ prior를 **최대**로 집계 |
+> | `followup2-prior` | 후속실험 2 계열 |
+> | `followup3-avg-b4`, `followup3-avg-b10` | 갈래 ② b 상한 넓히기 (평균집계 기반, b_max = 4 / 10) |
+> | `followup3-lqmax-b10` | 갈래 ② b 상한 넓히기 (최대집계 기반, b_max = 10) |
+> | `followup3-area-avg-fixed` / `-tied` / `-bounded` / `-free` | 갈래 ④ 면적 항 A · B · C · D |
+> | `followup3-area-avg-a1-c05` / `-a1-c2` | 갈래 ④ 면적 항 E (c=0.5) · F (c=2) |
+> | `followup3-area-avg-lq-c05` / `-lq-c075` / `-lq-c-free` | 갈래 ④ 면적 항 G · H · I (LQ의 c만 변경) |
+> | `followup3-area-avg-b-only` | 갈래 ④ 면적 항 J (b만 학습) |
+> | `followup3-area-avg-*-ctr` (4개) | 중심화를 이름으로 켜던 시절의 조건. 지금은 규칙으로 자동 적용되어 **원본과 결과가 완전히 같아** 실험 목록에서 뺐습니다 |
+> | `claude/relaxed-johnson-iqxeyf` | 후속실험 3 러너(`run_followup3.py`)와 결과 문서(`docs/`) |
+> | `claude/vigilant-wozniak-atum1b` | 이전 발표자료 작업 |
+>
+> 갈래 ②③④의 조건별 파라미터와 결과는
+> `claude/relaxed-johnson-iqxeyf` 브랜치의 `docs/후속실험3_조건표.md`에 정리되어 있습니다.
+>
+> </details>
+
+---
+
 # Pilot A — Disaster Latent-State Probabilistic Model
 
 > 지진 이벤트별 시정촌 피해 데이터와 USGS 사전확률(prior)을 결합해  
