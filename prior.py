@@ -191,7 +191,7 @@ class AreaPrior(nn.Module):
     # 중심화는 b가 흡수하는 재매개변수화라 b를 학습하는 모드에서만 의미가 있다.
     # b=0으로 고정된 모드(fixed / a1-* / lq-*)는 중심화하면 유도식이 깨지므로 넣지 않는다.
     MODES = ("fixed", "tied", "bounded", "free", "a1-c05", "a1-c2",
-             "lq-c05", "lq-c075", "lq-c-free", "b-only",
+             "lq-c05", "lq-c062", "lq-c075", "lq-c-free", "b-only",
              "tied-ctr", "bounded-ctr", "free-ctr", "b-only-ctr")
     # c를 학습하지 않는 모드의 c 값. tied는 c=a라서 여기 없다.
     FIXED_C = {"fixed": 1.0, "bounded": 1.0, "a1-c05": 0.5, "a1-c2": 2.0,
@@ -201,7 +201,11 @@ class AreaPrior(nn.Module):
 
     # c를 hazard별로 두는 모드. (c_LS, c_LQ)이고 "learn"이면 그쪽만 학습한다.
     # LS는 유도식 c=1을 건드리지 않는다 - 실측 편향이 +0.006으로 이미 맞기 때문이다.
-    SPLIT_C = {"lq-c05": (1.0, 0.5), "lq-c075": (1.0, 0.75), "lq-c-free": (1.0, "learn")}
+    # "lq-c062"의 0.62는 사람이 고른 값이 아니다. tools/sweep_c.py가 c_LQ를 0.5~2.0으로
+    # 훑어 예측 편향(평균 예측확률 - 실제 양성률)이 0을 지나는 자리를 0.618로 읽어냈고,
+    # 그 자리를 소수 둘째 자리로 끊은 것이다. G(0.5)와 H(0.75)가 그 값을 사이에 두고 있었다.
+    SPLIT_C = {"lq-c05": (1.0, 0.5), "lq-c062": (1.0, 0.62),
+               "lq-c075": (1.0, 0.75), "lq-c-free": (1.0, "learn")}
 
     A_MIN, A_MAX = 0.5, 2.0
 

@@ -20,7 +20,7 @@ GT_PATH = "validation/LS_LF 데이터자료.xlsx"
 
 # 후속실험 3: 이 브랜치의 prior 조건. followup3-area-avg-<모드> 브랜치마다 이 값만 다르다.
 # z = a·log p̄ + b + c·log k (prior.AreaPrior). None이면 기존 Prior(a·logit(pi)+b)를 쓴다.
-DEFAULT_AREA_MODE = "lq-c075"
+DEFAULT_AREA_MODE = "lq-c062"
 
 
 def save_predictions(batch, p_ls, p_lq, path="outputs/predictions.csv", extra=None):
