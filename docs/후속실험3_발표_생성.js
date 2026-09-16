@@ -330,6 +330,50 @@ const SWM_LQ  = [0.1933,0.1865,0.2493,0.3330,0.3999,0.4512,0.4896];
     x: M, y: 6.66, w: 12.1, h: 0.3, isTextBox: true, margin: 0, fontFace: KR, fontSize: 10.5, color: INK3 });
 }
 
+
+/* ══════════ 9-2. G~J 는 왜 그 값인가 ══════════ */
+{
+  const s = slideBase(false);
+  head(s, "갈래 ④", "G · H · I · J 는 왜 그 값으로 정했나", false);
+  s.addText("A~F를 돌리고 나서 관찰된 것: 같은 c = 1 인데 두 hazard의 눈금이 정반대로 어긋난다.", {
+    x: M, y: 1.78, w: 12.1, h: 0.32, isTextBox: true, margin: 0, fontFace: KR, fontSize: 12.5, color: INK2 });
+  const cmp = [
+    ["산사태 LS 편향","−0.494  무너짐","+0.006  거의 완벽","+0.146"],
+    ["액상화 LQ 편향","−0.103","+0.256  크게 과대","+0.501"],
+  ];
+  s.addTable([
+    ["","c = 0.5  (E)","c = 1.0  (A)","c = 2.0  (F)"].map(h=>({text:h,options:{bold:true,color:INK,fill:{color:BG2}}})),
+    ...cmp.map(r=>r.map((c,i)=>({text:c,options:{align:i?"right":"left",fontFace:i?NUM:KR,
+      color:c.includes("완벽")?GOOD:(c.includes("무너짐")||c.includes("과대"))?LS:INK2,
+      bold:c.includes("완벽")}}))),
+  ], {
+    x: M, y: 2.24, w: 9.4, colW:[2.5,2.3,2.3,2.3], rowH:0.44, fontFace:KR, fontSize:12, valign:"middle",
+    border:{type:"solid",color:"E3E9EC",pt:1}, fill:{color:BG} });
+  s.addText("→ 두 hazard가 서로 다른 c를 원한다.  LS는 유도값 1을 건드리지 말고, LQ만 내려 보자.", {
+    x: M, y: 3.42, w: 12.1, h: 0.34, isTextBox: true, margin: 0,
+    fontFace: KR, fontSize: 13.5, bold: true, color: INK });
+
+  const rows = [
+    ["G","c_LQ = 0.5 고정","E에서 이미 확인된 반대쪽 값. LQ 편향이 −0.103으로 부호가 뒤집히는 지점을 그대로 가져왔다."],
+    ["H","c_LQ = 0.75 고정","관찰값 두 개(0.5 → −0.103, 1.0 → +0.256)로 편향 0 교차점을 선형 추정하면 0.643이다. 0.25 간격 격자에서 그 위쪽 점을 잡았다."],
+    ["I","c_LQ 만 학습","사람이 고르지 말고 우도가 고르게 둔다. c ∈ [0, 2]에서 학습해 0.434로 수렴했다."],
+    ["J","b 만 학습","c를 건드리면 순위까지 같이 움직인다. b는 z에 더해지는 상수라 hazard 안에서 순위를 전혀 바꾸지 않고 확률 높이만 옮긴다 — 눈금을 고치는 올바른 손잡이는 c가 아니라 b라는 가설."],
+  ];
+  rows.forEach(([k,t,d],i)=>{
+    const y = 3.95 + i*0.78;
+    s.addShape(pres.ShapeType.ellipse, { x: M, y: y+0.04, w: 0.34, h: 0.34, fill:{color: k==="J"?GOOD:WARN} });
+    s.addText(k, { x: M, y: y+0.08, w: 0.34, h: 0.28, isTextBox:true, margin:0,
+      align:"center", fontFace:KR, fontSize:12.5, bold:true, color:"FFFFFF" });
+    s.addText(t, { x: M+0.5, y, w: 2.5, h: 0.32, isTextBox:true, margin:0,
+      fontFace:NUM, fontSize:12.5, bold:true, color:INK });
+    s.addText(d, { x: M+3.1, y, w: 9.0, h: 0.66, isTextBox:true, margin:0,
+      fontFace:KR, fontSize:11.5, color:INK2, lineSpacing:16 });
+  });
+  s.addText("⑤ 스윕이 나중에 실제 교차점을 c_LQ ≈ 0.618 로 확정했다.  G(0.5)와 H(0.75)가 정답을 사이에 두고 있었고, 선형 추정 0.643은 0.02 차이로 맞았다.  반면 I가 학습한 0.434는 아래로 지나쳤다.", {
+    x: M, y: 6.95, w: 12.1, h: 0.52, isTextBox: true, margin: 0,
+    fontFace: KR, fontSize: 11.5, bold: true, color: GOOD, lineSpacing: 16 });
+}
+
 /* ══════════ 10. 갈래 ⑤ 상세 ══════════ */
 {
   const s = slideBase(false);
