@@ -676,8 +676,8 @@ pairSlide("결과", "액상화 LQ — 자기 prior vs posterior",
 /* ══════════ 15-2. 정답 규칙이 순위를 뒤집는다 ══════════ */
 {
   const s = slideBase(false);
-  head(s, "갈래 ③ × ④", "A~J 를 자연+혼재 정답으로도 채점했다 — 순위가 뒤집힌다", false);
-  s.addText("④의 열 조건을 ③의 자연+혼재 정답(418행)으로 다시 채점했다. 모델은 한 줄도 바뀌지 않았고 채점 기준만 바꿨다. 그런데 좋은 조건과 나쁜 조건이 정확히 자리를 바꾼다.", {
+  head(s, "갈래 ③ × ④", "A~K 를 자연+혼재 정답으로도 채점했다 — 순위가 뒤집힌다", false);
+  s.addText("④·⑤의 열한 조건을 ③의 자연+혼재 정답(418행)으로 다시 채점했다. 모델은 한 줄도 바뀌지 않았고 채점 기준만 바꿨다. 그런데 좋은 조건과 나쁜 조건이 정확히 자리를 바꾼다.", {
     x: M, y: 1.76, w: 12.1, h: 0.44, isTextBox: true, margin: 0, fontFace: KR, fontSize: 12.5, color: INK2, lineSpacing: 17 });
   const rows = [
     ["C","bounded","0.8031","0.2563","−0.269","0.8812","0.1028","+0.076","b 학습 — 확률 높이를 낮출 수 있다"],
@@ -689,6 +689,7 @@ pairSlide("결과", "액상화 LQ — 자기 prior vs posterior",
     ["G","LQ c=0.5","0.8550","0.0994","+0.008","0.8577","0.4166","+0.504","b = 0 고정"],
     ["H","LQ c=0.75","0.8507","0.0998","+0.007","0.8536","0.4165","+0.503","b = 0 고정"],
     ["I","LQ c 학습","0.8550","0.0993","+0.008","0.8585","0.4167","+0.504","b = 0 고정"],
+    ["K","LQ c=0.62","0.8550","0.0996","+0.007","0.8559","0.4166","+0.503","b = 0 고정 — ⑤가 찾은 조건"],
     ["F","c=2","0.8658","0.1443","+0.146","0.8130","0.7738","+0.782","면적을 두 배로 — 양쪽 다 과대"],
   ];
   s.addTable([
@@ -701,28 +702,28 @@ pairSlide("결과", "액상화 LQ — 자기 prior vs posterior",
                bold:(i===3&&parseFloat(c)<0.1344)||(i===6&&parseFloat(c)<0.1503),
                color:(i===3&&parseFloat(c)<0.1344)||(i===6&&parseFloat(c)<0.1503)?GOOD:INK2,
                fill:{color:i>=2&&i<=4?"FDFAF9":i>=5&&i<=7?"F8FBFC":BG}}}))),
-  ], { x: M, y: 2.58, w: 12.1, colW:[0.42,1.35,0.95,0.95,0.95,0.95,0.95,0.95,4.63], rowH:0.28,
+  ], { x: M, y: 2.58, w: 12.1, colW:[0.42,1.35,0.95,0.95,0.95,0.95,0.95,0.95,4.63], rowH:0.27,
        fontFace:KR, fontSize:10.5, valign:"middle", border:{type:"solid",color:"E3E9EC",pt:1} });
   s.addText("기본 정답 (125행 · 양성률 84.0%)", { x: M+1.77, y: 2.28, w: 2.85, h: 0.26, isTextBox:true, margin:0,
     align:"center", fontFace:KR, fontSize:11, bold:true, color:LS });
   s.addText("자연+혼재 정답 (418행 · 양성률 18.4%)", { x: M+4.62, y: 2.28, w: 2.85, h: 0.26, isTextBox:true, margin:0,
     align:"center", fontFace:KR, fontSize:11, bold:true, color:LQ });
   s.addText("초록 = MSE가 그 기준의 기저확률보다 낮다 (기본 0.1344 / 자연+혼재 0.1503).  AUC는 가중평균.", {
-    x: M, y: 5.62, w: 12.1, h: 0.3, isTextBox: true, margin: 0, fontFace: KR, fontSize: 10.5, color: INK3 });
-  note(s, M, 6.0, 5.9, 1.35, "b = 0 고정 조건이 뒤집히는 이유",
+    x: M, y: 5.84, w: 12.1, h: 0.3, isTextBox: true, margin: 0, fontFace: KR, fontSize: 10.5, color: INK3 });
+  note(s, M, 6.16, 5.9, 1.30, "b = 0 고정 조건이 뒤집히는 이유",
     "A·G·H·I는 확률 높이가 묶여 있어 양성률 84%에는 맞지만 18.4%에는 +0.50 과대예측이 된다. b를 학습하는 C는 거기에 맞춰 내려간다.", WARN);
-  note(s, 6.82, 6.0, 5.9, 1.35, "순위(AUC)는 그나마 안정적이다",
+  note(s, 6.82, 6.16, 5.9, 1.30, "순위(AUC)는 그나마 안정적이다",
     "자연+혼재에서도 C가 AUC 0.8812로 1위, 보탠양 −0.008로 가장 작다. 눈금(MSE·편향)이 기준에 훨씬 민감하다.", GOOD);
 }
 
 
 /* ══════════ 19-2. 자연+혼재 재채점 — prior vs posterior 그래프 ══════════ */
 {
-  const AJ = ["A fixed","B tied","C bounded","D free","E c=0.5","F c=2","G LQ c=0.5","H LQ c=0.75","I LQ c 학습","J b만 학습"];
-  const BZP  = [0.8400,0.8400,0.8163,0.7969,0.8163,0.8679,0.8400,0.8400,0.8400,0.8400];
-  const BPO  = [0.8550,0.8204,0.8031,0.7710,0.7915,0.8658,0.8550,0.8507,0.8550,0.8235];
-  const NZP  = [0.8703,0.8703,0.8889,0.8882,0.8891,0.8105,0.8703,0.8703,0.8703,0.8703];
-  const NPO  = [0.8541,0.8389,0.8812,0.8599,0.8419,0.8130,0.8577,0.8536,0.8585,0.8391];
+  const AJ = ["A fixed","B tied","C bounded","D free","E c=0.5","F c=2","G LQ c=0.5","H LQ c=0.75","I LQ c 학습","J b만 학습","K LQ c=0.62"];
+  const BZP  = [0.8400,0.8400,0.8163,0.7969,0.8163,0.8679,0.8400,0.8400,0.8400,0.8400,0.8400];
+  const BPO  = [0.8550,0.8204,0.8031,0.7710,0.7915,0.8658,0.8550,0.8507,0.8550,0.8235,0.8550];
+  const NZP  = [0.8703,0.8703,0.8889,0.8882,0.8891,0.8105,0.8703,0.8703,0.8703,0.8703,0.8703];
+  const NPO  = [0.8541,0.8389,0.8812,0.8599,0.8419,0.8130,0.8577,0.8536,0.8585,0.8391,0.8559];
   const s = slideBase(false);
   head(s, "갈래 ③ × ④", "정답을 바꾸면 prior 자체가 올라간다 — AUC로 보면", false);
   s.addText("같은 모델, 같은 자기 prior 식이다. 정답만 바꿨는데 prior AUC가 0.840 → 0.870으로 오른다. 자연사면 붕괴만 양성으로 세면 USGS 사전모형이 원래 맞히던 것을 제대로 인정받기 때문이다.", {
@@ -730,26 +731,26 @@ pairSlide("결과", "액상화 LQ — 자기 prior vs posterior",
   s.addChart(pres.ChartType.bar, [
     { name: "자기 prior", labels: AJ, values: BZP },
     { name: "posterior",  labels: AJ, values: BPO },
-  ], { x: M, y: 2.36, w: 5.9, h: 3.35, barDir:"bar", barGrouping:"clustered", barGapWidthPct:28,
+  ], { x: M, y: 2.36, w: 5.9, h: 3.20, barDir:"bar", barGrouping:"clustered", barGapWidthPct:28,
        chartColors:[PRIOR,LS], ...chartFrame(), showLegend:true, legendPos:"t",
        legendFontFace:KR, legendFontSize:10.5, legendColor:INK2,
        showValue:true, dataLabelPosition:"outEnd", dataLabelFormatCode:"0.000",
        valAxisMinVal:0.72, valAxisMaxVal:0.92, valAxisLabelFormatCode:"0.00" });
-  s.addText("기본 정답 — 125행 · 양성률 84.0%", { x: M, y: 5.76, w: 5.9, h: 0.28, isTextBox:true, margin:0,
+  s.addText("기본 정답 — 125행 · 양성률 84.0%", { x: M, y: 5.60, w: 5.9, h: 0.28, isTextBox:true, margin:0,
     align:"center", fontFace:KR, fontSize:11, bold:true, color:LS });
   s.addChart(pres.ChartType.bar, [
     { name: "자기 prior", labels: AJ, values: NZP },
     { name: "posterior",  labels: AJ, values: NPO },
-  ], { x: 6.82, y: 2.36, w: 5.9, h: 3.35, barDir:"bar", barGrouping:"clustered", barGapWidthPct:28,
+  ], { x: 6.82, y: 2.36, w: 5.9, h: 3.20, barDir:"bar", barGrouping:"clustered", barGapWidthPct:28,
        chartColors:[PRIOR,LQ], ...chartFrame(), showLegend:true, legendPos:"t",
        legendFontFace:KR, legendFontSize:10.5, legendColor:INK2,
        showValue:true, dataLabelPosition:"outEnd", dataLabelFormatCode:"0.000",
        valAxisMinVal:0.72, valAxisMaxVal:0.92, valAxisLabelFormatCode:"0.00" });
-  s.addText("자연+혼재 정답 — 418행 · 양성률 18.4%", { x: 6.82, y: 5.76, w: 5.9, h: 0.28, isTextBox:true, margin:0,
+  s.addText("자연+혼재 정답 — 418행 · 양성률 18.4%", { x: 6.82, y: 5.60, w: 5.9, h: 0.28, isTextBox:true, margin:0,
     align:"center", fontFace:KR, fontSize:11, bold:true, color:LQ });
-  note(s, M, 6.12, 12.1, 1.25, "prior가 오르는 만큼 posterior는 못 따라간다",
+  note(s, M, 5.94, 12.1, 1.50, "prior가 오르는 만큼 posterior는 못 따라간다",
     "자기 prior는 0.840 → 0.870(A 기준)으로 +0.030 오르는데 posterior는 0.855 → 0.854로 제자리다. 그래서 기본에서 +0.015이던 보탠양이 자연+혼재에서는 −0.016으로 부호가 바뀐다. " +
-    "예외는 C로, prior 0.889 · posterior 0.881 · 보탠양 −0.008 로 양쪽 모두 가장 작게 깎는다.", WARN);
+    "예외는 C로, prior 0.889 · posterior 0.881 · 보탠양 −0.008 로 양쪽 모두 가장 작게 깎는다.  ⑤가 찾은 K도 여기서는 −0.014로 같이 깎인다 — c_LQ를 고친 것이 LS 채점에는 도움이 되지 않는다.", WARN);
 }
 
 /* ══════════ 16. 한계와 다음 ══════════ */
