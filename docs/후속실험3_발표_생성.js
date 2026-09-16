@@ -55,240 +55,306 @@ const chartFrame = () => ({
   dataLabelFontFace: NUM, dataLabelFontSize: 9, dataLabelColor: INK2,
 });
 
-/* ── 데이터 ─────────────────────────────────────────── */
+/* ── 데이터 (규칙 B, lam_gamma=10) ──────────────────────────── */
+const NL = "\n";
 const NAMES = ["1 3번 b4","2 3번 b10","3 6번 b10","4 3번 자연혼재","5 6번 자연혼재",
-  "A fixed","B tied","C bounded","D free","E c 작게","F c 크게",
+  "A fixed","B tied","C bounded","D free","E c=0.5","F c=2",
   "G LQ c=0.5","H LQ c=0.75","I LQ c 학습","J b만 학습"];
-const GAIN_LS = [-0.0853,-0.0352,-0.0372,-0.0385,-0.0377,
-  -0.0243,-0.0354,-0.0157,-0.0286,-0.0532,0.0005,-0.0204,-0.0230,-0.0200,-0.0384];
-const MSE_LS = [0.1525,0.1498,0.1470,0.1275,0.1242,
-  0.3683,0.1409,0.1148,0.1555,0.1429,0.7068,0.3685,0.3685,0.3684,0.1469];
+const ZP_LS   = [0.7969,0.7969,0.7969,0.8883,0.8883,0.8400,0.8400,0.8163,0.7969,0.8163,0.8679,0.8400,0.8400,0.8400,0.8400];
+const POST_LS = [0.7348,0.7635,0.7506,0.8474,0.8481,0.8550,0.8204,0.8031,0.7710,0.7915,0.8658,0.8550,0.8507,0.8550,0.8235];
+const ZP_LQ   = [0.7154,0.7154,0.8372,0.7154,0.8372,0.7698,0.7698,0.7709,0.7784,0.7570,0.7687,0.7570,0.7725,0.7547,0.7698];
+const POST_LQ = [0.7504,0.7663,0.7753,0.7663,0.7753,0.7812,0.7871,0.7813,0.7814,0.7914,0.7681,0.7905,0.7955,0.7732,0.8100];
+const BIAS_LS = [-0.308,-0.210,-0.211,0.151,0.148,0.006,-0.270,-0.269,-0.192,-0.494,0.146,0.008,0.007,0.008,-0.273];
+const BIAS_LQ = [-0.180,-0.204,-0.204,-0.204,-0.204,0.256,-0.229,-0.214,-0.208,-0.103,0.501,-0.106,0.104,-0.166,-0.192];
+const C_AXIS  = ["0.50","0.75","1.00","1.25","1.50","1.75","2.00"];
+const SW_LS   = [-0.4976,-0.2177,0.0065,0.1062,0.1356,0.1430,0.1464];
+const SW_LQ   = [-0.1055,0.1039,0.2561,0.3612,0.4271,0.4731,0.5008];
+const SWM_LS  = [0.4229,0.1946,0.0997,0.1103,0.1327,0.1414,0.1443];
+const SWM_LQ  = [0.1933,0.1865,0.2493,0.3330,0.3999,0.4512,0.4896];
 
 /* ══════════ 1. 표지 ══════════ */
 {
   const s = slideBase(true);
-  s.addText("PILOT A · 후속실험 3", { x: M, y: 1.7, w: 10, h: 0.35, isTextBox: true, margin: 0,
+  s.addText("PILOT A · 후속실험 3", { x: M, y: 1.65, w: 10, h: 0.35, isTextBox: true, margin: 0,
     fontFace: NUM, fontSize: 13, bold: true, charSpacing: 3, color: INK3 });
-  s.addText("평가 집합을 고치니\n결론이 뒤집혔다", { x: M, y: 2.2, w: 11.4, h: 2.0, isTextBox: true, margin: 0,
+  s.addText("유도식 c = 1 이" + NL + "산사태에서는 맞았다", { x: M, y: 2.15, w: 11.4, h: 2.0, isTextBox: true, margin: 0,
     fontFace: KR, fontSize: 42, bold: true, color: BG, lineSpacing: 54 });
-  s.addText("LS 정답의 69%가 평가에서 빠져 있었다. 되돌리자 양성률이 84%에서 25%로 내려가면서,\n“잘 맞는다”던 조건이 사실은 확률을 0.44만큼 과대추정하고 있었던 것으로 드러났다.", {
-    x: M, y: 4.4, w: 11.4, h: 0.8, isTextBox: true, margin: 0,
-    fontFace: KR, fontSize: 14.5, color: "AFC0CB", lineSpacing: 22 });
-  [["15","실험 조건"],["418","LS 평가 행"],["32,865","비교 쌍"],["9","이벤트"]].forEach(([v,l],i) => {
-    const x = M + i * 2.2;
-    s.addText(v, { x, y: 5.5, w: 2.0, h: 0.68, isTextBox: true, margin: 0,
-      fontFace: NUM, fontSize: 30, bold: true, color: i === 0 ? LS : BG });
-    s.addText(l, { x, y: 6.16, w: 2.0, h: 0.3, isTextBox: true, margin: 0,
-      fontFace: KR, fontSize: 11, color: INK3 });
+  s.addText("면적 항을 유도한 대로 두었을 때(a=1, b=0, c=1) 산사태 예측 편향이 +0.006이다." + NL +
+            "액상화만 c를 0.62로 낮춰야 한다 — 두 hazard가 서로 다른 c를 원한다.", {
+    x: M, y: 4.35, w: 11.4, h: 0.8, isTextBox: true, margin: 0,
+    fontFace: KR, fontSize: 14, color: "AFC0CB", lineSpacing: 22 });
+  const kpi = [["15","실험 조건"],["125","LS 평가 행"],["418","③ 평가 행"],["49","c 스윕 격자"]];
+  kpi.forEach(([v,l],i)=>{
+    const x = M + i*2.5;
+    s.addText(v, { x, y: 5.52, w: 2.3, h: 0.72, isTextBox: true, margin: 0,
+      fontFace: NUM, fontSize: 34, bold: true, color: BG });
+    s.addText(l, { x, y: 6.22, w: 2.3, h: 0.3, isTextBox: true, margin: 0,
+      fontFace: KR, fontSize: 11.5, color: INK3 });
   });
-  s.addNotes("핵심은 평가 집합이 편향돼 있었고, 그걸 고치니 이전 결론 둘이 뒤집혔다는 것.");
 }
 
-/* ══════════ 2. 세 번의 수정 ══════════ */
+/* ══════════ 2. 한 장 요약 ══════════ */
 {
   const s = slideBase(false);
-  head(s, "요약", "결과를 말하기 전에 — 세 가지를 고쳐야 했다", false);
-  const rows = [
-    ["기준선", "원값 prior → 자기 prior",
-     "면적 항 조건의 prior는 z = a·log p̄ + b + c·log k 라 원값과 순위가 다르다", INK3],
-    ["LS GT의 NA", "제외 → 0으로 포함",
-     "LQ는 NA를 0으로 세는데 LS만 뺐다. 그런데 GT 439행 중 304행(69%)이 NA였다", LS],
-    ["중심화", "이름 → 규칙",
-     "-ctr 이름이 붙은 조건만 중심화해서 B·C·D·J는 b를 학습하는데도 빠져 있었다", LQ],
+  head(s, "요약", "네 가지 결론", false);
+  const items = [
+    ["1", "유도식 c = 1 이 산사태에서 정확히 맞는다",
+     "편향이 0을 지나는 곳이 c_LS ≈ 0.99, MSE 최소도 c_LS = 1.0이다. A fixed의 편향 +0.006 / MSE 0.0998로 기저확률 0.1344를 크게 밑돈다. “격자 칸끼리 독립” 가정이 산사태에서는 성립한다.", LS],
+    ["2", "액상화는 c 를 0.62로 낮춰야 한다",
+     "c_LQ ≈ 0.62에서 편향이 0을 지난다. 액상화 감수성이 충적층을 따라 공간적으로 상관돼 유효 칸 수가 명목보다 적다는 뜻이다. 두 hazard가 서로 다른 c를 원한다.", LQ],
+    ["3", "b 를 학습하면 오히려 나빠진다",
+     "b·a를 학습하는 B·C·J가 편향 −0.27, MSE 0.21~0.26으로 최악이다. prior의 자유도를 늘리는 것이 답이 아니다.", WARN],
+    ["4", "피해 데이터의 기여는 판정할 수 없다",
+     "A·G·H·I는 보탠양이 +0.011~+0.015로 양수지만, 부트스트랩 95% 구간이 [−0.041, +0.073]으로 0을 포함한다. LS 평가에 음성이 20행뿐이기 때문이다.", INK3],
   ];
-  rows.forEach(([t, w2, d, c], i) => {
-    const y = 1.95 + i * 1.0;
-    s.addShape(pres.ShapeType.ellipse, { x: M, y: y + 0.12, w: 0.4, h: 0.4, fill: { color: c } });
-    s.addText(String(i + 1), { x: M, y: y + 0.17, w: 0.4, h: 0.3, isTextBox: true, margin: 0,
+  items.forEach(([n,t,d,c],i)=>{
+    const y = 1.85 + i*1.28;
+    s.addShape(pres.ShapeType.ellipse, { x: M, y: y+0.05, w: 0.38, h: 0.38, fill: { color: c } });
+    s.addText(n, { x: M, y: y+0.1, w: 0.38, h: 0.3, isTextBox: true, margin: 0,
       align: "center", fontFace: NUM, fontSize: 14, bold: true, color: "FFFFFF" });
-    s.addText(t, { x: M + 0.6, y: y + 0.04, w: 2.1, h: 0.34, isTextBox: true, margin: 0,
-      fontFace: KR, fontSize: 15, bold: true, color: INK });
-    s.addText(w2, { x: M + 2.75, y: y + 0.04, w: 3.3, h: 0.34, isTextBox: true, margin: 0,
-      fontFace: KR, fontSize: 14, color: c });
-    s.addText(d, { x: M + 0.6, y: y + 0.4, w: 11.4, h: 0.34, isTextBox: true, margin: 0,
-      fontFace: KR, fontSize: 12, color: INK2 });
+    s.addText(t, { x: M+0.58, y, w: 11.6, h: 0.36, isTextBox: true, margin: 0,
+      fontFace: KR, fontSize: 16, bold: true, color: INK });
+    s.addText(d, { x: M+0.58, y: y+0.38, w: 11.6, h: 0.78, isTextBox: true, margin: 0,
+      fontFace: KR, fontSize: 12, color: INK2, lineSpacing: 17 });
   });
-
-  note(s, M, 5.15, 12.1, 1.75, "⚠ 이 중 (2)가 이전 결론 두 개를 뒤집었다",
-    "“A fixed(유도식)가 LS 눈금이 완벽하다”(편향 +0.006)  →  정반대. 편향 +0.436, MSE 0.3683.\n" +
-    "“b를 학습하면 LS 눈금이 무너진다”(편향 −0.27)  →  반대. C bounded 편향 +0.009, MSE 0.1148.\n" +
-    "둘 다 양성률 84%짜리 집합에서 잰 값이었다. 음성이 될 행이 대부분 빠져 있어서 확률을 크게 부풀리는 모형이 “잘 맞는 모형”으로 보였다.", LS);
-  s.addNotes("(2)가 이번 개정의 핵심. 나머지는 그것을 제대로 보기 위한 준비.");
 }
 
-/* ══════════ 3. 평가 집합이 어떻게 바뀌었나 ══════════ */
+/* ══════════ 3. 규칙 ① 학습 ══════════ */
 {
   const s = slideBase(false);
-  head(s, "01", "LS 정답의 69%가 빠져 있었다", false);
-  s.addText("LS와 LQ가 서로 다른 NA 규칙으로 돌고 있었다. LQ의 jshis_flag는 NA를 0으로 세는데 LS는 평가에서 뺐다.", {
-    x: M, y: 1.78, w: 11.6, h: 0.32, isTextBox: true, margin: 0, fontFace: KR, fontSize: 13, color: INK2 });
-
-  s.addChart(pres.ChartType.bar, [
-    { name: "고치기 전", labels: ["LS 평가 행", "양성률 (%)", "AUC 정의 이벤트"], values: [125, 84.0, 5] },
-    { name: "고친 뒤",   labels: ["LS 평가 행", "양성률 (%)", "AUC 정의 이벤트"], values: [418, 25.1, 9] },
-  ], {
-    x: M, y: 2.3, w: 7.0, h: 4.2, barDir: "col", barGrouping: "clustered", barGapWidthPct: 45,
-    chartColors: [PRIOR, LS], ...chartFrame(), showLegend: true, legendPos: "t",
-    legendFontFace: KR, legendFontSize: 11, legendColor: INK2,
-    showValue: true, dataLabelPosition: "outEnd", dataLabelFormatCode: "0.#",
-    valAxisMinVal: 0, valAxisMaxVal: 450, catAxisLabelFontSize: 11,
-  });
-  s.addText("세 지표를 한 축에 놓았다 — 행 수·퍼센트·개수라 크기만 비교한다", {
-    x: M, y: 6.58, w: 7.0, h: 0.3, isTextBox: true, margin: 0, align: "center",
-    fontFace: KR, fontSize: 10.5, color: INK3 });
-
-  note(s, 7.9, 2.3, 4.8, 2.1, "GT 439행 중 304행이 NA",
-    "ls_flag 이벤트 6개: 1=64, 0=15, NA=178\nls_area_ha 이벤트 3개: >0=49, =0=7, NA=126\n\n" +
-    "기록이 없다는 것은 그 시정촌에서 산사태가 확인되지 않았다는 뜻이므로 0으로 센다.", LS);
-  note(s, 7.9, 4.6, 4.8, 2.1, "무엇이 달라지나",
-    "MSE 기저확률 0.1344 → 0.1881\n비교 쌍 2,100 → 32,865 (16배)\n\n" +
-    "불확실성이 크게 줄어 작은 차이도 판별할 수 있게 됐다.", LQ);
-}
-
-/* ══════════ 4. 무엇을 돌렸나 ══════════ */
-{
-  const s = slideBase(false);
-  head(s, "02", "무엇을 돌렸나", false);
-  s.addText("네 갈래 모두 같은 데이터·같은 seed. 조건마다 브랜치가 다르고, 면적 항은 prior.py / loader.py 자체가 다르다.\nGT는 학습에 전혀 쓰지 않는다 — 평가 전용이다.", {
-    x: M, y: 1.78, w: 11.6, h: 0.6, isTextBox: true, margin: 0, fontFace: KR, fontSize: 13, color: INK2, lineSpacing: 19 });
-
+  head(s, "규칙 1/3", "모든 조건이 똑같이 따르는 학습 설정", false);
+  s.addText("조건 사이에서 실제로 달라지는 것은 prior 식의 a · b · c 몇 개뿐이다. 나머지는 전부 같다.", {
+    x: M, y: 1.78, w: 12.1, h: 0.32, isTextBox: true, margin: 0, fontFace: KR, fontSize: 12.5, color: INK2 });
   s.addTable([
-    ["평가 집합", "행", "양성률", "MSE 기저확률"].map(t => ({ text: t, options: { bold: true, color: INK, fill: { color: BG2 } } })),
-    ["LS (기존 GT)", "418", "25.1%", "0.1881"],
-    ["LS (자연+혼재)", "398", "19.3%", "0.1560"],
-    ["LQ", "229", "47.6%", "0.2494"],
-  ].map(r => r.map((c, i) => typeof c === "string"
-      ? { text: c, options: { align: i ? "right" : "left", fontFace: i ? NUM : KR } } : c)), {
-    x: M, y: 2.6, w: 5.6, colW: [2.0, 1.1, 1.2, 1.3], rowH: 0.44,
-    fontFace: KR, fontSize: 12, color: INK2, valign: "middle",
-    border: { type: "solid", color: "E3E9EC", pt: 1 }, fill: { color: BG },
+    ["항목","값"].map(t=>({text:t,options:{bold:true,color:INK,fill:{color:BG2}}})),
+    ["seed","0"],["epoch","3000"],["optimizer","Adam · lr 0.02"],["λ_γ (gamma L2)","10"],
+    ["회귀·likelihood 파라미터","44개 — 모든 조건에서 학습"],
+    ["prior 파라미터","조건마다 0~6개"],
+  ].map(r=>r.map((c,i)=>typeof c==="string"
+      ? {text:c,options:{align:"left",fontFace:i?NUM:KR,color:INK2}} : c)), {
+    x: M, y: 2.24, w: 6.0, colW:[2.7,3.3], rowH:0.4, fontFace:KR, fontSize:12, valign:"middle",
+    border:{type:"solid",color:"E3E9EC",pt:1}, fill:{color:BG},
   });
+  note(s, 6.9, 2.24, 5.8, 2.8, "정답(GT)은 학습에 전혀 쓰지 않는다",
+    "train()이 받는 것은 피해 통계와 USGS prior뿐이다. 정답은 학습이 끝난 뒤 evaluate()에서만 쓰인다." + NL + NL +
+    "그래서 정답 규칙을 바꿔도 모델은 한 줄도 바뀌지 않고 채점만 바뀐다. 같은 시험지를 다시 채점하는 것이지 시험을 다시 보는 것이 아니다.", GOOD);
+  s.addText("피해 통계 XLSX  +  USGS prior XLSX   →   train()   →   posterior" + NL +
+            "LS / LF 정답 XLSX   →   evaluate()   ← 여기서만 쓰인다", {
+    x: M, y: 5.3, w: 12.1, h: 0.9, isTextBox: true, margin: 0,
+    fontFace: NUM, fontSize: 14, color: INK, lineSpacing: 26 });
+  s.addText("조건마다 브랜치가 다르다. 면적 항 조건은 prior.py / loader.py 자체가 다르기 때문에 한 checkout에서 전부 돌 수 없고, run_followup3.py가 조건별로 git worktree를 띄운다.", {
+    x: M, y: 6.4, w: 12.1, h: 0.5, isTextBox: true, margin: 0, fontFace: KR, fontSize: 11.5, color: INK3, lineSpacing: 16 });
+}
 
+/* ══════════ 4. 규칙 ② 정답 ══════════ */
+{
+  const s = slideBase(false);
+  head(s, "규칙 2/3", "정답(GT) 규칙 — 여기서 결론이 갈린다", false);
+  s.addText("NA는 “없었다”가 아니라 “모른다”다. 정답지가 0과 NA를 의도적으로 갈라 놓았다.", {
+    x: M, y: 1.78, w: 12.1, h: 0.32, isTextBox: true, margin: 0, fontFace: KR, fontSize: 12.5, color: INK2 });
+  s.addTable([
+    ["규칙","양성","음성","평가 제외","적용"].map(t=>({text:t,options:{bold:true,color:INK,fill:{color:BG2},fontSize:10.5}})),
+    ["LS 기본","ls_flag = 1\n(또는 면적 > 0)","ls_flag = 0\n(또는 면적 = 0)","NA","① ② ④ ⑤"],
+    ["LS 자연+혼재","ls_type ∈ {자연, 혼재}","그 밖 전부\n(인공·불명·빈칸·NA)","없음","③ (4·5번)"],
+    ["LQ — jshis_flag","1","0 과 NA","없음","구마모토·훗카이도·노토반도"],
+    ["LQ — lq_flag","1","0","NA","나머지 6개 이벤트"],
+  ].map(r=>r.map((c,i)=>typeof c==="string"
+      ? {text:c,options:{align:"left",fontFace:KR,color:INK2}} : c)), {
+    x: M, y: 2.24, w: 12.1, colW:[2.1,2.7,2.9,1.5,2.9], rowH:0.62, fontFace:KR, fontSize:10.5, valign:"middle",
+    border:{type:"solid",color:"E3E9EC",pt:1}, fill:{color:BG},
+  });
+  note(s, M, 5.02, 5.9, 2.0, "왜 LS의 NA를 빼나 — 정답지가 그렇게 적었다",
+    "ls_flag = 0 :「조사표에 행이 있고 산사태 칸만 비었다 = 調査対象이고 0」" + NL +
+    "NA :「調査の有無自体を確認できずNA」「항공사진 판독범위 밖」「신고 기반이라 산지 내부를 못 잡을 수 있어 NA」" + NL +
+    "근거가 적힌 NA 149행 중 “확인 결과 없었다”는 행은 하나도 없다.", LS);
+  note(s, 6.82, 5.02, 5.9, 2.0, "왜 ③만 제외가 없나 — 질문이 다르다",
+    "③이 묻는 것은 “이 시정촌에서 자연사면 붕괴가 확인되었는가”다." + NL +
+    "그 질문에는 인공만 무너졌든, 종별을 모르든, 기록이 아예 없든 답이 모두 “아니오”다." + NL +
+    "반면 기본 규칙의 “산사태가 있었는가”에는 답을 모르는 행이 실제로 있다.", GOOD);
+}
+
+/* ══════════ 5. 규칙 ③ 평가 ══════════ */
+{
+  const s = slideBase(false);
+  head(s, "규칙 3/3", "평가 집합과 지표", false);
+  s.addTable([
+    ["평가 집합","행","양성","음성","이벤트","MSE 기저확률"].map(t=>({text:t,options:{bold:true,color:INK,fill:{color:BG2}}})),
+    ["LS 기본","125","105","20","5","0.1344"],
+    ["LS 자연+혼재","418","77","341","9","0.1503"],
+    ["LQ","229","109","120","6","0.2494"],
+  ].map(r=>r.map((c,i)=>typeof c==="string"
+      ? {text:c,options:{align:i?"right":"left",fontFace:i?NUM:KR,color:INK2}} : c)), {
+    x: M, y: 1.95, w: 7.6, colW:[2.3,0.9,0.9,0.9,1.0,1.6], rowH:0.42, fontFace:KR, fontSize:12, valign:"middle",
+    border:{type:"solid",color:"E3E9EC",pt:1}, fill:{color:BG},
+  });
+  note(s, 8.3, 1.95, 4.4, 1.68, "⚠ LS 음성이 20행뿐이다",
+    "9개 이벤트 중 4개는 음성이 0개라 AUC를 잴 수조차 없어 빠진다. AUC 차이는 통계적으로 구분되지 않는다.", WARN);
+  const defs = [
+    ["가중평균 AUC","이벤트마다 AUC를 재고 그 이벤트의 평가 행 수로 가중평균한다. 이벤트를 섞는 pooled AUC는 다른 지진 사이의 쌍까지 채점해 의미가 없다."],
+    ["원값 prior","USGS p̄ 단독. 면적 항도 학습도 거치지 않은 값."],
+    ["자기 prior","그 조건의 prior sigmoid(z) 단독. 면적 항과 학습된 a·b·c가 들어 있고 피해 데이터만 안 거쳤다."],
+    ["면적항 기여","자기 prior − 원값 prior. 면적 항이 prior 순위에 보탠 양."],
+    ["보탠양","posterior − 자기 prior. 피해 데이터가 보탠 양. 음수면 오히려 깎았다는 뜻."],
+    ["예측 편향","평균 예측확률 − 실제 양성률. 0이 정답. 양수면 과대예측."],
+  ];
+  defs.forEach(([t,d],i)=>{
+    const y = 3.95 + i*0.52;
+    s.addText(t, { x: M, y, w: 2.0, h: 0.32, isTextBox: true, margin: 0,
+      fontFace: KR, fontSize: 12, bold: true, color: INK });
+    s.addText(d, { x: M+2.1, y, w: 10.0, h: 0.42, isTextBox: true, margin: 0,
+      fontFace: KR, fontSize: 11, color: INK2, lineSpacing: 15 });
+  });
+}
+
+/* ══════════ 6. 실험 지도 ══════════ */
+{
+  const s = slideBase(false);
+  head(s, "실험", "네 갈래 15개 조건", false);
   const groups = [
-    ["②", "교수님 피드백 — b 범위", "3개. b 상한을 4 / 10으로 넓혀 안쪽에서 멈추는지", LS],
-    ["③", "자연+혼재 GT 재평가", "2개. 학습은 그대로 두고 LS 정답만 좁힌다", WARN],
-    ["④", "면적 항", "10개. z = a·log p̄ + b + c·log k 의 a·b·c를 어떻게 다룰지", LQ],
-    ["⑤", "면적 계수 c 훑기", "100개. c를 0.3~1.0에서 격자로 돌려 최적값을 찾는다 (④ 결과를 보고 우리가 추가)", GOOD],
+    ["②","교수님 피드백 — b 범위","3개","b 상한을 4 / 10으로 넓혀 안쪽에서 멈추는지 본다","교수님 지시",LS],
+    ["③","자연+혼재 GT 재평가","2개","②의 모델을 그대로 두고 LS 정답만 자연사면으로 좁힌다","교수님 지시",GOOD],
+    ["④","면적 항","10개","z = a·log p̄ + b + c·log k 의 a·b·c를 어떻게 다룰지","A~F 지시 / G~J 추가",LQ],
+    ["⑤","면적 계수 c 훑기","49점+","c를 0.5~2.0 격자로 돌려 최적값을 찾는다","④ 결과를 보고 추가",WARN],
   ];
-  groups.forEach(([n, t, d, c], i) => {
-    const y = 4.55 + i * 0.72;
-    s.addShape(pres.ShapeType.ellipse, { x: M, y: y + 0.06, w: 0.4, h: 0.4, fill: { color: c } });
-    s.addText(n, { x: M, y: y + 0.11, w: 0.4, h: 0.3, isTextBox: true, margin: 0,
-      align: "center", fontFace: KR, fontSize: 13, bold: true, color: "FFFFFF" });
-    s.addText(t, { x: M + 0.6, y: y, w: 4.4, h: 0.32, isTextBox: true, margin: 0,
-      fontFace: KR, fontSize: 14, bold: true, color: INK });
-    s.addText(d, { x: M + 0.6, y: y + 0.32, w: 11.4, h: 0.32, isTextBox: true, margin: 0,
-      fontFace: KR, fontSize: 11.5, color: INK2 });
+  groups.forEach(([n,t,cnt,d,src,c],i)=>{
+    const y = 2.0 + i*1.22;
+    card(s, { x: M, y, w: 12.1, h: 1.05, fill: BG2 });
+    s.addShape(pres.ShapeType.ellipse, { x: M+0.3, y: y+0.3, w: 0.46, h: 0.46, fill: { color: c } });
+    s.addText(n, { x: M+0.3, y: y+0.36, w: 0.46, h: 0.34, isTextBox: true, margin: 0,
+      align: "center", fontFace: KR, fontSize: 14, bold: true, color: "FFFFFF" });
+    s.addText(t, { x: M+0.95, y: y+0.18, w: 5.0, h: 0.34, isTextBox: true, margin: 0,
+      fontFace: KR, fontSize: 15, bold: true, color: INK });
+    s.addText(cnt + " · " + src, { x: M+0.95, y: y+0.56, w: 5.0, h: 0.3, isTextBox: true, margin: 0,
+      fontFace: KR, fontSize: 11, color: INK3 });
+    s.addText(d, { x: M+6.2, y: y+0.34, w: 5.6, h: 0.5, isTextBox: true, margin: 0,
+      fontFace: KR, fontSize: 12, color: INK2, lineSpacing: 16 });
   });
-
-  note(s, 6.6, 2.6, 6.1, 1.76, "모두 lam_gamma = 10 · 3000 epoch · seed 0",
-    "면적 항 10개 조건 모두 lam_gamma=10이 최선이었다.\n" +
-    "회귀·likelihood 파라미터 44개는 모든 조건에서 학습한다. 표의 ‘학습’은 prior의 a·b·c 중 학습 개수다.", INK3);
+  s.addText("모두 같은 데이터 · 같은 seed · lam_gamma = 10.  정답은 학습에 쓰지 않으므로 ③은 학습을 다시 하지 않는다.", {
+    x: M, y: 6.95, w: 12.1, h: 0.3, isTextBox: true, margin: 0, fontFace: KR, fontSize: 11.5, color: INK3 });
 }
 
-/* ══════════ 4-3. 조건 설계 ① — 갈래 ②·③ ══════════ */
+/* ══════════ 7. 갈래 ② 상세 ══════════ */
 {
   const s = slideBase(false);
-  head(s, "04", "조건 설계 ① — 갈래 ②·③ (교수님 지시)", false);
-  s.addText("면적 항이 없는 조건이다. prior 식은  z = a·logit(p̄) + b  하나뿐이고, 여기서 a는 USGS 값을 얼마나 믿을지(기울기), b는 확률 수준을 위아래로 옮기는 값(높이)이다.", {
-    x: M, y: 1.78, w: 12.1, h: 0.5, isTextBox: true, margin: 0,
-    fontFace: KR, fontSize: 12, color: INK2 });
-
+  head(s, "갈래 ②", "교수님 피드백 — b 상한을 넓히면 안쪽에서 멈추는가", false);
+  s.addText("prior 식은  z = a · logit(p̄) + b  하나뿐이다(면적 항 없음). a는 USGS 값을 얼마나 믿을지(기울기), b는 확률 수준을 위아래로 옮기는 값(높이)이고, a ∈ [0.5, 2]다.", {
+    x: M, y: 1.78, w: 12.1, h: 0.5, isTextBox: true, margin: 0, fontFace: KR, fontSize: 12.5, color: INK2, lineSpacing: 17 });
   const rows = [
-    ["기준","3번 기준","평균","[−2, 2]","1.989","6314.7","작년 실험. 비교 출발점"],
-    ["기준","6번 기준","최대","[−2, 4]","3.956","6288.3","작년 실험. LQ만 집계 방식이 다르다"],
-    ["1","3번 b4","평균","[−2, 4]","3.954","6305.5","b 상한을 4로 넓혀 본다"],
-    ["2","3번 b10","평균","[−2, 10]","9.523","6301.4","b 상한을 10까지 넓혀 본다"],
-    ["3","6번 b10","최대","[−2, 10]","9.589","6282.5","2번과 같되 LQ를 최대집계로"],
-    ["4","3번 자연혼재","평균","—","9.523","6301.4","2번 모델 그대로. 정답만 자연+혼재로"],
-    ["5","6번 자연혼재","최대","—","9.589","6282.5","3번 모델 그대로. 정답만 자연+혼재로"],
+    ["기준","3번 기준","followup1-1-wood","평균","[−2, 2]","1.989","작년 실험. 비교 출발점"],
+    ["기준","6번 기준","followup2-1-wood","최대","[−2, 4]","3.956","작년 실험. LQ 집계만 다르다"],
+    ["1","3번 b4","followup3-avg-b4","평균","[−2, 4]","3.954 ⚠","b 상한을 4로 넓혀 본다"],
+    ["2","3번 b10","followup3-avg-b10","평균","[−2, 10]","9.523 ⚠","b 상한을 10까지 넓혀 본다"],
+    ["3","6번 b10","followup3-lqmax-b10","최대","[−2, 10]","9.589 ⚠","2번과 같되 LQ를 최대집계로"],
   ];
-  const hi = new Set(["1", "2", "3", "4", "5"]);
-  const hdr = ["#","이름","LQ 집계","b 범위","학습된 b_LS","NLL","무엇을 보려는 조건인가"];
+  const hi = new Set(["1","2","3"]);
   s.addTable([
-    hdr.map((h, i) => ({ text: h, options: { bold: true, color: INK, fill: { color: BG2 },
-      align: i >= 2 && i <= 5 ? "right" : "left", fontSize: 10.5 } })),
-    ...rows.map(r => r.map((c, i) => ({
-      text: c,
-      options: { align: i >= 2 && i <= 5 ? "right" : "left", fontFace: i >= 3 && i <= 5 ? NUM : KR,
-                 bold: hi.has(r[0]), color: hi.has(r[0]) ? INK : INK3,
-                 fill: { color: hi.has(r[0]) ? BG : "FAFCFD" } },
-    }))),
-  ], {
-    x: M, y: 2.34, w: 12.1, colW: [0.62, 1.75, 1.0, 1.15, 1.35, 1.1, 5.13],
-    rowH: 0.34, fontFace: KR, fontSize: 10.5, valign: "middle",
-    border: { type: "solid", color: "E3E9EC", pt: 1 },
-  });
-
-  note(s, M, 5.22, 5.9, 1.6, "② b를 넓혀도 계속 상한에 붙는다",
-    "최적값을 찾은 게 아니라 잘린 것이라 상한을 4 → 10으로 넓혀 봤는데 3.954 / 9.523 으로 " +
-    "또 끝에 붙는다. 3번과 6번의 차이는 LQ를 시정촌 안 격자들의 평균으로 볼지 최대로 볼지 하나뿐이다.", WARN);
-  note(s, 6.82, 5.22, 5.9, 1.6, "③ 은 모델을 다시 학습하지 않는다",
-    "학습에 정답을 전혀 쓰지 않으므로 같은 seed면 모델이 똑같고 채점 기준만 바뀐다. " +
-    "자연·혼재 → 양성 / 인공 → 음성(채점 포함) / 불명 → 채점 제외.  418행 → 398행.", GOOD);
+    ["#","이름","브랜치","LQ 집계","b 범위","학습된 b_LS","무엇을 보려는 조건인가"].map((h,i)=>
+      ({text:h,options:{bold:true,color:INK,fill:{color:BG2},align:i>=3&&i<=5?"right":"left",fontSize:10.5}})),
+    ...rows.map(r=>r.map((c,i)=>({text:c,
+      options:{align:i>=3&&i<=5?"right":"left",fontFace:i>=4&&i<=5?NUM:KR,
+               bold:hi.has(r[0]),color:hi.has(r[0])?INK:INK3,fill:{color:hi.has(r[0])?BG:"FAFCFD"}}}))),
+  ], { x: M, y: 2.42, w: 12.1, colW:[0.6,1.5,2.9,1.0,1.15,1.45,3.5], rowH:0.36,
+       fontFace:KR, fontSize:10.5, valign:"middle", border:{type:"solid",color:"E3E9EC",pt:1} });
+  note(s, M, 4.62, 5.9, 2.2, "⚠ 답: 안 멈춘다",
+    "b_LS가 상한 4에서 3.954, 상한 10에서 9.523으로 둘 다 끝에 붙는다." + NL +
+    "최적값을 찾은 것이 아니라 잘린 것이다." + NL + NL +
+    "규칙 B에서 다시 보면 이 조건들은 편향이 −0.21 ~ −0.31로 확률을 크게 과소예측한다. b를 키우는 방향 자체가 틀렸다.", WARN);
+  note(s, 6.82, 4.62, 5.9, 2.2, "3번 vs 6번의 차이는 하나뿐",
+    "LQ prior를 시정촌 안 격자들의 평균으로 집계하느냐, 최대로 집계하느냐." + NL + NL +
+    "최대집계가 LQ prior AUC를 0.7154 → 0.8372로 크게 올린다. 그런데 posterior는 0.775에 그쳐 −0.062로 오히려 깎는다 — 좋아진 prior를 모델이 망가뜨린다.", LQ);
 }
 
-/* ══════════ 4-4. 면적 항이란 무엇인가 + 조건 A~J ══════════ */
+/* ══════════ 8. 갈래 ③ 상세 ══════════ */
 {
   const s = slideBase(false);
-  head(s, "04", "조건 설계 ② — 갈래 ④ 면적 항", false);
+  head(s, "갈래 ③", "자연+혼재 재평가 — 학습을 다시 하지 않는다", false);
+  s.addText("USGS 산사태 사전모형(Nowicki Jessee 2018)이 설명하는 것은 자연사면의 붕괴다. 그런데 정답의 양성에는 성토·옹벽·법면 같은 인공사면 붕괴가 섞여 있다. 모형이 원리적으로 맞힐 수 없는 사건까지 양성으로 세고 있는 셈이라, 자연·혼재만 양성으로 두고 다시 채점한다.", {
+    x: M, y: 1.78, w: 12.1, h: 0.72, isTextBox: true, margin: 0, fontFace: KR, fontSize: 12.5, color: INK2, lineSpacing: 18 });
+  s.addTable([
+    ["#","이름","실행 브랜치","결과 이름","평가"].map(h=>({text:h,options:{bold:true,color:INK,fill:{color:BG2},fontSize:10.5}})),
+    ["4","3번 자연혼재","followup3-avg-b10  (2번과 동일)","followup3-avg-b10-natmix","418행"],
+    ["5","6번 자연혼재","followup3-lqmax-b10  (3번과 동일)","followup3-lqmax-b10-natmix","418행"],
+  ].map(r=>r.map(c=>typeof c==="string"?{text:c,options:{align:"left",fontFace:KR,color:INK2}}:c)), {
+    x: M, y: 2.62, w: 12.1, colW:[0.6,2.0,4.3,3.6,1.6], rowH:0.4, fontFace:KR, fontSize:11, valign:"middle",
+    border:{type:"solid",color:"E3E9EC",pt:1}, fill:{color:BG} });
+  note(s, M, 3.75, 5.9, 1.55, "브랜치를 따로 만들지 않는다",
+    "학습이 정답을 전혀 쓰지 않으므로 같은 seed면 모델이 완전히 같다. 2·3번 브랜치에서 --gt-variant natmix 옵션만 켜고 결과 파일 이름으로 구분한다.", GOOD);
+  note(s, 6.82, 3.75, 5.9, 1.55, "평가가 넓어진다",
+    "125행(양성률 84%) → 418행(양성률 18.4%). 제외하는 행이 없기 때문이다. 음성이 20행 → 341행이 되어 AUC가 훨씬 안정된다.", GOOD);
+  s.addChart(pres.ChartType.bar, [
+    { name: "자기 prior", labels: ["4 3번 자연혼재","5 6번 자연혼재"], values: [0.8883,0.8883] },
+    { name: "posterior",  labels: ["4 3번 자연혼재","5 6번 자연혼재"], values: [0.8474,0.8481] },
+  ], { x: M, y: 5.5, w: 5.9, h: 1.5, barDir:"bar", barGrouping:"clustered", barGapWidthPct:30,
+       chartColors:[PRIOR,GOOD], ...chartFrame(), showLegend:true, legendPos:"b",
+       legendFontFace:KR, legendFontSize:10, legendColor:INK2,
+       showValue:true, dataLabelPosition:"outEnd", dataLabelFormatCode:"0.000",
+       valAxisMinVal:0.7, valAxisMaxVal:0.95, valAxisLabelFormatCode:"0.0" });
+  note(s, 6.82, 5.5, 5.9, 1.5, "여기서도 posterior가 prior를 못 넘는다",
+    "−0.041 / −0.040. LS MSE는 0.1404 / 0.1371로 기저확률 0.1503을 밑돌아 눈금은 괜찮다. 편향은 +0.15로 과대예측이 남는다.", INK3);
+}
+
+/* ══════════ 9. 갈래 ④ 상세 ══════════ */
+{
+  const s = slideBase(false);
+  head(s, "갈래 ④", "면적 항 A~J — 무엇을 왜 넣었나", false);
   s.addText("z = a · log p̄ + b + c · (log k − m)      k = 시정촌 면적 ÷ 격자 한 칸 넓이", {
-    x: M, y: 1.76, w: 7.4, h: 0.3, isTextBox: true, margin: 0,
-    fontFace: NUM, fontSize: 13.5, bold: true, color: INK });
-  s.addText("USGS 값 p̄는 '발생 확률'이 아니라 '격자 한 칸 중 덮이는 면적 비율'이다. " +
-            "그래서 넓은 시정촌일수록 한 곳이라도 무너질 확률이 높다. 그 면적을 식에 넣은 것이 c·log k 항이고, " +
-            "유도대로면 a=1, b=0, c=1 이다. 면적 항이 있는 조건만 logit이 아니라 log를 쓰는 이유도 " +
-            "면적을 곱셈(λ = p̄·k)으로 넣으려면 로그가 되어야 하기 때문이다.", {
-    x: M, y: 2.12, w: 12.1, h: 0.62, isTextBox: true, margin: 0,
-    fontFace: KR, fontSize: 11.5, color: INK2, lineSpacing: 16 });
-
+    x: M, y: 1.76, w: 8.0, h: 0.3, isTextBox: true, margin: 0, fontFace: NUM, fontSize: 13.5, bold: true, color: INK });
+  s.addText("USGS 값 p̄는 “발생 확률”이 아니라 “격자 한 칸 중 덮이는 면적 비율”이다. 넓은 시정촌일수록 한 곳이라도 무너질 확률이 높다. 칸이 독립이면 λ = p̄ × k 이고 P(하나라도) = 1 − exp(−λ). 포화를 피해 순위가 같은 log λ = log p̄ + log k 를 쓴다 — 그래서 a=1, b=0, c=1 이 유도식 그대로이고, 면적 항이 있는 조건만 logit이 아니라 log를 쓴다.", {
+    x: M, y: 2.1, w: 12.1, h: 0.66, isTextBox: true, margin: 0, fontFace: KR, fontSize: 11.5, color: INK2, lineSpacing: 16 });
   const rows = [
-    ["지시","A","fixed","1.00","0.00","1.00","1.00","0.00","1.00","0","아무것도 학습 안 함. 유도식 그대로 — 기준점"],
-    ["지시","B","tied","0.89","4.91","= a","0.50","0.80","= a","4","면적의 힘을 USGS의 힘과 같게 묶고 크기만 학습"],
-    ["지시","C","bounded","1.98","11.06","1.00","0.51","0.83","1.00","4","면적의 힘은 1로 두고 기울기·높이만 학습"],
-    ["지시","D","free","1.86","11.49","0.01","0.50","0.91","0.78","6","여섯 값 전부 데이터에 맡긴다"],
-    ["지시","E","a1-c05","1.00","0.00","0.50","1.00","0.00","0.50","0","면적의 영향을 절반으로 줄여 고정"],
-    ["지시","F","a1-c2","1.00","0.00","2.00","1.00","0.00","2.00","0","면적의 영향을 두 배로 키워 고정"],
-    ["추가","G","lq-c05","1.00","0.00","1.00","1.00","0.00","0.50","0","액상화 쪽 면적 영향만 절반 (LS는 A와 동일)"],
-    ["추가","H","lq-c075","1.00","0.00","1.00","1.00","0.00","0.75","0","액상화 쪽만 0.75 (LS는 A와 동일)"],
-    ["추가","I","lq-c-free","1.00","0.00","1.00","1.00","0.00","0.43","1","액상화 쪽 면적 영향만 데이터가 고른다"],
-    ["요청","J","b-only","1.00","5.53","1.00","1.00","2.69","1.00","2","순위는 유도식 그대로, 확률 높이만 학습"],
+    ["지시","A","fixed","avg-fixed","1.00","0.00","1.00","1.00","0.00","1.00","0","아무것도 학습 안 함 — 기준점"],
+    ["지시","B","tied","avg-tied","0.89","4.91","= a","0.50","0.80","= a","4","면적의 힘을 USGS와 같게 묶고 크기만 학습"],
+    ["지시","C","bounded","avg-bounded","1.98","11.06","1.00","0.51","0.83","1.00","4","면적의 힘은 1로 두고 기울기·높이만 학습"],
+    ["지시","D","free","avg-free","1.86","11.49","0.01","0.50","0.91","0.78","6","여섯 값 전부 데이터에 맡긴다"],
+    ["지시","E","c=0.5","avg-a1-c05","1.00","0.00","0.50","1.00","0.00","0.50","0","면적의 영향을 절반으로 줄여 고정"],
+    ["지시","F","c=2","avg-a1-c2","1.00","0.00","2.00","1.00","0.00","2.00","0","면적의 영향을 두 배로 키워 고정"],
+    ["추가","G","lq-c05","avg-lq-c05","1.00","0.00","1.00","1.00","0.00","0.50","0","액상화 쪽만 절반 (LS는 A와 동일)"],
+    ["추가","H","lq-c075","avg-lq-c075","1.00","0.00","1.00","1.00","0.00","0.75","0","액상화 쪽만 0.75 (LS는 A와 동일)"],
+    ["추가","I","lq-c-free","avg-lq-c-free","1.00","0.00","1.00","1.00","0.00","0.43","1","액상화 쪽 c만 데이터가 고른다"],
+    ["요청","J","b-only","avg-b-only","1.00","5.53","1.00","1.00","2.69","1.00","2","순위는 유도식대로, 확률 높이만 보정"],
   ];
-  const srcFill = { "지시": "FAFCFD", "추가": "FFF6EC", "요청": "EAF4EE" };
-  const hdr = ["출처","","mode","a_LS","b_LS","c_LS","a_LQ","b_LQ","c_LQ","학습","무엇을 보려는 조건인가"];
+  const fill = { "지시":"FAFCFD", "추가":"FFF6EC", "요청":"EAF4EE" };
   s.addTable([
-    hdr.map((h, i) => ({ text: h, options: { bold: true, color: INK, fill: { color: BG2 },
-      align: i >= 3 && i <= 9 ? "right" : "left", fontSize: 10 } })),
-    ...rows.map(r => r.map((c, i) => ({
-      text: c,
-      options: { align: i >= 3 && i <= 9 ? "right" : "left",
-                 fontFace: i >= 3 && i <= 8 ? NUM : KR,
-                 bold: i === 1, color: INK2, fill: { color: srcFill[r[0]] } },
-    }))),
-  ], {
-    x: M, y: 2.86, w: 12.1, colW: [0.62, 0.42, 1.12, 0.78, 0.86, 0.78, 0.78, 0.78, 0.78, 0.6, 4.58],
-    rowH: 0.27, fontFace: KR, fontSize: 10, valign: "middle",
-    border: { type: "solid", color: "E3E9EC", pt: 1 },
-  });
-
-  s.addText("a = USGS 값을 얼마나 믿을지(기울기)     b = 확률 수준을 위아래로 옮기는 값(높이)     c = 시정촌 면적을 얼마나 반영할지", {
-    x: M, y: 5.98, w: 12.1, h: 0.3, isTextBox: true, margin: 0,
-    fontFace: KR, fontSize: 11.5, color: INK2 });
-  s.addText("출처 —  회색: 교수님이 지시하신 A~F     주황: 실험 도중 우리가 만든 G·H·I     초록: 민지님이 요청한 J", {
-    x: M, y: 6.34, w: 12.1, h: 0.3, isTextBox: true, margin: 0,
-    fontFace: KR, fontSize: 11.5, bold: true, color: WARN });
-  s.addText("b를 학습하는 B·C·D·J는 b 범위가 [−20, 20]이고 log k를 평균 중심화한다(m = LS 8.042 / LQ 6.656). 나머지는 b=0 고정이라 중심화하지 않는다 — 빼면 유도식이 깨진다.", {
-    x: M, y: 6.68, w: 12.1, h: 0.3, isTextBox: true, margin: 0,
-    fontFace: KR, fontSize: 10.5, color: INK3 });
+    ["출처","","이름","브랜치 followup3-","a_LS","b_LS","c_LS","a_LQ","b_LQ","c_LQ","학습","무엇을 보려는 조건인가"].map((h,i)=>
+      ({text:h,options:{bold:true,color:INK,fill:{color:BG2},align:i>=4&&i<=10?"right":"left",fontSize:9.5}})),
+    ...rows.map(r=>r.map((c,i)=>({text:c,
+      options:{align:i>=4&&i<=10?"right":"left",fontFace:i>=4&&i<=9?NUM:KR,
+               bold:i===1,color:INK2,fill:{color:fill[r[0]]}}}))),
+  ], { x: M, y: 2.92, w: 12.1, colW:[0.6,0.38,1.0,1.85,0.72,0.82,0.72,0.72,0.72,0.72,0.58,3.27],
+       rowH:0.27, fontFace:KR, fontSize:9.5, valign:"middle", border:{type:"solid",color:"E3E9EC",pt:1} });
+  s.addText("a = USGS를 얼마나 믿을지(기울기)     b = 확률 높이     c = 면적을 얼마나 반영할지     ‘학습’은 prior의 a·b·c 중 학습하는 개수 (회귀 44개는 늘 학습)", {
+    x: M, y: 5.98, w: 12.1, h: 0.3, isTextBox: true, margin: 0, fontFace: KR, fontSize: 11, color: INK2 });
+  s.addText("출처 —  회색: 교수님이 지시하신 A~F     주황: 실험 도중 우리가 만든 G·H·I     초록: 요청으로 추가한 J", {
+    x: M, y: 6.32, w: 12.1, h: 0.3, isTextBox: true, margin: 0, fontFace: KR, fontSize: 11, bold: true, color: WARN });
+  s.addText("b를 학습하는 B·C·D·J는 b 범위가 [−20, 20]이고 log k를 평균 중심화한다(m = LS 8.042 / LQ 6.656). b=0 고정 조건은 중심화하지 않는다 — 빼면 유도식이 깨진다.", {
+    x: M, y: 6.66, w: 12.1, h: 0.3, isTextBox: true, margin: 0, fontFace: KR, fontSize: 10.5, color: INK3 });
 }
 
-/* ══════════ 4-2. 전체 결과 한 장 — 자기 prior vs posterior ══════════ */
-const NL = "\n";   // 줄바꿈을 문자열에 직접 넣으면 소스가 깨져서 상수로 둔다
-const ZP_LS   = [0.8778,0.8778,0.8778,0.9023,0.9023,0.8850,0.8850,0.8969,0.8776,0.8967,0.8373,0.8850,0.8850,0.8850,0.8850];
-const POST_LS = [0.7925,0.8426,0.8405,0.8638,0.8646,0.8607,0.8496,0.8812,0.8490,0.8435,0.8379,0.8646,0.8620,0.8650,0.8466];
-const ZP_LQ   = [0.7154,0.7154,0.8372,0.7154,0.8372,0.7698,0.7698,0.7709,0.7784,0.7570,0.7687,0.7570,0.7725,0.7547,0.7698];
-const POST_LQ = [0.7504,0.7663,0.7753,0.7663,0.7753,0.7812,0.7871,0.7813,0.7814,0.7914,0.7681,0.7905,0.7955,0.7732,0.8100];
+/* ══════════ 10. 갈래 ⑤ 상세 ══════════ */
+{
+  const s = slideBase(false);
+  head(s, "갈래 ⑤", "면적 계수 c 훑기 — 유도값 1이 정말 맞나", false);
+  s.addText("④에서 c를 0.5 / 1 / 2 세 점으로만 봤다. 그 사이와 바깥을 직접 돌려 편향이 0을 지나는 c를 찾는다. AreaPrior(mode=\"grid\")로 c_LS와 c_LQ를 직접 지정하고 a=1, b=0은 고정하므로 prior에서 학습하는 값이 0개다 — 순수하게 c만 다른 실험이다.", {
+    x: M, y: 1.78, w: 12.1, h: 0.56, isTextBox: true, margin: 0, fontFace: KR, fontSize: 12.5, color: INK2, lineSpacing: 17 });
+  s.addTable([
+    ["항목","값"].map(t=>({text:t,options:{bold:true,color:INK,fill:{color:BG2}}})),
+    ["브랜치","followup3-area-sweep"],
+    ["거친 격자","c_LS × c_LQ ∈ {0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0}  =  49점"],
+    ["미세 격자","최적점 주변 0.05 간격"],
+    ["학습 prior 파라미터","0개"],
+    ["검증","격자점 (1.0, 1.0)이 조건 A와 완전히 일치"],
+  ].map(r=>r.map((c,i)=>typeof c==="string"?{text:c,options:{align:"left",fontFace:i?NUM:KR,color:INK2}}:c)), {
+    x: M, y: 2.5, w: 12.1, colW:[2.6,9.5], rowH:0.4, fontFace:KR, fontSize:11.5, valign:"middle",
+    border:{type:"solid",color:"E3E9EC",pt:1}, fill:{color:BG} });
+  note(s, M, 5.1, 5.9, 1.8, "두 hazard의 c는 서로 간섭하지 않는다",
+    "한쪽 c를 0.5~2.0으로 바꿔도 다른 쪽 편향은 0.004 안에서만 움직인다." + NL +
+    "c_LS와 c_LQ를 따로 골라도 된다는 뜻이고, 실제로 두 값이 크게 다르게 나왔다.", GOOD);
+  note(s, 6.82, 5.1, 5.9, 1.8, "왜 재학습이 필요한가",
+    "정답은 학습에 안 쓰이지만 c는 prior를 바꾸므로 posterior가 달라진다. 그래서 c마다 회귀 44개를 새로 적합한다." + NL +
+    "한 점에 14초, 49점에 12분이다.", INK3);
+}
 
+/* ══════════ 11-12. 결과 — prior vs posterior ══════════ */
 function pairSlide(kicker, title, dek, zp, post, col, capt, noteT, noteB) {
   const s = slideBase(false);
   head(s, kicker, title, false);
@@ -297,438 +363,161 @@ function pairSlide(kicker, title, dek, zp, post, col, capt, noteT, noteB) {
   s.addChart(pres.ChartType.bar, [
     { name: "자기 prior", labels: NAMES, values: zp },
     { name: "posterior",  labels: NAMES, values: post },
-  ], {
-    x: M, y: 2.2, w: 8.0, h: 4.6, barDir: "bar", barGrouping: "clustered", barGapWidthPct: 25,
-    chartColors: [PRIOR, col], ...chartFrame(), showLegend: true, legendPos: "t",
-    legendFontFace: KR, legendFontSize: 11, legendColor: INK2,
-    showValue: true, dataLabelPosition: "outEnd", dataLabelFormatCode: "0.000",
-    valAxisMinVal: 0.5, valAxisMaxVal: 1.0, valAxisLabelFormatCode: "0.0",
-  });
-  s.addText(capt, { x: M, y: 6.85, w: 8.0, h: 0.3, isTextBox: true, margin: 0, align: "center",
+  ], { x: M, y: 2.2, w: 8.0, h: 4.6, barDir:"bar", barGrouping:"clustered", barGapWidthPct:25,
+       chartColors:[PRIOR,col], ...chartFrame(), showLegend:true, legendPos:"t",
+       legendFontFace:KR, legendFontSize:11, legendColor:INK2,
+       showValue:true, dataLabelPosition:"outEnd", dataLabelFormatCode:"0.000",
+       valAxisMinVal:0.65, valAxisMaxVal:0.95, valAxisLabelFormatCode:"0.0" });
+  s.addText(capt, { x: M, y: 6.85, w: 8.0, h: 0.3, isTextBox: true, margin: 0, align:"center",
     fontFace: KR, fontSize: 10.5, color: INK3 });
   note(s, 8.85, 2.2, 3.85, 4.6, noteT, noteB, col);
 }
-
-pairSlide("03", "전체 결과 한 장 — 산사태 LS",
-  "회색이 자기 prior 단독, 색이 posterior다. 색 막대가 회색보다 짧으면 피해 데이터가 오히려 깎았다는 뜻이다.",
-  ZP_LS, POST_LS, LS, "가중평균 AUC · 가로축은 0.5(무작위)에서 시작",
-  "15개 중 14개가 짧다",
-  "posterior가 자기 prior를 넘은 것은 F 하나뿐이고 그마저 +0.0005다." + NL + NL +
-  "4·5번은 자연+혼재 GT라 prior 기준선이 0.878 → 0.902로 함께 올라간다." + NL + NL +
-  "비교 쌍이 32,865개로 16배 늘었는데도 방향이 바뀌지 않았다.");
-
-pairSlide("04", "전체 결과 한 장 — 액상화 LQ",
-  "같은 방식으로 LQ를 본다. 이쪽은 방향이 반대다.",
-  ZP_LQ, POST_LQ, LQ, "가중평균 AUC · 가로축은 0.5(무작위)에서 시작",
-  "대부분 posterior가 더 길다",
-  "LQ에서는 13개 조건이 자기 prior를 넘는다(+0.003 ~ +0.040). J가 +0.040으로 1위다." + NL + NL +
+pairSlide("결과", "산사태 LS — 자기 prior vs posterior",
+  "회색이 자기 prior 단독, 색이 posterior다. 색 막대가 회색보다 길어야 피해 데이터가 보탠 것이 있다.",
+  ZP_LS, POST_LS, LS, "가중평균 AUC · ①②④는 125행 / ③은 418행",
+  "A · G · H · I 가 넘는다",
+  "네 조건 모두 c_LS = 1 이고 b = 0 고정이다. 보탠양 +0.011 ~ +0.015." + NL + NL +
+  "⚠ 다만 부트스트랩 95% 구간이 [−0.041, +0.073]으로 0을 포함한다. LS 평가에 음성이 20행뿐이라 AUC로는 판정할 수 없다." + NL + NL +
+  "F(c=2)는 prior가 0.868로 가장 높지만 편향 +0.146으로 눈금이 나쁘다 — 순위가 좋은 c와 눈금이 맞는 c가 다르다.");
+pairSlide("결과", "액상화 LQ — 자기 prior vs posterior",
+  "LQ는 정답 규칙을 바꾸지 않았다. 229행 그대로다.",
+  ZP_LQ, POST_LQ, LQ, "가중평균 AUC · 229행 · 양성률 47.6%",
+  "대부분 보탠다",
+  "15개 중 13개가 자기 prior를 넘는다(+0.003 ~ +0.040). J(b만 학습)가 0.8100 / +0.040으로 1위다." + NL + NL +
   "예외는 3·5번(LQ 최대집계)과 F다. 3·5번은 prior가 0.837로 가장 좋은데 posterior가 0.775에 그쳐 −0.062로 가장 크게 깎는다." + NL + NL +
-  "좋아진 prior를 모델이 오히려 망가뜨린다.");
+  "LS와 정반대 그림이다.");
 
-/* ══════════ 5. LS 보탠 양 ══════════ */
+/* ══════════ 13. 결과 — 예측 편향 ══════════ */
 {
   const s = slideBase(false);
-  head(s, "05", "피해 데이터가 LS에 보탠 양", false);
-  s.addText("posterior AUC − 자기 prior AUC (가중평균). 0보다 커야 피해 데이터가 보탠 것이 있다.", {
-    x: M, y: 1.78, w: 11.6, h: 0.32, isTextBox: true, margin: 0, fontFace: KR, fontSize: 13, color: INK2 });
-
-  s.addChart(pres.ChartType.bar, [{ name: "LS 보탠 양", labels: NAMES, values: GAIN_LS }], {
-    x: M, y: 2.2, w: 7.9, h: 4.6, barDir: "bar", barGapWidthPct: 40,
-    chartColors: [LS], ...chartFrame(),
-    showValue: true, dataLabelPosition: "outEnd", dataLabelFormatCode: "+0.000;-0.000",
-    valAxisMinVal: -0.10, valAxisMaxVal: 0.015, valAxisLabelFormatCode: "0.00",
-  });
-
-  note(s, 8.75, 2.2, 3.95, 2.3, "15개 중 14개가 음수",
-    "유일한 양수 F(+0.0005)는 LS MSE 0.7068, 편향 +0.715로 다른 모든 지표에서 최악이다.\n\n" +
-    "비교 쌍이 32,865개로 16배 늘었는데도 방향이 바뀌지 않는다.", LS);
-  note(s, 8.75, 4.7, 3.95, 2.1, "LQ는 반대다",
-    "LQ에서는 대부분 보탠다(+0.003 ~ +0.040).\n\n" +
-    "지금 모델에서 피해 데이터가 LS에 보태는 것이 없다는 것이 이번 실험의 가장 큰 발견이다.", LQ);
-  s.addNotes("부트스트랩: A −0.017 [−0.039,+0.007], C +0.011 [−0.011,+0.035], E −0.039 [−0.064,−0.012].");
+  head(s, "결과", "예측 편향 — 여기가 진짜 지표다", false);
+  s.addText("평균 예측확률 − 실제 양성률. 0이 정답이고 양수면 과대예측이다. 음성이 20행뿐이라 AUC는 못 믿지만 편향과 MSE는 행 전체를 쓰므로 훨씬 안정적이다.", {
+    x: M, y: 1.78, w: 12.1, h: 0.5, isTextBox: true, margin: 0, fontFace: KR, fontSize: 12.5, color: INK2, lineSpacing: 17 });
+  s.addChart(pres.ChartType.bar, [{ name:"LS 편향", labels: NAMES, values: BIAS_LS }], {
+    x: M, y: 2.4, w: 5.9, h: 4.0, barDir:"bar", chartColors:[LS], ...chartFrame(),
+    showValue:true, dataLabelPosition:"outEnd", dataLabelFormatCode:"0.000",
+    valAxisMinVal:-0.55, valAxisMaxVal:0.55, valAxisLabelFormatCode:"0.0" });
+  s.addChart(pres.ChartType.bar, [{ name:"LQ 편향", labels: NAMES, values: BIAS_LQ }], {
+    x: 6.82, y: 2.4, w: 5.9, h: 4.0, barDir:"bar", chartColors:[LQ], ...chartFrame(),
+    showValue:true, dataLabelPosition:"outEnd", dataLabelFormatCode:"0.000",
+    valAxisMinVal:-0.55, valAxisMaxVal:0.55, valAxisLabelFormatCode:"0.0" });
+  s.addText("산사태 LS — 실제 양성률 0.840", { x: M, y: 6.45, w: 5.9, h: 0.28, isTextBox:true, margin:0,
+    align:"center", fontFace:KR, fontSize:11, color:INK3 });
+  s.addText("액상화 LQ — 실제 양성률 0.476", { x: 6.82, y: 6.45, w: 5.9, h: 0.28, isTextBox:true, margin:0,
+    align:"center", fontFace:KR, fontSize:11, color:INK3 });
+  s.addText("A · G · H · I 는 LS 편향이 0.008 안이다.  b를 학습하는 B · C · J 는 −0.27 로 최악이고, E(c=0.5)는 −0.494 로 무너진다.", {
+    x: M, y: 6.82, w: 12.1, h: 0.3, isTextBox:true, margin:0, fontFace:KR, fontSize:12, bold:true, color:INK });
 }
 
-/* ══════════ 6. c = 1 은 확률을 부풀린다 ══════════ */
+/* ══════════ 14. 결과 — c 스윕 ══════════ */
 {
   const s = slideBase(false);
-  head(s, "06", "c = 1 은 확률을 부풀린다 — 두 hazard 모두", false);
-  s.addText("USGS 값 p̄는 칸 면적 중 덮일 비율이다. 칸이 독립이면 λ = p̄ × k 이고 순위가 같은 log λ 를 쓴다.\n그래서 c = 1이 유도식 그대로다 — 그런데 그 독립 가정이 맞지 않는다.", {
-    x: M, y: 1.78, w: 11.6, h: 0.6, isTextBox: true, margin: 0, fontFace: KR, fontSize: 13, color: INK2, lineSpacing: 19 });
-
-  s.addChart(pres.ChartType.bar, [
-    { name: "산사태 LS", labels: ["c = 0.5", "c = 1.0", "c = 2.0"], values: [-0.097, 0.436, 0.715] },
-    { name: "액상화 LQ", labels: ["c = 0.5", "c = 1.0", "c = 2.0"], values: [-0.103, 0.256, 0.501] },
-  ], {
-    x: M, y: 2.5, w: 7.0, h: 4.0, barDir: "col", barGrouping: "clustered", barGapWidthPct: 45,
-    chartColors: [LS, LQ], ...chartFrame(), showLegend: true, legendPos: "t",
-    legendFontFace: KR, legendFontSize: 11, legendColor: INK2,
-    showValue: true, dataLabelPosition: "outEnd", dataLabelFormatCode: "+0.000;-0.000",
-    valAxisMinVal: -0.25, valAxisMaxVal: 0.85, valAxisLabelFormatCode: "0.0", catAxisLabelFontSize: 12,
-  });
-  s.addText("예측 편향 = 평균 예측확률 − 실제 양성률 (LS 0.251 / LQ 0.476)", {
-    x: M, y: 6.58, w: 7.0, h: 0.3, isTextBox: true, margin: 0, align: "center",
-    fontFace: KR, fontSize: 10.5, color: INK3 });
-
-  note(s, 7.9, 2.5, 4.8, 1.95, "이전 판이 왜 반대로 보였나",
-    "평가 집합이 양성 84%였다. 그러면 “거의 다 양성이라 찍는 모형”이 잘 맞는 것처럼 보인다.\n" +
-    "실제 양성률이 0.251로 내려가자 A fixed의 평균 예측 0.687이 정체를 드러냈다.", LS);
-  note(s, 7.9, 4.65, 4.8, 1.85, "LS의 최적 c도 0.5~1 사이다",
-    "LQ와 같은 방향이다. 칸이 공간적으로 상관되어 1 − ∏(1−pᵢ)가 과대추정한다는 뜻이다.\n" +
-    "“LS는 유도식 c=1이 맞다”는 이전 진단은 착시였다.", LQ);
-}
-
-/* ══════════ 7. b를 학습하면 교정된다 ══════════ */
-{
-  const s = slideBase(false);
-  head(s, "07", "b를 학습하면 교정된다", false);
-  s.addText("b는 z에 더해지는 상수라 hazard 안에서 순위를 바꾸지 않고 확률 수준만 옮긴다. 중심화까지 적용하니 제 역할을 한다.", {
-    x: M, y: 1.78, w: 11.6, h: 0.32, isTextBox: true, margin: 0, fontFace: KR, fontSize: 13, color: INK2 });
-
-  s.addChart(pres.ChartType.bar, [{ name: "LS MSE", labels: NAMES, values: MSE_LS }], {
-    x: M, y: 2.2, w: 7.9, h: 4.6, barDir: "bar", barGapWidthPct: 40,
-    chartColors: [LQ], ...chartFrame(),
-    showValue: true, dataLabelPosition: "outEnd", dataLabelFormatCode: "0.000",
-    valAxisMinVal: 0, valAxisMaxVal: 0.78, valAxisLabelFormatCode: "0.0",
-  });
-  s.addText("LS MSE (낮을수록 좋음) — 기저확률 베이스라인 0.1881", {
-    x: M, y: 6.85, w: 7.9, h: 0.3, isTextBox: true, margin: 0, align: "center",
-    fontFace: KR, fontSize: 10.5, color: INK3 });
-
-  note(s, 8.75, 2.2, 3.95, 2.55, "C bounded − A fixed (LS)",
-    "AUC  +0.0205  [+0.000, +0.042]   경계\nMSE  −0.2535  [−0.292, −0.217]   유의\n\n" +
-    "가중평균 기준이다. AUC 우위는 하한이 0에 닿아 경계선이고, MSE 우위는 확실하다.\nC는 기저확률(0.1881)을 넘는 유일한 면적 조건이고 편향은 +0.009다.", GOOD);
-  note(s, 8.75, 4.9, 3.95, 2.0, "A·G·H·I가 0.37로 튄다",
-    "넷 다 c_LS = 1 이고 b = 0 고정이다.\n" +
-    "순위(AUC)는 나쁘지 않은데 확률 수준이 두 배 넘게 부풀려져 MSE가 무너진다.", LS);
-}
-
-/* ══════════ 8. 전체 결과 표 ══════════ */
-{
-  const s = slideBase(false);
-  head(s, "08", "전체 결과 15개 조건", false);
-  const rows = [
-    ["1","3번 b4","a·b","—","—","0.7925","−0.085","0.1525","+0.063","0.7504","+0.035","0.2280"],
-    ["2","3번 b10","a·b","—","—","0.8426","−0.035","0.1498","+0.084","0.7663","+0.051","0.2428"],
-    ["3","6번 b10","a·b","—","—","0.8405","−0.037","0.1470","+0.081","0.7753","−0.062","0.2409"],
-    ["4","3번 자연혼재","a·b","—","—","0.8638","−0.039","0.1275","+0.134","0.7663","+0.051","0.2428"],
-    ["5","6번 자연혼재","a·b","—","—","0.8646","−0.038","0.1242","+0.131","0.7753","−0.062","0.2409"],
-    ["A","fixed","0","1.00","1.00","0.8607","−0.024","0.3683","+0.436","0.7812","+0.011","0.2497"],
-    ["B","tied","4","0.89","0.50","0.8496","−0.035","0.1409","+0.089","0.7871","+0.017","0.2530"],
-    ["C","bounded","4","1.00","1.00","0.8812","−0.016","0.1148","+0.009","0.7813","+0.010","0.2507"],
-    ["D","free","6","0.01","0.78","0.8490","−0.029","0.1555","+0.091","0.7814","+0.003","0.2411"],
-    ["E","c 작게","0","0.50","0.50","0.8435","−0.053","0.1429","−0.097","0.7914","+0.034","0.1932"],
-    ["F","c 크게","0","2.00","2.00","0.8379","+0.001","0.7068","+0.715","0.7681","−0.001","0.4896"],
-    ["G","LQ c=0.5","0","1.00","0.50","0.8646","−0.020","0.3685","+0.437","0.7905","+0.034","0.1929"],
-    ["H","LQ c=0.75","0","1.00","0.75","0.8620","−0.023","0.3685","+0.436","0.7955","+0.023","0.1868"],
-    ["I","LQ c 학습","1","1.00","0.43","0.8650","−0.020","0.3684","+0.437","0.7732","+0.019","0.2155"],
-    ["J","b만 학습","2","1.00","1.00","0.8466","−0.038","0.1469","+0.083","0.8100","+0.040","0.2217"],
-  ];
-  const hi = new Set(["C", "E", "J"]);
-  const hdr = ["#","이름","학습","c_LS","c_LQ","LS AUC","LS 보탠양","LS MSE","LS 편향","LQ AUC","LQ 보탠양","LQ MSE"];
-  s.addTable([
-    hdr.map((h, i) => ({ text: h, options: { bold: true, color: INK, fill: { color: BG2 },
-      align: i >= 2 ? "right" : "left", fontSize: 10 } })),
-    ...rows.map(r => r.map((c, i) => ({
-      text: c,
-      options: { align: i >= 2 ? "right" : "left", fontFace: i >= 2 ? NUM : KR,
-                 bold: hi.has(r[0]), color: hi.has(r[0]) ? INK : INK2,
-                 fill: { color: hi.has(r[0]) ? "EAF4EE" : BG } },
-    }))),
-  ], {
-    x: M, y: 1.95, w: 12.1, colW: [0.45, 1.5, 0.7, 0.75, 0.75, 1.15, 1.25, 1.1, 1.1, 1.15, 1.25, 1.1],
-    rowH: 0.3, fontFace: KR, fontSize: 10, valign: "middle",
-    border: { type: "solid", color: "E3E9EC", pt: 1 },
-  });
-  s.addText("‘보탠양’ = posterior AUC − 자기 prior AUC (가중평균).  기저확률 MSE: LS 0.1881(4·5번은 0.1560) / LQ 0.2494.  초록 = 아래 슬라이드의 세 후보.", {
-    x: M, y: 6.85, w: 12.1, h: 0.3, isTextBox: true, margin: 0, fontFace: KR, fontSize: 10.5, color: INK3 });
-}
-
-/* ══════════ 9. ③ 자연+혼재 ══════════ */
-{
-  const s = slideBase(false);
-  head(s, "09", "③ 자연+혼재는 여전히 유효하다", false);
-  s.addText("USGS 산사태 사전모형이 설명하는 것은 자연사면의 붕괴인데, GT의 양성에는 성토·옹벽·법면 같은\n인공사면 붕괴가 섞여 있었다. 평가 집합을 고친 뒤에도 이 결론은 그대로다.", {
-    x: M, y: 1.78, w: 11.6, h: 0.6, isTextBox: true, margin: 0, fontFace: KR, fontSize: 13, color: INK2, lineSpacing: 19 });
-
-  s.addChart(pres.ChartType.bar, [
-    { name: "자기 prior", labels: ["기존 GT (2번)", "자연+혼재 (4번)"], values: [0.8778, 0.9023] },
-    { name: "posterior",  labels: ["기존 GT (2번)", "자연+혼재 (4번)"], values: [0.8426, 0.8638] },
-  ], {
-    x: M, y: 2.5, w: 6.4, h: 3.9, barDir: "col", barGrouping: "clustered", barGapWidthPct: 50,
-    chartColors: [PRIOR, WARN], ...chartFrame(), showLegend: true, legendPos: "t",
-    legendFontFace: KR, legendFontSize: 11, legendColor: INK2,
-    showValue: true, dataLabelPosition: "outEnd", dataLabelFormatCode: "0.000",
-    valAxisMinVal: 0.80, valAxisMaxVal: 0.93, valAxisLabelFormatCode: "0.00", catAxisLabelFontSize: 12,
-  });
-  s.addText("LS AUC — 모델은 그대로, 정답만 바꿨을 때", {
-    x: M, y: 6.48, w: 6.4, h: 0.3, isTextBox: true, margin: 0, align: "center",
-    fontFace: KR, fontSize: 10.5, color: INK3 });
-
-  note(s, 7.3, 2.5, 5.4, 2.0, "모델을 한 줄도 바꾸지 않았다",
-    "그런데 자기 prior가 0.8778 → 0.9023으로 오른다. 원래 맞히고 있던 것을 그동안 틀렸다고 채점하고 있었다는 뜻이다.\n" +
-    "posterior 0.8426 → 0.8638, MSE 0.1498 → 0.1275.", WARN);
-  note(s, 7.3, 4.7, 5.4, 2.1, "⚠ 그런데 LQ 최대집계는 반대다",
-    "LQ prior를 최대집계로 바꾸면 prior 자체의 AUC가 0.7154 → 0.8372로 크게 오른다.\n" +
-    "그런데 posterior는 0.7753에 그친다 — 자기 prior보다 0.062 낮다. 좋아진 prior를 모델이 깎아먹는다.", LQ);
-}
-
-/* ══════════ 10. 어느 조건을 쓸 것인가 ══════════ */
-{
-  const s = slideBase(false);
-  head(s, "10", "어느 조건을 쓸 것인가 — 트레이드오프다", false);
-  s.addText("네 지표를 모두 통과하는 조건은 없다. LS 보탠양이 양수인 것이 F뿐이고 F는 나머지가 최악이기 때문이다.\n그 지표를 빼고 보면 셋이 갈린다.", {
-    x: M, y: 1.78, w: 11.6, h: 0.6, isTextBox: true, margin: 0, fontFace: KR, fontSize: 13, color: INK2, lineSpacing: 19 });
-
-  const cands = [
-    ["C bounded", "순위가 중요할 때", [["LS AUC","0.8812",1],["LS MSE","0.1148",1],["LS 편향","+0.009",1],
-      ["LQ AUC","0.7813",0],["LQ MSE","0.2507",-1],["LQ 편향","−0.214",0]], LQ],
-    ["E c = 0.5", "확률 눈금이 중요할 때", [["LS AUC","0.8435",0],["LS MSE","0.1429",1],["LS 편향","−0.097",0],
-      ["LQ AUC","0.7914",0],["LQ MSE","0.1932",1],["LQ 편향","−0.103",1]], GOOD],
-    ["J b만 학습", "LQ가 중요할 때", [["LS AUC","0.8466",0],["LS MSE","0.1469",1],["LS 편향","+0.083",0],
-      ["LQ AUC","0.8100",1],["LQ MSE","0.2217",1],["LQ 편향","−0.192",0]], LS],
-  ];
-  cands.forEach(([nm, use, metrics, col], i) => {
-    const x = M + i * 4.1;
-    card(s, { x, y: 2.6, w: 3.85, h: 4.0, fill: BG2 });
-    s.addShape(pres.ShapeType.rect, { x: x + 0.3, y: 2.86, w: 0.16, h: 0.16, fill: { color: col } });
-    s.addText(nm, { x: x + 0.56, y: 2.78, w: 3.0, h: 0.34, isTextBox: true, margin: 0,
-      fontFace: KR, fontSize: 16, bold: true, color: INK });
-    s.addText(use, { x: x + 0.3, y: 3.16, w: 3.25, h: 0.3, isTextBox: true, margin: 0,
-      fontFace: KR, fontSize: 12, color: col });
-    metrics.forEach(([k, v, good], j) => {
-      const y = 3.6 + j * 0.45;
-      s.addText(k, { x: x + 0.3, y, w: 1.52, h: 0.3, isTextBox: true, margin: 0,
-        fontFace: KR, fontSize: 11.5, color: INK2 });
-      s.addText(v, { x: x + 1.9, y, w: 1.65, h: 0.3, isTextBox: true, margin: 0, align: "right",
-        fontFace: NUM, fontSize: 13, bold: good === 1,
-        color: good === 1 ? GOOD : good === -1 ? LS : INK2 });
-    });
-  });
-  s.addText("C는 LS AUC 1위에 눈금도 거의 완벽하지만 LQ MSE가 기저확률(0.2494)에 0.0013 차이로 미달한다.  E는 학습 파라미터 0개로 평균 MSE·최대 편향 모두 1위다.  J는 LQ AUC와 보탠양이 모두 1위다.", {
-    x: M, y: 6.75, w: 12.1, h: 0.4, isTextBox: true, margin: 0, fontFace: KR, fontSize: 11, color: INK3 });
-}
-
-/* ══════════ 10-2. ⑤ 면적 계수 c 훑기 — 설계와 결과 ══════════ */
-const C_AXIS  = ["0.3","0.4","0.5","0.6","0.7","0.8","0.9","1.0"];
-const BIAS_LS = [-0.2002,-0.1562,-0.0964,-0.0216, 0.0773, 0.1982, 0.3248, 0.4362];
-const BIAS_LQ = [-0.2755,-0.1940,-0.1042,-0.0147, 0.0673, 0.1396, 0.2023, 0.2566];
-const MSE_LS_C= [ 0.1912, 0.1656, 0.1448, 0.1336, 0.1457, 0.1931, 0.2735, 0.3684];
-const MSE_LQ_C= [ 0.2767, 0.2282, 0.1927, 0.1776, 0.1806, 0.1962, 0.2203, 0.2499];
-
-{
-  const s = slideBase(false);
-  head(s, "10", "⑤ 면적 계수 c 를 훑었다 — 유도값 1은 틀렸다", false);
-  s.addText("④에서 c = 1이 두 hazard 모두 확률을 크게 부풀리는 것이 드러났다(LS +0.436 / LQ +0.256). " +
-            "c를 0.5로 내리면 부호가 뒤집히니 그 사이 어딘가가 정답이다. 그래서 c를 0.3부터 1.0까지 직접 돌려 봤다 — " +
-            "a=1, b=0 고정이라 prior에서 학습하는 값이 하나도 없는, 순수하게 c만 다른 100번의 학습이다.", {
-    x: M, y: 1.78, w: 12.1, h: 0.62, isTextBox: true, margin: 0,
-    fontFace: KR, fontSize: 12.5, color: INK2, lineSpacing: 17 });
-
+  head(s, "갈래 ⑤ 결과", "산사태는 c = 1, 액상화는 c = 0.62", false);
+  s.addText("c를 0.5부터 2.0까지 직접 돌린 결과다. 편향이 0을 지나는 자리가 두 hazard에서 크게 다르다.", {
+    x: M, y: 1.78, w: 12.1, h: 0.32, isTextBox: true, margin: 0, fontFace: KR, fontSize: 12.5, color: INK2 });
   s.addChart(pres.ChartType.line, [
-    { name: "산사태 LS", labels: C_AXIS, values: BIAS_LS },
-    { name: "액상화 LQ", labels: C_AXIS, values: BIAS_LQ },
-  ], {
-    x: M, y: 2.52, w: 5.9, h: 3.0, chartColors: [LS, LQ], ...chartFrame(),
-    showLegend: true, legendPos: "t", legendFontFace: KR, legendFontSize: 11, legendColor: INK2,
-    lineSize: 3, lineSmooth: false, showValue: false,
-    valAxisMinVal: -0.35, valAxisMaxVal: 0.5, valAxisLabelFormatCode: "0.0",
-  });
-  s.addText("예측 편향 = 평균 예측확률 − 실제 양성률.  가로축 c.  0이 정답이다.", {
-    x: M, y: 5.56, w: 5.9, h: 0.28, isTextBox: true, margin: 0, align: "center",
-    fontFace: KR, fontSize: 10.5, color: INK3 });
-
+    { name: "산사태 LS", labels: C_AXIS, values: SW_LS },
+    { name: "액상화 LQ", labels: C_AXIS, values: SW_LQ },
+  ], { x: M, y: 2.3, w: 5.9, h: 3.1, chartColors:[LS,LQ], ...chartFrame(),
+       showLegend:true, legendPos:"t", legendFontFace:KR, legendFontSize:11, legendColor:INK2,
+       lineSize:3, lineSmooth:false, valAxisMinVal:-0.55, valAxisMaxVal:0.55, valAxisLabelFormatCode:"0.0" });
+  s.addText("예측 편향 — 0이 정답.  가로축 c", { x: M, y: 5.45, w: 5.9, h: 0.28, isTextBox:true, margin:0,
+    align:"center", fontFace:KR, fontSize:10.5, color:INK3 });
   s.addChart(pres.ChartType.line, [
-    { name: "산사태 LS", labels: C_AXIS, values: MSE_LS_C },
-    { name: "액상화 LQ", labels: C_AXIS, values: MSE_LQ_C },
-  ], {
-    x: 6.82, y: 2.52, w: 5.9, h: 3.0, chartColors: [LS, LQ], ...chartFrame(),
-    showLegend: true, legendPos: "t", legendFontFace: KR, legendFontSize: 11, legendColor: INK2,
-    lineSize: 3, lineSmooth: false, showValue: false,
-    valAxisMinVal: 0.1, valAxisMaxVal: 0.4, valAxisLabelFormatCode: "0.0",
-  });
-  s.addText("MSE (낮을수록 좋음).  기저확률은 LS 0.1881 / LQ 0.2494 — 이보다 낮아야 의미가 있다.", {
-    x: 6.82, y: 5.56, w: 5.9, h: 0.28, isTextBox: true, margin: 0, align: "center",
-    fontFace: KR, fontSize: 10.5, color: INK3 });
-
-  note(s, M, 5.9, 5.9, 1.3, "두 hazard의 c는 서로 간섭하지 않는다",
-    "한쪽 c를 0.3~1.0으로 바꿔도 다른 쪽 편향은 0.003 안에서만 움직인다. 따로 골라도 된다.", null);
-  note(s, 6.82, 5.9, 5.9, 1.3, "편향이 0을 지나는 곳은 둘 다 0.62 근처",
-    "c_LS ≈ 0.624, c_LQ ≈ 0.616 (0.58~0.68을 0.02 간격으로 다시 확인). MSE 최소도 같은 자리다.", GOOD);
+    { name: "산사태 LS", labels: C_AXIS, values: SWM_LS },
+    { name: "액상화 LQ", labels: C_AXIS, values: SWM_LQ },
+  ], { x: 6.82, y: 2.3, w: 5.9, h: 3.1, chartColors:[LS,LQ], ...chartFrame(),
+       showLegend:true, legendPos:"t", legendFontFace:KR, legendFontSize:11, legendColor:INK2,
+       lineSize:3, lineSmooth:false, valAxisMinVal:0.0, valAxisMaxVal:0.55, valAxisLabelFormatCode:"0.0" });
+  s.addText("MSE — 낮을수록 좋음.  기저확률 LS 0.1344 / LQ 0.2494", { x: 6.82, y: 5.45, w: 5.9, h: 0.28,
+    isTextBox:true, margin:0, align:"center", fontFace:KR, fontSize:10.5, color:INK3 });
+  note(s, M, 5.82, 5.9, 1.32, "산사태 — 유도값이 맞는다",
+    "편향 0 교차 c_LS ≈ 0.99, MSE 최소 c_LS = 1.0 (0.0997). “칸끼리 독립” 가정이 성립한다.", LS);
+  note(s, 6.82, 5.82, 5.9, 1.32, "액상화 — 낮춰야 한다",
+    "편향 0 교차 c_LQ ≈ 0.62, MSE 최소 0.625 (0.1765). 감수성이 충적층을 따라 상관돼 유효 칸 수가 적다.", LQ);
 }
 
-/* ══════════ 10-3. ⑤ 결과 — 새 조건 K ══════════ */
+/* ══════════ 15. 전체 결과 표 ══════════ */
 {
   const s = slideBase(false);
-  head(s, "10", "⑤ 결과 — 두 hazard를 동시에 만족하는 조건이 처음 나왔다", false);
-  s.addText("c_LS = c_LQ = 0.62 로 묶은 것을 조건 K라 부른다. 기존 15개 조건과 나란히 놓으면 이렇다.", {
-    x: M, y: 1.78, w: 12.1, h: 0.32, isTextBox: true, margin: 0,
-    fontFace: KR, fontSize: 12.5, color: INK2 });
-
+  head(s, "결과", "전체 15개 조건", false);
   const rows = [
-    ["K","c = 0.62","0","0.8352","0.1335 ✓","−0.004","0.7848","0.1774 ✓","+0.003","눈금은 둘 다 완벽, 순위는 중간"],
-    ["C","bounded","4","0.8812","0.1148 ✓","+0.009","0.7813","0.2507 ✗","−0.214","LS 순위 1위, LQ 눈금이 기저 미달"],
-    ["E","c = 0.5","0","0.8435","0.1429 ✓","−0.097","0.7914","0.1932 ✓","−0.103","둘 다 과소예측이 남는다"],
-    ["J","b만 학습","2","0.8466","0.1469 ✓","+0.083","0.8100","0.2217 ✓","−0.192","LQ 순위 1위, LQ 눈금이 처진다"],
-    ["A","유도식 c = 1","0","0.8607","0.3683 ✗","+0.436","0.7812","0.2497 ✗","+0.256","둘 다 확률을 크게 부풀린다"],
+    ["1","3번 b4","125","0.797","0.797","0.735","−0.062","0.2793","−0.308","0.750","+0.035","0.2280","−0.180"],
+    ["2","3번 b10","125","0.797","0.797","0.763","−0.033","0.2510","−0.210","0.766","+0.051","0.2428","−0.204"],
+    ["3","6번 b10","125","0.797","0.797","0.751","−0.046","0.2524","−0.211","0.775","−0.062","0.2409","−0.204"],
+    ["4","3번 자연혼재","418","0.888","0.888","0.847","−0.041","0.1404","+0.151","0.766","+0.051","0.2428","−0.204"],
+    ["5","6번 자연혼재","418","0.888","0.888","0.848","−0.040","0.1371","+0.148","0.775","−0.062","0.2409","−0.204"],
+    ["A","fixed","125","0.797","0.840","0.855","+0.015","0.0998","+0.006","0.781","+0.011","0.2497","+0.256"],
+    ["B","tied","125","0.797","0.840","0.820","−0.020","0.2148","−0.270","0.787","+0.017","0.2530","−0.229"],
+    ["C","bounded","125","0.797","0.816","0.803","−0.013","0.2563","−0.269","0.781","+0.010","0.2507","−0.214"],
+    ["D","free","125","0.797","0.797","0.771","−0.026","0.2527","−0.192","0.781","+0.003","0.2411","−0.208"],
+    ["E","c=0.5","125","0.797","0.816","0.791","−0.025","0.4192","−0.494","0.791","+0.034","0.1932","−0.103"],
+    ["F","c=2","125","0.797","0.868","0.866","−0.002","0.1443","+0.146","0.768","−0.001","0.4896","+0.501"],
+    ["G","LQ c=0.5","125","0.797","0.840","0.855","+0.015","0.0994","+0.008","0.791","+0.033","0.1929","−0.106"],
+    ["H","LQ c=0.75","125","0.797","0.840","0.851","+0.011","0.0998","+0.007","0.796","+0.023","0.1868","+0.104"],
+    ["I","LQ c 학습","125","0.797","0.840","0.855","+0.015","0.0993","+0.008","0.773","+0.019","0.2155","−0.166"],
+    ["J","b만 학습","125","0.797","0.840","0.824","−0.017","0.2218","−0.273","0.810","+0.040","0.2217","−0.192"],
   ];
-  const hdr = ["","조건","학습","LS AUC","LS MSE","LS 편향","LQ AUC","LQ MSE","LQ 편향","한 줄 평"];
+  const hi = new Set(["A","G","H","I"]);
+  const hdr = ["#","이름","행","원값","자기","post","보탠양","LS MSE","LS 편향","LQ post","LQ 보탠양","LQ MSE","LQ 편향"];
   s.addTable([
-    hdr.map((h, i) => ({ text: h, options: { bold: true, color: INK, fill: { color: BG2 },
-      align: i >= 2 && i <= 8 ? "right" : "left", fontSize: 10.5 } })),
-    ...rows.map(r => r.map((c, i) => ({
-      text: c,
-      options: { align: i >= 2 && i <= 8 ? "right" : "left", fontFace: i >= 3 && i <= 8 ? NUM : KR,
-                 bold: r[0] === "K", color: r[0] === "K" ? INK : INK2,
-                 fill: { color: r[0] === "K" ? "EAF4EE" : BG } },
-    }))),
-  ], {
-    x: M, y: 2.25, w: 12.1, colW: [0.42, 1.35, 0.66, 1.05, 1.12, 1.05, 1.05, 1.12, 1.05, 3.23],
-    rowH: 0.36, fontFace: KR, fontSize: 10.5, valign: "middle",
-    border: { type: "solid", color: "E3E9EC", pt: 1 },
-  });
-  s.addText("✓ = MSE가 기저확률(LS 0.1881 / LQ 0.2494)보다 낮다.  ‘학습’은 prior의 a·b·c 중 학습하는 개수다.", {
-    x: M, y: 4.55, w: 12.1, h: 0.3, isTextBox: true, margin: 0, fontFace: KR, fontSize: 10.5, color: INK3 });
-
-  note(s, M, 5.0, 5.9, 1.95, "K 하나뿐이다",
-    "두 MSE가 동시에 기저확률을 밑돌면서 편향도 둘 다 0.004 안에 드는 조건은 K가 유일하다. " +
-    "C는 LQ MSE가 0.0013 차이로 기저를 못 넘고, E·J는 편향이 0.10~0.19 남는다. " +
-    "게다가 K는 학습하는 prior 파라미터가 0개다 — 과적합할 자유도가 없다.", GOOD);
-  note(s, 6.82, 5.0, 5.9, 1.95, "그래도 LS 순위 문제는 안 풀린다",
-    "LS posterior AUC는 오히려 c ≈ 0.6에서 가장 낮다(0.8344). 자기 prior는 전 구간 0.885~0.897이라\n" +
-    "보탠양이 c를 어떻게 골라도 음수다(−0.022 ~ −0.063).\n" +
-    "c는 눈금 문제를 고치지 순위 문제를 고치지 못한다.", LS);
+    hdr.map((h,i)=>({text:h,options:{bold:true,color:INK,fill:{color:BG2},align:i>=2?"right":"left",fontSize:9.5}})),
+    ...rows.map(r=>r.map((c,i)=>({text:c,
+      options:{align:i>=2?"right":"left",fontFace:i>=2?NUM:KR,
+               bold:hi.has(r[0]),color:hi.has(r[0])?INK:INK2,
+               fill:{color:hi.has(r[0])?"EAF4EE":BG}}}))),
+  ], { x: M, y: 1.95, w: 12.1, colW:[0.42,1.35,0.62,0.85,0.85,0.85,1.0,1.0,1.0,1.0,1.1,1.0,1.06],
+       rowH:0.29, fontFace:KR, fontSize:9.5, valign:"middle", border:{type:"solid",color:"E3E9EC",pt:1} });
+  s.addText("원값 = USGS p̄ 단독 · 자기 = 그 조건의 prior 단독 · 보탠양 = post − 자기.  MSE 기저확률: LS 0.1344 (4·5번은 0.1503) / LQ 0.2494.  초록 = LS 보탠양이 양수인 네 조건.", {
+    x: M, y: 6.72, w: 12.1, h: 0.3, isTextBox: true, margin: 0, fontFace: KR, fontSize: 10.5, color: INK3 });
 }
 
-/* ══════════ 10-4. prior AUC가 왜 이렇게 높아졌나 ══════════ */
-{
-  const s = slideBase(false);
-  head(s, "10", "prior AUC가 0.749에서 0.878이 된 이유", false);
-  s.addText("prior는 학습과 무관하므로 모델이 좋아진 것이 아니다. 재는 방법이 두 번 바뀌었고, 첫 판 숫자를 그대로 재현해 확인했다.", {
-    x: M, y: 1.78, w: 12.1, h: 0.32, isTextBox: true, margin: 0,
-    fontFace: KR, fontSize: 12.5, color: INK2 });
-
-  s.addTable([
-    ["기준", "pooled", "가중평균"].map(t => ({ text: t, options: { bold: true, color: INK, fill: { color: BG2 }, fontSize: 10.5 } })),
-    ["NA 제외 (125행 · 5이벤트)", "0.7486  ← 첫 판", "0.7969"],
-    ["NA 포함 (418행 · 9이벤트)", "0.8572", "0.8778  ← 지금"],
-  ].map(r => r.map((c, i) => typeof c === "string"
-      ? { text: c, options: { align: i ? "right" : "left", fontFace: i ? NUM : KR, color: INK2 } } : c)), {
-    x: M, y: 2.24, w: 5.9, colW: [2.7, 1.7, 1.5], rowH: 0.38,
-    fontFace: KR, fontSize: 10.5, valign: "middle",
-    border: { type: "solid", color: "E3E9EC", pt: 1 }, fill: { color: BG },
-  });
-  s.addText("NA 복원이 +0.109,  pooled → 가중평균이 +0.021.  거의 전부가 NA 복원이다.", {
-    x: M, y: 3.44, w: 5.9, h: 0.28, isTextBox: true, margin: 0,
-    fontFace: KR, fontSize: 10.5, color: INK3 });
-
-  note(s, M, 3.85, 5.9, 1.5, "첫 판에는 음성이 20행뿐이었다",
-    "9개 이벤트를 통틀어 음성이 20행이었고, 그중 4개 이벤트는 음성이 0개라 AUC를 잴 수조차 없어 " +
-    "통째로 빠져 있었다. 음성 2~4개짜리 AUC는 그 몇 개가 어디 놓이느냐로 정해진다.", WARN);
-  note(s, M, 5.5, 5.9, 1.5, "NA → 0 규칙은 채점에만 쓰인다",
-    "학습(train)은 피해 통계와 USGS prior만 받는다. 정답(GT)은 한 번도 들어가지 않는다. " +
-    "그래서 이 규칙은 LS의 AUC·MSE·편향·기저확률만 바꾸고 모델은 한 줄도 바꾸지 않는다.", GOOD);
-
-  const rows = [
-    ["2000 돗토리","9","0.904","21","0.908"],
-    ["2004 니가타현주에쓰","2","0.875","52","0.969"],
-    ["2007 니가타오키","0","측정 불가","20","0.925"],
-    ["2008 이와테미야기","0","측정 불가","25","0.873"],
-    ["2016 구마모토","3","0.641","14","0.841"],
-    ["2018 오사카","2","1.000","34","0.759"],
-    ["2018 훗카이도","4","0.778","31","0.948"],
-    ["2021 후쿠시마","0","측정 불가","59","0.725"],
-    ["2024 노토반도","0","측정 불가","57","1.000"],
-  ];
-  s.addTable([
-    ["이벤트", "전 음성", "전 AUC", "후 음성", "후 AUC"].map(t =>
-      ({ text: t, options: { bold: true, color: INK, fill: { color: BG2 }, fontSize: 10.5,
-                             align: t === "이벤트" ? "left" : "right" } })),
-    ...rows.map(r => r.map((c, i) => ({
-      text: c,
-      options: { align: i ? "right" : "left", fontFace: i && c !== "측정 불가" ? NUM : KR,
-                 color: i === 2 && c === "측정 불가" ? WARN : INK2,
-                 bold: (i === 4 && ["0.969","0.841","0.759","0.948"].includes(c)) || (i === 2 && c === "측정 불가"),
-                 fill: { color: BG } },
-    }))),
-  ], {
-    x: 6.82, y: 2.24, w: 5.9, colW: [2.0, 0.95, 1.05, 0.95, 0.95], rowH: 0.34,
-    fontFace: KR, fontSize: 10.5, valign: "middle",
-    border: { type: "solid", color: "E3E9EC", pt: 1 },
-  });
-  s.addText("오사카는 음성 2개로 1.000이었다가 34개가 되자 0.759로 내려갔고, 구마모토는 3개로 0.641이었다가 " +
-            "14개가 되자 0.841로 올랐다. 방향이 제각각인 것이 곧 첫 판 값이 노이즈였다는 뜻이다.", {
-    x: 6.82, y: 5.75, w: 5.9, h: 0.6, isTextBox: true, margin: 0,
-    fontFace: KR, fontSize: 11, color: INK2, lineSpacing: 16 });
-  s.addText("prior가 좋아진 것이 아니라, 우리가 제대로 못 재고 있었다.", {
-    x: 6.82, y: 6.45, w: 5.9, h: 0.34, isTextBox: true, margin: 0,
-    fontFace: KR, fontSize: 13.5, bold: true, color: LS });
-}
-
-/* ══════════ 10-5. 원값 prior → 자기 prior → posterior ══════════ */
-{
-  const s = slideBase(false);
-  head(s, "10", "면적 항이 실제로 보탠 양 — 세 단계로 쪼개 보기", false);
-  s.addText("원값 = USGS p̄ 단독(학습 전) · 자기 = 그 조건의 prior sigmoid(z) 단독 · posterior = 피해 데이터까지 통과. " +
-            "가운데 두 칸의 차이가 면적 항의 기여, 마지막 두 칸의 차이가 피해 데이터의 기여다.", {
-    x: M, y: 1.78, w: 12.1, h: 0.54, isTextBox: true, margin: 0,
-    fontFace: KR, fontSize: 12.5, color: INK2, lineSpacing: 17 });
-
-  const rows = [
-    ["①②","1·2·3번","0.8778","0.8778","+0.000","0.7154","0.7154","+0.000","면적 항이 없어 원값과 같다"],
-    ["③","4·5번 자연혼재","0.9023","0.9023","+0.000","0.7154","0.7154","+0.000","평가 집합이 달라 원값부터 높다"],
-    ["④","A fixed","0.8778","0.8850","+0.007","0.7154","0.7698","+0.054","유도식 c=1"],
-    ["④","B tied","0.8778","0.8850","+0.007","0.7154","0.7698","+0.054","c/a=1이라 A와 순위가 같다"],
-    ["④","C bounded","0.8778","0.8969","+0.019","0.7154","0.7709","+0.055","LS 기여 최대"],
-    ["④","D free","0.8778","0.8776","−0.000","0.7154","0.7784","+0.063","LQ 기여 최대 (c_LS를 0으로 내림)"],
-    ["④","E c=0.5","0.8778","0.8967","+0.019","0.7154","0.7570","+0.042",""],
-    ["④","F c=2","0.8778","0.8373","−0.040","0.7154","0.7687","+0.053","면적을 과하게 넣어 순위가 나빠졌다"],
-    ["④","G·H·I·J","0.8778","0.8850","+0.007","0.7154","0.755~0.773","+0.039~0.057",""],
-  ];
-  const hdr = ["", "조건", "LS 원값", "LS 자기", "면적항", "LQ 원값", "LQ 자기", "면적항", "메모"];
-  s.addTable([
-    hdr.map((h, i) => ({ text: h, options: { bold: true, color: INK, fill: { color: BG2 },
-      align: i >= 2 && i <= 7 ? "right" : "left", fontSize: 10.5 } })),
-    ...rows.map(r => r.map((c, i) => ({
-      text: c,
-      options: { align: i >= 2 && i <= 7 ? "right" : "left", fontFace: i >= 2 && i <= 7 ? NUM : KR,
-                 bold: (i === 4 || i === 7) && c !== "+0.000",
-                 color: (i === 4 || i === 7) && c.startsWith("−") ? LS : INK2, fill: { color: BG } },
-    }))),
-  ], {
-    x: M, y: 2.5, w: 12.1, colW: [0.5, 1.9, 1.15, 1.15, 1.0, 1.15, 1.25, 1.15, 2.85],
-    rowH: 0.33, fontFace: KR, fontSize: 10.5, valign: "middle",
-    border: { type: "solid", color: "E3E9EC", pt: 1 },
-  });
-
-  note(s, M, 5.75, 5.9, 1.5, "면적 항은 액상화에서 값을 한다",
-    "LS 기여는 +0.007~0.019로 작지만 LQ는 +0.039~0.063으로 5~8배 크다. " +
-    "액상화 감수성이 충적층을 따라 넓게 퍼져 있어 면적이 더 많은 정보를 담기 때문으로 보인다.", LQ);
-  note(s, 6.82, 5.75, 5.9, 1.5, "과하게 넣으면 깎인다",
-    "F(c=2)는 −0.040으로 원값보다 나쁘다. D는 c_LS를 0.006까지 내려 면적 항을 사실상 껐고, " +
-    "그래서 LS 기여가 −0.000이다. 면적은 넣되 적당히 넣어야 한다.", LS);
-}
-
-/* ══════════ 11. 한계와 다음 ══════════ */
+/* ══════════ 16. 한계와 다음 ══════════ */
 {
   const s = slideBase(true);
-  head(s, "11", "한계와 다음", true);
+  head(s, "마무리", "한계와 다음", true);
   const items = [
-    ["LS에서 피해 데이터가 보태는 것이 없다", "15개 중 14개가 자기 prior보다 낮다. 왜 그런지가 다음 연구의 중심이어야 한다.", LS],
-    ["c 최적값은 찾았지만 왜 학습이 거기로 안 가는지는 모른다", "⑤에서 c ≈ 0.62가 눈금을 맞춘다는 것을 확인했다. 그런데 c를 학습시킨 D free는 c_LS를 0.006까지 내렸다 — 우도가 c를 눈금이 아니라 순위 쪽으로 끌고 갔다는 뜻이다.", GOOD],
-    ["③·④·⑤를 서로 결합하지 않았다", "면적 항과 c 스윕은 전부 기존(all) GT로 돌았고, 자연+혼재 GT와 한 번도 같이 쓰지 않았다.", WARN],
-    ["LQ 최대집계 + 면적 항을 안 해봤다", "가장 좋은 LQ prior(0.8372)와 면적 항을 한 번도 같이 쓰지 않았다. 다만 λ = p̄·k 유도가 평균집계를 전제하므로 이론 정리가 먼저다.", LQ],
-    ["LQ 평가는 229행뿐이다", "LS는 418행으로 늘었지만 LQ는 GT 시트가 덮는 범위가 그대로다.", INK3],
+    ["LS 평가가 125행 · 음성 20행 · 이벤트 5개뿐이다", "이번 판의 가장 큰 제약이다. NA 304행을 되살리려면 「조사 대상이었음이 확인되나 기록 없음」과 「조사 여부 불명」을 근거별로 갈라야 한다. location_note가 구조화되어 있어 149행은 분류 가능하고, 면적 시트 4개(155행)는 원자료를 다시 봐야 한다.", LS],
+    ["③과 ④·⑤를 결합하지 않았다", "A~J는 전부 기본 규칙 125행으로만 채점했다. predictions_*.csv에 418행 전부의 예측이 있으므로 재학습 없이 재채점만 하면 된다.", WARN],
+    ["c_LS = 1.0, c_LQ ≈ 0.62 를 정식 조건으로 안 돌렸다", "스윕 격자 위의 점으로만 확인했다. 브랜치를 만들어 정식 조건으로 올려야 한다.", GOOD],
+    ["LQ 최대집계 + 면적 항을 안 해봤다", "가장 좋은 LQ prior(0.8372)와 면적 항을 한 번도 같이 쓰지 않았다. λ = p̄·k 유도가 평균집계를 전제하므로 이론 정리가 먼저다.", LQ],
+    ["왜 b를 학습하면 나빠지는지 모른다", "B·C·J의 편향이 −0.27이다. 양성률 84%짜리 좁은 집합에서 우도가 b를 어느 방향으로 끄는지 확인이 필요하다.", INK3],
   ];
-  items.forEach(([t, d, c], i) => {
-    const y = 1.95 + i * 1.0;
-    s.addShape(pres.ShapeType.ellipse, { x: M, y: y + 0.08, w: 0.22, h: 0.22, fill: { color: c } });
-    s.addText(t, { x: M + 0.44, y, w: 11.6, h: 0.34, isTextBox: true, margin: 0,
-      fontFace: KR, fontSize: 15, bold: true, color: BG });
-    s.addText(d, { x: M + 0.44, y: y + 0.36, w: 11.6, h: 0.5, isTextBox: true, margin: 0,
-      fontFace: KR, fontSize: 12, color: "AFC0CB", lineSpacing: 16 });
+  items.forEach(([t,d,c],i)=>{
+    const y = 1.9 + i*1.02;
+    s.addShape(pres.ShapeType.ellipse, { x: M, y: y+0.08, w: 0.22, h: 0.22, fill:{color:c} });
+    s.addText(t, { x: M+0.44, y, w: 11.6, h: 0.32, isTextBox:true, margin:0,
+      fontFace:KR, fontSize:14.5, bold:true, color:BG });
+    s.addText(d, { x: M+0.44, y: y+0.34, w: 11.6, h: 0.6, isTextBox:true, margin:0,
+      fontFace:KR, fontSize:11.5, color:"AFC0CB", lineSpacing:15 });
   });
-  s.addText("재현:  python tools/build_dataset.py --area-from-usgs  →  python run_followup3.py --data-dir .", {
-    x: M, y: 7.0, w: 11.6, h: 0.3, isTextBox: true, margin: 0, fontFace: NUM, fontSize: 11, color: INK3 });
+  s.addText("재현:  python run_followup3.py --data-dir .        정답 규칙은 loader.py에 있고 학습에는 쓰이지 않는다.", {
+    x: M, y: 7.02, w: 11.6, h: 0.3, isTextBox:true, margin:0, fontFace:NUM, fontSize:11, color:INK3 });
+}
+
+/* ══════════ 17. 부록 — 이전 판과의 차이 ══════════ */
+{
+  const s = slideBase(false);
+  head(s, "부록", "이전 판에서 무엇이 뒤집혔나", false);
+  s.addText("이전 판은 LS 정답의 NA를 0으로 세었다(418행). 정답지 정의를 확인한 뒤 NA를 평가에서 빼는 원래 규칙으로 되돌렸고, 다음이 뒤집혔다. 모델은 하나도 바뀌지 않았다 — 채점만 바뀌었다.", {
+    x: M, y: 1.78, w: 12.1, h: 0.5, isTextBox: true, margin: 0, fontFace: KR, fontSize: 12.5, color: INK2, lineSpacing: 17 });
+  const rows = [
+    ["최적 c_LS","0.62","0.99  ≈ 유도값 1"],
+    ["A fixed 편향","+0.436  (크게 과대예측)","+0.006"],
+    ["E c=0.5 편향","−0.097","−0.494  (무너짐)"],
+    ["b 학습 (B·C·J) 편향","+0.08 ~ +0.09  (양호)","−0.27  (최악)"],
+    ["LS 보탠양","15개 중 14개 음수","A·G·H·I 양수"],
+    ["LS 평가 집합","418행 · 양성률 25.1%","125행 · 양성률 84.0%"],
+  ];
+  s.addTable([
+    ["항목","이전 판 (NA → 0)","지금 (NA 평가 제외)"].map(h=>({text:h,options:{bold:true,color:INK,fill:{color:BG2}}})),
+    ...rows.map(r=>r.map((c,i)=>({text:c,
+      options:{align:i?"right":"left",fontFace:i?NUM:KR,color:i===2?INK:INK3,bold:i===2}}))),
+  ], { x: M, y: 2.45, w: 12.1, colW:[3.5,4.3,4.3], rowH:0.48, fontFace:KR, fontSize:12, valign:"middle",
+       border:{type:"solid",color:"E3E9EC",pt:1} });
+  note(s, M, 5.42, 12.1, 1.72, "왜 이렇게 크게 갈리나",
+    "NA 304행은 대부분 산림 내부·판독 범위 밖처럼 prior가 어차피 낮게 매기는 곳이다. 그것을 전부 “정답 음성”으로 만들면 prior에 유리한 쉬운 문제가 293개 추가된다." + NL +
+    "그러면 prior AUC가 0.797 → 0.878로 오르고, 확률을 크게 부풀리는 조건(c=1, A fixed)이 상대적으로 잘 맞아 보인다. 정답 정의 하나가 결론 전체를 좌우했다.", WARN);
 }
 
 pres.writeFile({ fileName: "후속실험3.pptx" }).then(f => console.log("생성:", f));
