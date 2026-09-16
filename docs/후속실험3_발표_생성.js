@@ -582,21 +582,21 @@ pairSlide("결과", "액상화 LQ — 자기 prior vs posterior",
   head(s, "마무리", "한계와 다음", true);
   const items = [
     ["LS 평가가 125행 · 음성 20행 · 이벤트 5개뿐이다", "이번 판의 가장 큰 제약이다. NA 304행을 되살리려면 「조사 대상이었음이 확인되나 기록 없음」과 「조사 여부 불명」을 근거별로 갈라야 한다. location_note가 구조화되어 있어 149행은 분류 가능하고, 면적 시트 4개(155행)는 원자료를 다시 봐야 한다.", LS],
-    ["c 의 최적값을 확정하지 않았다", "c를 바꿔 본 것은 0.5 · 0.75 · 1.0 · 2.0 몇 점뿐이다. LS는 1 근처, LQ는 0.5와 0.75 사이로 보이지만 정확한 자리는 모른다. 편향이 0을 지나는 c와 MSE가 최소인 c가 같은 자리인지도 확인하지 않았다.", WARN],
+    ["c 의 최적값을 확정하지 못했다", "조건 밖에서 (c_LS, c_LQ) 격자 65점을 따로 훑어 봤고 편향 0 교차가 LS ≈ 0.99 / LQ ≈ 0.618로 읽혔다. 싣지 않은 이유는 자체 검증이 통과하지 못해서다 — LQ는 편향 0과 MSE 최소가 같은 자리인데 LS는 MSE가 c = 1.05에서도 계속 내려간다. 두 기준이 어긋나면 어느 쪽을 최적이라 부를 근거가 없다. 게다가 최적 c는 정답 규칙에 크게 좌우된다(이전 판에서는 c_LS가 0.62였다).", WARN],
     ["C·D 의 a_LS 가 상한에 붙었다", "C는 1.977, D는 1.862로 범위 [0.5, 2.0]의 위쪽 끝이다. 찾은 값이 아니라 잘린 값일 수 있다. C를 “자연+혼재에서 유일하게 버티는 조건”으로 인용할 때 같이 말해야 한다.", GOOD],
     ["LQ 최대집계 + 면적 항을 안 해봤다", "가장 좋은 LQ prior(0.8372)와 면적 항을 한 번도 같이 쓰지 않았다. λ = p̄·k 유도가 평균집계를 전제하므로 이론 정리가 먼저다.", LQ],
     ["왜 b를 학습하면 나빠지는지 모른다", "B·C·J의 편향이 −0.27이다. 양성률 84%짜리 좁은 집합에서 우도가 b를 어느 방향으로 끄는지 확인이 필요하다.", INK3],
   ];
   items.forEach(([t,d,c],i)=>{
-    const y = 1.9 + i*1.02;
+    const y = 1.80 + i*1.04;
     s.addShape(pres.ShapeType.ellipse, { x: M, y: y+0.08, w: 0.22, h: 0.22, fill:{color:c} });
     s.addText(t, { x: M+0.44, y, w: 11.6, h: 0.32, isTextBox:true, margin:0,
       fontFace:KR, fontSize:14.5, bold:true, color:BG });
-    s.addText(d, { x: M+0.44, y: y+0.34, w: 11.6, h: 0.6, isTextBox:true, margin:0,
-      fontFace:KR, fontSize:11.5, color:"AFC0CB", lineSpacing:15 });
+    s.addText(d, { x: M+0.44, y: y+0.33, w: 11.6, h: 0.70, isTextBox:true, margin:0,
+      fontFace:KR, fontSize:11, color:"AFC0CB", lineSpacing:14 });
   });
   s.addText("재현:  python run_followup3.py --data-dir .        정답 규칙은 loader.py에 있고 학습에는 쓰이지 않는다.", {
-    x: M, y: 7.02, w: 11.6, h: 0.3, isTextBox:true, margin:0, fontFace:NUM, fontSize:11, color:INK3 });
+    x: M, y: 7.14, w: 11.6, h: 0.28, isTextBox:true, margin:0, fontFace:NUM, fontSize:11, color:INK3 });
 }
 
 /* ══════════ 17. 부록 — 이전 판과의 차이 ══════════ */
