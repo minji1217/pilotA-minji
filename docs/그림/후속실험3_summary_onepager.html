@@ -1,0 +1,171 @@
+<!DOCTYPE html><html lang="ko"><head><meta charset="utf-8"><title>후속실험 3 정리본</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#16232b;--ink2:#41535e;--ink3:#7d8f9a;--bg:#fff;--bg2:#f4f7f9;--line:#e3e9ec;
+      --ls:#B85042;--lq:#0E7CAA;--good:#2C7A5A;--warn:#C9772F}
+*{box-sizing:border-box}
+body{margin:0;background:#eef1f3;font-family:'Noto Sans KR',sans-serif;padding:30px}
+.page{max-width:1180px;margin:0 auto;background:var(--bg);padding:40px 48px 44px;border-radius:6px;
+      box-shadow:0 2px 16px rgba(0,0,0,.08)}
+h1{font-size:26px;margin:0 0 6px;letter-spacing:-.5px;color:var(--ink)}
+.lead{font-size:13px;color:var(--ink2);margin:0 0 4px;line-height:1.65}
+h2{font-size:17px;margin:34px 0 4px;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:6px}
+h3{font-size:14px;margin:20px 0 6px;color:var(--ink)}
+p{font-size:12.5px;color:var(--ink2);line-height:1.72;margin:6px 0}
+table{border-collapse:collapse;width:100%;font-size:11.5px;margin:9px 0}
+th{background:var(--bg2);color:var(--ink);font-weight:700;padding:7px 9px;text-align:left;border-bottom:1px solid var(--line)}
+td{padding:6px 9px;color:var(--ink2);border-bottom:1px solid var(--line);vertical-align:top}
+.num,td.n,th.n{text-align:right;font-family:'IBM Plex Mono',monospace}
+code{font-family:'IBM Plex Mono',monospace;font-size:11.5px;background:var(--bg2);padding:1px 5px;border-radius:3px;color:var(--ink)}
+.box{background:var(--bg2);border-left:4px solid var(--ink3);border-radius:0 7px 7px 0;padding:12px 16px;margin:12px 0}
+.box.ls{border-color:var(--ls)} .box.lq{border-color:var(--lq)}
+.box.good{border-color:var(--good);background:#EDF6F1} .box.warn{border-color:var(--warn);background:#FCF5EC}
+.box b{color:var(--ink)}
+.box p{margin:3px 0}
+.k{display:inline-block;width:22px;height:22px;border-radius:50%;color:#fff;font-size:11.5px;font-weight:700;
+   text-align:center;line-height:22px;margin-right:7px;font-family:'IBM Plex Mono',monospace}
+.tag{display:inline-block;font-size:10px;padding:1px 7px;border-radius:9px;font-weight:600}
+.t-si{background:#eceff1;color:#546e7a} .t-add{background:#FCF0E0;color:#C9772F} .t-req{background:#E6F2EA;color:#2C7A5A}
+.win{background:#EDF6F1}
+.foot{font-size:11px;color:var(--ink3);margin-top:28px;border-top:1px solid var(--line);padding-top:12px;line-height:1.7}
+</style></head><body><div class="page">
+
+<h1>후속실험 3 — 지금까지 한 실험 정리본</h1>
+<p class="lead">2026-09-16 · 정답 규칙을 정답지 정의대로 되돌리고 15개 조건 + c 스윕 49점을 다시 돌린 판.
+모든 조건이 같은 데이터 · seed 0 · 3000 epoch · Adam lr 0.02 · λ_γ=10을 쓴다.
+<b>정답(GT)은 학습에 전혀 쓰이지 않는다</b> — 규칙을 바꿔도 모델은 그대로고 채점만 바뀐다.</p>
+
+<h2>0. 모든 실험이 따르는 규칙 네 가지</h2>
+<table>
+<tr><th style="width:130px">규칙</th><th>내용</th></tr>
+<tr><td><b>① 정답</b></td><td><b>기본</b>: <code>ls_type</code> 안 씀. <code>ls_flag</code> 1→양성 / 0→음성 / <b>NA→평가 제외</b> → <b>125행</b>(양성 105·음성 20·이벤트 5)<br>
+<b>4·5번 자연혼재</b>: <code>ls_type</code>이 자연·혼재면 1, <b>그 밖 전부 0</b>(인공·불명·빈칸·NA), 제외 없음 → <b>418행</b>(양성 77)<br>
+<b>LQ</b>: <code>jshis_flag</code>(지도 기반)는 NA→0, <code>lq_flag</code>(현장 기록)는 NA→제외 → 229행</td></tr>
+<tr><td><b>② 변환</b></td><td>면적 항(<code>log k</code>)이 <b>있으면 <code>log(π)</code></b>, <b>없으면 <code>logit(π)</code></b>.
+면적을 곱셈 <code>λ = p̄·k</code>로 넣으려면 로그 스케일이어야 하기 때문이다.</td></tr>
+<tr><td><b>③ 중심화</b></td><td><b>b=0 고정이면 빼지 않고</b>(A·E·F·G·H·I), <b>b를 학습하면 전체 log k 평균을 뺀다</b>(B·C·D·J).
+평균은 LS 8.042 / LQ 6.656. 중심화는 b가 흡수하는 재매개변수화라 b=0에서 빼면 유도식이 깨진다.</td></tr>
+<tr><td><b>④ 지표</b></td><td><b>가중평균 AUC</b> — 이벤트마다 AUC를 재고 그 이벤트의 평가 행 수로 가중평균.
+이벤트를 섞는 pooled AUC는 다른 지진 사이의 쌍까지 채점해 의미가 없다.</td></tr>
+</table>
+
+<h2>1. 네 갈래 15개 조건 — 무엇을 왜 했나</h2>
+
+<h3><span class="k" style="background:var(--ls)">②</span>교수님 피드백 — b 상한을 넓히면 안쪽에서 멈추는가 <span class="tag t-si">교수님 지시</span></h3>
+<p>식은 <code>z = a·logit(p̄) + b</code> 하나뿐(면적 항 없음). 지난 실험에서 b가 범위 끝에 붙어 나왔는데,
+그건 최적값을 찾은 게 아니라 <b>잘린 것</b>이라 상한을 넓혀 본다.</p>
+<table>
+<tr><th style="width:36px">#</th><th style="width:110px">이름</th><th style="width:190px">브랜치</th><th style="width:70px">LQ 집계</th><th class="n" style="width:80px">b 범위</th><th class="n" style="width:90px">학습된 b_LS</th><th>결과</th></tr>
+<tr><td>1</td><td>3번 b4</td><td><code>followup3-avg-b4</code></td><td>평균</td><td class="n">[−2, 4]</td><td class="n"><b>3.954</b></td><td>상한에 붙음</td></tr>
+<tr><td>2</td><td>3번 b10</td><td><code>followup3-avg-b10</code></td><td>평균</td><td class="n">[−2, 10]</td><td class="n"><b>9.523</b></td><td>또 상한에 붙음</td></tr>
+<tr><td>3</td><td>6번 b10</td><td><code>followup3-lqmax-b10</code></td><td><b>최대</b></td><td class="n">[−2, 10]</td><td class="n"><b>9.589</b></td><td>또 상한에 붙음</td></tr>
+</table>
+<div class="box warn"><p><b>답: 안 멈춘다.</b> 3번과 6번의 차이는 LQ prior를 시정촌 안 격자들의 평균으로 볼지 최대로 볼지 하나뿐이다.
+최대집계가 LQ prior AUC를 0.715 → 0.837로 크게 올리지만, posterior는 0.775에 그쳐 −0.062로 오히려 깎는다.</p></div>
+
+<h3><span class="k" style="background:var(--good)">③</span>자연+혼재 재평가 <span class="tag t-si">교수님 지시</span></h3>
+<p>USGS 산사태 사전모형이 설명하는 것은 <b>자연사면</b>의 붕괴인데, 정답의 양성에 성토·옹벽·법면 같은
+인공사면 붕괴가 섞여 있다. 모형이 원리적으로 맞힐 수 없는 사건까지 양성으로 세고 있는 셈이다.
+<b>학습을 다시 하지 않는다</b> — 2·3번 브랜치에서 평가 옵션만 켜고 결과 이름으로 구분한다(4번=2번, 5번=3번).</p>
+
+<h3><span class="k" style="background:var(--lq)">④</span>면적 항 A~J <span class="tag t-si">A~F 지시</span> <span class="tag t-add">G~I 추가</span> <span class="tag t-req">J 요청</span></h3>
+<p><code>z = a·log p̄ + b + c·(log k − m)</code>,  <code>k = 시정촌 면적 ÷ 격자 한 칸 넓이</code>.
+USGS 값 p̄는 “발생 확률”이 아니라 <b>“격자 한 칸 중 덮이는 면적 비율”</b>이다. 넓은 시정촌일수록 한 곳이라도
+무너질 확률이 높다. 칸이 독립이면 <code>λ = p̄ × k</code>, <code>P(하나라도) = 1 − exp(−λ)</code>이고,
+포화를 피해 순위가 같은 <code>log λ = log p̄ + log k</code>를 쓴다. <b>그래서 a=1, b=0, c=1 이 유도식 그대로다.</b></p>
+<table>
+<tr><th style="width:46px">출처</th><th style="width:26px"></th><th style="width:150px">브랜치 followup3-</th><th class="n" style="width:56px">c_LS</th><th class="n" style="width:56px">c_LQ</th><th class="n" style="width:46px">학습</th><th>무엇을 보려는 조건인가</th></tr>
+<tr><td><span class="tag t-si">지시</span></td><td><b>A</b></td><td><code>area-avg-fixed</code></td><td class="n">1.00</td><td class="n">1.00</td><td class="n">0</td><td>아무것도 학습 안 함 — 유도식 그대로, 기준점</td></tr>
+<tr><td><span class="tag t-si">지시</span></td><td><b>B</b></td><td><code>area-avg-tied</code></td><td class="n">= a</td><td class="n">= a</td><td class="n">4</td><td>면적의 힘을 USGS와 같게 묶고 크기만 학습</td></tr>
+<tr><td><span class="tag t-si">지시</span></td><td><b>C</b></td><td><code>area-avg-bounded</code></td><td class="n">1.00</td><td class="n">1.00</td><td class="n">4</td><td>면적의 힘은 1로 두고 기울기·높이만 학습</td></tr>
+<tr><td><span class="tag t-si">지시</span></td><td><b>D</b></td><td><code>area-avg-free</code></td><td class="n">학습</td><td class="n">학습</td><td class="n">6</td><td>여섯 값 전부 데이터에 맡긴다</td></tr>
+<tr><td><span class="tag t-si">지시</span></td><td><b>E</b></td><td><code>area-avg-a1-c05</code></td><td class="n">0.50</td><td class="n">0.50</td><td class="n">0</td><td>면적의 영향을 절반으로 줄여 고정</td></tr>
+<tr><td><span class="tag t-si">지시</span></td><td><b>F</b></td><td><code>area-avg-a1-c2</code></td><td class="n">2.00</td><td class="n">2.00</td><td class="n">0</td><td>면적의 영향을 두 배로 키워 고정</td></tr>
+<tr><td><span class="tag t-add">추가</span></td><td><b>G</b></td><td><code>area-avg-lq-c05</code></td><td class="n">1.00</td><td class="n">0.50</td><td class="n">0</td><td>액상화 쪽만 절반 (LS는 A와 완전 동일)</td></tr>
+<tr><td><span class="tag t-add">추가</span></td><td><b>H</b></td><td><code>area-avg-lq-c075</code></td><td class="n">1.00</td><td class="n">0.75</td><td class="n">0</td><td>액상화 쪽만 0.75 (LS는 A와 완전 동일)</td></tr>
+<tr><td><span class="tag t-add">추가</span></td><td><b>I</b></td><td><code>area-avg-lq-c-free</code></td><td class="n">1.00</td><td class="n">0.43</td><td class="n">1</td><td>액상화 쪽 c만 데이터가 고른다</td></tr>
+<tr><td><span class="tag t-req">요청</span></td><td><b>J</b></td><td><code>area-avg-b-only</code></td><td class="n">1.00</td><td class="n">1.00</td><td class="n">2</td><td>순위는 유도식대로 두고 확률 높이만 보정</td></tr>
+</table>
+<p style="font-size:11.5px;color:var(--ink3)">a = USGS를 얼마나 믿을지(기울기) · b = 확률 높이 · c = 면적을 얼마나 반영할지.
+‘학습’은 prior의 a·b·c 중 학습하는 개수(회귀 44개는 늘 학습).</p>
+
+<h2>2. G · H · I · J 는 왜 그 값으로 정했나</h2>
+<p>A~F를 돌리고 나서 관찰된 것 — <b>같은 c = 1 인데 두 hazard의 눈금이 정반대로 어긋난다.</b></p>
+<table>
+<tr><th style="width:150px"></th><th class="n">c = 0.5 (E)</th><th class="n">c = 1.0 (A)</th><th class="n">c = 2.0 (F)</th></tr>
+<tr><td>산사태 LS 편향</td><td class="n" style="color:var(--ls)">−0.494 무너짐</td><td class="n" style="color:var(--good);font-weight:700">+0.006 거의 완벽</td><td class="n">+0.146</td></tr>
+<tr><td>액상화 LQ 편향</td><td class="n">−0.103</td><td class="n" style="color:var(--ls)">+0.256 크게 과대</td><td class="n">+0.501</td></tr>
+</table>
+<p><b>→ 두 hazard가 서로 다른 c를 원한다. LS의 유도값 1은 건드리지 말고, LQ만 내려 보자.</b>
+물리적으로도 그럴 만하다 — c=1은 “칸끼리 독립”에서 나온 값인데, 액상화 감수성은 충적층·지질을 따라
+공간적으로 강하게 상관되므로 <code>1 − ∏(1−pᵢ)</code>가 과대추정한다. 유효 칸 수가 명목 k보다 작다는 뜻이고,
+그것이 <code>c_LQ &lt; 1</code>로 나타난다.</p>
+<div class="box lq">
+<p><span class="k" style="background:var(--warn)">G</span><b>c_LQ = 0.5 고정</b> — E에서 이미 확인된 반대쪽 값. LQ 편향이 −0.103으로 부호가 뒤집히는 지점을 그대로 가져왔다.</p>
+<p><span class="k" style="background:var(--warn)">H</span><b>c_LQ = 0.75 고정</b> — 관찰값 두 개(0.5 → −0.103, 1.0 → +0.256)로 편향 0 교차점을 <b>선형 추정하면 0.643</b>. 0.25 간격 격자에서 그 위쪽 점을 잡았다.</p>
+<p><span class="k" style="background:var(--warn)">I</span><b>c_LQ 만 학습</b> — 사람이 고르지 말고 우도가 고르게 둔다. c ∈ [0, 2]에서 학습해 <b>0.434</b>로 수렴했다.</p>
+<p><span class="k" style="background:var(--good)">J</span><b>b 만 학습</b> — c를 건드리면 순위까지 같이 움직인다. b는 z에 더해지는 상수라 hazard 안에서 순위를 전혀 바꾸지 않고 확률 높이만 옮긴다. <b>눈금을 고치는 올바른 손잡이는 c가 아니라 b</b>라는 가설이다.</p>
+</div>
+
+<h2>3. ⑤ c 스윕 — 무엇을, 왜</h2>
+<p><b>무엇</b> — <code>AreaPrior(mode="grid")</code>로 <code>c_LS</code>와 <code>c_LQ</code>를 직접 지정하고
+a=1, b=0은 고정해서 <b>prior에서 학습하는 값이 0개</b>인 상태로 c만 바꿔 돌린다.
+거친 격자 <code>c ∈ {0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0}</code> 7×7 = <b>49점</b> + 최적점 주변 미세 격자.
+브랜치는 <code>followup3-area-sweep</code>이다.</p>
+<p><b>왜</b> — ④에서 c를 <b>0.5 / 1 / 2 세 점으로만</b> 봤기 때문이다. 그 세 점만으로는
+“유도값 1이 정말 최적인지”, “LQ의 최적이 어디인지”를 말할 수 없다. 편향이 0을 지나는 c를
+직접 찾아 <b>유도값이 맞는지 데이터로 검증</b>하는 것이 목적이다.
+c가 prior를 바꾸면 posterior도 바뀌므로 c마다 회귀 44개를 새로 적합한다(한 점 14초).</p>
+<div class="box good">
+<p><b>검증</b> — 격자점 (1.0, 1.0)이 조건 A와 완전히 일치한다. 스윕 배선이 맞다는 확인이다.</p>
+<p><b>부수 발견</b> — 두 hazard의 c는 서로 간섭하지 않는다. 한쪽 c를 0.5~2.0으로 바꿔도 다른 쪽 편향은 0.004 안에서만 움직인다. <b>c_LS와 c_LQ를 따로 골라도 된다.</b></p>
+</div>
+<table>
+<tr><th style="width:150px">c</th><th class="n">0.5</th><th class="n">0.75</th><th class="n">1.0</th><th class="n">1.25</th><th class="n">1.5</th><th class="n">2.0</th></tr>
+<tr><td>LS 편향</td><td class="n">−0.498</td><td class="n">−0.218</td><td class="n" style="color:var(--good);font-weight:700">+0.007</td><td class="n">+0.106</td><td class="n">+0.136</td><td class="n">+0.146</td></tr>
+<tr><td>LS MSE</td><td class="n">0.4229</td><td class="n">0.1946</td><td class="n" style="color:var(--good);font-weight:700">0.0997</td><td class="n">0.1103</td><td class="n">0.1327</td><td class="n">0.1443</td></tr>
+<tr><td>LQ 편향</td><td class="n">−0.106</td><td class="n">+0.104</td><td class="n">+0.256</td><td class="n">+0.361</td><td class="n">+0.427</td><td class="n">+0.501</td></tr>
+<tr><td>LQ MSE</td><td class="n">0.1933</td><td class="n" style="color:var(--good);font-weight:700">0.1865</td><td class="n">0.2493</td><td class="n">0.3330</td><td class="n">0.3999</td><td class="n">0.4896</td></tr>
+</table>
+<div class="box good"><p><b>답 — 편향이 0을 지나는 곳:  c_LS ≈ 0.99 (≈ 유도값 1),  c_LQ ≈ 0.62.</b>
+MSE 최소도 c_LS = 1.0 (0.0997) / c_LQ = 0.625 (0.1765)다.
+<b>G(0.5)와 H(0.75)가 정답 0.62를 사이에 두고 있었고, 선형 추정 0.643은 0.02 차이로 맞았다.</b>
+반면 I가 학습한 0.434는 아래로 지나쳤다 — 우도가 눈금이 아닌 쪽을 보고 있다는 신호다.</p></div>
+
+<h2>4. 결과 — 15개 조건</h2>
+<p style="font-size:11.5px;color:var(--ink3)">가중평균 AUC · lam_gamma=10 · MSE 기저확률: LS 0.1344 (4·5번은 0.1503) / LQ 0.2494 · 초록 = LS 보탠양이 양수</p>
+<table>
+<tr><th style="width:26px">#</th><th style="width:100px">이름</th><th class="n" style="width:46px">행</th><th class="n">원값</th><th class="n">자기</th><th class="n">post</th><th class="n">보탠양</th><th class="n">LS MSE</th><th class="n">LS 편향</th><th class="n">LQ post</th><th class="n">LQ MSE</th><th class="n">LQ 편향</th></tr>
+<tr><td>1</td><td>3번 b4</td><td class="n">125</td><td class="n">0.797</td><td class="n">0.797</td><td class="n">0.735</td><td class="n">−0.062</td><td class="n">0.2793</td><td class="n">−0.308</td><td class="n">0.750</td><td class="n">0.2280</td><td class="n">−0.180</td></tr>
+<tr><td>2</td><td>3번 b10</td><td class="n">125</td><td class="n">0.797</td><td class="n">0.797</td><td class="n">0.763</td><td class="n">−0.033</td><td class="n">0.2510</td><td class="n">−0.210</td><td class="n">0.766</td><td class="n">0.2428</td><td class="n">−0.204</td></tr>
+<tr><td>3</td><td>6번 b10</td><td class="n">125</td><td class="n">0.797</td><td class="n">0.797</td><td class="n">0.751</td><td class="n">−0.046</td><td class="n">0.2524</td><td class="n">−0.211</td><td class="n">0.775</td><td class="n">0.2409</td><td class="n">−0.204</td></tr>
+<tr><td>4</td><td>3번 자연혼재</td><td class="n">418</td><td class="n">0.888</td><td class="n">0.888</td><td class="n">0.847</td><td class="n">−0.041</td><td class="n">0.1404</td><td class="n">+0.151</td><td class="n">0.766</td><td class="n">0.2428</td><td class="n">−0.204</td></tr>
+<tr><td>5</td><td>6번 자연혼재</td><td class="n">418</td><td class="n">0.888</td><td class="n">0.888</td><td class="n">0.848</td><td class="n">−0.040</td><td class="n">0.1371</td><td class="n">+0.148</td><td class="n">0.775</td><td class="n">0.2409</td><td class="n">−0.204</td></tr>
+<tr class="win"><td><b>A</b></td><td><b>fixed</b></td><td class="n">125</td><td class="n">0.797</td><td class="n">0.840</td><td class="n"><b>0.855</b></td><td class="n"><b>+0.015</b></td><td class="n"><b>0.0998</b></td><td class="n"><b>+0.006</b></td><td class="n">0.781</td><td class="n">0.2497</td><td class="n">+0.256</td></tr>
+<tr><td>B</td><td>tied</td><td class="n">125</td><td class="n">0.797</td><td class="n">0.840</td><td class="n">0.820</td><td class="n">−0.020</td><td class="n">0.2148</td><td class="n">−0.270</td><td class="n">0.787</td><td class="n">0.2530</td><td class="n">−0.229</td></tr>
+<tr><td>C</td><td>bounded</td><td class="n">125</td><td class="n">0.797</td><td class="n">0.816</td><td class="n">0.803</td><td class="n">−0.013</td><td class="n">0.2563</td><td class="n">−0.269</td><td class="n">0.781</td><td class="n">0.2507</td><td class="n">−0.214</td></tr>
+<tr><td>D</td><td>free</td><td class="n">125</td><td class="n">0.797</td><td class="n">0.797</td><td class="n">0.771</td><td class="n">−0.026</td><td class="n">0.2527</td><td class="n">−0.192</td><td class="n">0.781</td><td class="n">0.2411</td><td class="n">−0.208</td></tr>
+<tr><td>E</td><td>c=0.5</td><td class="n">125</td><td class="n">0.797</td><td class="n">0.816</td><td class="n">0.791</td><td class="n">−0.025</td><td class="n">0.4192</td><td class="n">−0.494</td><td class="n">0.791</td><td class="n">0.1932</td><td class="n">−0.103</td></tr>
+<tr><td>F</td><td>c=2</td><td class="n">125</td><td class="n">0.797</td><td class="n">0.868</td><td class="n">0.866</td><td class="n">−0.002</td><td class="n">0.1443</td><td class="n">+0.146</td><td class="n">0.768</td><td class="n">0.4896</td><td class="n">+0.501</td></tr>
+<tr class="win"><td><b>G</b></td><td><b>LQ c=0.5</b></td><td class="n">125</td><td class="n">0.797</td><td class="n">0.840</td><td class="n"><b>0.855</b></td><td class="n"><b>+0.015</b></td><td class="n"><b>0.0994</b></td><td class="n"><b>+0.008</b></td><td class="n">0.791</td><td class="n">0.1929</td><td class="n">−0.106</td></tr>
+<tr class="win"><td><b>H</b></td><td><b>LQ c=0.75</b></td><td class="n">125</td><td class="n">0.797</td><td class="n">0.840</td><td class="n">0.851</td><td class="n"><b>+0.011</b></td><td class="n">0.0998</td><td class="n"><b>+0.007</b></td><td class="n"><b>0.796</b></td><td class="n"><b>0.1868</b></td><td class="n">+0.104</td></tr>
+<tr class="win"><td><b>I</b></td><td><b>LQ c 학습</b></td><td class="n">125</td><td class="n">0.797</td><td class="n">0.840</td><td class="n"><b>0.855</b></td><td class="n"><b>+0.015</b></td><td class="n"><b>0.0993</b></td><td class="n"><b>+0.008</b></td><td class="n">0.773</td><td class="n">0.2155</td><td class="n">−0.166</td></tr>
+<tr><td>J</td><td>b만 학습</td><td class="n">125</td><td class="n">0.797</td><td class="n">0.840</td><td class="n">0.824</td><td class="n">−0.017</td><td class="n">0.2218</td><td class="n">−0.273</td><td class="n"><b>0.810</b></td><td class="n">0.2217</td><td class="n">−0.192</td></tr>
+</table>
+
+<h2>5. 결론과 한계</h2>
+<div class="box ls"><p><b>1. 유도식 c = 1 이 산사태에서 정확히 맞는다.</b> 편향 0 교차 c_LS ≈ 0.99, MSE 최소도 1.0.
+A fixed의 편향 +0.006 / MSE 0.0998로 기저확률 0.1344를 크게 밑돈다. “칸끼리 독립” 가정이 산사태에서는 성립한다.</p></div>
+<div class="box lq"><p><b>2. 액상화는 c를 0.62로 낮춰야 한다.</b> 감수성이 충적층을 따라 공간적으로 상관돼 유효 칸 수가 명목보다 적다.
+H(c_LQ=0.75)가 LQ MSE 0.1868로 1위다.</p></div>
+<div class="box warn"><p><b>3. b를 학습하면 오히려 나빠진다.</b> B·C·J가 편향 −0.27, MSE 0.21~0.26으로 최악이다.
+prior의 자유도를 늘리는 것이 답이 아니다. J의 가설(“b가 올바른 손잡이”)은 이 평가 집합에서는 성립하지 않았다.</p></div>
+<div class="box"><p><b>4. 피해 데이터의 기여는 판정할 수 없다.</b> A·G·H·I는 보탠양 +0.011~+0.015로 양수지만
+부트스트랩 95% 구간이 [−0.041, +0.073]으로 0을 포함한다. <b>LS 평가에 음성이 20행뿐</b>이기 때문이다 —
+9개 이벤트 중 4개는 음성이 0개라 AUC를 잴 수조차 없어 빠진다. <b>편향과 MSE가 더 믿을 만한 지표다.</b></p></div>
+
+<p class="foot"><b>남은 일</b> — ① A~J를 자연+혼재 정답(418행)으로도 재채점 중이다. 음성이 20 → 341행이 되어 AUC가 안정된다.
+② NA 304행을 근거별로 갈라 「조사 대상이었으나 기록 없음」과 「조사 여부 불명」을 나누면 평가 집합을 넓힐 수 있다.
+③ <code>c_LS=1.0, c_LQ≈0.62</code>를 정식 조건으로 브랜치화. ④ LQ 최대집계 + 면적 항 결합(λ = p̄·k 유도가 평균집계를 전제하므로 이론 정리가 먼저).<br>
+재현: <code>python run_followup3.py --data-dir .</code> · 저장소 <code>minji1217/pilotA-minji</code> (private)</p>
+</div></body></html>
