@@ -33,7 +33,7 @@ h1{font-size:22px;margin:0 0 5px;letter-spacing:-.4px}
 </style></head><body><div class="viz-root" data-palette="#B85042,#0E7CAA">
 <h1>④ 조건 A~K 를 ③ 자연+혼재 정답으로도 채점했다</h1>
 <p class="sub">모델은 한 줄도 바뀌지 않았다 — 같은 seed, 같은 학습값, 같은 자기 prior 식이다. <b>채점 기준만 바꿨다.</b>
-왼쪽은 기본 정답(125행 · 양성률 84.0%), 오른쪽은 자연+혼재 정답(418행 · 양성률 18.4%). 가중평균 AUC.</p>
+가중평균 AUC라 <b>양성·음성이 둘 다 있는 이벤트만</b> 쓴다 — 왼쪽은 9개 중 5개(83행)만 남고, 오른쪽은 9개 전부(418행)를 쓴다.</p>
 <div class="two" id="app"></div>
 <div class="foot" id="foot"></div>
 </div>
@@ -63,10 +63,11 @@ function panel(t,n,d,col,colLt){
   return h+`</div></div></div>`;
 }
 document.getElementById("app").innerHTML =
-  panel("기본 정답","125행 · 양성 105 · 음성 20 · 이벤트 5",D.base,"var(--ls)","var(--ls-lt)")
-+ panel("자연+혼재 정답","418행 · 양성 77 · 음성 341 · 이벤트 9",D.nat,"var(--lq)","var(--lq-lt)");
+  panel("기본 정답","AUC 83행 · 양성 63 · 음성 20 · 이벤트 5 (편향 기준은 125행 · 9이벤트)",D.base,"var(--ls)","var(--ls-lt)")
++ panel("자연+혼재 정답","AUC 418행 · 양성 77 · 음성 341 · 이벤트 9 (편향 기준도 같다)",D.nat,"var(--lq)","var(--lq-lt)");
 document.getElementById("foot").innerHTML =
- `<b>1. AUC가 올라간 것은 정답 때문이 아니라 평가 집합 때문이다.</b> 이 변화에는 두 가지가 섞여 있다 —
+ `<b>0. 두 패널의 근거가 다르다.</b> 왼쪽은 <b>5개 이벤트 83행</b>, 오른쪽은 <b>9개 이벤트 418행</b>이다. 음성이 늘면서 AUC를 잴 수 있는 이벤트도 4개 늘었다 — 라벨만 바뀐 비교가 아니다.<br>
+  <b>1. AUC가 올라간 것은 정답 때문이 아니라 평가 집합 때문이다.</b> 이 변화에는 두 가지가 섞여 있다 —
   <b>①</b> 양성을 자연사면·혼재로 좁힌 것(113 → 81), <b>②</b> NA 293행을 음성으로 집어넣어 행이 125 → 418로 늘어난 것.
   같은 125행에 라벨만 바꿔 ①만 적용하면:<br>
   &nbsp;&nbsp;&nbsp;<code>A fixed &nbsp; 0.8400 &nbsp;→&nbsp; <b>0.7199</b> &nbsp;→&nbsp; 0.8703</code> &nbsp;&nbsp;

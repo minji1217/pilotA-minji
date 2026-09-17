@@ -113,15 +113,17 @@ function line(title,note,rows,xk,yk,col,refs,mark,xlab){
 
 const win=new Set(["A","G","H","I","K"]);
 document.getElementById("warn").innerHTML =
- `<b>읽기 전에.</b> LS 평가가 125행 · 양성 105 / 음성 20 · 이벤트 5개뿐이다(③만 418행).
-  음성이 20행이라 AUC 차이는 통계적으로 잘 구분되지 않는다 — A의 보탠양 +0.015도
-  부트스트랩 95% 구간이 [−0.041, +0.073]으로 0을 포함한다. <b>편향과 MSE가 더 믿을 만한 지표다.</b>`;
+ `<b>읽기 전에 — 위아래 패널의 근거 행 수가 다르다.</b>
+  AUC는 양성·음성이 둘 다 있는 이벤트만 쓴다(한쪽만 있으면 줄 세울 상대가 없다). LS는 9개 이벤트 중 4개가 양성뿐이라
+  <b>42행(전부 양성)이 빠져 83행</b>만 남는다. 편향·MSE는 평균이라 <b>125행을 다 쓴다</b>.<br>
+  음성이 20행뿐이라 AUC 차이는 통계적으로 구분되지 않는다 — A의 보탠양 +0.015도 부트스트랩 95% 구간이
+  [−0.041, +0.073]으로 0을 포함한다. <b>편향과 MSE가 더 믿을 만한 지표다.</b>`;
 document.getElementById("app").innerHTML =
-  paired("산사태 LS — 자기 prior vs posterior","가중평균 AUC · 초록 배경 = posterior가 prior를 넘은 조건","ls_zp","ls_post","var(--ls)","var(--ls-lt)",0.70,0.92,win)
-+ paired("액상화 LQ — 자기 prior vs posterior","가중평균 AUC · 229행 · 초록 배경 = 편향이 ±0.01 안","lq_zp","lq_post","var(--lq)","var(--lq-lt)",0.70,0.85,new Set(["K"]));
+  paired("산사태 LS — 자기 prior vs posterior","가중평균 AUC — 83행 · 5이벤트 (4·5번만 418행 · 9이벤트) · 초록 = posterior &gt; prior","ls_zp","ls_post","var(--ls)","var(--ls-lt)",0.70,0.92,win)
++ paired("액상화 LQ — 자기 prior vs posterior","가중평균 AUC — 182행 · 6이벤트 · 초록 = 편향이 ±0.01 안","lq_zp","lq_post","var(--lq)","var(--lq-lt)",0.70,0.85,new Set(["K"]));
 document.getElementById("app2").innerHTML =
-  diverge("LS 예측 편향","평균 예측확률 − 실제 양성률 · 초록 배경 = |편향| < 0.02","bias_ls","var(--ls)",0,0.52)
-+ diverge("LQ 예측 편향","0이 정답 · 초록 배경 = |편향| < 0.02","bias_lq","var(--lq)",0,0.52);
+  diverge("LS 예측 편향","평균 예측확률 − 실제 양성률 — 125행 · 9이벤트 · 초록 = |편향| &lt; 0.02","bias_ls","var(--ls)",0,0.52)
++ diverge("LQ 예측 편향","0이 정답 — 229행 · 9이벤트 · 초록 = |편향| &lt; 0.02","bias_lq","var(--lq)",0,0.52);
 document.getElementById("foot").innerHTML =
  `<b>1. 유도식 c = 1 이 산사태에서 정확히 맞는다.</b> E(c=0.5) 편향 −0.494 · <b>A(c=1) +0.006</b> · F(c=2) +0.146.
   A 의 MSE 0.0998 은 기저확률 0.1344 를 크게 밑돈다. "칸끼리 독립" 가정이 산사태에서는 성립한다.<br>

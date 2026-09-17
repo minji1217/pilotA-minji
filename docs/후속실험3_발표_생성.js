@@ -173,17 +173,25 @@ const BIAS_LQ = [-0.180,-0.204,-0.204,-0.204,-0.204,0.256,-0.229,-0.214,-0.208,-
   const s = slideBase(false);
   head(s, "규칙 3/3", "평가 집합과 지표", false);
   s.addTable([
-    ["평가 집합","행","양성","음성","이벤트","MSE 기저확률"].map(t=>({text:t,options:{bold:true,color:INK,fill:{color:BG2}}})),
-    ["LS 기본","125","105","20","5","0.1344"],
-    ["LS 자연+혼재","418","77","341","9","0.1503"],
-    ["LQ","229","109","120","6","0.2494"],
+    ["평가 집합","행","양성","음성","이벤트","행","이벤트","MSE 기저확률"].map((t,i)=>
+      ({text:t,options:{bold:true,color:INK,
+        fill:{color:i>=1&&i<=4?"FDF6EE":i>=5&&i<=6?"EDF4F7":BG2},align:i?"right":"left"}})),
+    ["LS 기본","125","105","20","9","83","5","0.1344"],
+    ["LS 자연+혼재","418","77","341","9","418","9","0.1503"],
+    ["LQ","229","109","120","9","182","6","0.2494"],
   ].map(r=>r.map((c,i)=>typeof c==="string"
-      ? {text:c,options:{align:i?"right":"left",fontFace:i?NUM:KR,color:INK2}} : c)), {
-    x: M, y: 1.95, w: 7.6, colW:[2.3,0.9,0.9,0.9,1.0,1.6], rowH:0.42, fontFace:KR, fontSize:12, valign:"middle",
+      ? {text:c,options:{align:i?"right":"left",fontFace:i?NUM:KR,color:INK2,
+          fill:{color:i>=1&&i<=4?"FFFDFA":i>=5&&i<=6?"F8FBFC":BG}}} : c)), {
+    x: M, y: 2.24, w: 7.6, colW:[1.9,0.75,0.75,0.75,0.85,0.75,0.85,1.0], rowH:0.40, fontFace:KR, fontSize:11.5, valign:"middle",
     border:{type:"solid",color:"E3E9EC",pt:1}, fill:{color:BG},
   });
-  note(s, 8.3, 1.95, 4.4, 1.68, "⚠ LS 음성이 20행뿐이다",
-    "9개 이벤트 중 4개는 음성이 0개라 AUC를 잴 수조차 없어 빠진다. AUC 차이는 통계적으로 구분되지 않는다.", WARN);
+  s.addText("편향 · MSE 기준", { x: M+1.9, y: 1.96, w: 3.1, h: 0.24, isTextBox:true, margin:0,
+    align:"center", fontFace:KR, fontSize:10.5, bold:true, color:WARN });
+  s.addText("AUC 기준", { x: M+5.0, y: 1.96, w: 1.6, h: 0.24, isTextBox:true, margin:0,
+    align:"center", fontFace:KR, fontSize:10.5, bold:true, color:LQ });
+  note(s, 8.3, 1.95, 4.4, 1.97, "⚠ 같은 실험인데 행 수가 둘이다",
+    "AUC는 양성·음성이 둘 다 있는 이벤트만 쓴다 — 한쪽만 있으면 줄 세울 상대가 없어 계산이 안 된다." + NL +
+    "LS 기본은 9개 이벤트 중 4개가 양성뿐이라 42행(전부 양성)이 AUC에서 빠져 83행만 남는다. 편향·MSE는 평균이라 125행을 다 쓴다.", WARN);
   const defs = [
     ["가중평균 AUC","이벤트마다 AUC를 재고 그 이벤트의 평가 행 수로 가중평균한다. 이벤트를 섞는 pooled AUC는 다른 지진 사이의 쌍까지 채점해 의미가 없다."],
     ["원값 prior","USGS p̄ 단독. 면적 항도 학습도 거치지 않은 값."],
@@ -193,7 +201,7 @@ const BIAS_LQ = [-0.180,-0.204,-0.204,-0.204,-0.204,0.256,-0.229,-0.214,-0.208,-
     ["예측 편향","평균 예측확률 − 실제 양성률. 0이 정답. 양수면 과대예측."],
   ];
   defs.forEach(([t,d],i)=>{
-    const y = 3.95 + i*0.52;
+    const y = 4.28 + i*0.50;
     s.addText(t, { x: M, y, w: 2.0, h: 0.32, isTextBox: true, margin: 0,
       fontFace: KR, fontSize: 12, bold: true, color: INK });
     s.addText(d, { x: M+2.1, y, w: 10.0, h: 0.42, isTextBox: true, margin: 0,
@@ -421,14 +429,14 @@ function pairSlide(kicker, title, dek, zp, post, col, capt, noteT, noteB) {
 }
 pairSlide("결과", "산사태 LS — 자기 prior vs posterior",
   "회색이 자기 prior 단독, 색이 posterior다. 색 막대가 회색보다 길어야 피해 데이터가 보탠 것이 있다.",
-  ZP_LS, POST_LS, LS, "가중평균 AUC · ①②④는 125행 / ③은 418행",
+  ZP_LS, POST_LS, LS, "가중평균 AUC — ①②④는 83행 · 5이벤트 / ③은 418행 · 9이벤트",
   "A · G · H · I 가 넘는다",
   "네 조건 모두 c_LS = 1 이고 b = 0 고정이다. 보탠양 +0.011 ~ +0.015." + NL + NL +
   "⚠ 다만 부트스트랩 95% 구간이 [−0.041, +0.073]으로 0을 포함한다. LS 평가에 음성이 20행뿐이라 AUC로는 판정할 수 없다." + NL + NL +
   "F(c=2)는 prior가 0.868로 가장 높지만 편향 +0.146으로 눈금이 나쁘다 — 순위가 좋은 c와 눈금이 맞는 c가 다르다.");
 pairSlide("결과", "액상화 LQ — 자기 prior vs posterior",
-  "LQ는 정답 규칙을 바꾸지 않았다. 229행 그대로다.",
-  ZP_LQ, POST_LQ, LQ, "가중평균 AUC · 229행 · 양성률 47.6%",
+  "LQ는 정답 규칙을 바꾸지 않았다. 평가 229행 그대로다.",
+  ZP_LQ, POST_LQ, LQ, "가중평균 AUC — 182행 · 6이벤트 (양성만 있는 3이벤트 47행은 AUC 계산 불가)",
   "대부분 보탠다",
   "15개 중 13개가 자기 prior를 넘는다(+0.003 ~ +0.040). J(b만 학습)가 0.8100 / +0.040으로 1위다." + NL + NL +
   "예외는 3·5번(LQ 최대집계)과 F다. 3·5번은 prior가 0.837로 가장 좋은데 posterior가 0.775에 그쳐 −0.062로 가장 크게 깎는다." + NL + NL +
@@ -524,9 +532,9 @@ pairSlide("결과", "액상화 LQ — 자기 prior vs posterior",
                fill:{color:i>=2&&i<=4?"FDFAF9":i>=5&&i<=7?"F8FBFC":BG}}}))),
   ], { x: M, y: 2.58, w: 12.1, colW:[0.42,1.35,0.95,0.95,0.95,0.95,0.95,0.95,4.63], rowH:0.265,
        fontFace:KR, fontSize:10.5, valign:"middle", border:{type:"solid",color:"E3E9EC",pt:1} });
-  s.addText("기본 정답 (125행 · 양성률 84.0%)", { x: M+1.77, y: 2.28, w: 2.85, h: 0.26, isTextBox:true, margin:0,
+  s.addText("기본 정답 (AUC 83행 · 편향 125행)", { x: M+1.77, y: 2.28, w: 2.85, h: 0.26, isTextBox:true, margin:0,
     align:"center", fontFace:KR, fontSize:11, bold:true, color:LS });
-  s.addText("자연+혼재 정답 (418행 · 양성률 18.4%)", { x: M+4.62, y: 2.28, w: 2.85, h: 0.26, isTextBox:true, margin:0,
+  s.addText("자연+혼재 정답 (둘 다 418행)", { x: M+4.62, y: 2.28, w: 2.85, h: 0.26, isTextBox:true, margin:0,
     align:"center", fontFace:KR, fontSize:11, bold:true, color:LQ });
   s.addText("초록 = MSE가 그 기준의 기저확률보다 낮다 (기본 0.1344 / 자연+혼재 0.1503).  AUC는 가중평균.", {
     x: M, y: 5.84, w: 12.1, h: 0.3, isTextBox: true, margin: 0, fontFace: KR, fontSize: 10.5, color: INK3 });
@@ -556,7 +564,7 @@ pairSlide("결과", "액상화 LQ — 자기 prior vs posterior",
        legendFontFace:KR, legendFontSize:10.5, legendColor:INK2,
        showValue:true, dataLabelPosition:"outEnd", dataLabelFormatCode:"0.000",
        valAxisMinVal:0.72, valAxisMaxVal:0.92, valAxisLabelFormatCode:"0.00" });
-  s.addText("기본 정답 — 125행 · 양성률 84.0%", { x: M, y: 5.60, w: 5.9, h: 0.28, isTextBox:true, margin:0,
+  s.addText("기본 정답 — AUC 83행 · 5이벤트 · 양성률 75.9%", { x: M, y: 5.60, w: 5.9, h: 0.28, isTextBox:true, margin:0,
     align:"center", fontFace:KR, fontSize:11, bold:true, color:LS });
   s.addChart(pres.ChartType.bar, [
     { name: "자기 prior", labels: AJ, values: NZP },
@@ -566,7 +574,7 @@ pairSlide("결과", "액상화 LQ — 자기 prior vs posterior",
        legendFontFace:KR, legendFontSize:10.5, legendColor:INK2,
        showValue:true, dataLabelPosition:"outEnd", dataLabelFormatCode:"0.000",
        valAxisMinVal:0.72, valAxisMaxVal:0.92, valAxisLabelFormatCode:"0.00" });
-  s.addText("자연+혼재 정답 — 418행 · 양성률 18.4%", { x: 6.82, y: 5.60, w: 5.9, h: 0.28, isTextBox:true, margin:0,
+  s.addText("자연+혼재 정답 — AUC 418행 · 9이벤트 · 양성률 18.4%", { x: 6.82, y: 5.60, w: 5.9, h: 0.28, isTextBox:true, margin:0,
     align:"center", fontFace:KR, fontSize:11, bold:true, color:LQ });
   note(s, M, 5.94, 12.1, 1.50, "같은 125행에서 라벨만 바꿔 보면 prior 는 오히려 떨어진다",
     "A 기준 — 기본 0.8400  →  같은 125행에 자연+혼재 라벨만 0.7199  →  418행 전부 0.8703.  C도 0.8163 → 0.7458 → 0.8889 로 똑같은 모양이다. " +
@@ -579,7 +587,7 @@ pairSlide("결과", "액상화 LQ — 자기 prior vs posterior",
   const s = slideBase(true);
   head(s, "마무리", "한계와 다음", true);
   const items = [
-    ["LS 평가가 125행 · 음성 20행 · 이벤트 5개뿐이다", "이번 판의 가장 큰 제약이다. NA 304행을 되살리려면 「조사 대상이었음이 확인되나 기록 없음」과 「조사 여부 불명」을 근거별로 갈라야 한다. location_note가 구조화되어 있어 149행은 분류 가능하고, 면적 시트 4개(155행)는 원자료를 다시 봐야 한다.", LS],
+    ["LS 평가가 편향 125행 · AUC 83행 · 음성 20행뿐이다", "이번 판의 가장 큰 제약이다. NA 304행을 되살리려면 「조사 대상이었음이 확인되나 기록 없음」과 「조사 여부 불명」을 근거별로 갈라야 한다. location_note가 구조화되어 있어 149행은 분류 가능하고, 면적 시트 4개(155행)는 원자료를 다시 봐야 한다.", LS],
     ["c_LS 는 확정하지 못했다", "c_LQ 는 G·H 가 부호로 괄호를 쳐서 0.62(K)로 확정했고 편향 +0.002 다. c_LS 는 그렇게 못 했다 — 편향으로는 1 근처가 맞는데(A +0.006) MSE 는 c_LS = 1.05 에서도 계속 내려간다. 두 기준이 어긋나 어느 쪽을 최적이라 부를 근거가 없어서 유도값 1 을 그대로 두었다. 최적 c 는 정답 규칙에도 크게 좌우된다(이전 판에서는 c_LS 가 0.62였다).", WARN],
     ["C·D 의 a_LS 가 상한에 붙었다", "C는 1.977, D는 1.862로 범위 [0.5, 2.0]의 위쪽 끝이다. 찾은 값이 아니라 잘린 값일 수 있다. C를 “자연+혼재에서 유일하게 버티는 조건”으로 인용할 때 같이 말해야 한다.", GOOD],
     ["LQ 최대집계 + 면적 항을 안 해봤다", "가장 좋은 LQ prior(0.8372)와 면적 항을 한 번도 같이 쓰지 않았다. λ = p̄·k 유도가 평균집계를 전제하므로 이론 정리가 먼저다.", LQ],
