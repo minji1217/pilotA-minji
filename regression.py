@@ -161,6 +161,7 @@ class DamageRegression(nn.Module):
         *,
         reference_event_idx: int = 0,
         gamma_init: float = 0.1,
+        mtn_covariate: bool = False,
     ) -> None:
         """
         회귀모형 파라미터를 생성한다.
@@ -277,6 +278,19 @@ class DamageRegression(nn.Module):
                 dtype=DTYPE,
             )
         )
+
+        # 후속실험 5 비교 조건: 산지 비율을 피해 회귀식에도 통제 변수로 넣는다.
+        # "산지가 많은 곳 = 시골 = 인구 대비 피해가 적다"는 효과를 eta_mtn이 흡수해,
+        # LS prior의 kappa가 그 효과를 산사태 쪽으로 잘못 가져가지 않게 한다.
+        # 기본값(False)이면 파라미터 자체가 없어 기존과 같다.
+        self.mtn_covariate = bool(mtn_covariate)
+        if self.mtn_covariate:
+            self.eta_mtn = nn.Parameter(
+                torch.zeros(
+                    NUM_CHANNELS,
+                    dtype=DTYPE,
+                )
+            )
 
         # ----------------------------------------------------
         # gamma
@@ -486,6 +500,9 @@ class DamageRegression(nn.Module):
         self.beta_pgv.zero_()
 
         self.delta_wood.zero_()
+
+        if self.mtn_covariate:
+            self.eta_mtn.zero_()
 
         # gamma 역시 initialize_from_batch() 호출 시
         # 항상 gamma_init 값으로 다시 초기화되도록 한다.
@@ -705,6 +722,10 @@ class DamageRegression(nn.Module):
             + gamma_ls * ls_state
             + gamma_lq * lq_state
         )
+
+        # 후속실험 5 비교 조건: eta_c * z_mtn_i (네 상태 모두에 같은 값)
+        if self.mtn_covariate:
+            log_lambda = log_lambda + self.eta_mtn.view(1, 1, NUM_CHANNELS) * batch.z_mtn.view(B, 1, 1)
 
         # ----------------------------------------------------
         # lambda

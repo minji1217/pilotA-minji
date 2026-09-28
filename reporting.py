@@ -127,6 +127,9 @@ def dump_params(reg, like, pri, path="outputs/params.csv"):
             ("pri", "_a_raw", "a", [0, 1], ["LS", "LQ"], f"bounded[{pri.A_MIN},{pri.A_MAX}]"),
             ("pri", "_b_raw", "b", [0, 1], ["LS", "LQ"], f"bounded[{pri.B_MIN},{pri.B_MAX}]"),
         ]
+    # 후속실험 5 비교 조건: 피해 회귀식의 산지 비율 효과 eta_c.
+    if getattr(reg, "mtn_covariate", False):
+        spec += [("reg", "eta_mtn", "eta_mtn", CHANNEL_IDX, CHANNEL_LABELS, "none")]
     # 후속실험 5: z_LS의 kappa * z_mtn. 부호 제약이 없다.
     if getattr(pri, "mtn_prior", False):
         spec += [("pri", "kappa", "kappa", [0], ["LS"], "none")]

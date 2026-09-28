@@ -103,7 +103,7 @@ def to_eval_gt(eval_gt: EvalGroundTruthBatch):
 
 def train(batch, *,seed=0,epochs=3000,lr=0.02,lam_gamma=0.0,prior_mode="free",b_bound=2.0,
           b_min=None,b_max=None,area_mode=None,c_min=0.0,c_max=2.0,
-          mtn_prior=False,lam_kappa=0.0,use_labels=False):
+          mtn_prior=False,lam_kappa=0.0,use_labels=False,mtn_damage=False):
     """
     lam_gamma  : gamma에 거는 L2 정규화 계수. loss에 lam_gamma * sum(gamma^2)를 더한다.
                  gamma에 N(0, 1/(2*lam_gamma)) prior를 준 MAP 추정과 같다.
@@ -119,12 +119,13 @@ def train(batch, *,seed=0,epochs=3000,lr=0.02,lam_gamma=0.0,prior_mode="free",b_
     mtn_prior  : True면 z_LS에 kappa * z_mtn을 더하고 kappa를 학습한다(area_mode 필요).
     lam_kappa  : kappa에 거는 L2 정규화 계수. loss에 lam_kappa * kappa^2를 더한다.
     use_labels : True면 batch.ls_label이 있는 행은 LS를 라벨값으로 고정한 우도를 쓴다.
+    mtn_damage : True면 피해 회귀식 log lambda에도 eta_c * z_mtn을 더한다(비교 조건).
     log_cov는 batch.log_cov에 실려 있으면 prior에 자동으로 들어간다.
     """
     torch.manual_seed(seed)
 
     like=DamageLikelihood()
-    reg=DamageRegression()
+    reg=DamageRegression(mtn_covariate=mtn_damage)
     if area_mode is None:
         if mtn_prior:
             raise ValueError("mtn_prior는 area_mode와 함께만 쓸 수 있습니다.")

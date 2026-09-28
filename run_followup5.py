@@ -11,7 +11,14 @@
 - 분리     : --test-event의 행 전체를 학습에서 뺀다. 평가 행의 사후는 라벨 없이(4상태 합산) 계산한다.
 
 평가 이벤트의 alpha_e(이벤트 절편)는 학습 데이터가 없어 gradient를 받지 못한다.
---heldout-alpha로 채울 값을 정한다(mean: 학습된 이벤트 절편 평균 / zero: 0).
+--heldout-alpha로 채울 값을 정한다.
+    mean : 학습된 이벤트 절편의 평균
+    zero : 0 (학습되지 않은 초기값 그대로)
+    fit  : 다른 파라미터를 모두 고정하고, 평가 이벤트 행의 '라벨 없음' 우도 sum log P(y_i)를
+           최대로 만드는 alpha_e 하나를 찾는다. LS 라벨은 쓰지 않는다.
+           평가 행의 사후 계산이 이미 y를 쓰므로(가이드 Step 4), y로 이벤트 수준만 맞추는 것이다.
+
+--mtn-damage를 주면 피해 회귀식 log lambda에도 eta_c * z_mtn을 더한다(가이드와 다른 비교 조건).
 기준 이벤트(alpha_e=0 고정)는 EVENTS[0]=2004 니가타라 돗토리·훗카이도 어느 회차에서도 학습에 남는다.
 
 실행 예:
@@ -73,7 +80,9 @@ def main():
                     help="LS 라벨을 우도에 쓰지 않는다(모든 행을 라벨 없음 식으로)")
     ap.add_argument("--lam-gamma", type=float, default=10.0)
     ap.add_argument("--lam-kappa", type=float, default=None, help="기본값은 --lam-gamma와 같다")
-    ap.add_argument("--heldout-alpha", default="mean", choices=["mean", "zero"],
+    ap.add_argument("--mtn-damage", action="store_true",
+                    help="비교 조건: 피해 회귀식에도 eta_c * z_mtn을 넣는다")
+    ap.add_argument("--heldout-alpha", default="mean", choices=["mean", "zero", "fit"],
                     help="평가 이벤트의 alpha_e에 넣을 값")
     ap.add_argument("--epochs", type=int, default=3000)
     ap.add_argument("--lr", type=float, default=0.02)
@@ -85,7 +94,8 @@ def main():
 
     tag = "full" if args.test_event is None else f"test-{args.test_event.replace(' ', '_')}"
     tag += ("" if not args.no_cov else "_nocov") + ("" if mtn_prior else "_nomtn")
-    tag += ("" if not args.no_labels else "_nolabels") + f"_alpha-{args.heldout_alpha}"
+    tag += ("" if not args.no_labels else "_nolabels") + ("_mtndmg" if args.mtn_damage else "")
+    tag += f"_alpha-{args.heldout_alpha}"
     out_dir = Path(args.out or f"results/followup5/{tag}")
     out_dir.mkdir(parents=True, exist_ok=True)
 
@@ -122,7 +132,7 @@ def main():
     reg, like, pri, hist = train(
         train_batch, seed=args.seed, epochs=args.epochs, lr=args.lr, lam_gamma=args.lam_gamma,
         area_mode="fixed", mtn_prior=mtn_prior, lam_kappa=lam_kappa,
-        use_labels=not args.no_labels,
+        use_labels=not args.no_labels, mtn_damage=args.mtn_damage,
     )
 
     # 평가 이벤트의 alpha_e는 gradient를 받지 못해 초기값 0에 남아 있다.
@@ -131,10 +141,38 @@ def main():
         ref = reg.reference_event_idx
         if e == ref:
             raise ValueError("평가 이벤트가 기준 이벤트입니다. reference_event_idx를 바꿔야 합니다.")
+        slot = e if e < ref else e - 1
         with torch.no_grad():
             trained = [i for i in range(len(EVENTS)) if i != e]
-            fill = reg.alpha_event[trained].mean() if args.heldout_alpha == "mean" else 0.0
-            reg.alpha_event_free[e if e < ref else e - 1] = fill
+            mean_alpha = float(reg.alpha_event[trained].mean())
+            if args.heldout_alpha == "mean":
+                reg.alpha_event_free[slot] = mean_alpha
+            elif args.heldout_alpha == "zero":
+                reg.alpha_event_free[slot] = 0.0
+            else:
+                # 평가 행만 떼어 '라벨 없음' 우도를 alpha_e 격자 위에서 계산한다.
+                # alpha_e 하나짜리 1차원 문제라 격자 탐색 후 주변을 한 번 더 촘촘히 본다.
+                test_batch = subset_batch(
+                    dataclasses.replace(batch, z_mtn=z_mtn, log_cov=log_cov, ls_label=None),
+                    torch.nonzero(test_mask).squeeze(-1),
+                )
+                log_w_test = prior_log_w(pri, test_batch)
+
+                def total_loglik(a: float) -> float:
+                    reg.alpha_event_free[slot] = a
+                    out_l = like(test_batch, reg(test_batch).mu)
+                    return float(marginalize(log_w_test, out_l.log_L)[1].sum())
+
+                grid = np.arange(-8.0, 4.0 + 1e-9, 0.05)
+                best = max(grid, key=total_loglik)
+                fine = np.arange(best - 0.05, best + 0.05 + 1e-9, 0.001)
+                best = max(fine, key=total_loglik)
+                reg.alpha_event_free[slot] = float(best)
+            heldout_alpha_value = float(reg.alpha_event[e])
+            print(f"평가 이벤트 alpha_e = {heldout_alpha_value:+.3f} "
+                  f"({args.heldout_alpha}; 학습 이벤트 평균 {mean_alpha:+.3f})")
+    else:
+        heldout_alpha_value = None
 
     # ---- 전체 행 추론: 라벨 없이(4상태 합산) ----
     with torch.no_grad():
@@ -186,6 +224,8 @@ def main():
         "lam_gamma": args.lam_gamma, "epochs": args.epochs, "lr": args.lr, "seed": args.seed,
         "use_cov": not args.no_cov, "mtn_prior": mtn_prior, "use_labels": not args.no_labels,
         "heldout_alpha": args.heldout_alpha,
+        "heldout_alpha_value": heldout_alpha_value,
+        "mtn_damage": bool(args.mtn_damage),
         "n_train": train_batch.batch_size, "n_train_labeled": n_lab, "n_train_negative": n_neg,
         "z_mtn_train_mean_of_loader_z": float(m), "z_mtn_train_std_of_loader_z": float(s),
         "final_loss": float(hist["loss_total"].iloc[-1]),
