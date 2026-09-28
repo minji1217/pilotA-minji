@@ -85,6 +85,8 @@ USGS_REQUIRED_COLUMNS: tuple[str, ...] = (
 GT_CODE_COLUMN: str = "muni_code"
 GT_LS_FLAG_COLUMN: str = "ls_flag"
 GT_LS_AREA_COLUMN: str = "ls_area_ha"
+# 후속실험 5: 시정촌 면적 중 산사태 인벤토리 판독 범위 안에 든 비율(0~1). 폴리곤 이벤트 시트에만 있다.
+GT_COVERAGE_COLUMN: str = "coverage_ratio"
 GT_LQ_FLAG_COLUMN: str = "lq_flag"
 GT_LQ_JSHIS_FLAG_COLUMN: str = "jshis_flag"
 
@@ -913,8 +915,26 @@ def _prepare_ls_ground_truth(
             f"'{GT_LS_AREA_COLUMN}' 컬럼이 필요합니다."
         )
 
+    # 후속실험 5: 판독 범위 비율 cov.
+    # 폴리곤 기반 라벨(coverage_ratio > 0)은 그대로 쓰고, 나머지는 1이다.
+    #   - 보고서 기반 시트(돗토리, 오사카 등)는 coverage_ratio 열이 없다.
+    #   - 훗카이도의 ls_flag만 있는 2행(에니와시, 기타히로시마시)은 coverage_ratio=0이지만
+    #     보고서 기반 라벨이라 1이다.
+    #   - coverage_ratio=0인 나머지 행은 판독 범위 밖이라 애초에 라벨이 없다(NA).
+    result["cov"] = 1.0
+    if GT_COVERAGE_COLUMN in df.columns:
+        cov = pd.to_numeric(df.loc[result.index, GT_COVERAGE_COLUMN], errors="coerce")
+        bad = cov.notna() & ((cov < 0) | (cov > 1))
+        if bad.any():
+            raise ValueError(
+                f"[{sheet_name}] coverage_ratio는 0~1이어야 합니다: "
+                f"{result.loc[bad, MUNICIPALITY_CODE_COLUMN].tolist()}"
+            )
+        use = cov.notna() & (cov > 0)
+        result.loc[use, "cov"] = cov[use].astype("float64")
+
     return result[
-        [MUNICIPALITY_CODE_COLUMN, "gt_ls", "ls_eval_mask"]
+        [MUNICIPALITY_CODE_COLUMN, "gt_ls", "ls_eval_mask", "cov"]
     ].reset_index(drop=True)
 
 
@@ -1110,6 +1130,34 @@ def load_eval_ground_truth(
 
     eval_batch.validate()
     return eval_batch
+
+
+def load_ls_coverage(
+    gt_path: str | Path,
+    model_batch: PilotABatch,
+) -> torch.Tensor:
+    """
+    후속실험 5: 모델 행 순서대로 LS 판독 범위 비율 cov [B]를 만든다.
+
+    LS 라벨이 있는 행만 실제 cov를 갖고, 라벨이 없는 행(판독 범위 밖 포함)은 1이다.
+    log(cov)는 LS prior에 학습하지 않는 고정 오프셋으로 더해진다.
+    """
+    gt_df = _prepare_eval_ground_truth_df(gt_path)
+    model_df = pd.DataFrame(
+        {
+            "event_idx": model_batch.event_idx.detach().cpu().tolist(),
+            MUNICIPALITY_CODE_COLUMN: list(model_batch.municipality_code),
+        }
+    )
+    aligned = model_df.merge(
+        gt_df[["event_idx", MUNICIPALITY_CODE_COLUMN, "cov", "ls_eval_mask"]],
+        on=["event_idx", MUNICIPALITY_CODE_COLUMN],
+        how="left",
+        validate="one_to_one",
+    )
+    labeled = aligned["ls_eval_mask"].fillna(False).astype(bool)
+    cov = aligned["cov"].where(labeled, 1.0).fillna(1.0).to_numpy(dtype="float64")
+    return torch.tensor(cov, dtype=DTYPE)
 
 
 def load_eval_inputs(

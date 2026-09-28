@@ -102,7 +102,8 @@ def to_eval_gt(eval_gt: EvalGroundTruthBatch):
 
 
 def train(batch, *,seed=0,epochs=3000,lr=0.02,lam_gamma=0.0,prior_mode="free",b_bound=2.0,
-          b_min=None,b_max=None,area_mode=None,c_min=0.0,c_max=2.0):
+          b_min=None,b_max=None,area_mode=None,c_min=0.0,c_max=2.0,
+          mtn_prior=False,lam_kappa=0.0,use_labels=False):
     """
     lam_gamma  : gamma에 거는 L2 정규화 계수. loss에 lam_gamma * sum(gamma^2)를 더한다.
                  gamma에 N(0, 1/(2*lam_gamma)) prior를 준 MAP 추정과 같다.
@@ -113,12 +114,20 @@ def train(batch, *,seed=0,epochs=3000,lr=0.02,lam_gamma=0.0,prior_mode="free",b_
                  후속실험 2의 b in [-2, 4]가 이 경우다. 둘 다 줘야 한다.
     area_mode  : 후속실험 3. AreaPrior 모드(prior.AreaPrior.MODES). 주면 prior_mode·b_bound는 쓰지 않는다.
                  b 범위는 b_min/b_max(기본 [-2, 4]), c 범위는 c_min/c_max(기본 [0, 2])다.
+
+    ---- 후속실험 5 옵션. 전부 기본값이면 기존 동작과 같다. ----
+    mtn_prior  : True면 z_LS에 kappa * z_mtn을 더하고 kappa를 학습한다(area_mode 필요).
+    lam_kappa  : kappa에 거는 L2 정규화 계수. loss에 lam_kappa * kappa^2를 더한다.
+    use_labels : True면 batch.ls_label이 있는 행은 LS를 라벨값으로 고정한 우도를 쓴다.
+    log_cov는 batch.log_cov에 실려 있으면 prior에 자동으로 들어간다.
     """
     torch.manual_seed(seed)
 
     like=DamageLikelihood()
     reg=DamageRegression()
     if area_mode is None:
+        if mtn_prior:
+            raise ValueError("mtn_prior는 area_mode와 함께만 쓸 수 있습니다.")
         pri=Prior(mode=prior_mode,b_bound=b_bound,b_min=b_min,b_max=b_max)
     else:
         # b를 학습하는 모드는 b 범위를 넓게 준다.
@@ -131,7 +140,7 @@ def train(batch, *,seed=0,epochs=3000,lr=0.02,lam_gamma=0.0,prior_mode="free",b_
         pri=AreaPrior(mode=area_mode,
                       b_min=default_b[0] if b_min is None else b_min,
                       b_max=default_b[1] if b_max is None else b_max,
-                      c_min=c_min,c_max=c_max)
+                      c_min=c_min,c_max=c_max,mtn_prior=mtn_prior)
         # 중심화 모드면 batch 전체의 log k 평균을 한 번 재 둔다.
         pri.fit_center(batch.log_k_ls, batch.log_k_lq)
 
@@ -140,7 +149,9 @@ def train(batch, *,seed=0,epochs=3000,lr=0.02,lam_gamma=0.0,prior_mode="free",b_
     opt=torch.optim.Adam(list(like.parameters())+list(reg.parameters())+list(pri.parameters()),lr=lr)
     #total param??
     print(f"총 학습될 파라미터 : {sum(p.numel() for p in opt.param_groups[0]['params'])}개")
-    
+    ls_label = batch.ls_label if use_labels else None
+    if use_labels and ls_label is None:
+        raise ValueError("use_labels=True이면 batch.ls_label이 있어야 합니다.")
 
     for epoch in range(epochs):
         out_r=reg(batch)
@@ -148,7 +159,7 @@ def train(batch, *,seed=0,epochs=3000,lr=0.02,lam_gamma=0.0,prior_mode="free",b_
         out_l=like(batch,out_r.mu)
         w_batch=prior_log_w(pri,batch)
         
-        _,log_Py=marginalize(w_batch,out_l.log_L)
+        _,log_Py=marginalize(w_batch,out_l.log_L,ls_label)
         nll=-log_Py.sum()
 
         # gamma는 softplus를 거친 실제 값에 건다. 변환 전 raw에 걸면 식의 gamma가 아니다.
@@ -158,6 +169,8 @@ def train(batch, *,seed=0,epochs=3000,lr=0.02,lam_gamma=0.0,prior_mode="free",b_
             )
         else:
             penalty = torch.zeros((), dtype=nll.dtype)
+        if mtn_prior and lam_kappa > 0:
+            penalty = penalty + lam_kappa * (pri.kappa ** 2).sum()
         loss = nll + penalty
 
         opt.zero_grad() #기울기 누적 초기화

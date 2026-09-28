@@ -206,11 +206,16 @@ class AreaPrior(nn.Module):
     A_MIN, A_MAX = 0.5, 2.0
 
     def __init__(self, mode: str = "fixed", b_min: float = -2.0, b_max: float = 4.0,
-                 c_min: float = 0.0, c_max: float = 2.0):
+                 c_min: float = 0.0, c_max: float = 2.0, mtn_prior: bool = False):
         super().__init__()
         if mode not in self.MODES:
             raise ValueError(f"mode는 {self.MODES} 중 하나여야 합니다: {mode}")
         self.mode = mode
+
+        # 후속실험 5: 켜면 z_LS에 kappa * z_mtn(표준화 산지 비율)을 더한다. kappa만 학습한다.
+        self.mtn_prior = bool(mtn_prior)
+        if self.mtn_prior:
+            self.kappa = nn.Parameter(torch.zeros(1, dtype=DTYPE))
 
         b_min, b_max, c_min, c_max = float(b_min), float(b_max), float(c_min), float(c_max)
         if not b_min < 0.0 < b_max:
@@ -312,8 +317,14 @@ class AreaPrior(nn.Module):
             return torch.cat([self.c[:1], c_lq])
         return self.c
 
-    def z(self, pi_ls, pi_lq, log_k_ls, log_k_lq):
-        """z_ls, z_lq [B]. 평가에서 '자기 prior' 단독 점수로도 쓴다."""
+    def z(self, pi_ls, pi_lq, log_k_ls, log_k_lq, log_cov=None, z_mtn=None):
+        """z_ls, z_lq [B]. 평가에서 '자기 prior' 단독 점수로도 쓴다.
+
+        후속실험 5 (LS에만 들어간다. LQ는 그대로)
+            log_cov : 판독 범위 비율의 log. 학습하지 않는 고정 오프셋이다.
+                      라벨 없는 행과 보고서 기반 행은 cov=1이라 0이다.
+            z_mtn   : 표준화 산지 비율. mtn_prior=True일 때 kappa를 곱해 더한다.
+        """
         # p̄ = 0인 행이 있어 log 0을 피하려고 기존 logit과 같은 EPS로 아래를 자른다.
         x_ls = torch.log(pi_ls.clamp_min(EPS))
         x_lq = torch.log(pi_lq.clamp_min(EPS))
@@ -321,10 +332,16 @@ class AreaPrior(nn.Module):
         # 중심화 모드가 아니면 log_k_center가 0이라 원값 그대로다.
         z_ls = a[0] * x_ls + b[0] + c[0] * (log_k_ls - self.log_k_center[0])
         z_lq = a[1] * x_lq + b[1] + c[1] * (log_k_lq - self.log_k_center[1])
+        if log_cov is not None:
+            z_ls = z_ls + log_cov
+        if self.mtn_prior:
+            if z_mtn is None:
+                raise ValueError("mtn_prior=True이면 z_mtn을 함께 넘겨야 합니다.")
+            z_ls = z_ls + self.kappa * z_mtn
         return z_ls, z_lq
 
-    def forward(self, pi_ls, pi_lq, log_k_ls, log_k_lq):
-        z_ls, z_lq = self.z(pi_ls, pi_lq, log_k_ls, log_k_lq)
+    def forward(self, pi_ls, pi_lq, log_k_ls, log_k_lq, log_cov=None, z_mtn=None):
+        z_ls, z_lq = self.z(pi_ls, pi_lq, log_k_ls, log_k_lq, log_cov, z_mtn)
 
         log_p_ls, log_q_ls = F.logsigmoid(z_ls), F.logsigmoid(-z_ls)
         log_p_lq, log_q_lq = F.logsigmoid(z_lq), F.logsigmoid(-z_lq)
@@ -335,8 +352,15 @@ class AreaPrior(nn.Module):
         return torch.stack(result, dim=-1)
 
 
+def prior_z(pri, batch):
+    """AreaPrior의 (z_LS, z_LQ)를 batch에서 만든다. log_cov가 batch에 실려 있으면 같이 쓴다."""
+    return pri.z(batch.pi_ls, batch.pi_lq, batch.log_k_ls, batch.log_k_lq,
+                 batch.log_cov, batch.z_mtn if pri.mtn_prior else None)
+
+
 def prior_log_w(pri, batch):
     """Prior / AreaPrior 어느 쪽이든 batch에서 4상태 log prior [B, 4]를 만든다."""
     if isinstance(pri, AreaPrior):
-        return pri(batch.pi_ls, batch.pi_lq, batch.log_k_ls, batch.log_k_lq)
+        return pri(batch.pi_ls, batch.pi_lq, batch.log_k_ls, batch.log_k_lq,
+                   batch.log_cov, batch.z_mtn if pri.mtn_prior else None)
     return pri(batch.pi_ls, batch.pi_lq)

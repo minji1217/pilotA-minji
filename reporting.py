@@ -127,6 +127,9 @@ def dump_params(reg, like, pri, path="outputs/params.csv"):
             ("pri", "_a_raw", "a", [0, 1], ["LS", "LQ"], f"bounded[{pri.A_MIN},{pri.A_MAX}]"),
             ("pri", "_b_raw", "b", [0, 1], ["LS", "LQ"], f"bounded[{pri.B_MIN},{pri.B_MAX}]"),
         ]
+    # 후속실험 5: z_LS의 kappa * z_mtn. 부호 제약이 없다.
+    if getattr(pri, "mtn_prior", False):
+        spec += [("pri", "kappa", "kappa", [0], ["LS"], "none")]
     # mode == "fixed"이면 a=1, b=0은 학습 파라미터가 아니므로 아래에서 고정행으로 넣는다.
     mods = {"reg": reg, "lik": like, "pri": pri}
     named = {k: dict(m.named_parameters()) for k, m in mods.items()}

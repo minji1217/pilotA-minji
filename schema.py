@@ -373,6 +373,13 @@ class PilotABatch:
 
     municipality_code: tuple[str, ...]
 
+    # 후속실험 5. loader는 채우지 않고 run_followup5.py가 dataclasses.replace로 싣는다.
+    # 둘 다 None이면 기존과 완전히 같다.
+    #   log_cov  [B] float64 : LS prior의 판독 범위 보정 log(cov). 라벨 없는 행은 0
+    #   ls_label [B] long    : GSI LS 라벨 0/1, 라벨 없는 행은 -1
+    log_cov: Tensor | None = None
+    ls_label: Tensor | None = None
+
 
     @property
     def batch_size(self) -> int:
