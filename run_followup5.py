@@ -80,6 +80,8 @@ def main():
                     help="LS 라벨을 우도에 쓰지 않는다(모든 행을 라벨 없음 식으로)")
     ap.add_argument("--lam-gamma", type=float, default=10.0)
     ap.add_argument("--lam-kappa", type=float, default=None, help="기본값은 --lam-gamma와 같다")
+    ap.add_argument("--save-alpha-curve", action="store_true",
+                    help="--heldout-alpha fit일 때 alpha_e 격자별 우도·사후 AUC를 alpha_fit_curve.csv로 저장(설명용)")
     ap.add_argument("--mtn-damage", action="store_true",
                     help="비교 조건: 피해 회귀식에도 eta_c * z_mtn을 넣는다")
     ap.add_argument("--heldout-alpha", default="mean", choices=["mean", "zero", "fit"],
@@ -167,6 +169,22 @@ def main():
                 best = max(grid, key=total_loglik)
                 fine = np.arange(best - 0.05, best + 0.05 + 1e-9, 0.001)
                 best = max(fine, key=total_loglik)
+
+                # 곡선 저장: alpha_e를 바꿔 가며 평가 행의 우도와 사후 LS AUC가 어떻게 변하는지 기록한다.
+                # 결과에는 영향이 없고 설명용 자료다. 라벨은 AUC 기록에만 쓰고 alpha_e 선택에는 쓰지 않는다.
+                if args.save_alpha_curve:
+                    lab = ls_label[test_mask].numpy()
+                    rows = []
+                    for a in np.arange(-4.0, 1.5 + 1e-9, 0.05):
+                        ll = total_loglik(float(a))
+                        out_l = like(test_batch, reg(test_batch).mu)
+                        lj, lpy = marginalize(log_w_test, out_l.log_L)
+                        p_ls_t, _ = infer(lj, lpy)
+                        has_lab = lab >= 0
+                        rows.append({"alpha_e": round(float(a), 3), "loglik": ll,
+                                     "post_auc": auc(p_ls_t.numpy()[has_lab], lab[has_lab]),
+                                     **{f"post_{c}": float(p_ls_t[i]) for i, c in enumerate(test_batch.municipality_code)}})
+                    pd.DataFrame(rows).to_csv(out_dir / "alpha_fit_curve.csv", index=False, encoding="utf-8-sig")
                 reg.alpha_event_free[slot] = float(best)
             heldout_alpha_value = float(reg.alpha_event[e])
             print(f"평가 이벤트 alpha_e = {heldout_alpha_value:+.3f} "
