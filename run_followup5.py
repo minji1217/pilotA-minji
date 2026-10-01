@@ -19,7 +19,7 @@
            평가 행의 사후 계산이 이미 y를 쓰므로(가이드 Step 4), y로 이벤트 수준만 맞추는 것이다.
 
 --mtn-damage를 주면 피해 회귀식 log lambda에도 eta_c * z_mtn을 더한다(가이드와 다른 비교 조건).
-기준 이벤트(alpha_e=0 고정)는 EVENTS[0]=2004 니가타라 돗토리·훗카이도 어느 회차에서도 학습에 남는다.
+기준 이벤트(alpha_e=0 고정)는 EVENTS[0]=2004 니가타다. 니가타를 평가할 때만 EVENTS[1]로 옮긴다.
 
 실행 예:
     python run_followup5.py --test-event "2018 훗카이도"
@@ -130,11 +130,18 @@ def main():
     n_neg = int((train_batch.ls_label == 0).sum())
     print(f"[{tag}] 학습 {train_batch.batch_size}행 (LS 라벨 {n_lab}, 음성 {n_neg}) / 평가 {int(test_mask.sum())}행")
 
+    # 기준 이벤트(alpha_e=0 고정)는 EVENTS[0]=2004 니가타다. 그 니가타를 평가할 때는
+    # 학습 행이 없는 이벤트를 기준으로 둘 수 없으므로 EVENTS[1]로 옮긴다. 기준을 옮겨도
+    # alpha_c가 그만큼 이동할 뿐 모형은 같다(alpha_e에는 정규화가 없다).
+    ref_idx = 0
+    if args.test_event is not None and EVENT_TO_INDEX[args.test_event] == 0:
+        ref_idx = 1
+
     # ---- 학습 ----
     reg, like, pri, hist = train(
         train_batch, seed=args.seed, epochs=args.epochs, lr=args.lr, lam_gamma=args.lam_gamma,
         area_mode="fixed", mtn_prior=mtn_prior, lam_kappa=lam_kappa,
-        use_labels=not args.no_labels, mtn_damage=args.mtn_damage,
+        use_labels=not args.no_labels, mtn_damage=args.mtn_damage, reference_event_idx=ref_idx,
     )
 
     # 평가 이벤트의 alpha_e는 gradient를 받지 못해 초기값 0에 남아 있다.
@@ -243,7 +250,7 @@ def main():
         "use_cov": not args.no_cov, "mtn_prior": mtn_prior, "use_labels": not args.no_labels,
         "heldout_alpha": args.heldout_alpha,
         "heldout_alpha_value": heldout_alpha_value,
-        "mtn_damage": bool(args.mtn_damage),
+        "mtn_damage": bool(args.mtn_damage), "reference_event": INDEX_TO_EVENT[ref_idx],
         "n_train": train_batch.batch_size, "n_train_labeled": n_lab, "n_train_negative": n_neg,
         "z_mtn_train_mean_of_loader_z": float(m), "z_mtn_train_std_of_loader_z": float(s),
         "final_loss": float(hist["loss_total"].iloc[-1]),
