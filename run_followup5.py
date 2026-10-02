@@ -38,7 +38,7 @@ import torch
 from infer import infer
 from loader import load_eval_ground_truth, load_ls_coverage, load_pilot_a_batch
 from marginal import marginalize
-from prior import prior_log_w, prior_z
+from prior import AreaPrior, prior_log_w, prior_z
 from schema import EVENT_TO_INDEX, EVENTS, INDEX_TO_EVENT, PilotABatch
 from train import GT_PATH, STATS_PATH, USGS_PATH, train
 from reporting import dump_params, save_loss_history
@@ -84,6 +84,8 @@ def main():
                     help="--heldout-alpha fit일 때 alpha_e 격자별 우도·사후 AUC를 alpha_fit_curve.csv로 저장(설명용)")
     ap.add_argument("--mtn-damage", action="store_true",
                     help="비교 조건: 피해 회귀식에도 eta_c * z_mtn을 넣는다")
+    ap.add_argument("--area-mode", default="fixed", choices=list(AreaPrior.MODES),
+                    help="AreaPrior 모드. 기본 fixed(조건 A). 후속실험 3의 버전 J는 b-only")
     ap.add_argument("--heldout-alpha", default="mean", choices=["mean", "zero", "fit"],
                     help="평가 이벤트의 alpha_e에 넣을 값")
     ap.add_argument("--epochs", type=int, default=3000)
@@ -97,6 +99,7 @@ def main():
     tag = "full" if args.test_event is None else f"test-{args.test_event.replace(' ', '_')}"
     tag += ("" if not args.no_cov else "_nocov") + ("" if mtn_prior else "_nomtn")
     tag += ("" if not args.no_labels else "_nolabels") + ("_mtndmg" if args.mtn_damage else "")
+    tag += ("" if args.area_mode == "fixed" else f"_area-{args.area_mode}")
     tag += f"_alpha-{args.heldout_alpha}"
     out_dir = Path(args.out or f"results/followup5/{tag}")
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -109,6 +112,9 @@ def main():
     ls_label = torch.full((B,), -1, dtype=torch.long)
     ls_rows = eval_gt.model_row_idx[eval_gt.ls_eval_mask]
     ls_label[ls_rows] = eval_gt.gt_ls[eval_gt.ls_eval_mask].to(torch.long)
+    # LQ 정답은 평가에만 쓴다(학습 우도에는 LQ 라벨을 넣지 않는다).
+    lq_label = torch.full((B,), -1, dtype=torch.long)
+    lq_label[eval_gt.model_row_idx[eval_gt.lq_eval_mask]] = eval_gt.gt_lq[eval_gt.lq_eval_mask].to(torch.long)
 
     cov = load_ls_coverage(GT_PATH, batch)
     log_cov = torch.zeros(B, dtype=batch.pi_ls.dtype) if args.no_cov else torch.log(cov)
@@ -140,7 +146,7 @@ def main():
     # ---- 학습 ----
     reg, like, pri, hist = train(
         train_batch, seed=args.seed, epochs=args.epochs, lr=args.lr, lam_gamma=args.lam_gamma,
-        area_mode="fixed", mtn_prior=mtn_prior, lam_kappa=lam_kappa,
+        area_mode=args.area_mode, mtn_prior=mtn_prior, lam_kappa=lam_kappa,
         use_labels=not args.no_labels, mtn_damage=args.mtn_damage, reference_event_idx=ref_idx,
     )
 
@@ -205,8 +211,8 @@ def main():
         out_l = like(full, out_r.mu)
         log_w = prior_log_w(pri, full)
         log_joint, log_Py = marginalize(log_w, out_l.log_L)
-        p_ls, _ = infer(log_joint, log_Py)
-        z_ls, _ = prior_z(pri, full)
+        p_ls, p_lq = infer(log_joint, log_Py)
+        z_ls, z_lq = prior_z(pri, full)
         z_A = torch.log(full.pi_ls.clamp_min(1e-6)) + full.log_k_ls  # 조건 A 자기 prior
 
     kappa = float(pri.kappa) if mtn_prior else 0.0
@@ -223,6 +229,11 @@ def main():
         "z_prior": z_ls.numpy(),
         "prior_ls": torch.sigmoid(z_ls).numpy(),
         "post_ls": p_ls.numpy(),
+        "lq_label": lq_label.numpy(),
+        "pi_lq": full.pi_lq.numpy(),
+        "z_prior_lq": z_lq.numpy(),
+        "prior_lq": torch.sigmoid(z_lq).numpy(),
+        "post_lq": p_lq.numpy(),
     })
     pred.to_csv(out_dir / "predictions.csv", index=False, encoding="utf-8-sig")
     save_loss_history(hist, dir_=str(out_dir), tag=tag)
@@ -241,6 +252,13 @@ def main():
             "auc_prior": auc(d.z_prior, d.ls_label),
             "auc_post": auc(d.post_ls, d.ls_label),
         })
+        q = pred[(pred.event == ev) & (pred.lq_label >= 0)]
+        rows[-1].update({
+            "n_lq": len(q), "neg_lq": int((q.lq_label == 0).sum()),
+            "auc_usgs_lq": auc(q.pi_lq, q.lq_label),
+            "auc_prior_lq": auc(q.z_prior_lq, q.lq_label),
+            "auc_post_lq": auc(q.post_lq, q.lq_label),
+        })
     res = pd.DataFrame(rows)
     res.to_csv(out_dir / "auc.csv", index=False, encoding="utf-8-sig")
 
@@ -250,7 +268,7 @@ def main():
         "use_cov": not args.no_cov, "mtn_prior": mtn_prior, "use_labels": not args.no_labels,
         "heldout_alpha": args.heldout_alpha,
         "heldout_alpha_value": heldout_alpha_value,
-        "mtn_damage": bool(args.mtn_damage), "reference_event": INDEX_TO_EVENT[ref_idx],
+        "mtn_damage": bool(args.mtn_damage), "area_mode": args.area_mode, "reference_event": INDEX_TO_EVENT[ref_idx],
         "n_train": train_batch.batch_size, "n_train_labeled": n_lab, "n_train_negative": n_neg,
         "z_mtn_train_mean_of_loader_z": float(m), "z_mtn_train_std_of_loader_z": float(s),
         "final_loss": float(hist["loss_total"].iloc[-1]),
