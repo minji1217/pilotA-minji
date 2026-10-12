@@ -133,8 +133,12 @@ def _neg_log1p_exp(x: Tensor) -> Tensor:
 class DisasterNet(nn.Module):
     """한 그룹(기본: 이벤트 1개)의 DisasterNet."""
 
-    def __init__(self, n_rows: int, num_flows=4, r0_var=1.0):
+    def __init__(self, n_rows: int, num_flows=4, r0_var=1.0, use_bd=True):
         super().__init__()
+        # use_bd=False: 건물피해 노드를 뺀 ablation. 파라미터는 똑같이 만들어 두고(난수 순서 유지)
+        # 손실·관측식에서만 BD를 빼므로, use_bd=True 결과는 이 옵션이 생기기 전과 같다.
+        self.use_bd = use_bd
+        self.nodes = NODES if use_bd else ("LS", "LQ")
         p = lambda: nn.Parameter(torch.rand((), dtype=DTYPE))  # 공식 코드처럼 U(0,1) 초기화
         # 노드 CPD 가중치 (weight vertices). 모든 위치에서 공유된다.
         # 이름이 _raw인 것은 softplus로 양수 제약을 건다 (아래 property).
@@ -174,9 +178,12 @@ class DisasterNet(nn.Module):
         r_lq, lq_lq = self.flow["LQ"](a_lq.unsqueeze(1), n_samples)
         q_ls = torch.sigmoid(r_ls).mean(1)                               # 식 6
         q_lq = torch.sigmoid(r_lq).mean(1)
-        h_bd = torch.stack([q_ls, q_lq, a_bd], dim=1)                    # BD의 부모
-        r_bd, lq_bd = self.flow["BD"](h_bd, n_samples)
-        q_bd = torch.sigmoid(r_bd).mean(1)
+        if self.use_bd:
+            h_bd = torch.stack([q_ls, q_lq, a_bd], dim=1)                # BD의 부모
+            r_bd, lq_bd = self.flow["BD"](h_bd, n_samples)
+            q_bd = torch.sigmoid(r_bd).mean(1)
+        else:
+            q_bd, lq_bd = torch.zeros_like(q_ls), torch.zeros_like(lq_ls)
         out["q"] = {"LS": q_ls, "LQ": q_lq, "BD": q_bd}
         out["log_q"] = {"LS": lq_ls, "LQ": lq_lq, "BD": lq_bd}
         return out
@@ -190,6 +197,8 @@ class DisasterNet(nn.Module):
             half = self.w_e[k] ** 2 / 2
             total = total + q[k] * _neg_log1p_exp(half - s) \
                 + (1 - q[k]) * _neg_log1p_exp(half + s)
+        if not self.use_bd:
+            return total
         # BD: noisy-OR 부모. 독립 Bernoulli(q_LS), (q_LQ)에 대한 E[exp(∓Σ w z)]
         s = self.w_0["BD"] + w_a["BD"] * a["BD"]
         half = self.w_e["BD"] ** 2 / 2
@@ -204,8 +213,8 @@ class DisasterNet(nn.Module):
     def log_p_x(self, log_x, q):
         """E log p(x | z) [N], x ~ LogNormal(Σ w_ix z_i + w_0x, w_εx²) (식 7)."""
         w_x = self.w_x
-        m = self.w_0x + sum(w_x[k] * q[k] for k in NODES)
-        v = sum(w_x[k] ** 2 * q[k] * (1 - q[k]) for k in NODES)
+        m = self.w_0x + sum(w_x[k] * q[k] for k in self.nodes)
+        v = sum(w_x[k] ** 2 * q[k] * (1 - q[k]) for k in self.nodes)
         s2 = self.w_ex ** 2 + 1e-6
         return -log_x - 0.5 * torch.log(2 * math.pi * s2) - ((log_x - m) ** 2 + v) / (2 * s2)
 
@@ -249,10 +258,10 @@ class FitResult:
 
 
 def _fit_group(rows: DPMRows, name, *, epochs, lr, seed, n_samples, num_flows,
-               lam_triplet, margin, anneal, r0_var, verbose):
+               lam_triplet, margin, anneal, r0_var, use_bd, verbose):
     torch.manual_seed(seed)
     a, log_x = prepare_inputs(rows)
-    model = DisasterNet(rows.n, num_flows=num_flows, r0_var=r0_var)
+    model = DisasterNet(rows.n, num_flows=num_flows, r0_var=r0_var, use_bd=use_bd)
     opt = torch.optim.Adam(model.parameters(), lr=lr)
 
     hist = []
@@ -262,7 +271,7 @@ def _fit_group(rows: DPMRows, name, *, epochs, lr, seed, n_samples, num_flows,
         post = model.posteriors(a["LS"], a["LQ"], a["BD"], n_samples)
         q = post["q"]
         rec = model.log_p_x(log_x, q)                                    # [N]
-        log_q = sum(post["log_q"][k].mean(1) for k in NODES)              # E log q(r^K)
+        log_q = sum(post["log_q"][k].mean(1) for k in model.nodes)              # E log q(r^K)
         kl = log_q - model.log_p_z(q, a)
         trip = triplet_penalty(q, a, margin) if lam_triplet > 0 else torch.zeros((), dtype=DTYPE)
         loss = (-rec + beta * kl).sum() + lam_triplet * trip
@@ -291,7 +300,7 @@ def _fit_group(rows: DPMRows, name, *, epochs, lr, seed, n_samples, num_flows,
 
 def fit_disasternet(rows: DPMRows, *, pooled=False, epochs=3000, lr=0.01, seed=0,
                     n_samples=8, num_flows=4, lam_triplet=1.0, margin=1.0, anneal=True,
-                    r0_var=1.0, verbose=True) -> FitResult:
+                    r0_var=1.0, use_bd=True, verbose=True) -> FitResult:
     """이벤트별(기본, 논문과 같음) 또는 통합(pooled)으로 학습하고 사후확률을 돌려준다."""
     if pooled:
         groups = [("pooled", rows)]
@@ -305,7 +314,7 @@ def fit_disasternet(rows: DPMRows, *, pooled=False, epochs=3000, lr=0.01, seed=0
             print(f"[DisasterNet] {name}: {g.n}행 / flow K={num_flows} / triplet λ={lam_triplet}")
         p, prm, h = _fit_group(g, name, epochs=epochs, lr=lr, seed=seed, n_samples=n_samples,
                                num_flows=num_flows, lam_triplet=lam_triplet, margin=margin,
-                               anneal=anneal, r0_var=r0_var, verbose=verbose)
+                               anneal=anneal, r0_var=r0_var, use_bd=use_bd, verbose=verbose)
         preds.append(p); params.extend(prm); hist.extend(h)
 
     pred = pd.concat(preds, ignore_index=True).sort_values(["event_idx", "muni_code"])

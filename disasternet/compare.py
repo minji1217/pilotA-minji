@@ -110,6 +110,7 @@ def main(argv=None):
     ap.add_argument("--lam-triplet", type=float, default=1.0, help="triplet loss 가중치 λ (0이면 끔)")
     ap.add_argument("--margin", type=float, default=1.0, help="triplet margin β (공식 코드 1.0)")
     ap.add_argument("--no-anneal", action="store_true", help="KL β warm-up 끄기")
+    ap.add_argument("--no-bd", action="store_true", help="건물피해(BD) 노드를 뺀 ablation")
     ap.add_argument("--dn-epochs", type=int, default=3000)
     ap.add_argument("--dn-lr", type=float, default=0.01)
     ap.add_argument("--mc-samples", type=int, default=8, help="학습 중 q_i 계산용 MC 샘플 수 M")
@@ -137,7 +138,7 @@ def main(argv=None):
     dn = fit_disasternet(
         dpm_rows, pooled=a.pooled, epochs=a.dn_epochs, lr=a.dn_lr, seed=a.seed,
         n_samples=a.mc_samples, num_flows=a.flows, lam_triplet=a.lam_triplet,
-        margin=a.margin, anneal=not a.no_anneal,
+        margin=a.margin, anneal=not a.no_anneal, use_bd=not a.no_bd,
     )
 
     # ---- pilotA ----
