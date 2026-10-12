@@ -2,45 +2,59 @@
 DisasterNet - model.py
 
 Li et al., "DisasterNet: Causal Bayesian Networks with Normalizing Flows for
-Cascading Hazards Estimation from Satellite Imagery", KDD 2023 의 재구현.
-원 논문은 40 m 픽셀 단위지만 우리 DPM은 시정촌 집계값이라 "한 행 = 한 위치"로 둔다.
+Cascading Hazards Estimation from Satellite Imagery", KDD 2023 (pp. 4391-4403) 재구현.
+공식 코드: https://github.com/SusuXu/DisasterNet (Haiti 전용 경로가 박혀 있어 그대로는 실행되지 않는다.
+            세부 설정 확인용으로만 참고했다.)
 
-인과 그래프 (논문 구조)
------------------------
-    USGS π_LS ─▶ LS ─┐
-                     ├─▶ BD ─┐
-    USGS π_LQ ─▶ LQ ─┘       ├─▶ DPM (y)
-                 LS, LQ ─────┤
-                       ε ────┘
+원 논문은 DPM 픽셀 단위지만 우리 DPM은 시정촌 집계값이라 "한 행 = 한 위치 l"로 둔다.
 
-    LS, LQ ~ Bern(σ(a·logit π + b))                    ← pilotA의 Prior와 같은 보정식
-    BD     ~ Bern(σ(c0 + c_LS·LS + c_LQ·LQ + c_PGV·z(log PGV)))
-    ε      ~ N(0, 1)                                    (환경 잡음 노드)
-    y      ~ N(w0 + w_LS·LS + w_LQ·LQ + w_BD·BD + w_ε·ε, σ²)
+인과 그래프 (논문 Fig. 2)
+------------------------
+    α_LS, ε_LS ─▶ z_LS ─┐
+                        ├─▶ z_BD ─┐
+    α_LF, ε_LF ─▶ z_LF ─┘  ▲       ├─▶ x (DPM)
+                 α_BD, ε_BD┘       │
+              z_LS, z_LF ──────────┤
+                         ε_x ──────┘
+    (논문 표기 LF = 우리 LQ)
 
-    w_LS, w_LQ, w_BD, c_LS, c_LQ, w_ε, σ 는 softplus로 양수.
-    "재해가 있으면 DPM(간섭도 손실)이 커진다"는 물리적 방향만 강제한다.
+노드 분포 (식 1, 9 / 부록 6.3)
+    logit p(z_i=1 | 부모, ε_i) = Σ_j w_ji z_j + w_αi α_i + w_εi ε_i + w_0i ,  ε_i ~ N(0,1)
+    BD의 부모 LS, LF는 noisy-OR 형태로 들어간다.
 
-추론
-----
-inference="vi"    (기본, 논문 방식)
-    위치별(local) 변분분포로 확률적 변분추론(SVI)을 한다.
-      q(LS) q(LQ) q(BD)  : 행마다 Bernoulli (mean-field)
-      q(ε)               : 행마다 N(m, s²)에 planar normalizing flow K층
-    이산 노드 기댓값은 8상태를 열거해 정확히 계산하고, ε만 재파라미터화 샘플링한다.
-    생성 파라미터와 변분 파라미터를 하나의 ELBO로 함께 학습한다.
+normalizing flow로 만드는 변분분포 (식 2-6)
+    r_i^0 ~ N(μ_i, σ_i²),  μ_i = φ(부모; W_μ),  σ_i² = softplus(δ(부모; W_σ))
+    r_i^K = f_K ∘ … ∘ f_1(r_i^0),  f(r) = r + u·h(w·r + b)  (planar, h = tanh)
+    q_i   = (1/M) Σ_m sigmoid(r_i^K,m)                             ← P(z_i=1 | 관측)
+    μ와 flow 파라미터 (u, w, b)는 부모 입력에서 amortize한 부분 + 위치별 자유 오프셋.
 
-inference="exact" (점검용)
-    ε를 해석적으로 적분(y | 상태 ~ N(m_s, σ² + w_ε²))하고 8상태를 정확히 합산해
-    주변우도를 최대화한다. pilotA와 같은 방식이다. VI가 제대로 수렴했는지 대조할 때 쓴다.
+관측 (식 7)
+    x | 부모 ~ LogNormal(Σ_i w_ix z_i + w_0x,  w_εx²)
 
-논문과 다른 점 / 원문 대조가 필요한 점
---------------------------------------
-1. 단위: 픽셀 → 시정촌 집계 DPM.
-2. BD prior: 논문은 건물 위치/피해 prior를 쓰지만 여기엔 그 자료가 없어 PGV로 대신한다.
-3. triplet loss: 논문은 지구물리 prior로 식별성을 높이는 triplet loss를 쓴다.
-   정확한 식을 확인하지 못해 넣지 않았다. 원문을 보고 elbo_loss()에 더하면 된다.
-4. 이벤트마다 따로 학습한다(논문도 지진마다 따로 학습). --pooled로 합쳐 학습할 수도 있다.
+손실 (식 8, 11, 12)
+    L = -Σ_l [ E log p(x|z) + Σ_i E log p(z_i|·) - E log q(r^K) ]  +  λ Σ_l L_p
+    E log p(z_i|·)  : Jensen 하한 E[-log(1+e^x)] ≥ -log(1+E[e^x]) (식 10, 부록 6.3)
+    L_p (triplet)   : max{0, ||q_LS - α_LS|| - ||q_LS - α_LF|| + β}  와 LF 쪽 대칭항.
+                      공식 코드 nn.TripletMarginLoss(margin=1, p=2)(q_LS, α_LS, α_LF) 를 따른다
+                      (거리는 배치 안 위치들을 벡터로 본 유클리드 거리).
+
+논문 / 공식 코드와 다른 점
+--------------------------
+1. 단위: 픽셀 → 시정촌 집계 DPM. 지역 가지치기(local pruning)는 쓸 일이 없어 뺐다.
+2. α_BD: 논문은 건물 fragility curve 기반 prior. 그 자료가 없어 이벤트 안에서 min-max 정규화한
+   log PGV로 대신한다 (논문 그래프에서도 지진동이 BD의 부모다).
+3. σ_i²: 공식 코드는 LS/LF에 USGS 불확실도 지도(qvar)를 고정값으로 쓰고 BD는 [1,5]로 묶는다.
+   불확실도 지도가 없어 상수(기본 1)로 고정한다. 논문 식대로 학습하면 E log q(r) 항 때문에
+   분산이 발산해 사후가 상수로 뭉개진다 (r0_var=None으로 재현 가능).
+3-1. 부호 제약: w_α, w_ix, w_LS→BD, w_LQ→BD 는 softplus로 양수. 논문·코드에는 없는 제약이다.
+4. 부록 6.3의 w_ε²/2 부호: 공식 코드는 논문과 반대 부호다. ε ~ N(0,1)에서
+   E[exp(-w_ε ε)] = exp(+w_ε²/2) 이므로 논문 식이 맞아 논문을 따른다.
+5. E log p(x|z): 논문 [3]항 전개 대신 독립 Bernoulli(q)에 대한 정확한 기댓값
+   (log x - m)² → (log x - w_0x - Σ w q)² + Σ w² q(1-q) 를 쓴다. 같은 양이다.
+6. 부록 6.1 XOR 노드는 "plug-and-play" 선택 요소이고 공식 코드에도 없어 넣지 않았다.
+7. 최적화: 공식 코드는 픽셀 수천 개 배치에 RMSprop lr=1e-5, 30 epoch.
+   행이 이벤트당 30-80개라 전체 배치 Adam (기본 lr=0.01, 3000 epoch)으로 바꿨다.
+   KL 항 β warm-up(0.01→1)은 공식 코드를 따랐다.
 """
 import math
 from dataclasses import dataclass
@@ -51,163 +65,180 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch import Tensor
 
-from prior import Prior
 from schema import DTYPE, EPS, INDEX_TO_EVENT
 
 from .data import DPMRows
 
-# 8상태 (LS, LQ, BD). 앞 4개 (LS, LQ) 순서는 schema.LATENT_STATES와 같다.
-STATES_LSLQ = ((0, 0), (1, 0), (0, 1), (1, 1))
-STATES = tuple((ls, lq, bd) for bd in (0, 1) for (ls, lq) in STATES_LSLQ)
+NODES = ("LS", "LQ", "BD")
 
 
-def _inv_softplus(x: float) -> float:
-    return math.log(math.expm1(x))
+class FlowNode(nn.Module):
+    """한 노드의 변분분포: N(μ, σ²) 초기분포 + planar flow K층.
+
+    입력 h [N, d]는 부모 노드 신호이고, 출력은 MC 샘플 r^K와 log q(r^K).
+
+    μ와 flow 파라미터 = (부모로부터 amortize한 부분) + (위치별 자유 오프셋).
+    위치별 오프셋이 없으면 q가 부모(α)만의 함수가 되어 관측 DPM이 사후에 들어갈 통로가 없다.
+    공식 코드는 nn.Linear(batch_size, batch_size)로 배치의 모든 위치를 한 벡터로 받는데,
+    배치 순서가 고정이라 사실상 위치별 자유 파라미터로 작동한다. 그것을 명시적으로 쓴 것이다
+    (논문 Algorithm 1의 "위치별 사후 {q_i^l} 갱신").
+    """
+
+    def __init__(self, in_dim: int, num_flows: int, n_rows: int, r0_var=1.0):
+        super().__init__()
+        self.K = num_flows
+        self.mu = nn.Linear(in_dim, 1, dtype=DTYPE)      # φ(·; W_μ)
+        self.mu_local = nn.Parameter(torch.zeros(n_rows, 1, dtype=DTYPE))
+        # r^0 분산. None이면 논문 식대로 δ(·; W_σ) → softplus 로 학습한다.
+        # 다만 그렇게 두면 손실의 E log q(r) 항이 r 공간 밀도라 분산이 끝없이 커지고
+        # 사후가 상수로 뭉개진다 (합성 데이터에서 확인). 공식 코드도 LS/LF는 USGS 불확실도
+        # 지도로 고정, BD는 [1, 5]로 묶어 이를 막는다. 불확실도 지도가 없어 상수로 고정한다.
+        self.r0_var = r0_var
+        if r0_var is None:
+            self.var = nn.Linear(in_dim, 1, dtype=DTYPE)
+        # flow 파라미터 amortization. 공식 코드처럼 [-1, 1]로 묶는다.
+        self.amor = nn.Linear(in_dim, 3 * num_flows, dtype=DTYPE)
+        self.flow_local = nn.Parameter(0.01 * torch.randn(n_rows, 3 * num_flows, dtype=DTYPE))
+
+    def forward(self, h: Tensor, n_samples: int):
+        N = h.shape[0]
+        mu = 6.0 * torch.tanh((self.mu(h) + self.mu_local) / 6.0)      # [N,1], 부드럽게 ±6 안쪽
+        if self.r0_var is None:
+            var = F.softplus(self.var(h)) + 1e-3
+        else:
+            var = torch.full_like(mu, float(self.r0_var))
+        std = var.sqrt()
+        n = torch.randn(N, n_samples, dtype=DTYPE)
+        r = mu + std * n                                                 # r^0 [N,M]
+        log_q = -0.5 * (n ** 2 + math.log(2 * math.pi)) - torch.log(std)
+
+        if self.K:
+            # 공식 코드는 u, w, b를 Hardtanh로 [-1, 1]에 묶는다. 경계에서 u·w = -1이 되면
+            # 가역성이 깨지므로 0.99·tanh로 살짝 안쪽에 둔다 (|u·w| < 1 → 1+u·w·h' > 0).
+            uwb = (0.99 * torch.tanh(self.amor(h) + self.flow_local)).view(N, 3, self.K)
+            for k in range(self.K):
+                u, w, b = uwb[:, 0, k:k + 1], uwb[:, 1, k:k + 1], uwb[:, 2, k:k + 1]
+                t = torch.tanh(w * r + b)
+                log_det = torch.log(1.0 + u * w * (1.0 - t ** 2))         # 식 4
+                r = r + u * t                                            # 식 3
+                log_q = log_q - log_det                                  # 식 15
+        return r, log_q
 
 
-def _standardize(x: Tensor) -> Tensor:
-    sd = x.std()
-    return (x - x.median()) / (sd if sd > 0 else 1.0)
+def _neg_log1p_exp(x: Tensor) -> Tensor:
+    """-log(1 + e^x), 수치안정."""
+    return -F.softplus(x)
 
 
 class DisasterNet(nn.Module):
-    """한 그룹(기본: 이벤트 1개)의 생성모형 + 위치별 변분분포."""
+    """한 그룹(기본: 이벤트 1개)의 DisasterNet."""
 
-    def __init__(self, n_rows: int, *, use_bd=True, prior_mode="free", b_bound=2.0,
-                 flow_layers=4):
+    def __init__(self, n_rows: int, num_flows=4, r0_var=1.0):
         super().__init__()
-        self.use_bd = use_bd
-        self.prior = Prior(mode=prior_mode, b_bound=b_bound)
+        p = lambda: nn.Parameter(torch.rand((), dtype=DTYPE))  # 공식 코드처럼 U(0,1) 초기화
+        # 노드 CPD 가중치 (weight vertices). 모든 위치에서 공유된다.
+        # 이름이 _raw인 것은 softplus로 양수 제약을 건다 (아래 property).
+        # 논문·공식 코드는 부호 제약이 없지만, 행이 이벤트당 수십 개뿐이라 제약 없이 두면
+        # "prior가 높을수록 덜 발생" / "재해가 있으면 DPM이 작아짐" 으로 부호가 뒤집힌 해에
+        # 빠지는 것을 합성 데이터에서 확인했다. 물리적 방향만 고정한다.
+        self.w_0 = nn.ParameterDict({k: p() for k in NODES})
+        self.w_a_raw = nn.ParameterDict({k: p() for k in NODES})
+        self.w_e = nn.ParameterDict({k: p() for k in NODES})
+        self.w_LS_BD_raw, self.w_LQ_BD_raw = p(), p()
+        # 관측 노드
+        self.w_x_raw = nn.ParameterDict({k: p() for k in NODES})
+        self.w_0x = p()
+        self.w_ex = nn.Parameter(torch.tensor(1.0, dtype=DTYPE))
+        # 노드별 변분분포 (부모 입력 차원: LS/LQ는 α 하나, BD는 q_LS·q_LQ·α_BD 셋)
+        self.flow = nn.ModuleDict({
+            "LS": FlowNode(1, num_flows, n_rows, r0_var),
+            "LQ": FlowNode(1, num_flows, n_rows, r0_var),
+            "BD": FlowNode(3, num_flows, n_rows, r0_var),
+        })
 
-        p = lambda v: nn.Parameter(torch.tensor(float(v), dtype=DTYPE))
-        # BD 노드
-        self.c0 = p(-1.0)
-        self.c_ls_raw = p(_inv_softplus(1.0))
-        self.c_lq_raw = p(_inv_softplus(1.0))
-        self.c_pgv = p(0.5)
-        # 관측 노드 (y는 그룹 안에서 표준화해서 넣으므로 단위는 표준편차)
-        self.w0 = p(-0.5)
-        self.w_ls_raw = p(_inv_softplus(0.5))
-        self.w_lq_raw = p(_inv_softplus(0.5))
-        self.w_bd_raw = p(_inv_softplus(0.5))
-        self.w_eps_raw = p(_inv_softplus(0.3))
-        self.sigma_raw = p(_inv_softplus(0.5))
+    @property
+    def w_a(self):
+        return {k: F.softplus(v) for k, v in self.w_a_raw.items()}
 
-        # 위치별 변분 파라미터
-        self.q_logit = nn.Parameter(torch.zeros(n_rows, 3, dtype=DTYPE))
-        self.q_eps_m = nn.Parameter(torch.zeros(n_rows, dtype=DTYPE))
-        self.q_eps_logs = nn.Parameter(torch.zeros(n_rows, dtype=DTYPE))
-        K = flow_layers
-        self.flow_u = nn.Parameter(0.01 * torch.randn(n_rows, K, dtype=DTYPE))
-        self.flow_w = nn.Parameter(1.0 + 0.01 * torch.randn(n_rows, K, dtype=DTYPE))
-        self.flow_b = nn.Parameter(torch.zeros(n_rows, K, dtype=DTYPE))
+    @property
+    def w_x(self):
+        return {k: F.softplus(v) for k, v in self.w_x_raw.items()}
 
-    # ---- 양수 제약 파라미터 ----
-    c_ls = property(lambda self: F.softplus(self.c_ls_raw))
-    c_lq = property(lambda self: F.softplus(self.c_lq_raw))
-    w_ls = property(lambda self: F.softplus(self.w_ls_raw))
-    w_lq = property(lambda self: F.softplus(self.w_lq_raw))
-    w_bd = property(lambda self: F.softplus(self.w_bd_raw) if self.use_bd
-                    else torch.zeros((), dtype=DTYPE))
-    w_eps = property(lambda self: F.softplus(self.w_eps_raw))
-    sigma = property(lambda self: F.softplus(self.sigma_raw) + 1e-3)
+    w_LS_BD = property(lambda self: F.softplus(self.w_LS_BD_raw))
+    w_LQ_BD = property(lambda self: F.softplus(self.w_LQ_BD_raw))
 
-    def init_q_from_prior(self, rows: DPMRows, z_pgv: Tensor):
-        with torch.no_grad():
-            self.q_logit[:, 0] = torch.logit(rows.pi_ls, eps=EPS)
-            self.q_logit[:, 1] = torch.logit(rows.pi_lq, eps=EPS)
-            self.q_logit[:, 2] = self.c0 + self.c_pgv * z_pgv
+    def posteriors(self, a_ls, a_lq, a_bd, n_samples=8):
+        """q_i = P(z_i=1|x)와 각 노드의 log q(r^K) [N,M]."""
+        out = {}
+        r_ls, lq_ls = self.flow["LS"](a_ls.unsqueeze(1), n_samples)
+        r_lq, lq_lq = self.flow["LQ"](a_lq.unsqueeze(1), n_samples)
+        q_ls = torch.sigmoid(r_ls).mean(1)                               # 식 6
+        q_lq = torch.sigmoid(r_lq).mean(1)
+        h_bd = torch.stack([q_ls, q_lq, a_bd], dim=1)                    # BD의 부모
+        r_bd, lq_bd = self.flow["BD"](h_bd, n_samples)
+        q_bd = torch.sigmoid(r_bd).mean(1)
+        out["q"] = {"LS": q_ls, "LQ": q_lq, "BD": q_bd}
+        out["log_q"] = {"LS": lq_ls, "LQ": lq_lq, "BD": lq_bd}
+        return out
 
-    # ---- 생성모형 ----
-    def log_prior_states(self, rows: DPMRows, z_pgv: Tensor) -> Tensor:
-        """log p(LS, LQ, BD) [N, 8]."""
-        log_w = self.prior(rows.pi_ls, rows.pi_lq)                     # [N,4]
-        ls = torch.tensor([s[0] for s in STATES_LSLQ], dtype=DTYPE)
-        lq = torch.tensor([s[1] for s in STATES_LSLQ], dtype=DTYPE)
-        z_bd = (self.c0 + self.c_ls * ls + self.c_lq * lq).unsqueeze(0) \
-            + (self.c_pgv * z_pgv).unsqueeze(1)                        # [N,4]
-        if self.use_bd:
-            log_bd0, log_bd1 = F.logsigmoid(-z_bd), F.logsigmoid(z_bd)
-        else:  # BD 노드를 끄면 BD=0으로 고정
-            log_bd0 = torch.zeros_like(z_bd)
-            log_bd1 = torch.full_like(z_bd, -1e4)
-        return torch.cat([log_w + log_bd0, log_w + log_bd1], dim=-1)   # [8] 순서 = STATES
+    def log_p_z(self, q, a):
+        """Σ_i E log p(z_i | ε_i, 부모) 의 Jensen 하한 [N] (식 9-10, 부록 6.3)."""
+        total = 0.0
+        w_a = self.w_a
+        for k in ("LS", "LQ"):
+            s = self.w_0[k] + w_a[k] * a[k]
+            half = self.w_e[k] ** 2 / 2
+            total = total + q[k] * _neg_log1p_exp(half - s) \
+                + (1 - q[k]) * _neg_log1p_exp(half + s)
+        # BD: noisy-OR 부모. 독립 Bernoulli(q_LS), (q_LQ)에 대한 E[exp(∓Σ w z)]
+        s = self.w_0["BD"] + w_a["BD"] * a["BD"]
+        half = self.w_e["BD"] ** 2 / 2
+        e_neg = (1 - q["LS"] + q["LS"] * torch.exp(-self.w_LS_BD)) \
+            * (1 - q["LQ"] + q["LQ"] * torch.exp(-self.w_LQ_BD))
+        e_pos = (1 - q["LS"] + q["LS"] * torch.exp(self.w_LS_BD)) \
+            * (1 - q["LQ"] + q["LQ"] * torch.exp(self.w_LQ_BD))
+        total = total + q["BD"] * _neg_log1p_exp(half - s + torch.log(e_neg)) \
+            + (1 - q["BD"]) * _neg_log1p_exp(half + s + torch.log(e_pos))
+        return total
 
-    def obs_mean(self) -> Tensor:
-        """상태별 E[y | 상태, ε=0] [8]."""
-        s = torch.tensor(STATES, dtype=DTYPE)
-        return self.w0 + self.w_ls * s[:, 0] + self.w_lq * s[:, 1] + self.w_bd * s[:, 2]
-
-    # ---- 정확 추론 (점검용) ----
-    def exact_log_joint(self, rows, y, z_pgv) -> Tensor:
-        var = self.sigma ** 2 + self.w_eps ** 2
-        log_lik = -0.5 * ((y.unsqueeze(1) - self.obs_mean()) ** 2 / var + torch.log(2 * math.pi * var))
-        return self.log_prior_states(rows, z_pgv) + log_lik             # [N,8]
-
-    # ---- 변분 추론 ----
-    def sample_eps(self, n_samples: int):
-        """planar flow를 거친 ε 샘플과 log q(ε). 모양 [N, S]."""
-        N = self.q_eps_m.shape[0]
-        n = torch.randn(N, n_samples, dtype=DTYPE)
-        s = torch.exp(self.q_eps_logs).unsqueeze(1)
-        z = self.q_eps_m.unsqueeze(1) + s * n
-        log_q = -0.5 * (n ** 2 + math.log(2 * math.pi)) - torch.log(s)
-        for k in range(self.flow_u.shape[1]):
-            w = self.flow_w[:, k:k + 1]
-            u = self.flow_u[:, k:k + 1]
-            b = self.flow_b[:, k:k + 1]
-            # 1차원 planar flow의 가역 조건 u·w > -1 을 보장하는 재파라미터화
-            wu = w * u
-            w_safe = torch.where(w.abs() < 1e-6, torch.full_like(w, 1e-6), w)
-            u_hat = (-1.0 + F.softplus(wu)) / w_safe
-            h = torch.tanh(w * z + b)
-            log_det = torch.log((1.0 + u_hat * w * (1.0 - h ** 2)).abs() + 1e-12)
-            z = z + u_hat * h
-            log_q = log_q - log_det
-        return z, log_q
-
-    def elbo(self, rows, y, z_pgv, n_samples=8) -> Tensor:
-        """행별 ELBO [N]."""
-        logits = self.q_logit if self.use_bd else torch.cat(
-            [self.q_logit[:, :2], torch.full_like(self.q_logit[:, 2:], -30.0)], dim=1)
-        s = torch.tensor(STATES, dtype=DTYPE)                           # [8,3]
-        log_q1, log_q0 = F.logsigmoid(logits), F.logsigmoid(-logits)    # [N,3]
-        log_qs = log_q1 @ s.T + log_q0 @ (1 - s).T                     # [N,8]
-        qs = log_qs.exp()
-
-        eps, log_q_eps = self.sample_eps(n_samples)                     # [N,S]
-        mean = self.obs_mean().view(1, 8, 1) + self.w_eps * eps.unsqueeze(1)
-        var = self.sigma ** 2
-        log_lik = -0.5 * ((y.view(-1, 1, 1) - mean) ** 2 / var + torch.log(2 * math.pi * var))
-        e_log_lik = (qs * log_lik.mean(-1)).sum(-1)                     # [N]
-
-        e_log_prior = (qs * self.log_prior_states(rows, z_pgv)).sum(-1)
-        entropy_s = -(qs * log_qs).sum(-1)
-        log_p_eps = -0.5 * (eps ** 2 + math.log(2 * math.pi))
-        kl_eps = (log_q_eps - log_p_eps).mean(-1)
-        return e_log_lik + e_log_prior + entropy_s - kl_eps
-
-    def posterior(self, rows, y, z_pgv, inference):
-        """P(LS=1|y), P(LQ=1|y), P(BD=1|y) [N]."""
-        if inference == "exact":
-            lj = self.exact_log_joint(rows, y, z_pgv)
-            post = torch.softmax(lj, dim=-1)
-            s = torch.tensor(STATES, dtype=DTYPE)
-            p = post @ s
-            return p[:, 0], p[:, 1], p[:, 2]
-        p = torch.sigmoid(self.q_logit)
-        p_bd = p[:, 2] if self.use_bd else torch.zeros_like(p[:, 2])
-        return p[:, 0], p[:, 1], p_bd
+    def log_p_x(self, log_x, q):
+        """E log p(x | z) [N], x ~ LogNormal(Σ w_ix z_i + w_0x, w_εx²) (식 7)."""
+        w_x = self.w_x
+        m = self.w_0x + sum(w_x[k] * q[k] for k in NODES)
+        v = sum(w_x[k] ** 2 * q[k] * (1 - q[k]) for k in NODES)
+        s2 = self.w_ex ** 2 + 1e-6
+        return -log_x - 0.5 * torch.log(2 * math.pi * s2) - ((log_x - m) ** 2 + v) / (2 * s2)
 
     def param_rows(self, group: str):
-        a, b = self.prior.a_value.detach(), self.prior.b_value.detach()
-        vals = {
-            "a_LS": a[0], "b_LS": b[0], "a_LQ": a[1], "b_LQ": b[1],
-            "c0_BD": self.c0, "c_LS→BD": self.c_ls, "c_LQ→BD": self.c_lq, "c_PGV→BD": self.c_pgv,
-            "w0": self.w0, "w_LS": self.w_ls, "w_LQ": self.w_lq, "w_BD": self.w_bd,
-            "w_eps": self.w_eps, "sigma": self.sigma,
-        }
+        vals = {}
+        w_a, w_x = self.w_a, self.w_x
+        for k in NODES:
+            vals.update({f"w_0{k}": self.w_0[k], f"w_a{k}": w_a[k],
+                         f"w_e{k}": self.w_e[k], f"w_{k}x": w_x[k]})
+        vals.update({"w_LS→BD": self.w_LS_BD, "w_LQ→BD": self.w_LQ_BD,
+                     "w_0x": self.w_0x, "w_ex": self.w_ex})
         return [{"group": group, "param": k, "value": float(v.detach())} for k, v in vals.items()]
+
+
+def triplet_penalty(q, a, margin):
+    """공식 코드: TripletMarginLoss(margin, p=2)(q_LS, α_LS, α_LF) + (q_LF, α_LF, α_LS)."""
+    tl = nn.TripletMarginLoss(margin=margin, p=2)
+    return tl(q["LS"].unsqueeze(0), a["LS"].unsqueeze(0), a["LQ"].unsqueeze(0)) \
+        + tl(q["LQ"].unsqueeze(0), a["LQ"].unsqueeze(0), a["LS"].unsqueeze(0))
+
+
+def prepare_inputs(rows: DPMRows):
+    """α와 log x를 만든다. LogNormal이라 DPM은 양수여야 한다."""
+    x = rows.y
+    if (x <= 0).any():
+        shift = float(-x.min()) + 1e-3
+        print(f"  [경고] DPM에 0 이하 값이 있어 +{shift:.4f} 만큼 이동 (LogNormal 관측은 x>0 필요)")
+        x = x + shift
+    lp = torch.log(rows.pgv.clamp_min(EPS))
+    span = lp.max() - lp.min()
+    a_bd = (lp - lp.min()) / (span if span > 0 else 1.0)
+    a = {"LS": rows.pi_ls, "LQ": rows.pi_lq, "BD": a_bd}
+    return a, torch.log(x)
 
 
 @dataclass
@@ -217,61 +248,53 @@ class FitResult:
     history: pd.DataFrame
 
 
-def _fit_group(rows: DPMRows, name: str, *, inference, epochs, lr, seed, n_samples,
-               use_bd, prior_mode, b_bound, flow_layers, verbose):
+def _fit_group(rows: DPMRows, name, *, epochs, lr, seed, n_samples, num_flows,
+               lam_triplet, margin, anneal, r0_var, verbose):
     torch.manual_seed(seed)
-    y = _standardize(rows.y)
-    z_pgv = _standardize(torch.log(rows.pgv.clamp_min(EPS)))
-
-    model = DisasterNet(rows.n, use_bd=use_bd, prior_mode=prior_mode, b_bound=b_bound,
-                        flow_layers=flow_layers)
-    model.init_q_from_prior(rows, z_pgv)
+    a, log_x = prepare_inputs(rows)
+    model = DisasterNet(rows.n, num_flows=num_flows, r0_var=r0_var)
     opt = torch.optim.Adam(model.parameters(), lr=lr)
 
     hist = []
     for epoch in range(epochs):
-        if inference == "exact":
-            loss = -torch.logsumexp(model.exact_log_joint(rows, y, z_pgv), dim=-1).sum()
-        else:
-            loss = -model.elbo(rows, y, z_pgv, n_samples=n_samples).sum()
+        # KL 항 warm-up (공식 코드 anneal: β = min(0.01 + t/T, 1))
+        beta = min(0.01 + epoch / max(epochs, 1), 1.0) if anneal else 1.0
+        post = model.posteriors(a["LS"], a["LQ"], a["BD"], n_samples)
+        q = post["q"]
+        rec = model.log_p_x(log_x, q)                                    # [N]
+        log_q = sum(post["log_q"][k].mean(1) for k in NODES)              # E log q(r^K)
+        kl = log_q - model.log_p_z(q, a)
+        trip = triplet_penalty(q, a, margin) if lam_triplet > 0 else torch.zeros((), dtype=DTYPE)
+        loss = (-rec + beta * kl).sum() + lam_triplet * trip
         opt.zero_grad()
         loss.backward()
         opt.step()
-        hist.append({"group": name, "epoch": epoch, "loss": float(loss.detach())})
-        if verbose and epoch % 500 == 0:
-            print(f"  [{name}] {epoch:5d}  loss/row {float(loss) / rows.n:.4f}")
 
+        nelbo = float((-rec + kl).sum().detach())
+        hist.append({"group": name, "epoch": epoch, "loss": float(loss.detach()),
+                     "neg_elbo": nelbo, "triplet": float(trip.detach()), "beta": beta})
+        if verbose and epoch % 500 == 0:
+            print(f"  [{name}] {epoch:5d}  -ELBO/row {nelbo / rows.n:.4f}  triplet {float(trip.detach()):.4f}")
+
+    # 최종 사후확률은 MC 샘플을 넉넉히 뽑아 평균한다.
     with torch.no_grad():
-        p_ls, p_lq, p_bd = model.posterior(rows, y, z_pgv, inference)
+        q = model.posteriors(a["LS"], a["LQ"], a["BD"], n_samples=256)["q"]
     pred = pd.DataFrame({
         "event_idx": rows.event_idx.tolist(),
         "muni_code": list(rows.municipality_code),
         "model_row_idx": rows.model_row_idx.tolist(),
         "dpm": rows.y.numpy(),
-        "p_ls": p_ls.numpy(), "p_lq": p_lq.numpy(), "p_bd": p_bd.numpy(),
+        "p_ls": q["LS"].numpy(), "p_lq": q["LQ"].numpy(), "p_bd": q["BD"].numpy(),
     })
     return pred, model.param_rows(name), hist
 
 
-def fit_disasternet(rows: DPMRows, *, inference="vi", pooled=False, epochs=3000, lr=0.02,
-                    seed=0, n_samples=8, use_bd=True, prior_mode="free", b_bound=2.0,
-                    flow_layers=4, verbose=True) -> FitResult:
-    """이벤트별(기본) 또는 통합(pooled)으로 DisasterNet을 학습하고 사후확률을 돌려준다.
-
-    통합 학습에서도 DPM은 이벤트 안에서 표준화한다. 프레임/이벤트마다 자가 다르기 때문이다.
-    """
-    if inference not in ("vi", "exact"):
-        raise ValueError(f"inference는 'vi' 또는 'exact': {inference}")
-
+def fit_disasternet(rows: DPMRows, *, pooled=False, epochs=3000, lr=0.01, seed=0,
+                    n_samples=8, num_flows=4, lam_triplet=1.0, margin=1.0, anneal=True,
+                    r0_var=1.0, verbose=True) -> FitResult:
+    """이벤트별(기본, 논문과 같음) 또는 통합(pooled)으로 학습하고 사후확률을 돌려준다."""
     if pooled:
-        y_std = torch.empty_like(rows.y)
-        for e in rows.event_idx.unique().tolist():
-            m = rows.event_idx == e
-            y_std[m] = _standardize(rows.y[m])
-        pooled_rows = DPMRows(y=y_std, pi_ls=rows.pi_ls, pi_lq=rows.pi_lq, pgv=rows.pgv,
-                              event_idx=rows.event_idx, municipality_code=rows.municipality_code,
-                              model_row_idx=rows.model_row_idx)
-        groups = [("pooled", pooled_rows)]
+        groups = [("pooled", rows)]
     else:
         groups = [(INDEX_TO_EVENT[e], rows.subset(rows.event_idx == e))
                   for e in sorted(rows.event_idx.unique().tolist())]
@@ -279,12 +302,10 @@ def fit_disasternet(rows: DPMRows, *, inference="vi", pooled=False, epochs=3000,
     preds, params, hist = [], [], []
     for name, g in groups:
         if verbose:
-            print(f"[DisasterNet/{inference}] {name}: {g.n}행")
-        p, prm, h = _fit_group(g, name, inference=inference, epochs=epochs, lr=lr, seed=seed,
-                               n_samples=n_samples, use_bd=use_bd, prior_mode=prior_mode,
-                               b_bound=b_bound, flow_layers=flow_layers, verbose=verbose)
-        if pooled:  # 표준화 전 원래 DPM 값을 남긴다
-            p["dpm"] = rows.y.numpy()
+            print(f"[DisasterNet] {name}: {g.n}행 / flow K={num_flows} / triplet λ={lam_triplet}")
+        p, prm, h = _fit_group(g, name, epochs=epochs, lr=lr, seed=seed, n_samples=n_samples,
+                               num_flows=num_flows, lam_triplet=lam_triplet, margin=margin,
+                               anneal=anneal, r0_var=r0_var, verbose=verbose)
         preds.append(p); params.extend(prm); hist.extend(h)
 
     pred = pd.concat(preds, ignore_index=True).sort_values(["event_idx", "muni_code"])

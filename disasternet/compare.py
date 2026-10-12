@@ -97,22 +97,22 @@ def main(argv=None):
     ap = argparse.ArgumentParser(description="DisasterNet vs pilotA 비교 (DPM이 있는 5개 이벤트)")
     ap.add_argument("--dpm", required=True, help="DPM_municipality_v5.xlsx 경로")
     ap.add_argument("--dpm-col", default=DEFAULT_DPM_COLUMN,
-                    help="관측으로 쓸 DPM 컬럼 (기본 DPM_정규화z. 예: DPM_평균, DPM_p90, DPM_변화25초과비율)")
+                    help="관측으로 쓸 DPM 컬럼 (기본 DPM_변화25초과비율. LogNormal이라 0 이하 값이 있으면 이동한다)")
     ap.add_argument("--min-base-coh", type=float, default=None,
                     help="base상관도가 이 값 미만인 행 제외 (자료설명: 0.30 미만은 측정 실패에 가까움)")
     ap.add_argument("--stats", default=STATS_PATH)
     ap.add_argument("--usgs", default=USGS_PATH)
     ap.add_argument("--gt", default=GT_PATH)
     # DisasterNet
-    ap.add_argument("--inference", default="vi", choices=["vi", "exact"],
-                    help="vi=논문 방식(SVI+normalizing flow) / exact=정확 주변화(점검용)")
-    ap.add_argument("--pooled", action="store_true", help="5개 이벤트를 한 모델로 학습 (기본: 이벤트별)")
-    ap.add_argument("--no-bd", action="store_true", help="건물피해(BD) 노드를 빼는 ablation")
-    ap.add_argument("--dn-prior-mode", default="free", choices=["free", "fixed", "bounded"])
+    ap.add_argument("--pooled", action="store_true", help="5개 이벤트를 한 모델로 학습 (기본: 이벤트별, 논문과 같음)")
+    ap.add_argument("--flows", type=int, default=4,
+                    help="planar flow 층 수 K (논문은 이벤트마다 3/4/8, 0이면 flow 없음)")
+    ap.add_argument("--lam-triplet", type=float, default=1.0, help="triplet loss 가중치 λ (0이면 끔)")
+    ap.add_argument("--margin", type=float, default=1.0, help="triplet margin β (공식 코드 1.0)")
+    ap.add_argument("--no-anneal", action="store_true", help="KL β warm-up 끄기")
     ap.add_argument("--dn-epochs", type=int, default=3000)
-    ap.add_argument("--dn-lr", type=float, default=0.02)
-    ap.add_argument("--mc-samples", type=int, default=8)
-    ap.add_argument("--flow-layers", type=int, default=4)
+    ap.add_argument("--dn-lr", type=float, default=0.01)
+    ap.add_argument("--mc-samples", type=int, default=8, help="학습 중 q_i 계산용 MC 샘플 수 M")
     # pilotA (train.py와 같은 옵션)
     ap.add_argument("--pilota-train", default="all", choices=["all", "dpm-events"],
                     help="all=9개 이벤트 전체로 학습(평소대로) / dpm-events=DPM 5개 이벤트 행만")
@@ -135,9 +135,9 @@ def main(argv=None):
 
     # ---- DisasterNet ----
     dn = fit_disasternet(
-        dpm_rows, inference=a.inference, pooled=a.pooled, epochs=a.dn_epochs, lr=a.dn_lr,
-        seed=a.seed, n_samples=a.mc_samples, use_bd=not a.no_bd,
-        prior_mode=a.dn_prior_mode, flow_layers=a.flow_layers,
+        dpm_rows, pooled=a.pooled, epochs=a.dn_epochs, lr=a.dn_lr, seed=a.seed,
+        n_samples=a.mc_samples, num_flows=a.flows, lam_triplet=a.lam_triplet,
+        margin=a.margin, anneal=not a.no_anneal,
     )
 
     # ---- pilotA ----

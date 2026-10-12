@@ -4,11 +4,9 @@
 
     python -m disasternet.smoke_test
 
-생성모형에서 LS/LQ/BD와 DPM을 직접 뽑은 뒤
-  - DisasterNet 사후 AUC가 USGS prior 단독 AUC보다 높아야 하고
-  - vi와 exact의 사후확률이 대체로 비슷해야 한다.
+논문 4.4처럼 생성모형의 forward 과정으로 LS/LQ/BD와 DPM을 뽑은 뒤,
+사후 AUC가 USGS prior 단독 AUC보다 높은지 본다.
 """
-import numpy as np
 import pandas as pd
 import torch
 
@@ -21,18 +19,23 @@ from .model import fit_disasternet
 
 def make_synthetic(n_per_event=60, events=(3, 4, 5, 6, 7), seed=0):
     g = torch.Generator().manual_seed(seed)
+    rnd = lambda n: torch.randn(n, generator=g, dtype=DTYPE)
     parts, truth = [], []
     for e in events:
         n = n_per_event
-        pi_ls = torch.rand(n, generator=g, dtype=DTYPE) ** 3 * 0.6 + 1e-3
-        pi_lq = torch.rand(n, generator=g, dtype=DTYPE) ** 3 * 0.6 + 1e-3
-        pgv = torch.exp(torch.randn(n, generator=g, dtype=DTYPE) * 0.6 + 3)
-        ls = torch.bernoulli(pi_ls, generator=g)
-        lq = torch.bernoulli(pi_lq, generator=g)
-        zp = (torch.log(pgv) - 3) / 0.6
-        bd = torch.bernoulli(torch.sigmoid(-1.5 + 1.0 * ls + 1.0 * lq + 0.8 * zp), generator=g)
-        y = 0.05 + 0.25 * ls + 0.2 * lq + 0.15 * bd + 0.06 * torch.randn(n, generator=g, dtype=DTYPE)
-        parts.append(dict(y=y, pi_ls=pi_ls, pi_lq=pi_lq, pgv=pgv,
+        # prior: 실제 발생과 상관은 있지만 잡음이 낀 확률
+        lat_ls, lat_lq = rnd(n), rnd(n)
+        pi_ls = torch.sigmoid(1.2 * lat_ls - 1.5 + 0.8 * rnd(n))
+        pi_lq = torch.sigmoid(1.2 * lat_lq - 1.5 + 0.8 * rnd(n))
+        ls = torch.bernoulli(torch.sigmoid(2.5 * lat_ls - 1.5), generator=g)
+        lq = torch.bernoulli(torch.sigmoid(2.5 * lat_lq - 1.5), generator=g)
+        pgv = torch.exp(0.5 * rnd(n) + 3)
+        zp = (torch.log(pgv) - 3) / 0.5
+        p_bd = 1 - torch.sigmoid(-(-1.5 + 0.8 * zp)) * torch.exp(-1.0 * ls - 1.0 * lq)  # noisy-OR
+        bd = torch.bernoulli(p_bd.clamp(0, 1), generator=g)
+        # LogNormal DPM (양수)
+        x = torch.exp(-2.5 + 0.9 * ls + 0.7 * lq + 0.5 * bd + 0.25 * rnd(n))
+        parts.append(dict(y=x, pi_ls=pi_ls, pi_lq=pi_lq, pgv=pgv,
                           event_idx=torch.full((n,), e, dtype=torch.long)))
         truth.append(pd.DataFrame({"event_idx": e, "ls_true": ls.long().numpy(),
                                    "lq_true": lq.long().numpy()}))
@@ -49,23 +52,24 @@ def make_synthetic(n_per_event=60, events=(3, 4, 5, 6, 7), seed=0):
 
 def main():
     rows, gt = make_synthetic()
-    prior_pred = pd.DataFrame({"event_idx": rows.event_idx.tolist(),
-                               "muni_code": list(rows.municipality_code),
-                               "p_ls": rows.pi_ls.numpy(), "p_lq": rows.pi_lq.numpy()})
-    res_prior = evaluate(gt, prior_pred)
-    out = {}
-    for inf in ("vi", "exact"):
-        fit = fit_disasternet(rows, inference=inf, epochs=1500, verbose=False)
-        out[inf] = fit.predictions
-        r = evaluate(gt, fit.predictions[["event_idx", "muni_code", "p_ls", "p_lq"]])
-        print(f"[{inf:5s}] AUC_LS {r.auc_ls:.3f} (prior {res_prior.auc_ls:.3f})  "
-              f"AUC_LQ {r.auc_lq:.3f} (prior {res_prior.auc_lq:.3f})  "
-              f"MSE_LS {r.mse_ls:.4f} (prior {res_prior.mse_ls:.4f})  "
-              f"MSE_LQ {r.mse_lq:.4f} (prior {res_prior.mse_lq:.4f})")
-        assert r.auc_ls > res_prior.auc_ls and r.auc_lq > res_prior.auc_lq, "사후가 prior를 못 넘음"
+    prior = evaluate(gt, pd.DataFrame({
+        "event_idx": rows.event_idx.tolist(), "muni_code": list(rows.municipality_code),
+        "p_ls": rows.pi_ls.numpy(), "p_lq": rows.pi_lq.numpy()}))
+    print(f"[prior          ] AUC_LS {prior.auc_ls_wavg:.3f}  AUC_LQ {prior.auc_lq_wavg:.3f}  "
+          f"MSE_LS {prior.mse_ls:.4f}  MSE_LQ {prior.mse_lq:.4f}")
 
-    diff = np.abs(out["vi"][["p_ls", "p_lq"]].to_numpy() - out["exact"][["p_ls", "p_lq"]].to_numpy())
-    print(f"vi vs exact 사후확률 차이: 평균 {diff.mean():.3f} / 90% {np.quantile(diff, .9):.3f}")
+    results = {}
+    # K=0(flow 없음)은 이 재구현에서 LS/LQ가 뒤바뀐 해에 빠지기 쉬워 점검 대상에서 뺐다 (README 참고).
+    for K, lam in ((4, 1.0), (4, 0.0)):
+        fit = fit_disasternet(rows, epochs=1500, num_flows=K, lam_triplet=lam, verbose=False)
+        r = evaluate(gt, fit.predictions[["event_idx", "muni_code", "p_ls", "p_lq"]])
+        results[(K, lam)] = r
+        print(f"[K={K} triplet={lam:.0f}] AUC_LS {r.auc_ls_wavg:.3f}  AUC_LQ {r.auc_lq_wavg:.3f}  "
+              f"MSE_LS {r.mse_ls:.4f}  MSE_LQ {r.mse_lq:.4f}")
+
+    main_r = results[(4, 1.0)]
+    assert main_r.auc_ls_wavg > prior.auc_ls_wavg and main_r.auc_lq_wavg > prior.auc_lq_wavg, \
+        "기본 설정의 사후 AUC가 prior를 못 넘음"
     print("OK")
 
 

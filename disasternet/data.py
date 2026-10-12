@@ -27,9 +27,11 @@ from schema import DTYPE, EVENT_TO_INDEX, PilotABatch
 
 DPM_SHEET = "집계"
 
-# 프레임마다 DPM 분포의 위치·폭이 달라서 원값(DPM_평균)은 이벤트끼리, 프레임끼리 자가 다르다.
-# 정규화z는 프레임 중앙값/IQR로 맞춘 값이라 기본값으로 쓴다.
-DEFAULT_DPM_COLUMN = "DPM_정규화z"
+# 논문 식 7은 DPM을 LogNormal로 두므로 관측값이 양수여야 한다.
+# DPM_평균 / DPM_정규화z는 음수가 있어 임의 이동이 필요하고,
+# DPM_변화25초과비율(시정촌 화소 중 DPM>0.25 비율)은 항상 (0,1) 안이라 그대로 쓸 수 있다.
+# 픽셀 DPM을 시정촌 하나로 요약할 때 "변화한 면적 비율"이라 해석도 자연스럽다.
+DEFAULT_DPM_COLUMN = "DPM_변화25초과비율"
 
 # 자료설명 시트: base상관도 0.30 미만은 "측정 실패에 가까움", 처리 방침 미정.
 # 기본은 제외하지 않고(None) 옵션으로만 둔다.
