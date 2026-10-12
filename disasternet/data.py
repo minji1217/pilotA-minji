@@ -112,7 +112,10 @@ def align_dpm_to_batch(dpm_df: pd.DataFrame, batch: PilotABatch) -> DPMRows:
     no_model = merged["model_row_idx"].isna()
     if no_model.any():
         lost = merged.loc[no_model, ["event_idx", "muni_code"]].to_dict("records")
-        print(f"[DPM] PilotABatch에 없는 DPM 행 {len(lost)}개 (USGS prior가 없어 제외): {lost[:10]}")
+        # pilotA loader가 이미 뺀 행이다 (USGS 행 없음 · Exposure 결측 등, loader.load_excluded_rows 참고).
+        # 삿포로처럼 DPM에 시 전체 행과 구 단위 행이 함께 있으면 구 단위 행도 여기로 빠진다.
+        print(f"[DPM] pilotA 모델 행에 없어 제외한 DPM 행 {len(lost)}개 "
+              f"(pilotA도 제외한 시정촌 / 삿포로 구 단위 중복): {lost[:10]}")
         merged = merged.loc[~no_model]
 
     merged = merged.sort_values(["event_idx", "muni_code"]).reset_index(drop=True)
