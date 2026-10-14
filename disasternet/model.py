@@ -236,10 +236,19 @@ def triplet_penalty(q, a, margin):
         + tl(q["LQ"].unsqueeze(0), a["LQ"].unsqueeze(0), a["LS"].unsqueeze(0))
 
 
-def prepare_inputs(rows: DPMRows):
-    """α와 log x를 만든다. LogNormal이라 DPM은 양수여야 한다."""
+def prepare_inputs(rows: DPMRows, obs_offset=None):
+    """α와 log x를 만든다. LogNormal이라 DPM은 양수여야 한다.
+
+    obs_offset: 관측에 더할 고정 상수. DPM_배경차처럼 음수가 있는 지표에 쓴다.
+                DPM은 상관도의 차이라 [-1, 1] 안이므로 1을 더하면 모든 시정촌에 같은 처리로 양수가 된다.
+                None이면 0 이하 값이 있을 때만 그 그룹 최솟값만큼 올린다(이전 동작).
+    """
     x = rows.y
-    if (x <= 0).any():
+    if obs_offset is not None:
+        x = x + obs_offset
+        if (x <= 0).any():
+            raise ValueError(f"obs_offset={obs_offset}을 더해도 0 이하인 관측이 있습니다.")
+    elif (x <= 0).any():
         shift = float(-x.min()) + 1e-3
         print(f"  [경고] DPM에 0 이하 값이 있어 +{shift:.4f} 만큼 이동 (LogNormal 관측은 x>0 필요)")
         x = x + shift
@@ -258,9 +267,9 @@ class FitResult:
 
 
 def _fit_group(rows: DPMRows, name, *, epochs, lr, seed, n_samples, num_flows,
-               lam_triplet, margin, anneal, r0_var, use_bd, verbose):
+               lam_triplet, margin, anneal, r0_var, use_bd, obs_offset, verbose):
     torch.manual_seed(seed)
-    a, log_x = prepare_inputs(rows)
+    a, log_x = prepare_inputs(rows, obs_offset)
     model = DisasterNet(rows.n, num_flows=num_flows, r0_var=r0_var, use_bd=use_bd)
     opt = torch.optim.Adam(model.parameters(), lr=lr)
 
@@ -300,7 +309,7 @@ def _fit_group(rows: DPMRows, name, *, epochs, lr, seed, n_samples, num_flows,
 
 def fit_disasternet(rows: DPMRows, *, pooled=False, epochs=3000, lr=0.01, seed=0,
                     n_samples=8, num_flows=4, lam_triplet=1.0, margin=1.0, anneal=True,
-                    r0_var=1.0, use_bd=True, verbose=True) -> FitResult:
+                    r0_var=1.0, use_bd=True, obs_offset=None, verbose=True) -> FitResult:
     """이벤트별(기본, 논문과 같음) 또는 통합(pooled)으로 학습하고 사후확률을 돌려준다."""
     if pooled:
         groups = [("pooled", rows)]
@@ -314,7 +323,8 @@ def fit_disasternet(rows: DPMRows, *, pooled=False, epochs=3000, lr=0.01, seed=0
             print(f"[DisasterNet] {name}: {g.n}행 / flow K={num_flows} / triplet λ={lam_triplet}")
         p, prm, h = _fit_group(g, name, epochs=epochs, lr=lr, seed=seed, n_samples=n_samples,
                                num_flows=num_flows, lam_triplet=lam_triplet, margin=margin,
-                               anneal=anneal, r0_var=r0_var, use_bd=use_bd, verbose=verbose)
+                               anneal=anneal, r0_var=r0_var, use_bd=use_bd, obs_offset=obs_offset,
+                               verbose=verbose)
         preds.append(p); params.extend(prm); hist.extend(h)
 
     pred = pd.concat(preds, ignore_index=True).sort_values(["event_idx", "muni_code"])
