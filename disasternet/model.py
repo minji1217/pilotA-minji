@@ -296,7 +296,8 @@ def _fit_group(rows: DPMRows, name, *, epochs, lr, seed, n_samples, num_flows,
         log_q = sum(post["log_q"][k].mean(1) * keep[k] for k in model.nodes)    # E log q(r^K)
         kl = log_q - model.log_p_z(q, a, rows.log_frac, keep if rows.off is not None else None)
         trip = triplet_penalty(q, a, margin) if lam_triplet > 0 else torch.zeros((), dtype=DTYPE)
-        loss = (-rec + beta * kl).sum() + lam_triplet * trip
+        per_row = -rec + beta * kl
+        loss = (per_row if rows.weight is None else per_row * rows.weight).sum() + lam_triplet * trip
         opt.zero_grad()
         loss.backward()
         opt.step()

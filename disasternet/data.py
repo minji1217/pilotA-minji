@@ -52,6 +52,8 @@ class DPMRows:
     log_frac: dict | None = None
     # 원본 가지치기 그대로: {"LS"|"LQ"|"BD": [N] bool} True면 그 노드를 0으로 고정. 없으면 None.
     off: dict | None = None
+    # 행 가중치 [N]. 한 시정촌을 여러 가상 화소 행으로 나눌 때 칸 비율을 넣는다. 없으면 1.
+    weight: Tensor | None = None
 
     @property
     def n(self) -> int:
@@ -66,6 +68,7 @@ class DPMRows:
             model_row_idx=self.model_row_idx[idx],
             log_frac=None if self.log_frac is None else {k: v[idx] for k, v in self.log_frac.items()},
             off=None if self.off is None else {k: v[idx] for k, v in self.off.items()},
+            weight=None if self.weight is None else self.weight[idx],
         )
 
 
