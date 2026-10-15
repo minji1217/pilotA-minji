@@ -54,6 +54,8 @@ class DPMRows:
     off: dict | None = None
     # 행 가중치 [N]. 한 시정촌을 여러 가상 화소 행으로 나눌 때 칸 비율을 넣는다. 없으면 1.
     weight: Tensor | None = None
+    # 행마다 고정한 r^0 분산 {"LS"|"LQ": [N]} (원본의 USGS 불확실도 지도). 없으면 상수.
+    r0_var: dict | None = None
 
     @property
     def n(self) -> int:
@@ -69,6 +71,7 @@ class DPMRows:
             log_frac=None if self.log_frac is None else {k: v[idx] for k, v in self.log_frac.items()},
             off=None if self.off is None else {k: v[idx] for k, v in self.off.items()},
             weight=None if self.weight is None else self.weight[idx],
+            r0_var=None if self.r0_var is None else {k: v[idx] for k, v in self.r0_var.items()},
         )
 
 

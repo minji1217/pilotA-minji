@@ -27,25 +27,61 @@ from .run_input_v5 import load_table
 CASE_OFF = {1: (False, True), 2: (True, False), 3: (False, False)}   # 경우 → (산사태 끔, 액상화 끔)
 
 
-def expand(df, local_path, bd_off=False):
+def expand(df, local_path, bd_off=False, usgs_unc=False, alpha="muni"):
+    """시정촌 → 가상 화소 행.
+
+    usgs_unc=False: 행 = (경우, 건물). 끄기는 경우(비탈·평지·중간)와 건물용지로만.
+    usgs_unc=True : 원본처럼 USGS 불확실도도 쓴다 (usgs_cells로 칸마다 us_*/sd_*를 붙인 지도 필요).
+                    칸마다 산사태 켬 = 비탈·중간이고 USGS 끔이 아님, 액상화 켬 = 평지·중간이고 USGS 끔이 아님.
+                    행 = (산사태 켬, 액상화 켬, 건물). 행의 r^0 분산 = 켜진 칸들의 불확실도 평균 (원본 std = √qvar).
+                    alpha="cells"면 행의 출발 확률도 켜진 칸들의 USGS 확률 평균, "muni"면 시정촌 값 그대로.
+    """
     loc = pd.read_csv(local_path, dtype={"시정촌코드": str})
-    loc = loc[loc["경우"] > 0]
+    loc = loc[loc["경우"] > 0].copy()
     loc["건물"] = loc["건물_켬"] if bd_off else 1
-    share = loc.groupby(["이벤트", "시정촌코드", "경우", "건물"]).size().rename("n").reset_index()
+    if usgs_unc:
+        from .usgs_cells import usgs_off
+        loc["ls_on"] = (loc["경우"].isin([1, 3]) & ~usgs_off(loc["us_ls"], loc["sd_ls"])).astype(int)
+        loc["lq_on"] = (loc["경우"].isin([2, 3]) & ~usgs_off(loc["us_lq"], loc["sd_lq"])).astype(int)
+        keys = ["ls_on", "lq_on", "건물"]
+        for k in ("ls", "lq"):
+            on = loc[f"{k}_on"] == 1
+            loc[f"v_{k}"] = loc[f"sd_{k}"].where(on)
+            loc[f"a_{k}"] = loc[f"us_{k}"].where(on)
+        agg = {"n": ("경우", "size"), "var_ls": ("v_ls", "mean"), "var_lq": ("v_lq", "mean"),
+               "a_ls": ("a_ls", "mean"), "a_lq": ("a_lq", "mean")}
+    else:
+        keys = ["경우", "건물"]
+        agg = {"n": ("경우", "size")}
+    share = loc.groupby(["이벤트", "시정촌코드"] + keys).agg(**agg).reset_index()
     share["w"] = share["n"] / share.groupby(["이벤트", "시정촌코드"])["n"].transform("sum")
     share["muni_code"] = share["시정촌코드"].str.zfill(5)
     df = df.assign(muni_code=df["muni_code"].astype(str).str.zfill(5))
-    x = df.merge(share[["이벤트", "muni_code", "경우", "건물", "w"]], on=["이벤트", "muni_code"], how="left")
+    cols = [c for c in share.columns if c not in ("시정촌코드", "n")]
+    x = df.merge(share[cols], on=["이벤트", "muni_code"], how="left")
     if x["w"].isna().any():
         raise ValueError(f"끄기 지도에 칸이 없는 시정촌: {x.loc[x['w'].isna(), '시정촌명'].tolist()}")
-    x["행"] = x["경우"].astype(str) + "b" + x["건물"].astype(str)
+    if usgs_unc:
+        x["off_ls"], x["off_lq"] = x["ls_on"] == 0, x["lq_on"] == 0
+        x["행"] = "s" + x["ls_on"].astype(str) + "q" + x["lq_on"].astype(str) + "b" + x["건물"].astype(str)
+        if alpha == "cells":
+            x["LS_prior_평균"] = x["a_ls"].fillna(0.0)
+            x["LQ_prior_최대"] = x["LQ_prior_평균"] = x["a_lq"].fillna(0.0)
+    else:
+        x["off_ls"] = [CASE_OFF[c][0] for c in x["경우"]]
+        x["off_lq"] = [CASE_OFF[c][1] for c in x["경우"]]
+        x["행"] = x["경우"].astype(str) + "b" + x["건물"].astype(str)
     return x.sort_values(["event_idx", "muni_code", "행"]).reset_index(drop=True)
 
 
 def to_rows(x, dpm_col, lq_col="LQ_prior_최대"):
     t = lambda c: torch.as_tensor(x[c].to_numpy(dtype="float64").copy(), dtype=DTYPE)
-    off_ls = torch.as_tensor([CASE_OFF[c][0] for c in x["경우"]])
-    off_lq = torch.as_tensor([CASE_OFF[c][1] for c in x["경우"]])
+    off_ls = torch.as_tensor(x["off_ls"].to_numpy(dtype=bool))
+    off_lq = torch.as_tensor(x["off_lq"].to_numpy(dtype=bool))
+    r0_var = None
+    if "var_ls" in x.columns:   # 원본: std = √qvar → 분산 = qvar. 꺼진 노드는 쓰이지 않으므로 1을 채운다.
+        r0_var = {k: torch.as_tensor(x[f"var_{k.lower()}"].fillna(1.0).to_numpy(dtype="float64").copy(), dtype=DTYPE)
+                  for k in ("LS", "LQ")}
     return DPMRows(
         y=t(dpm_col), pi_ls=t("LS_prior_평균"), pi_lq=t(lq_col), pgv=t("PGV"),
         event_idx=torch.as_tensor(x["event_idx"].to_numpy(), dtype=torch.long),
@@ -53,6 +89,7 @@ def to_rows(x, dpm_col, lq_col="LQ_prior_최대"):
         model_row_idx=torch.arange(len(x)),
         off={"LS": off_ls, "LQ": off_lq, "BD": torch.as_tensor((x["건물"] == 0).to_numpy())},
         weight=t("w"),
+        r0_var=r0_var,
     )
 
 

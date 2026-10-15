@@ -100,10 +100,13 @@ class FlowNode(nn.Module):
         self.amor = nn.Linear(in_dim, 3 * num_flows, dtype=DTYPE)
         self.flow_local = nn.Parameter(0.01 * torch.randn(n_rows, 3 * num_flows, dtype=DTYPE))
 
-    def forward(self, h: Tensor, n_samples: int):
+    def forward(self, h: Tensor, n_samples: int, var_rows: Tensor | None = None):
+        """var_rows: [N] 행마다 고정한 r^0 분산 (공식 코드의 USGS 불확실도 지도). 주면 r0_var 대신 쓴다."""
         N = h.shape[0]
         mu = 6.0 * torch.tanh((self.mu(h) + self.mu_local) / 6.0)      # [N,1], 부드럽게 ±6 안쪽
-        if self.r0_var is None:
+        if var_rows is not None:
+            var = var_rows.unsqueeze(1)
+        elif self.r0_var is None:
             var = F.softplus(self.var(h)) + 1e-3
         else:
             var = torch.full_like(mu, float(self.r0_var))
@@ -171,21 +174,23 @@ class DisasterNet(nn.Module):
     w_LS_BD = property(lambda self: F.softplus(self.w_LS_BD_raw))
     w_LQ_BD = property(lambda self: F.softplus(self.w_LQ_BD_raw))
 
-    def posteriors(self, a_ls, a_lq, a_bd, n_samples=8, off=None):
+    def posteriors(self, a_ls, a_lq, a_bd, n_samples=8, off=None, r0_var=None):
         """q_i = P(z_i=1|x)와 각 노드의 log q(r^K) [N,M].
 
         off: {"LS"|"LQ"|"BD": [N] bool}. True인 노드는 q를 0으로 고정한다 (원본 가지치기).
+        r0_var: {"LS"|"LQ": [N]} 행마다 고정한 r^0 분산 (원본의 USGS 불확실도). 없는 노드는 r0_var 상수.
              행끼리 섞이지 않는 flow라 flow가 끝난 뒤 한 번 곱하면 원본의 단계별 재마스킹과 같다.
         """
         keep = {k: torch.ones_like(a_ls) if off is None else (~off[k]).to(a_ls.dtype) for k in NODES}
         out = {"keep": keep}
-        r_ls, lq_ls = self.flow["LS"](a_ls.unsqueeze(1), n_samples)
-        r_lq, lq_lq = self.flow["LQ"](a_lq.unsqueeze(1), n_samples)
+        rv = r0_var or {}
+        r_ls, lq_ls = self.flow["LS"](a_ls.unsqueeze(1), n_samples, rv.get("LS"))
+        r_lq, lq_lq = self.flow["LQ"](a_lq.unsqueeze(1), n_samples, rv.get("LQ"))
         q_ls = torch.sigmoid(r_ls).mean(1) * keep["LS"]                  # 식 6
         q_lq = torch.sigmoid(r_lq).mean(1) * keep["LQ"]
         if self.use_bd:
             h_bd = torch.stack([q_ls, q_lq, a_bd], dim=1)                # BD의 부모
-            r_bd, lq_bd = self.flow["BD"](h_bd, n_samples)
+            r_bd, lq_bd = self.flow["BD"](h_bd, n_samples, rv.get("BD"))
             q_bd = torch.sigmoid(r_bd).mean(1) * keep["BD"]
         else:
             q_bd, lq_bd = torch.zeros_like(q_ls), torch.zeros_like(lq_ls)
@@ -290,7 +295,7 @@ def _fit_group(rows: DPMRows, name, *, epochs, lr, seed, n_samples, num_flows,
     for epoch in range(epochs):
         # KL 항 warm-up (공식 코드 anneal: β = min(0.01 + t/T, 1))
         beta = min(0.01 + epoch / max(epochs, 1), 1.0) if anneal else 1.0
-        post = model.posteriors(a["LS"], a["LQ"], a["BD"], n_samples, off=rows.off)
+        post = model.posteriors(a["LS"], a["LQ"], a["BD"], n_samples, off=rows.off, r0_var=rows.r0_var)
         q, keep = post["q"], post["keep"]
         rec = model.log_p_x(log_x, q)                                    # [N]
         log_q = sum(post["log_q"][k].mean(1) * keep[k] for k in model.nodes)    # E log q(r^K)
@@ -310,7 +315,7 @@ def _fit_group(rows: DPMRows, name, *, epochs, lr, seed, n_samples, num_flows,
 
     # 최종 사후확률은 MC 샘플을 넉넉히 뽑아 평균한다.
     with torch.no_grad():
-        q = model.posteriors(a["LS"], a["LQ"], a["BD"], n_samples=256, off=rows.off)["q"]
+        q = model.posteriors(a["LS"], a["LQ"], a["BD"], n_samples=256, off=rows.off, r0_var=rows.r0_var)["q"]
     pred = pd.DataFrame({
         "event_idx": rows.event_idx.tolist(),
         "muni_code": list(rows.municipality_code),
