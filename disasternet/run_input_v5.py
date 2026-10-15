@@ -4,7 +4,7 @@ DisasterNet 입력 통합표(DisasterNet_입력_v5.xlsx, 시트 "입력" 264행)
     python -m disasternet.run_input_v5 --input raw/DisasterNet_입력_v5.xlsx --jobs 4
 
 무엇을 하나
-  기준선  USGS prior 단독(LS_prior_평균, LQ_prior_평균)의 AUC
+  기준선  USGS prior 단독(LS_prior_평균, LQ_prior_최대)의 AUC
   제안    prior + DPM 관측을 DisasterNet(disasternet/model.py)으로 결합한 사후확률의 AUC
   참고    DPM 값 자체를 점수로 쓴 AUC (모델이 DPM 위에 무엇을 더하는지 보려고)
 
@@ -50,7 +50,7 @@ from .model import fit_disasternet
 SHEET = "입력"
 DOMAINS = {  # 도메인: (정답 컬럼, prior 컬럼)
     "LS": ("LS_정답", "LS_prior_평균"),
-    "LQ": ("LQ_정답", "LQ_prior_평균"),
+    "LQ": ("LQ_정답", "LQ_prior_최대"),
 }
 LOW_COH = 0.30
 OUT_DIR = Path("outputs/disasternet/input_v5")
@@ -82,7 +82,7 @@ def attach_terrain(df, path):
     return out
 
 
-def to_rows(df, dpm_col, mode="soft", off_thresh=FRAC_FLOOR, lq_col="LQ_prior_평균"):
+def to_rows(df, dpm_col, mode="soft", off_thresh=FRAC_FLOOR, lq_col="LQ_prior_최대"):
     """mode: soft = prior 로짓에 log(비율) / hard = 비율 ≤ off_thresh인 노드를 0으로 고정 / both = 둘 다."""
     t = lambda c: torch.as_tensor(df[c].to_numpy(dtype="float64"), dtype=DTYPE)
     log_frac = off = None
@@ -237,7 +237,8 @@ def main(argv=None):
     ap.add_argument("--terrain-mode", choices=["soft", "hard", "both"], default="soft",
                     help="soft: prior 로짓에 log(비율) / hard: 비율 ≤ --off-thresh인 노드를 0으로 고정 (원본 가지치기) / both")
     ap.add_argument("--off-thresh", type=float, default=FRAC_FLOOR, help="hard 모드에서 끄는 비율 기준 (기본 0.01)")
-    ap.add_argument("--lq-prior-col", default="LQ_prior_평균", help="액상화 출발 확률 열 (LQ_prior_평균 / LQ_prior_최대)")
+    ap.add_argument("--lq-prior-col", default="LQ_prior_최대",
+                    help="액상화 출발 확률 열. 기본은 최대 (USGS 칸 대부분이 바닥값이라 평균은 위험한 칸을 희석함). 평균: LQ_prior_평균")
     a = ap.parse_args(argv)
     out_dir = Path(a.out_dir)
 
