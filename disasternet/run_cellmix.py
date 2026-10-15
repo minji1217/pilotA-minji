@@ -42,12 +42,12 @@ def expand(df, local_path, bd_off=False):
     return x.sort_values(["event_idx", "muni_code", "행"]).reset_index(drop=True)
 
 
-def to_rows(x, dpm_col):
+def to_rows(x, dpm_col, lq_col="LQ_prior_평균"):
     t = lambda c: torch.as_tensor(x[c].to_numpy(dtype="float64").copy(), dtype=DTYPE)
     off_ls = torch.as_tensor([CASE_OFF[c][0] for c in x["경우"]])
     off_lq = torch.as_tensor([CASE_OFF[c][1] for c in x["경우"]])
     return DPMRows(
-        y=t(dpm_col), pi_ls=t("LS_prior_평균"), pi_lq=t("LQ_prior_평균"), pgv=t("PGV"),
+        y=t(dpm_col), pi_ls=t("LS_prior_평균"), pi_lq=t(lq_col), pgv=t("PGV"),
         event_idx=torch.as_tensor(x["event_idx"].to_numpy(), dtype=torch.long),
         municipality_code=tuple(f"{m}#{r}" for m, r in zip(x["muni_code"], x["행"])),
         model_row_idx=torch.arange(len(x)),
@@ -57,9 +57,9 @@ def to_rows(x, dpm_col):
 
 
 def _fit_one(job):
-    x, dpm_col, offset, seed, epochs, out_dir = job
+    x, dpm_col, offset, seed, epochs, out_dir, lq_col = job
     torch.set_num_threads(1)
-    fit = fit_disasternet(to_rows(x, dpm_col), seed=seed, epochs=epochs, obs_offset=offset, verbose=False)
+    fit = fit_disasternet(to_rows(x, dpm_col, lq_col), seed=seed, epochs=epochs, obs_offset=offset, verbose=False)
     p = fit.predictions
     p[["muni_code", "행"]] = p["muni_code"].str.split("#", expand=True)
     p = p.merge(x[["event_idx", "muni_code", "행", "w"]], on=["event_idx", "muni_code", "행"])
@@ -85,12 +85,13 @@ def main(argv=None):
     ap.add_argument("--jobs", type=int, default=1)
     ap.add_argument("--out-dir", default="outputs/disasternet/input_v5_cellmix")
     ap.add_argument("--bd-off", action="store_true", help="건물용지가 없는 칸은 건물 피해도 0으로 고정")
+    ap.add_argument("--lq-prior-col", default="LQ_prior_평균", help="액상화 출발 확률 열 (LQ_prior_평균 / LQ_prior_최대)")
     a = ap.parse_args(argv)
 
     x = expand(load_table(a.input), a.local, a.bd_off)
     print(f"시정촌 {x.groupby(['event_idx', 'muni_code']).ngroups}곳 → 가상 화소 행 {len(x)}개 "
           f"(행 종류별 {x['행'].value_counts().sort_index().to_dict()})", flush=True)
-    jobs = [(x, a.dpm_col, a.obs_offset, s, a.epochs, a.out_dir) for s in a.seeds]
+    jobs = [(x, a.dpm_col, a.obs_offset, s, a.epochs, a.out_dir, a.lq_prior_col) for s in a.seeds]
     if a.jobs > 1:
         with get_context("fork").Pool(a.jobs) as pool:
             pool.map(_fit_one, jobs)

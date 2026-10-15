@@ -82,7 +82,7 @@ def attach_terrain(df, path):
     return out
 
 
-def to_rows(df, dpm_col, mode="soft", off_thresh=FRAC_FLOOR):
+def to_rows(df, dpm_col, mode="soft", off_thresh=FRAC_FLOOR, lq_col="LQ_prior_평균"):
     """mode: soft = prior 로짓에 log(비율) / hard = 비율 ≤ off_thresh인 노드를 0으로 고정 / both = 둘 다."""
     t = lambda c: torch.as_tensor(df[c].to_numpy(dtype="float64"), dtype=DTYPE)
     log_frac = off = None
@@ -92,7 +92,7 @@ def to_rows(df, dpm_col, mode="soft", off_thresh=FRAC_FLOOR):
         if mode in ("hard", "both"):
             off = {k: t(f"frac_{k}") <= off_thresh for k in ("LS", "LQ", "BD")}
     return DPMRows(
-        y=t(dpm_col), pi_ls=t("LS_prior_평균"), pi_lq=t("LQ_prior_평균"), pgv=t("PGV"),
+        y=t(dpm_col), pi_ls=t("LS_prior_평균"), pi_lq=t(lq_col), pgv=t("PGV"),
         event_idx=torch.as_tensor(df["event_idx"].to_numpy(), dtype=torch.long),
         municipality_code=tuple(df["muni_code"]),
         model_row_idx=torch.arange(len(df)),
@@ -103,12 +103,12 @@ def to_rows(df, dpm_col, mode="soft", off_thresh=FRAC_FLOOR):
 
 # ---------------------------------------------------------------- 학습
 def _fit_one(job):
-    path, dpm_col, offset, seed, epochs, use_bd, out_dir, terrain, mode, thresh = job
+    path, dpm_col, offset, seed, epochs, use_bd, out_dir, terrain, mode, thresh, lq_col = job
     torch.set_num_threads(1)
     df = load_table(path)
     if terrain:
         df = attach_terrain(df, terrain)
-    fit = fit_disasternet(to_rows(df, dpm_col, mode, thresh), seed=seed, epochs=epochs, use_bd=use_bd,
+    fit = fit_disasternet(to_rows(df, dpm_col, mode, thresh, lq_col), seed=seed, epochs=epochs, use_bd=use_bd,
                           obs_offset=offset, verbose=False)
     p = fit.predictions[["event_idx", "muni_code", "p_ls", "p_lq", "p_bd"]].copy()
     p.insert(0, "seed", seed)
@@ -237,6 +237,7 @@ def main(argv=None):
     ap.add_argument("--terrain-mode", choices=["soft", "hard", "both"], default="soft",
                     help="soft: prior 로짓에 log(비율) / hard: 비율 ≤ --off-thresh인 노드를 0으로 고정 (원본 가지치기) / both")
     ap.add_argument("--off-thresh", type=float, default=FRAC_FLOOR, help="hard 모드에서 끄는 비율 기준 (기본 0.01)")
+    ap.add_argument("--lq-prior-col", default="LQ_prior_평균", help="액상화 출발 확률 열 (LQ_prior_평균 / LQ_prior_최대)")
     a = ap.parse_args(argv)
     out_dir = Path(a.out_dir)
 
@@ -246,7 +247,7 @@ def main(argv=None):
     if a.skip_fit:
         post = {s: pd.read_csv(out_dir / f"predictions_seed{s}.csv", dtype={"muni_code": str}) for s in a.seeds}
     else:
-        jobs = [(a.input, a.dpm_col, a.obs_offset, s, a.epochs, not a.no_bd, out_dir, a.terrain, a.terrain_mode, a.off_thresh) for s in a.seeds]
+        jobs = [(a.input, a.dpm_col, a.obs_offset, s, a.epochs, not a.no_bd, out_dir, a.terrain, a.terrain_mode, a.off_thresh, a.lq_prior_col) for s in a.seeds]
         if a.jobs > 1:
             with get_context("fork").Pool(a.jobs) as pool:
                 res = pool.map(_fit_one, jobs)
