@@ -94,9 +94,10 @@ def to_rows(x, dpm_col, lq_col="LQ_prior_최대"):
 
 
 def _fit_one(job):
-    x, dpm_col, offset, seed, epochs, out_dir, lq_col = job
+    x, dpm_col, offset, seed, epochs, out_dir, lq_col, bd_var_learn = job
     torch.set_num_threads(1)
-    fit = fit_disasternet(to_rows(x, dpm_col, lq_col), seed=seed, epochs=epochs, obs_offset=offset, verbose=False)
+    fit = fit_disasternet(to_rows(x, dpm_col, lq_col), seed=seed, epochs=epochs, obs_offset=offset, verbose=False,
+                          bd_var_learn=bd_var_learn)
     p = fit.predictions
     p[["muni_code", "행"]] = p["muni_code"].str.split("#", expand=True)
     p = p.merge(x[["event_idx", "muni_code", "행", "w"]], on=["event_idx", "muni_code", "행"])
@@ -124,12 +125,18 @@ def main(argv=None):
     ap.add_argument("--bd-off", action="store_true", help="건물용지가 없는 칸은 건물 피해도 0으로 고정")
     ap.add_argument("--lq-prior-col", default="LQ_prior_최대",
                     help="액상화 출발 확률 열. 기본은 최대 (USGS 칸 대부분이 바닥값이라 평균은 위험한 칸을 희석함). 평균: LQ_prior_평균")
+    ap.add_argument("--bd-var-learn", action="store_true",
+                    help="건물 피해 r^0 분산을 공식 코드처럼 부모 입력으로 학습하고 [1, 5]로 묶음 (없으면 1 고정)")
+    ap.add_argument("--usgs-unc", action="store_true",
+                    help="원본처럼 USGS 불확실도로 끄고(0·999) r^0 분산으로 씀. --local은 usgs_cells 출력이어야 함")
+    ap.add_argument("--alpha", choices=["muni", "cells"], default="muni",
+                    help="--usgs-unc일 때 행의 출발 확률: muni = 시정촌 값, cells = 켜진 칸들의 USGS 평균")
     a = ap.parse_args(argv)
 
-    x = expand(load_table(a.input), a.local, a.bd_off)
+    x = expand(load_table(a.input), a.local, a.bd_off, a.usgs_unc, a.alpha)
     print(f"시정촌 {x.groupby(['event_idx', 'muni_code']).ngroups}곳 → 가상 화소 행 {len(x)}개 "
           f"(행 종류별 {x['행'].value_counts().sort_index().to_dict()})", flush=True)
-    jobs = [(x, a.dpm_col, a.obs_offset, s, a.epochs, a.out_dir, a.lq_prior_col) for s in a.seeds]
+    jobs = [(x, a.dpm_col, a.obs_offset, s, a.epochs, a.out_dir, a.lq_prior_col, a.bd_var_learn) for s in a.seeds]
     if a.jobs > 1:
         with get_context("fork").Pool(a.jobs) as pool:
             pool.map(_fit_one, jobs)

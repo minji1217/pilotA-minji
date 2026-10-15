@@ -94,7 +94,7 @@ class FlowNode(nn.Module):
         # 사후가 상수로 뭉개진다 (합성 데이터에서 확인). 공식 코드도 LS/LF는 USGS 불확실도
         # 지도로 고정, BD는 [1, 5]로 묶어 이를 막는다. 불확실도 지도가 없어 상수로 고정한다.
         self.r0_var = r0_var
-        if r0_var is None:
+        if r0_var is None or r0_var == "bounded":
             self.var = nn.Linear(in_dim, 1, dtype=DTYPE)
         # flow 파라미터 amortization. 공식 코드처럼 [-1, 1]로 묶는다.
         self.amor = nn.Linear(in_dim, 3 * num_flows, dtype=DTYPE)
@@ -108,6 +108,9 @@ class FlowNode(nn.Module):
             var = var_rows.unsqueeze(1)
         elif self.r0_var is None:
             var = F.softplus(self.var(h)) + 1e-3
+        elif self.r0_var == "bounded":
+            # 공식 코드의 BD: Linear → Softplus → Hardtanh(1, 5). 부모 입력으로 분산을 정하되 [1, 5]로 묶는다.
+            var = torch.clamp(F.softplus(self.var(h)), 1.0, 5.0)
         else:
             var = torch.full_like(mu, float(self.r0_var))
         std = var.sqrt()
@@ -136,7 +139,7 @@ def _neg_log1p_exp(x: Tensor) -> Tensor:
 class DisasterNet(nn.Module):
     """한 그룹(기본: 이벤트 1개)의 DisasterNet."""
 
-    def __init__(self, n_rows: int, num_flows=4, r0_var=1.0, use_bd=True):
+    def __init__(self, n_rows: int, num_flows=4, r0_var=1.0, use_bd=True, bd_var_learn=False):
         super().__init__()
         # use_bd=False: 건물피해 노드를 뺀 ablation. 파라미터는 똑같이 만들어 두고(난수 순서 유지)
         # 손실·관측식에서만 BD를 빼므로, use_bd=True 결과는 이 옵션이 생기기 전과 같다.
@@ -160,7 +163,7 @@ class DisasterNet(nn.Module):
         self.flow = nn.ModuleDict({
             "LS": FlowNode(1, num_flows, n_rows, r0_var),
             "LQ": FlowNode(1, num_flows, n_rows, r0_var),
-            "BD": FlowNode(3, num_flows, n_rows, r0_var),
+            "BD": FlowNode(3, num_flows, n_rows, "bounded" if bd_var_learn else r0_var),
         })
 
     @property
@@ -285,10 +288,10 @@ class FitResult:
 
 
 def _fit_group(rows: DPMRows, name, *, epochs, lr, seed, n_samples, num_flows,
-               lam_triplet, margin, anneal, r0_var, use_bd, obs_offset, verbose):
+               lam_triplet, margin, anneal, r0_var, use_bd, obs_offset, verbose, bd_var_learn=False):
     torch.manual_seed(seed)
     a, log_x = prepare_inputs(rows, obs_offset)
-    model = DisasterNet(rows.n, num_flows=num_flows, r0_var=r0_var, use_bd=use_bd)
+    model = DisasterNet(rows.n, num_flows=num_flows, r0_var=r0_var, use_bd=use_bd, bd_var_learn=bd_var_learn)
     opt = torch.optim.Adam(model.parameters(), lr=lr)
 
     hist = []
@@ -328,7 +331,7 @@ def _fit_group(rows: DPMRows, name, *, epochs, lr, seed, n_samples, num_flows,
 
 def fit_disasternet(rows: DPMRows, *, pooled=False, epochs=3000, lr=0.01, seed=0,
                     n_samples=8, num_flows=4, lam_triplet=1.0, margin=1.0, anneal=True,
-                    r0_var=1.0, use_bd=True, obs_offset=None, verbose=True) -> FitResult:
+                    r0_var=1.0, use_bd=True, obs_offset=None, verbose=True, bd_var_learn=False) -> FitResult:
     """이벤트별(기본, 논문과 같음) 또는 통합(pooled)으로 학습하고 사후확률을 돌려준다."""
     if pooled:
         groups = [("pooled", rows)]
@@ -343,6 +346,7 @@ def fit_disasternet(rows: DPMRows, *, pooled=False, epochs=3000, lr=0.01, seed=0
         p, prm, h = _fit_group(g, name, epochs=epochs, lr=lr, seed=seed, n_samples=n_samples,
                                num_flows=num_flows, lam_triplet=lam_triplet, margin=margin,
                                anneal=anneal, r0_var=r0_var, use_bd=use_bd, obs_offset=obs_offset,
+                               bd_var_learn=bd_var_learn,
                                verbose=verbose)
         preds.append(p); params.extend(prm); hist.extend(h)
 
