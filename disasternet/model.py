@@ -171,24 +171,29 @@ class DisasterNet(nn.Module):
     w_LS_BD = property(lambda self: F.softplus(self.w_LS_BD_raw))
     w_LQ_BD = property(lambda self: F.softplus(self.w_LQ_BD_raw))
 
-    def posteriors(self, a_ls, a_lq, a_bd, n_samples=8):
-        """q_i = P(z_i=1|x)와 각 노드의 log q(r^K) [N,M]."""
-        out = {}
+    def posteriors(self, a_ls, a_lq, a_bd, n_samples=8, off=None):
+        """q_i = P(z_i=1|x)와 각 노드의 log q(r^K) [N,M].
+
+        off: {"LS"|"LQ"|"BD": [N] bool}. True인 노드는 q를 0으로 고정한다 (원본 가지치기).
+             행끼리 섞이지 않는 flow라 flow가 끝난 뒤 한 번 곱하면 원본의 단계별 재마스킹과 같다.
+        """
+        keep = {k: torch.ones_like(a_ls) if off is None else (~off[k]).to(a_ls.dtype) for k in NODES}
+        out = {"keep": keep}
         r_ls, lq_ls = self.flow["LS"](a_ls.unsqueeze(1), n_samples)
         r_lq, lq_lq = self.flow["LQ"](a_lq.unsqueeze(1), n_samples)
-        q_ls = torch.sigmoid(r_ls).mean(1)                               # 식 6
-        q_lq = torch.sigmoid(r_lq).mean(1)
+        q_ls = torch.sigmoid(r_ls).mean(1) * keep["LS"]                  # 식 6
+        q_lq = torch.sigmoid(r_lq).mean(1) * keep["LQ"]
         if self.use_bd:
             h_bd = torch.stack([q_ls, q_lq, a_bd], dim=1)                # BD의 부모
             r_bd, lq_bd = self.flow["BD"](h_bd, n_samples)
-            q_bd = torch.sigmoid(r_bd).mean(1)
+            q_bd = torch.sigmoid(r_bd).mean(1) * keep["BD"]
         else:
             q_bd, lq_bd = torch.zeros_like(q_ls), torch.zeros_like(lq_ls)
         out["q"] = {"LS": q_ls, "LQ": q_lq, "BD": q_bd}
         out["log_q"] = {"LS": lq_ls, "LQ": lq_lq, "BD": lq_bd}
         return out
 
-    def log_p_z(self, q, a, log_frac=None):
+    def log_p_z(self, q, a, log_frac=None, keep=None):
         """Σ_i E log p(z_i | ε_i, 부모) 의 Jensen 하한 [N] (식 9-10, 부록 6.3).
 
         log_frac: 원본 가지치기(LOCAL 지도·건물 footprint)의 시정촌 단위 대용.
@@ -196,13 +201,15 @@ class DisasterNet(nn.Module):
                   비율 1 → 영향 없음, 비율 → 0 → 그 노드를 끄는 것과 같다.
         """
         off = (lambda k: log_frac[k]) if log_frac is not None else (lambda k: 0.0)
+        # keep: 0으로 고정한 노드는 확률변수가 아니므로 prior 항에서 뺀다
+        kp = (lambda k: keep[k]) if keep is not None else (lambda k: 1.0)
         total = 0.0
         w_a = self.w_a
         for k in ("LS", "LQ"):
             s = self.w_0[k] + w_a[k] * a[k] + off(k)
             half = self.w_e[k] ** 2 / 2
-            total = total + q[k] * _neg_log1p_exp(half - s) \
-                + (1 - q[k]) * _neg_log1p_exp(half + s)
+            total = total + kp(k) * (q[k] * _neg_log1p_exp(half - s)
+                                     + (1 - q[k]) * _neg_log1p_exp(half + s))
         if not self.use_bd:
             return total
         # BD: noisy-OR 부모. 독립 Bernoulli(q_LS), (q_LQ)에 대한 E[exp(∓Σ w z)]
@@ -212,8 +219,8 @@ class DisasterNet(nn.Module):
             * (1 - q["LQ"] + q["LQ"] * torch.exp(-self.w_LQ_BD))
         e_pos = (1 - q["LS"] + q["LS"] * torch.exp(self.w_LS_BD)) \
             * (1 - q["LQ"] + q["LQ"] * torch.exp(self.w_LQ_BD))
-        total = total + q["BD"] * _neg_log1p_exp(half - s + torch.log(e_neg)) \
-            + (1 - q["BD"]) * _neg_log1p_exp(half + s + torch.log(e_pos))
+        total = total + kp("BD") * (q["BD"] * _neg_log1p_exp(half - s + torch.log(e_neg))
+                                    + (1 - q["BD"]) * _neg_log1p_exp(half + s + torch.log(e_pos)))
         return total
 
     def log_p_x(self, log_x, q):
@@ -283,11 +290,11 @@ def _fit_group(rows: DPMRows, name, *, epochs, lr, seed, n_samples, num_flows,
     for epoch in range(epochs):
         # KL 항 warm-up (공식 코드 anneal: β = min(0.01 + t/T, 1))
         beta = min(0.01 + epoch / max(epochs, 1), 1.0) if anneal else 1.0
-        post = model.posteriors(a["LS"], a["LQ"], a["BD"], n_samples)
-        q = post["q"]
+        post = model.posteriors(a["LS"], a["LQ"], a["BD"], n_samples, off=rows.off)
+        q, keep = post["q"], post["keep"]
         rec = model.log_p_x(log_x, q)                                    # [N]
-        log_q = sum(post["log_q"][k].mean(1) for k in model.nodes)              # E log q(r^K)
-        kl = log_q - model.log_p_z(q, a, rows.log_frac)
+        log_q = sum(post["log_q"][k].mean(1) * keep[k] for k in model.nodes)    # E log q(r^K)
+        kl = log_q - model.log_p_z(q, a, rows.log_frac, keep if rows.off is not None else None)
         trip = triplet_penalty(q, a, margin) if lam_triplet > 0 else torch.zeros((), dtype=DTYPE)
         loss = (-rec + beta * kl).sum() + lam_triplet * trip
         opt.zero_grad()
@@ -302,7 +309,7 @@ def _fit_group(rows: DPMRows, name, *, epochs, lr, seed, n_samples, num_flows,
 
     # 최종 사후확률은 MC 샘플을 넉넉히 뽑아 평균한다.
     with torch.no_grad():
-        q = model.posteriors(a["LS"], a["LQ"], a["BD"], n_samples=256)["q"]
+        q = model.posteriors(a["LS"], a["LQ"], a["BD"], n_samples=256, off=rows.off)["q"]
     pred = pd.DataFrame({
         "event_idx": rows.event_idx.tolist(),
         "muni_code": list(rows.municipality_code),

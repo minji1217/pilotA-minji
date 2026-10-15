@@ -50,6 +50,8 @@ class DPMRows:
     model_row_idx: Tensor   # [N]  long. PilotABatch에서의 행 번호 (pilotA 예측을 같은 행으로 뽑을 때 쓴다)
     # 가지치기 대용: {"LS"|"LQ"|"BD": [N]} 그 재해가 가능한 땅 비율의 log. 없으면 None.
     log_frac: dict | None = None
+    # 원본 가지치기 그대로: {"LS"|"LQ"|"BD": [N] bool} True면 그 노드를 0으로 고정. 없으면 None.
+    off: dict | None = None
 
     @property
     def n(self) -> int:
@@ -63,6 +65,7 @@ class DPMRows:
             municipality_code=tuple(self.municipality_code[i] for i in idx.tolist()),
             model_row_idx=self.model_row_idx[idx],
             log_frac=None if self.log_frac is None else {k: v[idx] for k, v in self.log_frac.items()},
+            off=None if self.off is None else {k: v[idx] for k, v in self.off.items()},
         )
 
 

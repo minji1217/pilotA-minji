@@ -82,28 +82,33 @@ def attach_terrain(df, path):
     return out
 
 
-def to_rows(df, dpm_col):
+def to_rows(df, dpm_col, mode="soft", off_thresh=FRAC_FLOOR):
+    """mode: soft = prior 로짓에 log(비율) / hard = 비율 ≤ off_thresh인 노드를 0으로 고정 / both = 둘 다."""
     t = lambda c: torch.as_tensor(df[c].to_numpy(dtype="float64"), dtype=DTYPE)
-    log_frac = None
+    log_frac = off = None
     if "frac_LS" in df.columns:
-        log_frac = {k: torch.log(torch.clamp(t(f"frac_{k}"), min=FRAC_FLOOR)) for k in ("LS", "LQ", "BD")}
+        if mode in ("soft", "both"):
+            log_frac = {k: torch.log(torch.clamp(t(f"frac_{k}"), min=FRAC_FLOOR)) for k in ("LS", "LQ", "BD")}
+        if mode in ("hard", "both"):
+            off = {k: t(f"frac_{k}") <= off_thresh for k in ("LS", "LQ", "BD")}
     return DPMRows(
         y=t(dpm_col), pi_ls=t("LS_prior_평균"), pi_lq=t("LQ_prior_평균"), pgv=t("PGV"),
         event_idx=torch.as_tensor(df["event_idx"].to_numpy(), dtype=torch.long),
         municipality_code=tuple(df["muni_code"]),
         model_row_idx=torch.arange(len(df)),
         log_frac=log_frac,
+        off=off,
     )
 
 
 # ---------------------------------------------------------------- 학습
 def _fit_one(job):
-    path, dpm_col, offset, seed, epochs, use_bd, out_dir, terrain = job
+    path, dpm_col, offset, seed, epochs, use_bd, out_dir, terrain, mode, thresh = job
     torch.set_num_threads(1)
     df = load_table(path)
     if terrain:
         df = attach_terrain(df, terrain)
-    fit = fit_disasternet(to_rows(df, dpm_col), seed=seed, epochs=epochs, use_bd=use_bd,
+    fit = fit_disasternet(to_rows(df, dpm_col, mode, thresh), seed=seed, epochs=epochs, use_bd=use_bd,
                           obs_offset=offset, verbose=False)
     p = fit.predictions[["event_idx", "muni_code", "p_ls", "p_lq", "p_bd"]].copy()
     p.insert(0, "seed", seed)
@@ -229,6 +234,9 @@ def main(argv=None):
     ap.add_argument("--out-dir", default=str(OUT_DIR), help="결과 폴더")
     ap.add_argument("--terrain", default=None,
                     help="terrain_fractions.csv. 주면 원본 가지치기의 대용으로 prior 로짓에 log(가능 면적 비율)을 더한다")
+    ap.add_argument("--terrain-mode", choices=["soft", "hard", "both"], default="soft",
+                    help="soft: prior 로짓에 log(비율) / hard: 비율 ≤ --off-thresh인 노드를 0으로 고정 (원본 가지치기) / both")
+    ap.add_argument("--off-thresh", type=float, default=FRAC_FLOOR, help="hard 모드에서 끄는 비율 기준 (기본 0.01)")
     a = ap.parse_args(argv)
     out_dir = Path(a.out_dir)
 
@@ -238,7 +246,7 @@ def main(argv=None):
     if a.skip_fit:
         post = {s: pd.read_csv(out_dir / f"predictions_seed{s}.csv", dtype={"muni_code": str}) for s in a.seeds}
     else:
-        jobs = [(a.input, a.dpm_col, a.obs_offset, s, a.epochs, not a.no_bd, out_dir, a.terrain) for s in a.seeds]
+        jobs = [(a.input, a.dpm_col, a.obs_offset, s, a.epochs, not a.no_bd, out_dir, a.terrain, a.terrain_mode, a.off_thresh) for s in a.seeds]
         if a.jobs > 1:
             with get_context("fork").Pool(a.jobs) as pool:
                 res = pool.map(_fit_one, jobs)
@@ -261,7 +269,7 @@ def main(argv=None):
     show_ev = ["도메인", "이벤트", "양성", "음성", "비교쌍", "상태", "AUC_prior", "AUC_DPM", "AUC_사후_평균", "AUC_사후_표준편차"]
     md = [f"# DisasterNet · 입력 통합표 v5\n",
           f"- 관측: {a.dpm_col} + {a.obs_offset} (로그정규 관측) · seed {a.seeds} · BD 노드 {'제외' if a.no_bd else '포함'}"
-          f" · 가지치기 대용 {'있음 (' + a.terrain + ')' if a.terrain else '없음'}",
+          f" · 가지치기 대용 {'있음 (' + a.terrain + ', ' + a.terrain_mode + (f' ≤{a.off_thresh}' if a.terrain_mode != 'soft' else '') + ')' if a.terrain else '없음'}",
           f"- 전체 AUC = 비교쌍(양성×음성) 가중평균. 계산 불가 조합은 제외.\n",
           "## 이벤트별 · 도메인별\n", _md(ev[[c for c in show_ev if c in ev.columns]]),
           "\n## 비교쌍 가중 전체\n", _md(ov),
