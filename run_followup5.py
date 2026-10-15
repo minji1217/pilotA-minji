@@ -88,6 +88,8 @@ def main():
                     help="AreaPrior 모드. 기본 fixed(조건 A). 후속실험 3의 버전 J는 b-only")
     ap.add_argument("--heldout-alpha", default="mean", choices=["mean", "zero", "fit"],
                     help="평가 이벤트의 alpha_e에 넣을 값")
+    ap.add_argument("--lq-prior", default="mean", choices=["mean", "max"],
+                    help="액상화 p̄로 USGS 시정촌 평균(기본) 또는 최댓값을 쓴다")
     ap.add_argument("--epochs", type=int, default=3000)
     ap.add_argument("--lr", type=float, default=0.02)
     ap.add_argument("--seed", type=int, default=0)
@@ -100,12 +102,13 @@ def main():
     tag += ("" if not args.no_cov else "_nocov") + ("" if mtn_prior else "_nomtn")
     tag += ("" if not args.no_labels else "_nolabels") + ("_mtndmg" if args.mtn_damage else "")
     tag += ("" if args.area_mode == "fixed" else f"_area-{args.area_mode}")
+    tag += ("" if args.lq_prior == "mean" else f"_lq{args.lq_prior}")
     tag += f"_alpha-{args.heldout_alpha}"
     out_dir = Path(args.out or f"results/followup5/{tag}")
     out_dir.mkdir(parents=True, exist_ok=True)
 
     # ---- 데이터 ----
-    batch = load_pilot_a_batch(STATS_PATH, USGS_PATH)
+    batch = load_pilot_a_batch(STATS_PATH, USGS_PATH, lq_prior=args.lq_prior)
     eval_gt = load_eval_ground_truth(GT_PATH, batch)
     B = batch.batch_size
 
@@ -268,7 +271,7 @@ def main():
         "use_cov": not args.no_cov, "mtn_prior": mtn_prior, "use_labels": not args.no_labels,
         "heldout_alpha": args.heldout_alpha,
         "heldout_alpha_value": heldout_alpha_value,
-        "mtn_damage": bool(args.mtn_damage), "area_mode": args.area_mode, "reference_event": INDEX_TO_EVENT[ref_idx],
+        "mtn_damage": bool(args.mtn_damage), "area_mode": args.area_mode, "lq_prior": args.lq_prior, "reference_event": INDEX_TO_EVENT[ref_idx],
         "n_train": train_batch.batch_size, "n_train_labeled": n_lab, "n_train_negative": n_neg,
         "z_mtn_train_mean_of_loader_z": float(m), "z_mtn_train_std_of_loader_z": float(s),
         "final_loss": float(hist["loss_total"].iloc[-1]),

@@ -54,6 +54,7 @@ from schema import (
     MOUNTAIN_RATIO_COLUMN,
     POPULATION_COLUMN,
     USGS_LQ_PRIOR_COLUMN,
+    USGS_LQ_PRIOR_MAX_COLUMN,
     USGS_LS_PRIOR_COLUMN,
     USGS_PGV_COLUMN,
     WOODEN_RATIO_COLUMN,
@@ -336,11 +337,15 @@ def _prepare_stats_sheet(path: str | Path, sheet_name: str) -> pd.DataFrame:
     return result
 
 
-def _prepare_usgs_sheet(path: str | Path, sheet_name: str) -> pd.DataFrame:
+def _prepare_usgs_sheet(
+    path: str | Path,
+    sheet_name: str,
+    lq_prior_column: str = USGS_LQ_PRIOR_COLUMN,
+) -> pd.DataFrame:
     """
     한 이벤트의 USGS 시트를 이번 Pilot에 필요한 값만 남겨 정리한다.
 
-    출력: 시정촌코드, pi_ls=LS_prior(평균), pi_lq=LQ_prior(평균), pgv=PGV
+    출력: 시정촌코드, pi_ls=LS_prior(평균), pi_lq=lq_prior_column(기본 LQ_prior(평균)), pgv=PGV
     """
     df = _read_table(path, sheet_name)
     _require_columns(df, USGS_REQUIRED_COLUMNS, sheet_name=sheet_name, source_name="USGS")
@@ -351,7 +356,9 @@ def _prepare_usgs_sheet(path: str | Path, sheet_name: str) -> pd.DataFrame:
 
     # 이번 Pilot에서 확정한 평균 prior를 모델 변수명으로 바꿔 저장한다.
     result["pi_ls"] = pd.to_numeric(df[USGS_LS_PRIOR_COLUMN], errors="coerce")
-    result["pi_lq"] = pd.to_numeric(df[USGS_LQ_PRIOR_COLUMN], errors="coerce")
+    if lq_prior_column not in df.columns:
+        raise ValueError(f"[{sheet_name}] USGS에 '{lq_prior_column}' 컬럼이 없습니다.")
+    result["pi_lq"] = pd.to_numeric(df[lq_prior_column], errors="coerce")
     result["pgv"] = pd.to_numeric(df[USGS_PGV_COLUMN], errors="coerce")
 
     # 실제 값이 존재하는 prior가 [0,1] 범위를 벗어나면 데이터 오류로 처리한다.
@@ -641,6 +648,7 @@ def _to_batch(df: pd.DataFrame) -> PilotABatch:
 def _load_all_events(
     stats_path: str | Path,
     usgs_path: str | Path,
+    lq_prior_column: str = USGS_LQ_PRIOR_COLUMN,
 ) -> tuple[pd.DataFrame, pd.DataFrame, int, int]:
     """
     9개 이벤트 전체에 같은 전처리 규칙을 적용한다.
@@ -654,7 +662,7 @@ def _load_all_events(
 
     for event in EVENTS:
         stats_df = _prepare_stats_sheet(stats_path, event)
-        usgs_df = _prepare_usgs_sheet(usgs_path, event)
+        usgs_df = _prepare_usgs_sheet(usgs_path, event, lq_prior_column)
 
         total_stats_rows += len(stats_df)
 
@@ -686,6 +694,7 @@ def load_pilot_a_batch(
     *,
     area_path: str | Path = AREA_PATH,
     strict_expected_rows: bool = True,
+    lq_prior: str = "mean",
 ) -> PilotABatch:
     """
     실제 통계 XLSX와 USGS XLSX를 읽어 최종 PilotABatch를 만든다.
@@ -695,6 +704,7 @@ def load_pilot_a_batch(
     - usgs_path: 재난프로젝트_시정촌별_USGS.xlsx
     - area_path: 시정촌 면적 CSV (후속실험 3의 log k용, 기본 raw/시정촌_면적.csv)
     - strict_expected_rows: True이면 현재 확인한 439/419/418 행 수가 맞는지 검사
+    - lq_prior: "mean"(기본, LQ_prior(평균)) 또는 "max"(LQ_prior(최대), 비교 실험용)
 
     출력: PilotABatch
     """
@@ -706,9 +716,13 @@ def load_pilot_a_batch(
     if not usgs_path.exists():
         raise FileNotFoundError(f"USGS XLSX를 찾을 수 없습니다: {usgs_path}")
 
+    if lq_prior not in ("mean", "max"):
+        raise ValueError(f"lq_prior는 'mean' 또는 'max'여야 합니다: {lq_prior}")
+    lq_column = USGS_LQ_PRIOR_MAX_COLUMN if lq_prior == "max" else USGS_LQ_PRIOR_COLUMN
     model_df, _, total_stats_rows, total_usgs_matched_rows = _load_all_events(
         stats_path,
         usgs_path,
+        lq_column,
     )
 
     # 최종 모델 행(현재 기대 418행)을 기준으로 취약성 공변량을 표준화한다.

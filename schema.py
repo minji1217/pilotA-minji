@@ -204,6 +204,8 @@ MOUNTAIN_RATIO_COLUMN: str = "mountain_ratio"
 # 이번 Pilot은 최대 prior가 아니라 평균 prior를 사용한다.
 USGS_LS_PRIOR_COLUMN: str = "LS_prior(평균)"
 USGS_LQ_PRIOR_COLUMN: str = "LQ_prior(평균)"
+# 비교 실험용: --lq-prior max일 때 액상화 prior로 시정촌 최댓값을 읽는다(기본은 평균).
+USGS_LQ_PRIOR_MAX_COLUMN: str = "LQ_prior(최대)"
 USGS_PGV_COLUMN: str = "PGV"
 
 
