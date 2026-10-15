@@ -188,19 +188,25 @@ class DisasterNet(nn.Module):
         out["log_q"] = {"LS": lq_ls, "LQ": lq_lq, "BD": lq_bd}
         return out
 
-    def log_p_z(self, q, a):
-        """Σ_i E log p(z_i | ε_i, 부모) 의 Jensen 하한 [N] (식 9-10, 부록 6.3)."""
+    def log_p_z(self, q, a, log_frac=None):
+        """Σ_i E log p(z_i | ε_i, 부모) 의 Jensen 하한 [N] (식 9-10, 부록 6.3).
+
+        log_frac: 원본 가지치기(LOCAL 지도·건물 footprint)의 시정촌 단위 대용.
+                  {"LS"|"LQ"|"BD": [N]} = log(그 재해가 가능한 땅의 비율). 고정값으로 로짓에 더한다.
+                  비율 1 → 영향 없음, 비율 → 0 → 그 노드를 끄는 것과 같다.
+        """
+        off = (lambda k: log_frac[k]) if log_frac is not None else (lambda k: 0.0)
         total = 0.0
         w_a = self.w_a
         for k in ("LS", "LQ"):
-            s = self.w_0[k] + w_a[k] * a[k]
+            s = self.w_0[k] + w_a[k] * a[k] + off(k)
             half = self.w_e[k] ** 2 / 2
             total = total + q[k] * _neg_log1p_exp(half - s) \
                 + (1 - q[k]) * _neg_log1p_exp(half + s)
         if not self.use_bd:
             return total
         # BD: noisy-OR 부모. 독립 Bernoulli(q_LS), (q_LQ)에 대한 E[exp(∓Σ w z)]
-        s = self.w_0["BD"] + w_a["BD"] * a["BD"]
+        s = self.w_0["BD"] + w_a["BD"] * a["BD"] + off("BD")
         half = self.w_e["BD"] ** 2 / 2
         e_neg = (1 - q["LS"] + q["LS"] * torch.exp(-self.w_LS_BD)) \
             * (1 - q["LQ"] + q["LQ"] * torch.exp(-self.w_LQ_BD))
@@ -281,7 +287,7 @@ def _fit_group(rows: DPMRows, name, *, epochs, lr, seed, n_samples, num_flows,
         q = post["q"]
         rec = model.log_p_x(log_x, q)                                    # [N]
         log_q = sum(post["log_q"][k].mean(1) for k in model.nodes)              # E log q(r^K)
-        kl = log_q - model.log_p_z(q, a)
+        kl = log_q - model.log_p_z(q, a, rows.log_frac)
         trip = triplet_penalty(q, a, margin) if lam_triplet > 0 else torch.zeros((), dtype=DTYPE)
         loss = (-rec + beta * kl).sum() + lam_triplet * trip
         opt.zero_grad()

@@ -69,21 +69,40 @@ def load_table(path):
     return df.sort_values(["event_idx", "muni_code"]).reset_index(drop=True)
 
 
+FRAC_FLOOR = 0.01  # 비율 0인 시정촌의 log가 -inf가 되지 않게 (1% 미만은 1%로)
+
+
+def attach_terrain(df, path):
+    """terrain_fractions.csv(시정촌별 비탈·평지·건물용지 비율)를 붙인다."""
+    t = pd.read_csv(path, dtype={"시정촌코드": str})
+    t = t.rename(columns={"시정촌코드": "muni_code"})[["이벤트", "muni_code", "frac_LS", "frac_LQ", "frac_BD"]]
+    out = df.merge(t, on=["이벤트", "muni_code"], how="left", validate="one_to_one")
+    if out[["frac_LS", "frac_LQ", "frac_BD"]].isna().any().any():
+        raise ValueError("지형 비율이 없는 시정촌이 있습니다.")
+    return out
+
+
 def to_rows(df, dpm_col):
     t = lambda c: torch.as_tensor(df[c].to_numpy(dtype="float64"), dtype=DTYPE)
+    log_frac = None
+    if "frac_LS" in df.columns:
+        log_frac = {k: torch.log(torch.clamp(t(f"frac_{k}"), min=FRAC_FLOOR)) for k in ("LS", "LQ", "BD")}
     return DPMRows(
         y=t(dpm_col), pi_ls=t("LS_prior_평균"), pi_lq=t("LQ_prior_평균"), pgv=t("PGV"),
         event_idx=torch.as_tensor(df["event_idx"].to_numpy(), dtype=torch.long),
         municipality_code=tuple(df["muni_code"]),
         model_row_idx=torch.arange(len(df)),
+        log_frac=log_frac,
     )
 
 
 # ---------------------------------------------------------------- 학습
 def _fit_one(job):
-    path, dpm_col, offset, seed, epochs, use_bd, out_dir = job
+    path, dpm_col, offset, seed, epochs, use_bd, out_dir, terrain = job
     torch.set_num_threads(1)
     df = load_table(path)
+    if terrain:
+        df = attach_terrain(df, terrain)
     fit = fit_disasternet(to_rows(df, dpm_col), seed=seed, epochs=epochs, use_bd=use_bd,
                           obs_offset=offset, verbose=False)
     p = fit.predictions[["event_idx", "muni_code", "p_ls", "p_lq", "p_bd"]].copy()
@@ -208,6 +227,8 @@ def main(argv=None):
     ap.add_argument("--skip-fit", action="store_true", help="이미 저장된 predictions_seed*.csv로 채점만")
     ap.add_argument("--top", type=int, default=5, help="순위 변화 상위 몇 곳")
     ap.add_argument("--out-dir", default=str(OUT_DIR), help="결과 폴더")
+    ap.add_argument("--terrain", default=None,
+                    help="terrain_fractions.csv. 주면 원본 가지치기의 대용으로 prior 로짓에 log(가능 면적 비율)을 더한다")
     a = ap.parse_args(argv)
     out_dir = Path(a.out_dir)
 
@@ -217,7 +238,7 @@ def main(argv=None):
     if a.skip_fit:
         post = {s: pd.read_csv(out_dir / f"predictions_seed{s}.csv", dtype={"muni_code": str}) for s in a.seeds}
     else:
-        jobs = [(a.input, a.dpm_col, a.obs_offset, s, a.epochs, not a.no_bd, out_dir) for s in a.seeds]
+        jobs = [(a.input, a.dpm_col, a.obs_offset, s, a.epochs, not a.no_bd, out_dir, a.terrain) for s in a.seeds]
         if a.jobs > 1:
             with get_context("fork").Pool(a.jobs) as pool:
                 res = pool.map(_fit_one, jobs)
@@ -239,7 +260,8 @@ def main(argv=None):
 
     show_ev = ["도메인", "이벤트", "양성", "음성", "비교쌍", "상태", "AUC_prior", "AUC_DPM", "AUC_사후_평균", "AUC_사후_표준편차"]
     md = [f"# DisasterNet · 입력 통합표 v5\n",
-          f"- 관측: {a.dpm_col} + {a.obs_offset} (로그정규 관측) · seed {a.seeds} · BD 노드 {'제외' if a.no_bd else '포함'}",
+          f"- 관측: {a.dpm_col} + {a.obs_offset} (로그정규 관측) · seed {a.seeds} · BD 노드 {'제외' if a.no_bd else '포함'}"
+          f" · 가지치기 대용 {'있음 (' + a.terrain + ')' if a.terrain else '없음'}",
           f"- 전체 AUC = 비교쌍(양성×음성) 가중평균. 계산 불가 조합은 제외.\n",
           "## 이벤트별 · 도메인별\n", _md(ev[[c for c in show_ev if c in ev.columns]]),
           "\n## 비교쌍 가중 전체\n", _md(ov),
