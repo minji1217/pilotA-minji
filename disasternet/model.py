@@ -288,7 +288,8 @@ class FitResult:
 
 
 def _fit_group(rows: DPMRows, name, *, epochs, lr, seed, n_samples, num_flows,
-               lam_triplet, margin, anneal, r0_var, use_bd, obs_offset, verbose, bd_var_learn=False):
+               lam_triplet, margin, anneal, r0_var, use_bd, obs_offset, verbose, bd_var_learn=False,
+               loss_mode="elbo"):
     torch.manual_seed(seed)
     a, log_x = prepare_inputs(rows, obs_offset)
     model = DisasterNet(rows.n, num_flows=num_flows, r0_var=r0_var, use_bd=use_bd, bd_var_learn=bd_var_learn)
@@ -304,8 +305,16 @@ def _fit_group(rows: DPMRows, name, *, epochs, lr, seed, n_samples, num_flows,
         log_q = sum(post["log_q"][k].mean(1) * keep[k] for k in model.nodes)    # E log q(r^K)
         kl = log_q - model.log_p_z(q, a, rows.log_frac, keep if rows.off is not None else None)
         trip = triplet_penalty(q, a, margin) if lam_triplet > 0 else torch.zeros((), dtype=DTYPE)
-        per_row = -rec + beta * kl
-        loss = (per_row if rows.weight is None else per_row * rows.weight).sum() + lam_triplet * trip
+        if loss_mode == "std":
+            # 공식 코드 기본값(--anneal std): kl = log q − β·log p(z) (log q에 flow의 log det 포함),
+            # loss = β·|mean log p(x|z)| + kl + triplet. 행 가중치가 있으면 가중 평균으로 쓴다.
+            wv = torch.ones_like(rec) if rows.weight is None else rows.weight
+            wmean = lambda v: (v * wv).sum() / wv.sum()
+            loss = beta * torch.abs(wmean(rec)) + wmean(log_q - beta * model.log_p_z(q, a, rows.log_frac, keep if rows.off is not None else None)) \
+                + lam_triplet * trip
+        else:
+            per_row = -rec + beta * kl
+            loss = (per_row if rows.weight is None else per_row * rows.weight).sum() + lam_triplet * trip
         opt.zero_grad()
         loss.backward()
         opt.step()
@@ -331,7 +340,8 @@ def _fit_group(rows: DPMRows, name, *, epochs, lr, seed, n_samples, num_flows,
 
 def fit_disasternet(rows: DPMRows, *, pooled=False, epochs=3000, lr=0.01, seed=0,
                     n_samples=8, num_flows=4, lam_triplet=1.0, margin=1.0, anneal=True,
-                    r0_var=1.0, use_bd=True, obs_offset=None, verbose=True, bd_var_learn=False) -> FitResult:
+                    r0_var=1.0, use_bd=True, obs_offset=None, verbose=True, bd_var_learn=False,
+                    loss_mode="elbo") -> FitResult:
     """이벤트별(기본, 논문과 같음) 또는 통합(pooled)으로 학습하고 사후확률을 돌려준다."""
     if pooled:
         groups = [("pooled", rows)]
@@ -346,7 +356,7 @@ def fit_disasternet(rows: DPMRows, *, pooled=False, epochs=3000, lr=0.01, seed=0
         p, prm, h = _fit_group(g, name, epochs=epochs, lr=lr, seed=seed, n_samples=n_samples,
                                num_flows=num_flows, lam_triplet=lam_triplet, margin=margin,
                                anneal=anneal, r0_var=r0_var, use_bd=use_bd, obs_offset=obs_offset,
-                               bd_var_learn=bd_var_learn,
+                               bd_var_learn=bd_var_learn, loss_mode=loss_mode,
                                verbose=verbose)
         preds.append(p); params.extend(prm); hist.extend(h)
 
