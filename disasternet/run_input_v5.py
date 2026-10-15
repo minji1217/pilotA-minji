@@ -21,7 +21,7 @@ DisasterNet 입력 통합표(DisasterNet_입력_v5.xlsx, 시트 "입력" 264행)
   - base상관도 < 0.30 행은 빼지 않는다. 민감도 분석으로만, 그 행을 채점에서 뺀 표를 따로 낸다
     (학습은 같은 모델 그대로).
 
-산출물 (outputs/disasternet/input_v5/)
+산출물 (기본 outputs/disasternet/input_v5/, --out-dir로 변경)
   predictions_seed{N}.csv   시정촌별 사후확률
   auc_by_event.csv          이벤트 × 도메인 표 (양성·음성·쌍 수, prior / DPM / 사후 AUC)
   auc_overall.csv           비교쌍 가중 전체 AUC (LS · LQ · 합계)
@@ -80,15 +80,15 @@ def to_rows(df, dpm_col):
 
 # ---------------------------------------------------------------- 학습
 def _fit_one(job):
-    path, dpm_col, offset, seed, epochs, use_bd = job
+    path, dpm_col, offset, seed, epochs, use_bd, out_dir = job
     torch.set_num_threads(1)
     df = load_table(path)
     fit = fit_disasternet(to_rows(df, dpm_col), seed=seed, epochs=epochs, use_bd=use_bd,
                           obs_offset=offset, verbose=False)
     p = fit.predictions[["event_idx", "muni_code", "p_ls", "p_lq", "p_bd"]].copy()
     p.insert(0, "seed", seed)
-    OUT_DIR.mkdir(parents=True, exist_ok=True)
-    p.to_csv(OUT_DIR / f"predictions_seed{seed}.csv", index=False, encoding="utf-8-sig")
+    Path(out_dir).mkdir(parents=True, exist_ok=True)
+    p.to_csv(Path(out_dir) / f"predictions_seed{seed}.csv", index=False, encoding="utf-8-sig")
     print(f"seed {seed} 완료", flush=True)
     return p
 
@@ -205,15 +205,17 @@ def main(argv=None):
     ap.add_argument("--jobs", type=int, default=1, help="seed를 동시에 돌릴 프로세스 수")
     ap.add_argument("--skip-fit", action="store_true", help="이미 저장된 predictions_seed*.csv로 채점만")
     ap.add_argument("--top", type=int, default=5, help="순위 변화 상위 몇 곳")
+    ap.add_argument("--out-dir", default=str(OUT_DIR), help="결과 폴더")
     a = ap.parse_args(argv)
+    out_dir = Path(a.out_dir)
 
     df = load_table(a.input)
     print(f"입력 {len(df)}행 / 이벤트별 {df.groupby('이벤트').size().to_dict()}")
 
     if a.skip_fit:
-        post = {s: pd.read_csv(OUT_DIR / f"predictions_seed{s}.csv", dtype={"muni_code": str}) for s in a.seeds}
+        post = {s: pd.read_csv(out_dir / f"predictions_seed{s}.csv", dtype={"muni_code": str}) for s in a.seeds}
     else:
-        jobs = [(a.input, a.dpm_col, a.obs_offset, s, a.epochs, not a.no_bd) for s in a.seeds]
+        jobs = [(a.input, a.dpm_col, a.obs_offset, s, a.epochs, not a.no_bd, out_dir) for s in a.seeds]
         if a.jobs > 1:
             with get_context("fork").Pool(a.jobs) as pool:
                 res = pool.map(_fit_one, jobs)
@@ -228,10 +230,10 @@ def main(argv=None):
     ov_c = overall_table(ev_c, post)
     mv = movers(df, post, a.dpm_col, top=a.top)
 
-    OUT_DIR.mkdir(parents=True, exist_ok=True)
+    out_dir.mkdir(parents=True, exist_ok=True)
     for name, t in (("auc_by_event", ev), ("auc_overall", ov), ("auc_by_event_coh30", ev_c),
                     ("auc_overall_coh30", ov_c), ("movers", mv)):
-        t.to_csv(OUT_DIR / f"{name}.csv", index=False, encoding="utf-8-sig")
+        t.to_csv(out_dir / f"{name}.csv", index=False, encoding="utf-8-sig")
 
     show_ev = ["도메인", "이벤트", "양성", "음성", "비교쌍", "상태", "AUC_prior", "AUC_DPM", "AUC_사후_평균", "AUC_사후_표준편차"]
     md = [f"# DisasterNet · 입력 통합표 v5\n",
@@ -242,14 +244,14 @@ def main(argv=None):
           f"\n## 민감도: base상관도 ≥ {LOW_COH} 행만 채점 (제외 {int((~keep).sum())}행)\n",
           _md(ev_c[[c for c in show_ev if c in ev_c.columns]]), "\n", _md(ov_c),
           "\n## prior 대비 사후 순위가 크게 바뀐 시정촌 (정답 있는 곳)\n", _md(mv, 3)]
-    (OUT_DIR / "summary.md").write_text("\n".join(md), encoding="utf-8")
+    (out_dir / "summary.md").write_text("\n".join(md), encoding="utf-8")
 
     pd.set_option("display.width", 250)
     print(ev[[c for c in show_ev if c in ev.columns]].round(3).to_string(index=False))
     print(ov.round(4).to_string(index=False))
     print(f"\n[민감도 base상관도 ≥ {LOW_COH}]")
     print(ov_c.round(4).to_string(index=False))
-    print(f"\n저장: {OUT_DIR}/")
+    print(f"\n저장: {out_dir}/")
 
 
 if __name__ == "__main__":
