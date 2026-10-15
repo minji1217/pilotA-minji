@@ -11,7 +11,8 @@ DisasterNet 입력 통합표(DisasterNet_입력_v5.xlsx, 시트 "입력" 264행)
 입력 처리
   - prior·PGV·정답은 모두 통합표의 값을 쓴다 (pilotA loader를 거치지 않는다).
   - 관측은 DPM_배경차(주 지표). DisasterNet은 DPM을 로그정규로 두어 양수가 필요하므로
-    모든 시정촌에 같은 상수 1을 더한다(--obs-offset). DPM은 상관도의 차이라 [-1, 1] 안이다.
+    모든 시정촌에 같은 상수 2를 더한다(--obs-offset). DPM은 상관도의 차이라 [-1, 1] 안이고,
+    배경차(시정촌 평균 − 프레임 중앙값)는 이론상 [-2, 2] 안이다.
   - 학습은 이벤트마다 따로, 정답 없이. seed 여러 개로 반복한다.
 
 평가 규칙 (요청 사항 그대로)
@@ -197,8 +198,9 @@ def main(argv=None):
     ap = argparse.ArgumentParser(description="DisasterNet 입력 통합표 v5 실험")
     ap.add_argument("--input", default="raw/DisasterNet_입력_v5.xlsx")
     ap.add_argument("--dpm-col", default="DPM_배경차", help="관측 컬럼 (기본: 주 지표 DPM_배경차)")
-    ap.add_argument("--obs-offset", type=float, default=1.0,
-                    help="관측에 더할 고정 상수. 로그정규 관측이라 양수가 필요하다 (기본 1)")
+    ap.add_argument("--obs-offset", type=float, default=2.0,
+                    help="관측에 더할 고정 상수. 로그정규 관측이라 양수가 필요하다. "
+                         "배경차는 이론상 -2까지 갈 수 있어 기본 2 (1로 돌려도 전체 AUC 차이 0.002)")
     ap.add_argument("--seeds", nargs="+", type=int, default=[0, 1, 2, 3, 4])
     ap.add_argument("--epochs", type=int, default=3000)
     ap.add_argument("--no-bd", action="store_true", help="건물피해 노드를 뺀 ablation")
