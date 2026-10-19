@@ -75,11 +75,13 @@ def main(argv=None):
     print(f"저장: {a.out} ({len(out):,}칸)")
 
 
-def usgs_off(us, sd):
+def usgs_off(us, sd, rule="ours"):
     """원본 규칙: 불확실도가 0 또는 999면 끈다. 2024 노토 판은 확률 0인 칸에도 불확실도가 작게 남아 있어
-    확률이 0이거나 nodata인 칸도 함께 끈다 (옛 판에서는 불확실도 0 ⇔ 확률 0이라 결과가 같다)."""
+    확률이 0이거나 nodata인 칸도 함께 끈다 (옛 판에서는 불확실도 0 ⇔ 확률 0이라 결과가 같다).
+    rule="paper"면 공식 코드 그대로 불확실도만 본다."""
     us, sd = np.asarray(us), np.asarray(sd)
-    return (sd == 0) | (sd == NODATA) | (us == 0) | (us == NODATA)
+    off = (sd == 0) | (sd == NODATA)
+    return off if rule == "paper" else off | (us == 0) | (us == NODATA)
 
 
 if __name__ == "__main__":

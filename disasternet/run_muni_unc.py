@@ -25,12 +25,12 @@ from .run_input_v5 import attach_terrain, load_table, to_rows
 from .usgs_cells import usgs_off
 
 
-def muni_usgs(local_path):
+def muni_usgs(local_path, off_rule="ours"):
     """칸별 USGS 확률·불확실도 → 시정촌별 (켠 칸 수, 불확실도 평균). 물 칸(경우 0)은 뺀다."""
     loc = pd.read_csv(local_path, dtype={"시정촌코드": str})
     loc = loc[loc["경우"] > 0].copy()
     for k in ("ls", "lq"):
-        on = ~usgs_off(loc[f"us_{k}"], loc[f"sd_{k}"])
+        on = ~usgs_off(loc[f"us_{k}"], loc[f"sd_{k}"], off_rule)
         loc[f"on_{k}"] = on.astype(int)
         loc[f"v_{k}"] = loc[f"sd_{k}"].where(on)
     g = loc.groupby(["이벤트", "시정촌코드"]).agg(n_on_ls=("on_ls", "sum"), n_on_lq=("on_lq", "sum"),
@@ -86,12 +86,14 @@ def main(argv=None):
     ap.add_argument("--unc", choices=["both", "off", "var", "none"], default="both",
                     help="USGS 불확실도에서 쓸 것: both = 끄기 + r⁰ 분산 / off = 끄기만 / var = 분산만")
     ap.add_argument("--no-bd", action="store_true", help="건물피해 노드를 뺀다")
+    ap.add_argument("--off-rule", choices=["ours", "paper"], default="ours",
+                    help="USGS 끄기 판정: ours = 불확실도 0·999 또는 확률 0·999 / paper = 공식 코드처럼 불확실도 0·999만")
     a = ap.parse_args(argv)
 
     df = load_table(a.input)
     if a.terrain:
         df = attach_terrain(df, a.terrain)
-    df = df.merge(muni_usgs(a.local), on=["이벤트", "muni_code"], how="left", validate="one_to_one")
+    df = df.merge(muni_usgs(a.local, a.off_rule), on=["이벤트", "muni_code"], how="left", validate="one_to_one")
     if df[["n_on_ls", "n_on_lq"]].isna().any().any():
         raise ValueError(f"칸 지도가 없는 시정촌: {df.loc[df['n_on_ls'].isna(), '시정촌명'].tolist()}")
     print(f"시정촌 {len(df)}곳 · USGS로 산사태 끈 곳 {(df.n_on_ls == 0).sum()} · 액상화 끈 곳 {(df.n_on_lq == 0).sum()}"
