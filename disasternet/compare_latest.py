@@ -51,12 +51,15 @@ def main(argv=None):
     ap.add_argument("--dn-dir", default="outputs/disasternet")
     ap.add_argument("--pilota-outputs", required=True)
     ap.add_argument("--out", default="outputs/disasternet/compare_latest.json")
+    ap.add_argument("--runs", nargs="+", default=None, metavar="이름=폴더",
+                    help="채점할 DisasterNet 결과 (기본: 최신 실험 4개). 예: DN=nobd_DN SOFT=nobd_SOFT")
     a = ap.parse_args(argv)
+    runs = dict(r.split("=", 1) for r in a.runs) if a.runs else RUNS
 
     d = pd.read_excel(a.input, sheet_name="입력")
     d["muni_code"] = d["시정촌코드"].astype(int).astype(str).str.zfill(5)
     P = {k: [pd.read_csv(f, dtype={"muni_code": str}).assign(muni_code=lambda x: x.muni_code.str.zfill(5))
-             for f in sorted(glob.glob(f"{a.dn_dir}/{v}/predictions_seed*.csv"))] for k, v in RUNS.items()}
+             for f in sorted(glob.glob(f"{a.dn_dir}/{v}/predictions_seed*.csv"))] for k, v in runs.items()}
 
     events = {}
     for dom, (ycol, usg, pa, pz, prefix) in DOMS.items():
@@ -92,6 +95,7 @@ def main(argv=None):
 
     names = {"USGS": "USGS 기준선", "PR": "pilotA prior", "A1": "pilotA A1", "A2": "pilotA A2",
              "DN": "① DN", "SOFT": "② SOFT", "DNU": "③ DNU", "SOFTU": "④ SOFTU"}
+    names.update({k: k for k in runs if k not in names})
     print(f"{'':14s}  ALL    LS     LQ")
     for m in models:
         print(f"{names[m]:14s} {overall['ALL'][m]:.3f}  {overall['LS'][m]:.3f}  {overall['LQ'][m]:.3f}")
