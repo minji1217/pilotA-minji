@@ -33,23 +33,42 @@ EVS = ["2016 구마모토", "2018 오사카", "2018 훗카이도", "2021 후쿠�
 
 def load_cells(local_path, dpm_path, keep_water=False):
     loc = pd.read_csv(local_path, dtype={"mesh250": str, "시정촌코드": str},
-                      usecols=["이벤트", "시정촌코드", "mesh250", "경우", "us_ls", "us_lq"])
+                      usecols=["이벤트", "시정촌코드", "mesh250", "slope", "경우", "us_ls", "us_lq", "sd_ls", "sd_lq"])
     dpm = pd.read_csv(dpm_path, dtype={"mesh250": str}, usecols=["이벤트", "mesh250", "화소수", "DPM_배경차", "DPM_최댓값"])
     c = loc.merge(dpm, on=["이벤트", "mesh250"], how="inner")
     if not keep_water:
         c = c[c["경우"] > 0]
     c["muni_code"] = c["시정촌코드"].str.zfill(5)
+    # U 끄기 판정은 원래 값(0·999 포함)으로 먼저 해 둔다 (usgs_cells.usgs_off, 기본 규칙)
+    from .usgs_cells import usgs_off
+    for k in ("ls", "lq"):
+        c[f"off_{k}"] = usgs_off(c[f"us_{k}"].fillna(999), c[f"sd_{k}"].fillna(999))
     for k in ("us_ls", "us_lq"):
         c[k] = c[k].where(c[k] < 999, 0.0).fillna(0.0)
     c["event_idx"] = c["이벤트"].map(EVENT_TO_INDEX)
     return c.sort_values(["event_idx", "muni_code", "mesh250"]).reset_index(drop=True)
 
 
-def to_rows(c, dpm_col):
+def to_rows(c, dpm_col, soft=False, unc=False):
+    """soft: 시정촌 soft를 칸에 그대로 — 칸의 비탈 비율 = (경사 ≥ 10°), 평지 비율 = (경사 < 5°), 1% 미만은 1%로.
+             칸은 경사가 하나라 비율이 0 아니면 1 → 비탈 칸은 액상화 로짓 −4.6, 평지 칸은 산사태 로짓 −4.6.
+       unc : 원 논문처럼 칸마다 USGS 불확실도 — 0·999 칸은 끄고, 나머지는 r⁰ 분산 = 그 칸의 불확실도."""
     t = lambda col: torch.as_tensor(c[col].to_numpy(dtype="float64").copy(), dtype=DTYPE)
-    return DPMRows(y=t(dpm_col), pi_ls=t("us_ls"), pi_lq=t("us_lq"), pgv=torch.ones(len(c), dtype=DTYPE),
+    n = len(c)
+    log_frac = off = r0_var = None
+    if soft:
+        fr = {"LS": (c["slope"] >= 10.0).astype(float), "LQ": (c["slope"] < 5.0).astype(float)}
+        log_frac = {k: torch.log(torch.as_tensor(v.clip(lower=0.01).to_numpy(), dtype=DTYPE)) for k, v in fr.items()}
+        log_frac["BD"] = torch.zeros(n, dtype=DTYPE)
+    if unc:
+        off = {"LS": torch.as_tensor(c["off_ls"].to_numpy(dtype=bool)), "LQ": torch.as_tensor(c["off_lq"].to_numpy(dtype=bool)),
+               "BD": torch.zeros(n, dtype=torch.bool)}
+        r0_var = {k: torch.as_tensor(c[f"sd_{k.lower()}"].where(~c[f"off_{k.lower()}"], 1.0).fillna(1.0).to_numpy(dtype="float64"), dtype=DTYPE)
+                  for k in ("LS", "LQ")}
+    return DPMRows(y=t(dpm_col), pi_ls=t("us_ls"), pi_lq=t("us_lq"), pgv=torch.ones(n, dtype=DTYPE),
                    event_idx=torch.as_tensor(c["event_idx"].to_numpy(), dtype=torch.long),
-                   municipality_code=tuple(c["muni_code"]), model_row_idx=torch.arange(len(c)))
+                   municipality_code=tuple(c["muni_code"]), model_row_idx=torch.arange(n),
+                   log_frac=log_frac, off=off, r0_var=r0_var)
 
 
 def fit_cells(rows, *, epochs, seed, lr=0.01, n_samples=8, num_flows=4, lam_triplet=1.0, margin=1.0,
@@ -73,11 +92,11 @@ def fit_cells(rows, *, epochs, seed, lr=0.01, n_samples=8, num_flows=4, lam_trip
     t0 = time.time()
     for epoch in range(start, epochs):
         beta = min(0.01 + epoch / max(epochs, 1), 1.0)
-        post = model.posteriors(a["LS"], a["LQ"], a["BD"], n_samples)
-        q = post["q"]
+        post = model.posteriors(a["LS"], a["LQ"], a["BD"], n_samples, off=rows.off, r0_var=rows.r0_var)
+        q, keep = post["q"], post["keep"]
         rec = model.log_p_x(log_x, q)
-        log_q = sum(post["log_q"][k].mean(1) for k in model.nodes)
-        kl = log_q - model.log_p_z(q, a)
+        log_q = sum(post["log_q"][k].mean(1) * keep[k] for k in model.nodes)
+        kl = log_q - model.log_p_z(q, a, rows.log_frac, keep if rows.off is not None else None)
         loss = (-rec + beta * kl).sum() + lam_triplet * triplet_penalty(q, a, margin)
         opt.zero_grad()
         loss.backward()
@@ -95,15 +114,16 @@ def fit_cells(rows, *, epochs, seed, lr=0.01, n_samples=8, num_flows=4, lam_trip
     with torch.no_grad():
         for s in range(0, rows.n, chunk):
             e = min(s + chunk, rows.n)
-            sub = {k: v for k, v in _slice_model_posteriors(model, a, s, e, final_samples).items()}
+            sub = _slice_model_posteriors(model, a, s, e, final_samples, rows)
             for k in model.nodes:
                 out[k][s:e] = sub[k]
     w = {k: round(float(v), 4) for k, v in model.w_x.items() if k in model.nodes}
     return out, w
 
 
-def _slice_model_posteriors(model, a, s, e, n_samples):
-    """행 [s, e) 만의 사후확률. FlowNode의 행별 파라미터(mu_local, flow_local)를 잘라서 계산한다."""
+def _slice_model_posteriors(model, a, s, e, n_samples, rows=None):
+    """행 [s, e) 만의 사후확률. FlowNode의 행별 파라미터(mu_local, flow_local)를 잘라서 계산한다.
+    rows의 r0_var(칸별 분산)와 off(끄기)도 같은 범위로 잘라 적용한다."""
     q = {}
     for k in model.nodes:
         node = model.flow[k]
@@ -111,11 +131,14 @@ def _slice_model_posteriors(model, a, s, e, n_samples):
         full_mu, full_fl = node.mu_local, node.flow_local
         node.mu_local = torch.nn.Parameter(full_mu[s:e], requires_grad=False)
         node.flow_local = torch.nn.Parameter(full_fl[s:e], requires_grad=False)
+        var = None if rows is None or rows.r0_var is None else rows.r0_var[k][s:e]
         try:
-            r, _ = node(h, n_samples)
+            r, _ = node(h, n_samples, var)
         finally:
             node.mu_local, node.flow_local = full_mu, full_fl
         q[k] = torch.sigmoid(r).mean(1)
+        if rows is not None and rows.off is not None:
+            q[k] = q[k] * (~rows.off[k][s:e]).to(q[k].dtype)
     return q
 
 
@@ -130,7 +153,7 @@ def _job(args):
         return
     c = load_cells(a.local, a.dpm, a.keep_water)
     c = c[c["이벤트"] == ev].reset_index(drop=True)
-    rows = to_rows(c, a.dpm_col)
+    rows = to_rows(c, a.dpm_col, soft=a.soft, unc=a.unc)
     ckpt = out / f"ckpt_{tag}_seed{seed}.pt"
     q, w = fit_cells(rows, epochs=a.epochs, seed=seed, tag=f"{ev} s{seed} {rows.n}칸", ckpt=ckpt)
     c = c.assign(p_ls=q["LS"].numpy(), p_lq=q["LQ"].numpy())
@@ -160,6 +183,8 @@ def main(argv=None):
     ap.add_argument("--dpm", default="raw/dpm_250m_v8_slim.csv.gz")
     ap.add_argument("--dpm-col", default="DPM_배경차")
     ap.add_argument("--keep-water", action="store_true", help="물 칸(경우 0)도 쓴다")
+    ap.add_argument("--soft", action="store_true", help="칸 경사로 soft (비탈 칸 액상화·평지 칸 산사태 로짓 −4.6)")
+    ap.add_argument("--unc", action="store_true", help="칸마다 USGS 불확실도: 0·999 칸 끄기 + r⁰ 분산 = 그 칸 불확실도")
     ap.add_argument("--events", nargs="+", default=EVS)
     ap.add_argument("--seeds", nargs="+", type=int, default=[0, 1, 2, 3, 4])
     ap.add_argument("--epochs", type=int, default=3000)
