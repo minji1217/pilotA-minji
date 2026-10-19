@@ -111,6 +111,7 @@ def fit_cells(rows, *, epochs, seed, lr=0.01, n_samples=8, num_flows=4, lam_trip
             print(f"  [{tag}] {epoch:5d}  -ELBO/칸 {float((-rec + kl).detach().mean()):.4f}  {time.time() - t0:.0f}s", flush=True)
         if ckpt is not None and time.time() - last_save > ckpt_secs and epoch + 1 < epochs:
             last_save = time.time()
+            Path(ckpt).parent.mkdir(parents=True, exist_ok=True)
             tmp = Path(str(ckpt) + ".tmp")
             torch.save({"model": model.state_dict(), "opt": opt.state_dict(), "rng": torch.get_rng_state(),
                         "epoch": epoch}, tmp)
@@ -150,6 +151,16 @@ def _slice_model_posteriors(model, a, s, e, n_samples, rows=None):
 
 
 def _job(args):
+    try:
+        return _job_inner(args)
+    except Exception as e:   # 지진 하나가 실패해도 나머지 지진은 계속 돌게 (다시 실행하면 실패한 것만 이어서 함)
+        import traceback
+        print(f"실패 {args[0]} seed {args[1]}: {e}", flush=True)
+        traceback.print_exc()
+        return False
+
+
+def _job_inner(args):
     ev, seed, a = args
     torch.set_num_threads(a.threads)
     out = Path(a.out_dir)
@@ -164,6 +175,7 @@ def _job(args):
     ckpt = out / f"ckpt_{tag}_seed{seed}.pt"
     q, w = fit_cells(rows, epochs=a.epochs, seed=seed, tag=f"{ev} s{seed} {rows.n}칸", ckpt=ckpt)
     c = c.assign(p_ls=q["LS"].numpy(), p_lq=q["LQ"].numpy())
+    out.mkdir(parents=True, exist_ok=True)   # 학습 도중 폴더가 사라졌어도(동기화 프로그램 등) 저장되게
     g = c.groupby(["event_idx", "muni_code"])
     m = g.agg(n_cells=("mesh250", "size"), p_ls=("p_ls", "max"), p_lq=("p_lq", "max"),
               p_ls_mean=("p_ls", "mean"), p_lq_mean=("p_lq", "mean")).reset_index()
