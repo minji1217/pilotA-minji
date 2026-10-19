@@ -49,10 +49,12 @@ def load_cells(local_path, dpm_path, keep_water=False, off_rule="ours"):
     return c.sort_values(["event_idx", "muni_code", "mesh250"]).reset_index(drop=True)
 
 
-def to_rows(c, dpm_col, soft=False, unc=False):
+def to_rows(c, dpm_col, soft=False, unc=False, unc_mode="both", const_var=None):
     """soft: 시정촌 soft를 칸에 그대로 — 칸의 비탈 비율 = (경사 ≥ 10°), 평지 비율 = (경사 < 5°), 1% 미만은 1%로.
              칸은 경사가 하나라 비율이 0 아니면 1 → 비탈 칸은 액상화 로짓 −4.6, 평지 칸은 산사태 로짓 −4.6.
-       unc : 원 논문처럼 칸마다 USGS 불확실도 — 0·999 칸은 끄고, 나머지는 r⁰ 분산 = 그 칸의 불확실도."""
+       unc : 원 논문처럼 칸마다 USGS 불확실도 — 0·999 칸은 끄고, 나머지는 r⁰ 분산 = 그 칸의 불확실도.
+       unc_mode: both = 끄기 + 분산 / off = 끄기만 (분산 1) / var = 분산만 (끄지 않음).
+       const_var: 주면 모든 칸의 r⁰ 분산을 이 값으로 (USGS 불확실도 정보 없이 폭만 작게)."""
     t = lambda col: torch.as_tensor(c[col].to_numpy(dtype="float64").copy(), dtype=DTYPE)
     n = len(c)
     log_frac = off = r0_var = None
@@ -60,11 +62,15 @@ def to_rows(c, dpm_col, soft=False, unc=False):
         fr = {"LS": (c["slope"] >= 10.0).astype(float), "LQ": (c["slope"] < 5.0).astype(float)}
         log_frac = {k: torch.log(torch.as_tensor(v.clip(lower=0.01).to_numpy(), dtype=DTYPE)) for k, v in fr.items()}
         log_frac["BD"] = torch.zeros(n, dtype=DTYPE)
-    if unc:
+    if unc and unc_mode in ("both", "off"):
         off = {"LS": torch.as_tensor(c["off_ls"].to_numpy(dtype=bool)), "LQ": torch.as_tensor(c["off_lq"].to_numpy(dtype=bool)),
                "BD": torch.zeros(n, dtype=torch.bool)}
+    if unc and unc_mode in ("both", "var"):
+        # 분산만 쓸 때(끄지 않음) 0·999 칸은 불확실도 정보가 없으므로 기본값 1
         r0_var = {k: torch.as_tensor(c[f"sd_{k.lower()}"].where(~c[f"off_{k.lower()}"], 1.0).fillna(1.0).to_numpy(dtype="float64"), dtype=DTYPE)
                   for k in ("LS", "LQ")}
+    if const_var is not None:
+        r0_var = {k: torch.full((n,), float(const_var), dtype=DTYPE) for k in ("LS", "LQ")}
     return DPMRows(y=t(dpm_col), pi_ls=t("us_ls"), pi_lq=t("us_lq"), pgv=torch.ones(n, dtype=DTYPE),
                    event_idx=torch.as_tensor(c["event_idx"].to_numpy(), dtype=torch.long),
                    municipality_code=tuple(c["muni_code"]), model_row_idx=torch.arange(n),
@@ -154,7 +160,7 @@ def _job(args):
         return
     c = load_cells(a.local, a.dpm, a.keep_water, a.off_rule)
     c = c[c["이벤트"] == ev].reset_index(drop=True)
-    rows = to_rows(c, a.dpm_col, soft=a.soft, unc=a.unc)
+    rows = to_rows(c, a.dpm_col, soft=a.soft, unc=a.unc, unc_mode=a.unc_mode, const_var=a.const_var)
     ckpt = out / f"ckpt_{tag}_seed{seed}.pt"
     q, w = fit_cells(rows, epochs=a.epochs, seed=seed, tag=f"{ev} s{seed} {rows.n}칸", ckpt=ckpt)
     c = c.assign(p_ls=q["LS"].numpy(), p_lq=q["LQ"].numpy())
@@ -187,6 +193,9 @@ def main(argv=None):
     ap.add_argument("--soft", action="store_true", help="칸 경사로 soft (비탈 칸 액상화·평지 칸 산사태 로짓 −4.6)")
     ap.add_argument("--off-rule", choices=["ours", "paper"], default="ours",
                     help="--unc 끄기 판정: ours = 불확실도 0·999 또는 확률 0·999 / paper = 공식 코드처럼 불확실도 0·999만")
+    ap.add_argument("--unc-mode", choices=["both", "off", "var"], default="both",
+                    help="--unc에서 쓸 것: both = 끄기 + 분산 / off = 끄기만 / var = 분산만")
+    ap.add_argument("--const-var", type=float, default=None, help="모든 칸의 r⁰ 분산을 같은 값으로 (비교용)")
     ap.add_argument("--unc", action="store_true", help="칸마다 USGS 불확실도: 0·999 칸 끄기 + r⁰ 분산 = 그 칸 불확실도")
     ap.add_argument("--events", nargs="+", default=EVS)
     ap.add_argument("--seeds", nargs="+", type=int, default=[0, 1, 2, 3, 4])
