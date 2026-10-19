@@ -20,7 +20,6 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
-import rasterio
 
 EVENT_ID = {"2016 구마모토": "us20005iis", "2018 오사카": "us1000eu1c", "2018 훗카이도": "us2000h8ty",
             "2021 후쿠시마": "us6000dher", "2024 노토반도": "us6000m0xl"}
@@ -36,6 +35,7 @@ def _pick(folder, stems):
 
 def sample(path, lon, lat):
     """칸 중심이 들어가는 래스터 칸 값. 범위 밖·nodata·NaN은 999로 통일한다."""
+    import rasterio  # 래스터를 읽을 때만 필요 (끄기 판정 usgs_off만 쓰는 곳에서는 설치 안 해도 되게)
     with rasterio.open(path) as r:
         a = r.read(1).astype("float64")
         rows, cols = rasterio.transform.rowcol(r.transform, lon, lat)
