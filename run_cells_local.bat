@@ -12,5 +12,5 @@ py -3.10 -m disasternet.run_cells_max --seeds 0 --jobs %JOBS% --soft --unc --off
 py -3.10 -m disasternet.run_cells_max --seeds 0 --jobs %JOBS% --soft --unc --unc-mode off --off-rule paper --out-dir %O%\cells_max_softunc_off_paper
 py -3.10 -m disasternet.run_cells_max --seeds 0 --jobs %JOBS% --soft --unc --unc-mode var --off-rule paper --out-dir %O%\cells_max_softunc_var_paper
 py -3.10 -m disasternet.run_cells_max --seeds 0 --jobs %JOBS% --soft --unc --off-rule ours --out-dir %O%\cells_max_softunc
-echo 모두 끝났습니다.
+echo ALL DONE
 pause
