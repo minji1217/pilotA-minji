@@ -124,7 +124,7 @@ def fit_cells(rows, *, epochs, seed, lr=0.01, n_samples=8, num_flows=4, lam_trip
             sub = _slice_model_posteriors(model, a, s, e, final_samples, rows)
             for k in model.nodes:
                 out[k][s:e] = sub[k]
-    w = {k: round(float(v), 4) for k, v in model.w_x.items() if k in model.nodes}
+    w = {k: round(float(v.detach()), 4) for k, v in model.w_x.items() if k in model.nodes}
     return out, w
 
 
