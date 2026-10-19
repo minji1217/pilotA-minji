@@ -53,14 +53,25 @@ def to_rows(c, dpm_col):
 
 
 def fit_cells(rows, *, epochs, seed, lr=0.01, n_samples=8, num_flows=4, lam_triplet=1.0, margin=1.0,
-              obs_offset=2.0, final_samples=256, chunk=50_000, log_every=500, tag=""):
-    """model._fit_group과 같은 학습(ELBO + β warm-up + triplet), BD 없음. 마지막 추론만 칸이 많아 나눠서 한다."""
+              obs_offset=2.0, final_samples=256, chunk=50_000, log_every=500, tag="", ckpt=None, ckpt_every=250):
+    """model._fit_group과 같은 학습(ELBO + β warm-up + triplet), BD 없음. 마지막 추론만 칸이 많아 나눠서 한다.
+
+    ckpt: 중간 저장 파일. 있으면 그 epoch부터 이어서 학습한다 (작업 환경이 재시작돼도 처음부터 다시 하지 않게).
+    """
     torch.manual_seed(seed)
     a, log_x = prepare_inputs(rows, obs_offset)
     model = DisasterNet(rows.n, num_flows=num_flows, r0_var=1.0, use_bd=False)
     opt = torch.optim.Adam(model.parameters(), lr=lr)
+    start = 0
+    if ckpt is not None and Path(ckpt).exists():
+        st = torch.load(ckpt, weights_only=False)
+        model.load_state_dict(st["model"])
+        opt.load_state_dict(st["opt"])
+        torch.set_rng_state(st["rng"])
+        start = st["epoch"] + 1
+        print(f"  [{tag}] 중간 저장에서 이어서: epoch {start}", flush=True)
     t0 = time.time()
-    for epoch in range(epochs):
+    for epoch in range(start, epochs):
         beta = min(0.01 + epoch / max(epochs, 1), 1.0)
         post = model.posteriors(a["LS"], a["LQ"], a["BD"], n_samples)
         q = post["q"]
@@ -72,7 +83,12 @@ def fit_cells(rows, *, epochs, seed, lr=0.01, n_samples=8, num_flows=4, lam_trip
         loss.backward()
         opt.step()
         if log_every and epoch % log_every == 0:
-            print(f"  [{tag}] {epoch:5d}  -ELBO/칸 {float((-rec + kl).mean()):.4f}  {time.time() - t0:.0f}s", flush=True)
+            print(f"  [{tag}] {epoch:5d}  -ELBO/칸 {float((-rec + kl).detach().mean()):.4f}  {time.time() - t0:.0f}s", flush=True)
+        if ckpt is not None and (epoch + 1) % ckpt_every == 0 and epoch + 1 < epochs:
+            tmp = Path(str(ckpt) + ".tmp")
+            torch.save({"model": model.state_dict(), "opt": opt.state_dict(), "rng": torch.get_rng_state(),
+                        "epoch": epoch}, tmp)
+            tmp.replace(ckpt)
 
     # 최종 사후확률: 샘플 final_samples개 평균. 칸이 많아 chunk씩 나눠 계산한다 (flow·μ는 행마다 독립).
     out = {k: torch.empty(rows.n, dtype=DTYPE) for k in model.nodes}
@@ -106,21 +122,26 @@ def _slice_model_posteriors(model, a, s, e, n_samples):
 def _job(args):
     ev, seed, a = args
     torch.set_num_threads(a.threads)
+    out = Path(a.out_dir)
+    out.mkdir(parents=True, exist_ok=True)
+    tag = ev.replace(" ", "")
+    if (out / f"muni_{tag}_seed{seed}.csv").exists():
+        print(f"이미 있음 {ev} seed {seed}", flush=True)
+        return
     c = load_cells(a.local, a.dpm, a.keep_water)
     c = c[c["이벤트"] == ev].reset_index(drop=True)
     rows = to_rows(c, a.dpm_col)
-    q, w = fit_cells(rows, epochs=a.epochs, seed=seed, tag=f"{ev} s{seed} {rows.n}칸")
+    ckpt = out / f"ckpt_{tag}_seed{seed}.pt"
+    q, w = fit_cells(rows, epochs=a.epochs, seed=seed, tag=f"{ev} s{seed} {rows.n}칸", ckpt=ckpt)
     c = c.assign(p_ls=q["LS"].numpy(), p_lq=q["LQ"].numpy())
-    out = Path(a.out_dir)
-    out.mkdir(parents=True, exist_ok=True)
     g = c.groupby(["event_idx", "muni_code"])
     m = g.agg(n_cells=("mesh250", "size"), p_ls=("p_ls", "max"), p_lq=("p_lq", "max"),
               p_ls_mean=("p_ls", "mean"), p_lq_mean=("p_lq", "mean")).reset_index()
     m.insert(0, "seed", seed)
-    tag = ev.replace(" ", "")
     m.to_csv(out / f"muni_{tag}_seed{seed}.csv", index=False, encoding="utf-8-sig")
     c[["event_idx", "muni_code", "mesh250", "us_ls", "us_lq", "DPM_배경차", "p_ls", "p_lq"]].to_csv(
         out / f"cells_{tag}_seed{seed}.csv.gz", index=False, compression="gzip")
+    ckpt.unlink(missing_ok=True)
     print(f"완료 {ev} seed {seed}  w_x {w}", flush=True)
 
 
