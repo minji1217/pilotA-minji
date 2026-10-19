@@ -39,8 +39,9 @@ def muni_usgs(local_path):
     return g.drop(columns="시정촌코드")
 
 
-def build_rows(df, dpm_col, lq_col, unc="both"):
-    """unc: both = ① 끄기 + ② r⁰ 분산 / off = 끄기만 (분산은 기본값 1) / var = 분산만 (끄지 않음)."""
+def build_rows(df, dpm_col, lq_col, unc="both", const_var=None):
+    """unc: both = ① 끄기 + ② r⁰ 분산 / off = 끄기만 (분산은 기본값 1) / var = 분산만 (끄지 않음)
+         / none = 둘 다 안 씀. const_var를 주면 r⁰ 분산을 모든 행에 같은 값으로 둔다 (USGS 값 대신)."""
     rows = to_rows(df, dpm_col, mode="soft", lq_col=lq_col)       # frac_* 열이 있으면 soft의 log_frac, 없으면 없음
     t = lambda c: torch.as_tensor(df[c].to_numpy(dtype="float64").copy(), dtype=DTYPE)
     if unc in ("both", "off"):
@@ -50,13 +51,15 @@ def build_rows(df, dpm_col, lq_col, unc="both"):
     if unc in ("both", "var"):
         # 꺼진 노드는 분산이 쓰이지 않으므로 1을 채운다 (run_cellmix.to_rows와 같은 규칙)
         rows.r0_var = {"LS": t("var_ls").nan_to_num(1.0), "LQ": t("var_lq").nan_to_num(1.0)}
+    if const_var is not None:
+        rows.r0_var = {k: torch.full((len(df),), float(const_var), dtype=DTYPE) for k in ("LS", "LQ")}
     return rows
 
 
 def _fit_one(job):
-    df, dpm_col, offset, seed, epochs, out_dir, lq_col, unc, use_bd = job
+    df, dpm_col, offset, seed, epochs, out_dir, lq_col, unc, use_bd, const_var = job
     torch.set_num_threads(1)
-    fit = fit_disasternet(build_rows(df, dpm_col, lq_col, unc), seed=seed, epochs=epochs, obs_offset=offset,
+    fit = fit_disasternet(build_rows(df, dpm_col, lq_col, unc, const_var), seed=seed, epochs=epochs, obs_offset=offset,
                           verbose=False, bd_var_learn=True, use_bd=use_bd)
     p = fit.predictions[["event_idx", "muni_code", "p_ls", "p_lq", "p_bd"]].copy()
     p.insert(0, "seed", seed)
@@ -78,7 +81,9 @@ def main(argv=None):
     ap.add_argument("--epochs", type=int, default=3000)
     ap.add_argument("--jobs", type=int, default=1)
     ap.add_argument("--out-dir", default="outputs/disasternet/input_v5_muni_unc")
-    ap.add_argument("--unc", choices=["both", "off", "var"], default="both",
+    ap.add_argument("--const-var", type=float, default=None,
+                    help="r⁰ 분산을 모든 시정촌에 같은 값으로 (USGS 불확실도 정보 없이 폭만 작게 했을 때와 비교용)")
+    ap.add_argument("--unc", choices=["both", "off", "var", "none"], default="both",
                     help="USGS 불확실도에서 쓸 것: both = 끄기 + r⁰ 분산 / off = 끄기만 / var = 분산만")
     ap.add_argument("--no-bd", action="store_true", help="건물피해 노드를 뺀다")
     a = ap.parse_args(argv)
@@ -91,7 +96,7 @@ def main(argv=None):
         raise ValueError(f"칸 지도가 없는 시정촌: {df.loc[df['n_on_ls'].isna(), '시정촌명'].tolist()}")
     print(f"시정촌 {len(df)}곳 · USGS로 산사태 끈 곳 {(df.n_on_ls == 0).sum()} · 액상화 끈 곳 {(df.n_on_lq == 0).sum()}"
           f" · 지형 비율 {'있음 (soft)' if a.terrain else '없음'}", flush=True)
-    jobs = [(df, a.dpm_col, a.obs_offset, s, a.epochs, a.out_dir, a.lq_prior_col, a.unc, not a.no_bd) for s in a.seeds]
+    jobs = [(df, a.dpm_col, a.obs_offset, s, a.epochs, a.out_dir, a.lq_prior_col, a.unc, not a.no_bd, a.const_var) for s in a.seeds]
     if a.jobs > 1:
         with get_context("fork").Pool(a.jobs) as pool:
             pool.map(_fit_one, jobs)
