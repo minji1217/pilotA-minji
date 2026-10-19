@@ -1,0 +1,160 @@
+"""
+칸(250 m) 단위 DisasterNet → 시정촌 사후확률 = 칸 사후확률의 최댓값 (교수님 지시, 2026-10).
+
+  - 칸마다 자기 DPM(dpm_250m_v8의 DPM_배경차)과 자기 USGS 확률(us_ls, us_lq)로 학습한다
+  - 산사태·액상화만 (BD 없음), 끄기 없음, soft 없음
+  - 학습 설정은 시정촌 실험(run_input_v5)과 같다: 지진마다 따로, 정답 없이, 관측 + 2, 3000 epoch
+  - 학습이 끝나면 시정촌마다 칸 사후확률의 최댓값(그리고 참고용 평균)을 낸다
+
+칸 자료
+  raw/local_250m_byevent_usgs.csv : 264개 시정촌의 250 m 칸 (칸 중심이 속한 시정촌), 경사·USGS 확률
+  raw/dpm_250m_v8_slim.csv.gz     : 같은 칸 체계(1/4 메시)의 칸별 DPM
+  둘을 (이벤트, mesh250)으로 붙이고, 물 칸(경우 0)은 뺀다. 물은 상관도가 원래 낮아 DPM이 커서
+  최댓값을 오염시키기 때문이다. USGS 확률 999(계산 안 함)는 확률 0으로 둔다.
+
+    python -m disasternet.run_cells_max --out-dir outputs/disasternet/cells_max --jobs 4
+"""
+import argparse
+import time
+from multiprocessing import get_context
+from pathlib import Path
+
+import pandas as pd
+import torch
+
+from schema import DTYPE
+
+from .data import DPMRows
+from .model import DisasterNet, prepare_inputs, triplet_penalty
+from .run_input_v5 import EVENT_TO_INDEX
+
+EVS = ["2016 구마모토", "2018 오사카", "2018 훗카이도", "2021 후쿠시마", "2024 노토반도"]
+
+
+def load_cells(local_path, dpm_path, keep_water=False):
+    loc = pd.read_csv(local_path, dtype={"mesh250": str, "시정촌코드": str},
+                      usecols=["이벤트", "시정촌코드", "mesh250", "경우", "us_ls", "us_lq"])
+    dpm = pd.read_csv(dpm_path, dtype={"mesh250": str}, usecols=["이벤트", "mesh250", "화소수", "DPM_배경차", "DPM_최댓값"])
+    c = loc.merge(dpm, on=["이벤트", "mesh250"], how="inner")
+    if not keep_water:
+        c = c[c["경우"] > 0]
+    c["muni_code"] = c["시정촌코드"].str.zfill(5)
+    for k in ("us_ls", "us_lq"):
+        c[k] = c[k].where(c[k] < 999, 0.0).fillna(0.0)
+    c["event_idx"] = c["이벤트"].map(EVENT_TO_INDEX)
+    return c.sort_values(["event_idx", "muni_code", "mesh250"]).reset_index(drop=True)
+
+
+def to_rows(c, dpm_col):
+    t = lambda col: torch.as_tensor(c[col].to_numpy(dtype="float64").copy(), dtype=DTYPE)
+    return DPMRows(y=t(dpm_col), pi_ls=t("us_ls"), pi_lq=t("us_lq"), pgv=torch.ones(len(c), dtype=DTYPE),
+                   event_idx=torch.as_tensor(c["event_idx"].to_numpy(), dtype=torch.long),
+                   municipality_code=tuple(c["muni_code"]), model_row_idx=torch.arange(len(c)))
+
+
+def fit_cells(rows, *, epochs, seed, lr=0.01, n_samples=8, num_flows=4, lam_triplet=1.0, margin=1.0,
+              obs_offset=2.0, final_samples=256, chunk=50_000, log_every=500, tag=""):
+    """model._fit_group과 같은 학습(ELBO + β warm-up + triplet), BD 없음. 마지막 추론만 칸이 많아 나눠서 한다."""
+    torch.manual_seed(seed)
+    a, log_x = prepare_inputs(rows, obs_offset)
+    model = DisasterNet(rows.n, num_flows=num_flows, r0_var=1.0, use_bd=False)
+    opt = torch.optim.Adam(model.parameters(), lr=lr)
+    t0 = time.time()
+    for epoch in range(epochs):
+        beta = min(0.01 + epoch / max(epochs, 1), 1.0)
+        post = model.posteriors(a["LS"], a["LQ"], a["BD"], n_samples)
+        q = post["q"]
+        rec = model.log_p_x(log_x, q)
+        log_q = sum(post["log_q"][k].mean(1) for k in model.nodes)
+        kl = log_q - model.log_p_z(q, a)
+        loss = (-rec + beta * kl).sum() + lam_triplet * triplet_penalty(q, a, margin)
+        opt.zero_grad()
+        loss.backward()
+        opt.step()
+        if log_every and epoch % log_every == 0:
+            print(f"  [{tag}] {epoch:5d}  -ELBO/칸 {float((-rec + kl).mean()):.4f}  {time.time() - t0:.0f}s", flush=True)
+
+    # 최종 사후확률: 샘플 final_samples개 평균. 칸이 많아 chunk씩 나눠 계산한다 (flow·μ는 행마다 독립).
+    out = {k: torch.empty(rows.n, dtype=DTYPE) for k in model.nodes}
+    with torch.no_grad():
+        for s in range(0, rows.n, chunk):
+            e = min(s + chunk, rows.n)
+            sub = {k: v for k, v in _slice_model_posteriors(model, a, s, e, final_samples).items()}
+            for k in model.nodes:
+                out[k][s:e] = sub[k]
+    w = {k: round(float(v), 4) for k, v in model.w_x.items() if k in model.nodes}
+    return out, w
+
+
+def _slice_model_posteriors(model, a, s, e, n_samples):
+    """행 [s, e) 만의 사후확률. FlowNode의 행별 파라미터(mu_local, flow_local)를 잘라서 계산한다."""
+    q = {}
+    for k in model.nodes:
+        node = model.flow[k]
+        h = a[k][s:e].unsqueeze(1)
+        full_mu, full_fl = node.mu_local, node.flow_local
+        node.mu_local = torch.nn.Parameter(full_mu[s:e], requires_grad=False)
+        node.flow_local = torch.nn.Parameter(full_fl[s:e], requires_grad=False)
+        try:
+            r, _ = node(h, n_samples)
+        finally:
+            node.mu_local, node.flow_local = full_mu, full_fl
+        q[k] = torch.sigmoid(r).mean(1)
+    return q
+
+
+def _job(args):
+    ev, seed, a = args
+    torch.set_num_threads(a.threads)
+    c = load_cells(a.local, a.dpm, a.keep_water)
+    c = c[c["이벤트"] == ev].reset_index(drop=True)
+    rows = to_rows(c, a.dpm_col)
+    q, w = fit_cells(rows, epochs=a.epochs, seed=seed, tag=f"{ev} s{seed} {rows.n}칸")
+    c = c.assign(p_ls=q["LS"].numpy(), p_lq=q["LQ"].numpy())
+    out = Path(a.out_dir)
+    out.mkdir(parents=True, exist_ok=True)
+    g = c.groupby(["event_idx", "muni_code"])
+    m = g.agg(n_cells=("mesh250", "size"), p_ls=("p_ls", "max"), p_lq=("p_lq", "max"),
+              p_ls_mean=("p_ls", "mean"), p_lq_mean=("p_lq", "mean")).reset_index()
+    m.insert(0, "seed", seed)
+    tag = ev.replace(" ", "")
+    m.to_csv(out / f"muni_{tag}_seed{seed}.csv", index=False, encoding="utf-8-sig")
+    c[["event_idx", "muni_code", "mesh250", "us_ls", "us_lq", "DPM_배경차", "p_ls", "p_lq"]].to_csv(
+        out / f"cells_{tag}_seed{seed}.csv.gz", index=False, compression="gzip")
+    print(f"완료 {ev} seed {seed}  w_x {w}", flush=True)
+
+
+def merge_outputs(out_dir, seeds):
+    out = Path(out_dir)
+    for s in seeds:
+        fs = sorted(out.glob(f"muni_*_seed{s}.csv"))
+        if len(fs) == len(EVS):
+            pd.concat([pd.read_csv(f, dtype={"muni_code": str}) for f in fs]).to_csv(
+                out / f"predictions_seed{s}.csv", index=False, encoding="utf-8-sig")
+
+
+def main(argv=None):
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--local", default="raw/local_250m_byevent_usgs.csv")
+    ap.add_argument("--dpm", default="raw/dpm_250m_v8_slim.csv.gz")
+    ap.add_argument("--dpm-col", default="DPM_배경차")
+    ap.add_argument("--keep-water", action="store_true", help="물 칸(경우 0)도 쓴다")
+    ap.add_argument("--events", nargs="+", default=EVS)
+    ap.add_argument("--seeds", nargs="+", type=int, default=[0, 1, 2, 3, 4])
+    ap.add_argument("--epochs", type=int, default=3000)
+    ap.add_argument("--jobs", type=int, default=1)
+    ap.add_argument("--threads", type=int, default=1)
+    ap.add_argument("--out-dir", default="outputs/disasternet/cells_max")
+    a = ap.parse_args(argv)
+    jobs = [(ev, s, a) for s in a.seeds for ev in a.events]
+    if a.jobs > 1:
+        with get_context("spawn").Pool(a.jobs) as p:
+            p.map(_job, jobs, chunksize=1)
+    else:
+        for j in jobs:
+            _job(j)
+    merge_outputs(a.out_dir, a.seeds)
+
+
+if __name__ == "__main__":
+    main()
