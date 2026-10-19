@@ -31,7 +31,7 @@ from .run_input_v5 import EVENT_TO_INDEX
 EVS = ["2016 구마모토", "2018 오사카", "2018 훗카이도", "2021 후쿠시마", "2024 노토반도"]
 
 
-def load_cells(local_path, dpm_path, keep_water=False):
+def load_cells(local_path, dpm_path, keep_water=False, off_rule="ours"):
     loc = pd.read_csv(local_path, dtype={"mesh250": str, "시정촌코드": str},
                       usecols=["이벤트", "시정촌코드", "mesh250", "slope", "경우", "us_ls", "us_lq", "sd_ls", "sd_lq"])
     dpm = pd.read_csv(dpm_path, dtype={"mesh250": str}, usecols=["이벤트", "mesh250", "화소수", "DPM_배경차", "DPM_최댓값"])
@@ -42,7 +42,7 @@ def load_cells(local_path, dpm_path, keep_water=False):
     # U 끄기 판정은 원래 값(0·999 포함)으로 먼저 해 둔다 (usgs_cells.usgs_off, 기본 규칙)
     from .usgs_cells import usgs_off
     for k in ("ls", "lq"):
-        c[f"off_{k}"] = usgs_off(c[f"us_{k}"].fillna(999), c[f"sd_{k}"].fillna(999))
+        c[f"off_{k}"] = usgs_off(c[f"us_{k}"].fillna(999), c[f"sd_{k}"].fillna(999), off_rule)
     for k in ("us_ls", "us_lq"):
         c[k] = c[k].where(c[k] < 999, 0.0).fillna(0.0)
     c["event_idx"] = c["이벤트"].map(EVENT_TO_INDEX)
@@ -151,7 +151,7 @@ def _job(args):
     if (out / f"muni_{tag}_seed{seed}.csv").exists():
         print(f"이미 있음 {ev} seed {seed}", flush=True)
         return
-    c = load_cells(a.local, a.dpm, a.keep_water)
+    c = load_cells(a.local, a.dpm, a.keep_water, a.off_rule)
     c = c[c["이벤트"] == ev].reset_index(drop=True)
     rows = to_rows(c, a.dpm_col, soft=a.soft, unc=a.unc)
     ckpt = out / f"ckpt_{tag}_seed{seed}.pt"
@@ -184,6 +184,8 @@ def main(argv=None):
     ap.add_argument("--dpm-col", default="DPM_배경차")
     ap.add_argument("--keep-water", action="store_true", help="물 칸(경우 0)도 쓴다")
     ap.add_argument("--soft", action="store_true", help="칸 경사로 soft (비탈 칸 액상화·평지 칸 산사태 로짓 −4.6)")
+    ap.add_argument("--off-rule", choices=["ours", "paper"], default="ours",
+                    help="--unc 끄기 판정: ours = 불확실도 0·999 또는 확률 0·999 / paper = 공식 코드처럼 불확실도 0·999만")
     ap.add_argument("--unc", action="store_true", help="칸마다 USGS 불확실도: 0·999 칸 끄기 + r⁰ 분산 = 그 칸 불확실도")
     ap.add_argument("--events", nargs="+", default=EVS)
     ap.add_argument("--seeds", nargs="+", type=int, default=[0, 1, 2, 3, 4])
