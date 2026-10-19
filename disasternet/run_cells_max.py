@@ -72,10 +72,10 @@ def to_rows(c, dpm_col, soft=False, unc=False):
 
 
 def fit_cells(rows, *, epochs, seed, lr=0.01, n_samples=8, num_flows=4, lam_triplet=1.0, margin=1.0,
-              obs_offset=2.0, final_samples=256, chunk=50_000, log_every=500, tag="", ckpt=None, ckpt_every=250):
+              obs_offset=2.0, final_samples=256, chunk=50_000, log_every=500, tag="", ckpt=None, ckpt_secs=300):
     """model._fit_group과 같은 학습(ELBO + β warm-up + triplet), BD 없음. 마지막 추론만 칸이 많아 나눠서 한다.
 
-    ckpt: 중간 저장 파일. 있으면 그 epoch부터 이어서 학습한다 (작업 환경이 재시작돼도 처음부터 다시 하지 않게).
+    ckpt: 중간 저장 파일 (ckpt_secs초마다 저장). 있으면 그 epoch부터 이어서 학습한다 (작업 환경이 재시작돼도 처음부터 다시 하지 않게).
     """
     torch.manual_seed(seed)
     a, log_x = prepare_inputs(rows, obs_offset)
@@ -89,7 +89,7 @@ def fit_cells(rows, *, epochs, seed, lr=0.01, n_samples=8, num_flows=4, lam_trip
         torch.set_rng_state(st["rng"])
         start = st["epoch"] + 1
         print(f"  [{tag}] 중간 저장에서 이어서: epoch {start}", flush=True)
-    t0 = time.time()
+    t0 = last_save = time.time()
     for epoch in range(start, epochs):
         beta = min(0.01 + epoch / max(epochs, 1), 1.0)
         post = model.posteriors(a["LS"], a["LQ"], a["BD"], n_samples, off=rows.off, r0_var=rows.r0_var)
@@ -103,7 +103,8 @@ def fit_cells(rows, *, epochs, seed, lr=0.01, n_samples=8, num_flows=4, lam_trip
         opt.step()
         if log_every and epoch % log_every == 0:
             print(f"  [{tag}] {epoch:5d}  -ELBO/칸 {float((-rec + kl).detach().mean()):.4f}  {time.time() - t0:.0f}s", flush=True)
-        if ckpt is not None and (epoch + 1) % ckpt_every == 0 and epoch + 1 < epochs:
+        if ckpt is not None and time.time() - last_save > ckpt_secs and epoch + 1 < epochs:
+            last_save = time.time()
             tmp = Path(str(ckpt) + ".tmp")
             torch.save({"model": model.state_dict(), "opt": opt.state_dict(), "rng": torch.get_rng_state(),
                         "epoch": epoch}, tmp)
