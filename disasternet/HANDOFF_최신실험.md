@@ -58,6 +58,8 @@ USGS 액상화 확률 ─▶ [액상화 LQ] ─┘                   ├─▶ �
 | `raw/terrain_fractions.csv` | 시정촌별 지형 비율 (② ④의 soft에 씀) |
 | `raw/local_250m_byevent_usgs.csv` (약 105만 칸) | 250 m 칸별 경사 · USGS 확률(us_ls, us_lq) · USGS 불확실도(sd_ls, sd_lq) (③ ④에 씀) |
 | `raw/DPM_municipality_v8.xlsx` | DPM 시정촌 집계표 + 만든 방법 설명(`자료설명` 시트) |
+| `raw/dpm_250m_v8_slim.csv.gz` (2026-10-18) | **250 m 칸별 DPM** 1,190,051칸. 열: 이벤트 · 시정촌코드 · mesh250 · 화소수 · DPM_배경차 · DPM_최댓값. v8과 같은 화소·정렬·궤도·배경 규칙 (원본 `dpm_250m_v8.csv` 90 MB에서 열만 줄임). 만든 방법은 `raw/dpm_250m_v8_README.txt` |
+| `raw/dpm_250m_v8_base.csv.gz` (2026-10-19) | 같은 칸의 **base 상관도**(지진 전 두 장면의 상관도, 칸 평균, 소수 3자리). 열: 이벤트 · mesh250 · base상관도. 낮을수록(숲·논·물가) DPM이 잡음일 수 있음. 칸의 54%가 0.3 미만 (중앙값 0.284) |
 
 **통합표의 주요 열**
 
