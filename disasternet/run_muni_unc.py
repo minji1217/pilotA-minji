@@ -88,12 +88,18 @@ def main(argv=None):
     ap.add_argument("--no-bd", action="store_true", help="건물피해 노드를 뺀다")
     ap.add_argument("--off-rule", choices=["ours", "paper"], default="ours",
                     help="USGS 끄기 판정: ours = 불확실도 0·999 또는 확률 0·999 / paper = 공식 코드처럼 불확실도 0·999만")
+    ap.add_argument("--usgs-muni", default=None,
+                    help="muni_usgs_pixel.py 출력. 주면 칸 지도 대신 이 시정촌별 불확실도(n_on_*, var_*)를 쓴다 (논문 기준 끄기)")
     a = ap.parse_args(argv)
 
     df = load_table(a.input)
     if a.terrain:
         df = attach_terrain(df, a.terrain)
-    df = df.merge(muni_usgs(a.local, a.off_rule), on=["이벤트", "muni_code"], how="left", validate="one_to_one")
+    if a.usgs_muni:   # 사전확률 표와 같은 방식(USGS 칸 중심점이 시정촌 안)으로 미리 집계한 불확실도 (muni_usgs_pixel.py)
+        u = pd.read_csv(a.usgs_muni, dtype={"muni_code": str})[["이벤트", "muni_code", "n_on_ls", "n_on_lq", "var_ls", "var_lq"]]
+    else:
+        u = muni_usgs(a.local, a.off_rule)
+    df = df.merge(u, on=["이벤트", "muni_code"], how="left", validate="one_to_one")
     if df[["n_on_ls", "n_on_lq"]].isna().any().any():
         raise ValueError(f"칸 지도가 없는 시정촌: {df.loc[df['n_on_ls'].isna(), '시정촌명'].tolist()}")
     print(f"시정촌 {len(df)}곳 · USGS로 산사태 끈 곳 {(df.n_on_ls == 0).sum()} · 액상화 끈 곳 {(df.n_on_lq == 0).sum()}"
