@@ -53,6 +53,8 @@ def main(argv=None):
     ap.add_argument("--ksj-dir", required=True)
     ap.add_argument("--usgs-dir", required=True)
     ap.add_argument("--out", default="raw/muni_usgs_pixel.csv")
+    ap.add_argument("--off-rule", choices=["paper", "ours"], default="paper",
+                    help="paper = 불확실도 0·999만 끔 / ours = 불확실도 0·999 또는 확률 0·999면 끔")
     a = ap.parse_args(argv)
 
     tab = load_table(a.input).rename(columns={"muni_code": "code"})
@@ -68,7 +70,11 @@ def main(argv=None):
         g = pd.DataFrame({"code": sorted(b["code"])})
         for k in ("ls", "lq"):
             sd = res[f"sd_{k}"]
-            on = sd[(sd[f"sd_{k}"] != 0) & (sd[f"sd_{k}"] < 999)]
+            ok = (sd[f"sd_{k}"] != 0) & (sd[f"sd_{k}"] < 999)
+            if a.off_rule == "ours":   # 확률이 0·999인 칸도 끈다 (확률·불확실도 래스터는 같은 격자라 칸 순서가 같다)
+                pv = res[f"us_{k}"][f"us_{k}"].to_numpy()
+                ok = ok & (pv != 0) & (pv < 999)
+            on = sd[ok]
             g = g.merge(sd.groupby("code").size().rename(f"n_pix_{k}").reset_index(), on="code", how="left")
             g = g.merge(on.groupby("code")[f"sd_{k}"].agg(["size", "mean"]).rename(
                 columns={"size": f"n_on_{k}", "mean": f"var_{k}"}).reset_index(), on="code", how="left")
