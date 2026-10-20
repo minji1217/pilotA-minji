@@ -1,13 +1,13 @@
 @echo off
 chcp 65001 >nul
-REM 칸 단위 결과(실험마다 predictions_seed0.csv 1개)를 10분마다 GitHub pc-results 브랜치에 올린다.
+REM 칸 단위 결과(실험마다 predictions_seed*.csv)를 10분마다 GitHub pc-results 브랜치에 올린다.
 REM 실험 폴더(SRC)는 git 저장소가 아니어도 된다. 이 파일은 git clone 한 폴더(C:\work\pilotA-minji-git) 안에서 실행.
 set SRC=C:\work\pilotA-minji-claude-dazzling-babbage-8c6yd4\outputs\disasternet
 :loop
 for /d %%D in ("%SRC%\cells_max*_aw") do (
-  if exist "%%D\predictions_seed0.csv" (
+  for %%F in ("%%D\predictions_seed*.csv") do (
     if not exist "pc_results\%%~nxD" mkdir "pc_results\%%~nxD"
-    copy /y "%%D\predictions_seed0.csv" "pc_results\%%~nxD\" >nul
+    copy /y "%%F" "pc_results\%%~nxD\" >nul
   )
 )
 git add pc_results
