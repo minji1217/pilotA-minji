@@ -19,6 +19,7 @@ import time
 from multiprocessing import get_context
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 import torch
 
@@ -33,7 +34,8 @@ EVS = ["2016 구마모토", "2018 오사카", "2018 훗카이도", "2021 후쿠�
 
 def load_cells(local_path, dpm_path, keep_water=False, off_rule="ours"):
     loc = pd.read_csv(local_path, dtype={"mesh250": str, "시정촌코드": str},
-                      usecols=["이벤트", "시정촌코드", "mesh250", "slope", "경우", "us_ls", "us_lq", "sd_ls", "sd_lq"])
+                      usecols=["이벤트", "시정촌코드", "mesh250", "slope", "경우", "산사태_켬", "액상화_켬",
+                               "us_ls", "us_lq", "sd_ls", "sd_lq"])
     dpm = pd.read_csv(dpm_path, dtype={"mesh250": str}, usecols=["이벤트", "mesh250", "화소수", "DPM_배경차", "DPM_최댓값"])
     c = loc.merge(dpm, on=["이벤트", "mesh250"], how="inner")
     if not keep_water:
@@ -49,12 +51,14 @@ def load_cells(local_path, dpm_path, keep_water=False, off_rule="ours"):
     return c.sort_values(["event_idx", "muni_code", "mesh250"]).reset_index(drop=True)
 
 
-def to_rows(c, dpm_col, soft=False, unc=False, unc_mode="both", const_var=None):
+def to_rows(c, dpm_col, soft=False, unc=False, unc_mode="both", const_var=None, local_off=False):
     """soft: 시정촌 soft를 칸에 그대로 — 칸의 비탈 비율 = (경사 ≥ 10°), 평지 비율 = (경사 < 5°), 1% 미만은 1%로.
              칸은 경사가 하나라 비율이 0 아니면 1 → 비탈 칸은 액상화 로짓 −4.6, 평지 칸은 산사태 로짓 −4.6.
        unc : 원 논문처럼 칸마다 USGS 불확실도 — 0·999 칸은 끄고, 나머지는 r⁰ 분산 = 그 칸의 불확실도.
        unc_mode: both = 끄기 + 분산 / off = 끄기만 (분산 1) / var = 분산만 (끄지 않음).
-       const_var: 주면 모든 칸의 r⁰ 분산을 이 값으로 (USGS 불확실도 정보 없이 폭만 작게)."""
+       const_var: 주면 모든 칸의 r⁰ 분산을 이 값으로 (USGS 불확실도 정보 없이 폭만 작게).
+       local_off: 원본 LOCAL처럼 끄기 지도(local_map)로 칸마다 불가능한 재해를 0으로 고정 —
+                  비탈 칸은 액상화, 평지 칸은 산사태를 끔 (중간 칸은 둘 다 켬). U 끄기와 함께 쓰면 둘 중 하나라도 끄면 끔."""
     t = lambda col: torch.as_tensor(c[col].to_numpy(dtype="float64").copy(), dtype=DTYPE)
     n = len(c)
     log_frac = off = r0_var = None
@@ -62,9 +66,14 @@ def to_rows(c, dpm_col, soft=False, unc=False, unc_mode="both", const_var=None):
         fr = {"LS": (c["slope"] >= 10.0).astype(float), "LQ": (c["slope"] < 5.0).astype(float)}
         log_frac = {k: torch.log(torch.as_tensor(v.clip(lower=0.01).to_numpy(), dtype=DTYPE)) for k, v in fr.items()}
         log_frac["BD"] = torch.zeros(n, dtype=DTYPE)
-    if unc and unc_mode in ("both", "off"):
-        off = {"LS": torch.as_tensor(c["off_ls"].to_numpy(dtype=bool)), "LQ": torch.as_tensor(c["off_lq"].to_numpy(dtype=bool)),
-               "BD": torch.zeros(n, dtype=torch.bool)}
+    if (unc and unc_mode in ("both", "off")) or local_off:
+        o = {k: np.zeros(n, dtype=bool) for k in ("ls", "lq")}
+        if unc and unc_mode in ("both", "off"):
+            o = {k: o[k] | c[f"off_{k}"].to_numpy(dtype=bool) for k in o}
+        if local_off:
+            o["ls"] |= c["산사태_켬"].to_numpy() == 0
+            o["lq"] |= c["액상화_켬"].to_numpy() == 0
+        off = {"LS": torch.as_tensor(o["ls"]), "LQ": torch.as_tensor(o["lq"]), "BD": torch.zeros(n, dtype=torch.bool)}
     if unc and unc_mode in ("both", "var"):
         # 분산만 쓸 때(끄지 않음) 0·999 칸은 불확실도 정보가 없으므로 기본값 1
         r0_var = {k: torch.as_tensor(c[f"sd_{k.lower()}"].where(~c[f"off_{k.lower()}"], 1.0).fillna(1.0).to_numpy(dtype="float64"), dtype=DTYPE)
@@ -171,7 +180,7 @@ def _job_inner(args):
         return
     c = load_cells(a.local, a.dpm, a.keep_water, a.off_rule)
     c = c[c["이벤트"] == ev].reset_index(drop=True)
-    rows = to_rows(c, a.dpm_col, soft=a.soft, unc=a.unc, unc_mode=a.unc_mode, const_var=a.const_var)
+    rows = to_rows(c, a.dpm_col, soft=a.soft, unc=a.unc, unc_mode=a.unc_mode, const_var=a.const_var, local_off=a.local_off)
     ckpt = out / f"ckpt_{tag}_seed{seed}.pt"
     q, w = fit_cells(rows, epochs=a.epochs, seed=seed, tag=f"{ev} s{seed} {rows.n}칸", ckpt=ckpt)
     c = c.assign(p_ls=q["LS"].numpy(), p_lq=q["LQ"].numpy())
@@ -208,6 +217,8 @@ def main(argv=None):
     ap.add_argument("--unc-mode", choices=["both", "off", "var"], default="both",
                     help="--unc에서 쓸 것: both = 끄기 + 분산 / off = 끄기만 / var = 분산만")
     ap.add_argument("--const-var", type=float, default=None, help="모든 칸의 r⁰ 분산을 같은 값으로 (비교용)")
+    ap.add_argument("--local-off", action="store_true",
+                    help="원본 LOCAL처럼 끄기 지도로 비탈 칸 액상화·평지 칸 산사태를 0으로 고정 (soft 대신)")
     ap.add_argument("--unc", action="store_true", help="칸마다 USGS 불확실도: 0·999 칸 끄기 + r⁰ 분산 = 그 칸 불확실도")
     ap.add_argument("--events", nargs="+", default=EVS)
     ap.add_argument("--seeds", nargs="+", type=int, default=[0, 1, 2, 3, 4])
