@@ -134,7 +134,7 @@ td.up{color:var(--all);font-weight:700} td.down{color:var(--warn);font-weight:70
       <div class="arrow">↓</div>
       <div class="step diff"><b>입력</b>DPM = 그 칸의 DPM_배경차<br>USGS 확률 = 그 칸의 값 (999는 0)</div>
       <div class="arrow">↓</div>
-      <div class="step diff"><b>soft · U</b>soft = 칸 경사로 0 또는 1 → 로짓 0 또는 −4.6<br>U 끄기 = 불확실도 0·999 칸만 끔<br>U 분산 = 그 칸의 불확실도</div>
+      <div class="step diff"><b>soft · U</b>soft = 칸 경사로 비율 0 또는 1 → 로짓에 더하는 값 0 또는 −4.6 (log 0.01, 사전확률 약 1/100)<br>U 끄기 = 불확실도 0·999 칸만 끔<br>U 분산 = 그 칸의 불확실도</div>
       <div class="arrow">↓</div>
       <div class="step"><b>모델 · 학습</b>r⁰ ~ N(μ, 분산) → planar flow 4번 → 샘플 8개 sigmoid 평균<br>ELBO + triplet, Adam, 3000 epoch</div>
       <div class="arrow">↓</div>
@@ -169,7 +169,7 @@ td.up{color:var(--all);font-weight:700} td.down{color:var(--warn);font-weight:70
     <tr><td>한 줄</td><td>시정촌 (지진마다 40~81줄)</td><td>250 m 칸 (지진마다 4.5만~32만 줄), 물 칸 제외</td></tr>
     <tr><td>DPM</td><td>시정촌 평균 − 프레임 중앙값</td><td>그 칸의 값 (<code>dpm_250m_v8</code>)</td></tr>
     <tr><td>USGS 사전확률</td><td>산사태 평균 · 액상화 최댓값</td><td>그 칸의 값</td></tr>
-    <tr><td>soft</td><td>비탈·평지 비율의 log</td><td>칸 경사로 0 또는 1 → 로짓 0 또는 −4.6 (중간 칸은 둘 다 −4.6)</td></tr>
+    <tr><td>soft</td><td>비탈·평지 비율의 log</td><td>칸 경사로 비율 0 또는 1 → 로짓에 0 또는 −4.6을 더함 (중간 칸은 둘 다 −4.6을 더함, 고쳐서 다시 돌리는 중)</td></tr>
     <tr><td>U 끄기</td><td>시정촌 통째로 (산사태 6곳, 액상화 11곳)</td><td>칸마다</td></tr>
     <tr><td>U 분산</td><td>켜진 칸들의 불확실도 평균</td><td>그 칸의 불확실도</td></tr>
     <tr><td>시정촌 사후확률</td><td>그 줄의 값</td><td>칸 사후확률의 최댓값</td></tr>

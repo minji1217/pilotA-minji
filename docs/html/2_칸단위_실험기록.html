@@ -184,7 +184,7 @@ body{background:#fff}
       <div class="arrow">↓</div>
       <div class="step diff"><b>입력</b>DPM = 그 칸의 DPM_배경차<br>USGS 확률 = 그 칸의 값 (999는 0)</div>
       <div class="arrow">↓</div>
-      <div class="step diff"><b>soft · U</b>soft = 칸 경사로 0 또는 1 → 로짓 0 또는 −4.6<br>U 끄기 = 불확실도 0·999 칸만 끔<br>U 분산 = 그 칸의 불확실도</div>
+      <div class="step diff"><b>soft · U</b>soft = 칸 경사로 비율 0 또는 1 → 로짓에 더하는 값 0 또는 −4.6 (log 0.01, 사전확률 약 1/100)<br>U 끄기 = 불확실도 0·999 칸만 끔<br>U 분산 = 그 칸의 불확실도</div>
       <div class="arrow">↓</div>
       <div class="step"><b>모델 · 학습</b>r⁰ ~ N(μ, 분산) → planar flow 4번 → 샘플 8개 sigmoid 평균<br>ELBO + triplet, Adam, 3000 epoch</div>
       <div class="arrow">↓</div>
@@ -213,7 +213,7 @@ body{background:#fff}
     <tr><td>한 줄</td><td>시정촌 (지진마다 40~81줄)</td><td>250 m 칸 (지진마다 4.5만~32만 줄), 물 칸 제외</td></tr>
     <tr><td>DPM</td><td>시정촌 평균 − 프레임 중앙값</td><td>그 칸의 DPM_배경차 = 칸 안 40 m 화소 평균 − 프레임 중앙값 (<code>dpm_250m_v8</code>). 모델에는 똑같이 +2 해서 log</td></tr>
     <tr><td>USGS 사전확률</td><td>산사태 평균 · 액상화 최댓값</td><td>그 칸의 값</td></tr>
-    <tr><td>soft</td><td>비탈·평지 비율의 log</td><td>칸 경사로 0 또는 1 → 로짓 0 또는 −4.6 (중간 칸은 둘 다 −4.6)</td></tr>
+    <tr><td>soft</td><td>비탈·평지 비율의 log</td><td>칸 경사로 비율 0 또는 1 → 로짓에 0 또는 −4.6을 더함 (중간 칸은 둘 다 −4.6을 더함)</td></tr>
     <tr><td>U 끄기</td><td>시정촌 통째로 (산사태 6곳, 액상화 11곳)</td><td>칸마다</td></tr>
     <tr><td>U 분산</td><td>켜진 칸들의 불확실도 평균</td><td>그 칸의 불확실도</td></tr>
     <tr><td>시정촌 사후확률</td><td>그 줄의 값</td><td>칸 사후확률의 최댓값</td></tr>
@@ -522,7 +522,7 @@ body{background:#fff}
     <tr><th></th><th class="num"><span class="tag t-ls">산사태</span> 사전확률</th><th class="num"><span class="tag t-lq">액상화</span> 사전확률</th></tr>
     <tr><td>USGS 값 (면적 평균)</td><td class="num">0.0175</td><td class="num">0.0663</td></tr>
     <tr><td>로짓</td><td class="num">-4.03</td><td class="num">-2.64</td></tr>
-    <tr><td class="down">지금까지 soft: 로짓 − 4.6</td><td class="num down">-8.63 이면 0.00018</td><td class="num down">-7.25 이면 0.00071</td></tr>
+    <tr><td class="down">지금까지 soft: 로짓에 −4.6을 더함</td><td class="num down">-8.63 이면 0.00018</td><td class="num down">-7.25 이면 0.00071</td></tr>
     <tr><td class="up">고친 soft: 그대로</td><td class="num up">0.0175</td><td class="num up">0.0663</td></tr>
   </table></div>
   <p class="meta">USGS는 이 칸에 액상화 6.6%, 산사태 1.8%를 주는데, 지금까지 soft는 둘 다 약 100분의 1로 만들어 "이 칸에서는 아무것도 안 일어난다"고 미리 정한 셈이었습니다.</p>
@@ -615,7 +615,7 @@ body{background:#fff}
     <li>추가 실험: 시정촌 단위에서 했던 soft + U(SOFTU · 끄기만 · 분산만)를 칸 단위에도 그대로 돌려 비교</li>
     <li>칸: 250 m (1/4 메시), 264개 시정촌 안 약 102만 칸. 칸마다 자기 DPM(<code>dpm_250m_v8</code>, DPM_배경차)과 자기 USGS 산사태·액상화 확률</li>
     <li>물 칸은 뺌. USGS가 계산 안 한 칸(999)은 확률 0</li>
-    <li>칸 단위 soft: 칸의 경사가 10° 이상이면 비탈 비율 1, 5° 미만이면 평지 비율 1, 아니면 0. 비율 0인 재해는 사전확률 로짓 −4.6 (log 0.01)</li>
+    <li>칸 단위 soft: 칸의 경사가 10° 이상이면 비탈 비율 1, 5° 미만이면 평지 비율 1, 아니면 0. 비율 0인 재해는 사전확률 로짓에 log 0.01 = −4.6을 더함 (0이면 log 0 = −∞라 1%로 바닥을 둠. 사전확률이 약 1/100이 됨)</li>
     <li>칸 단위 U: 불확실도 0·999 칸은 그 재해를 0으로 고정, 분산 = 그 칸의 USGS 불확실도</li>
     <li>평가: 시정촌 단위와 같음. 공통 263곳, 지진별 AUC를 시정촌 수로 가중평균 (<code>compare_latest.py</code>)</li>
     <li>코드 <code>disasternet/run_cells_max.py</code>, 결과 폴더 <code>outputs/disasternet/cells_max</code></li>
@@ -627,7 +627,7 @@ body{background:#fff}
   <div class="tw"><table>
     <tr><th>실험</th><th>BD</th><th>불가능한 재해 끄기</th><th>soft (사전확률 깎기)</th><th>U 끄기</th><th>U 분산 (r⁰)</th><th>돌린 곳</th></tr>
     <tr><td>① baseline</td><td>없음</td><td>없음</td><td>없음</td><td>없음</td><td>모두 1</td><td>연구실 PC</td></tr>
-    <tr><td>② soft + U</td><td>없음</td><td>U로만</td><td>비탈 칸 액상화 · 평지 칸 산사태 · 중간 칸 둘 다 로짓 −4.6 (중간 칸은 부작용, <a href="#softmid">고쳐서 다시 돌리는 중</a>)</td><td>불확실도 0·999 칸 = 0</td><td>그 칸의 USGS 불확실도</td><td>연구실 PC</td></tr>
+    <tr><td>② soft + U</td><td>없음</td><td>U로만</td><td>비탈 칸 액상화 · 평지 칸 산사태 · 중간 칸 둘 다 로짓에 −4.6을 더함 = 사전확률 약 1/100 (중간 칸은 부작용, <a href="#softmid">고쳐서 다시 돌리는 중</a>)</td><td>불확실도 0·999 칸 = 0</td><td>그 칸의 USGS 불확실도</td><td>연구실 PC</td></tr>
     <tr><td>③ soft + U (끄기만)</td><td>없음</td><td>U로만</td><td>SOFTU와 같음</td><td>불확실도 0·999 칸 = 0</td><td>모두 1</td><td>연구실 PC</td></tr>
     <tr><td>④ soft + U (분산만)</td><td>없음</td><td>없음</td><td>SOFTU와 같음</td><td>없음</td><td>그 칸의 USGS 불확실도 (0·999 칸은 1)</td><td>연구실 PC</td></tr>
     <tr><td>⑤ 끄기 지도 + U</td><td>없음</td><td>끄기 지도 + U: 비탈 칸 액상화 · 평지 칸 산사태 = 0 (중간 칸은 둘 다 켬)</td><td>없음</td><td>불확실도 0·999 칸 = 0</td><td>그 칸의 USGS 불확실도</td><td>연구실 PC</td></tr>
@@ -654,7 +654,7 @@ body{background:#fff}
   <p class="meta">막대는 0.5부터</p>
   <div class="anal"><b>결과 분석</b><ul>
     <li><b>① baseline(끄기·soft·U 없음)은 전체 0.617</b>로, 시정촌 단위 baseline(0.614)과 거의 같습니다. 칸 단위로 학습하는 것만으로는 오르지 않습니다</li>
-    <li><b>② soft + U는 전체 0.793</b>으로 ⑤(0.797)와 거의 같습니다. soft(로짓 −4.6 깎기)와 끄기 지도(0 고정)의 차이는 seed 흔들림 수준입니다. 산사태는 ②가 조금 높고(0.760 대 0.753), 액상화는 ⑤가 조금 높습니다(0.812 대 0.804)</li>
+    <li><b>② soft + U는 전체 0.793</b>으로 ⑤(0.797)와 거의 같습니다. soft(로짓에 −4.6을 더해 사전확률 약 1/100)와 끄기 지도(0 고정)의 차이는 seed 흔들림 수준입니다. 산사태는 ②가 조금 높고(0.760 대 0.753), 액상화는 ⑤가 조금 높습니다(0.812 대 0.804)</li>
     <li><b>③ soft + U (끄기만, 분산 1)은 0.775</b>로 ②(0.793)보다 조금 낮습니다. 칸 단위에서도 끄기만으로 대부분의 효과가 나고, 분산을 더하면 조금 더 오릅니다 (+0.018)</li>
     <li><b>④ soft + U (분산만, 끄기 없음)은 0.619</b>로 크게 떨어집니다. 노토 액상화가 0.317로 무너지기 때문입니다: USGS가 계산하지 않은 니가타 쪽 칸을 끄지 않으면 그 칸들의 값이 높게 나와 시정촌 최댓값을 차지합니다. 산사태는 오히려 가장 높습니다 (0.812)</li>
     <li>→ <b>칸 단위에서는 "끄기"가 핵심</b>입니다 (끄기만 ③ 0.775, 분산만 ④ 0.619). 시정촌 단위(분산이 핵심)와 반대입니다</li>
