@@ -506,7 +506,7 @@ body{background:#fff}
   <h2><span class="n">0</span>진행 현황</h2>
   <div class="tw"><table>
     <tr><th>실험</th><th>soft</th><th>U 끄기</th><th>U 분산</th><th>돌린 곳</th><th>상태</th></tr>
-    <tr><td>① baseline (교수님 기본판)</td><td class="no">✗</td><td class="no">✗</td><td class="no">✗</td><td>연구실 PC</td><td>✅ 완료 · 아래 결과</td></tr>
+    <tr><td>① baseline (교수님 기본판)</td><td class="no">✗</td><td class="no">✗</td><td class="no">✗</td><td>연구실 PC</td><td>✅ 완료 · 아래 결과 · <b>seed 1 완료 (2.10)</b></td></tr>
     <tr><td>② soft + U</td><td class="yes">○</td><td class="yes">○</td><td class="yes">○</td><td>연구실 PC</td><td>✅ 완료 · 아래 결과</td></tr>
     <tr><td>③ soft + U (끄기만)</td><td class="yes">○</td><td class="yes">○</td><td class="no">✗</td><td>연구실 PC</td><td>✅ 완료 · 아래 결과</td></tr>
     <tr><td>④ soft + U (분산만)</td><td class="yes">○</td><td class="no">✗</td><td class="yes">○</td><td>연구실 PC</td><td>✅ 완료 · 아래 결과</td></tr>
@@ -669,7 +669,7 @@ body{background:#fff}
 </section>
 
 <section id="seed1">
-  <h2><span class="n">2.10</span>seed 1 결과: ⑤ 끄기 지도 + U</h2>
+  <h2><span class="n">2.10</span>seed 1 결과: ⑤ 끄기 지도 + U, ① baseline</h2>
   <p>같은 설정을 무작위 순서(seed)만 바꿔 한 번 더 돌린 결과입니다. 시정촌 값을 칸 최댓값으로 모은 것이 기본이고, "섞기"는 산사태만 칸 평균, 액상화는 칸 최댓값으로 모은 것입니다 (2.9).</p>
   <div class="tw"><table>
     <tr><th>전체 AUC (시정촌 200곳)</th><th>전체</th><th>산사태 (49)</th><th>액상화 (151)</th></tr>
@@ -679,8 +679,27 @@ body{background:#fff}
     <tr><td>⑤ 섞기 seed 0</td><td>0.810</td><td>0.806</td><td>0.812</td></tr>
     <tr><td>⑤ 섞기 seed 1</td><td>0.838</td><td>0.799</td><td>0.850</td></tr>
     <tr><td><b>⑤ 섞기 seed 0·1 평균</b></td><td><b>0.824</b></td><td><b>0.803</b></td><td><b>0.831</b></td></tr>
+    <tr><td>① baseline seed 0</td><td>0.617</td><td>0.663</td><td>0.602</td></tr>
+    <tr><td>① baseline seed 1</td><td>0.679</td><td>0.643</td><td>0.691</td></tr>
+    <tr><td><b>① baseline seed 0·1 평균</b></td><td><b>0.648</b></td><td><b>0.653</b></td><td><b>0.647</b></td></tr>
+    <tr><td>① 섞기 seed 0·1 평균</td><td>0.645</td><td>0.641</td><td>0.647</td></tr>
     <tr><td>USGS 기준선 (같은 채점)</td><td>0.854</td><td>0.729</td><td>0.895</td></tr>
   </table></div>
+  <div class="tw"><table>
+    <tr><th>① baseline 지진별 (시정촌 수)</th><th>seed 0</th><th>seed 1</th></tr>
+    <tr><td>산사태 2016 구마모토 (29)</td><td>0.679</td><td>0.782</td></tr>
+    <tr><td>산사태 2018 오사카 (7)</td><td>0.900</td><td>0.800</td></tr>
+    <tr><td>산사태 2018 훗카이도 (13)</td><td>0.500</td><td>0.250</td></tr>
+    <tr><td>액상화 2016 구마모토 (40)</td><td>0.513</td><td>0.566</td></tr>
+    <tr><td>액상화 2018 훗카이도 (40)</td><td>0.504</td><td>0.604</td></tr>
+    <tr><td>액상화 2021 후쿠시마 (7)</td><td>0.500</td><td>0.500</td></tr>
+    <tr><td>액상화 2024 노토반도 (64)</td><td>0.731</td><td>0.845</td></tr>
+  </table></div>
+  <div class="note"><ul>
+    <li><b>① baseline은 seed마다 크게 흔들림</b>: 전체 0.617 대 0.679, 지진별로는 0.1 넘게 바뀌는 곳이 많습니다 (훗카이도 산사태 0.500 대 0.250, 노토반도 액상화 0.731 대 0.845).</li>
+    <li><b>왜</b>: 끄기가 없어서 거의 모든 시정촌의 산사태 값(칸 최댓값)이 0.99 ~ 0.998로 천장에 붙고 (seed 1 구마모토 40곳 모두 0.99 이상), 순서가 작은 차이와 무작위에 좌우됩니다.</li>
+    <li><b>⑤와 비교</b>: 두 seed 평균 ① 0.648 대 ⑤ 0.809. 끄기 지도 + U가 칸 단위에서 핵심이라는 결론은 seed 1에서도 그대로입니다. ①은 섞기(산사태 칸 평균)로도 좋아지지 않습니다 (0.645).</li>
+  </ul></div>
   <div class="tw"><table>
     <tr><th>지진별 (시정촌 수)</th><th>seed 0</th><th>seed 1</th><th>섞기 seed 0</th><th>섞기 seed 1</th></tr>
     <tr><td>산사태 2016 구마모토 (29)</td><td>0.769</td><td>0.731</td><td>0.872</td><td>0.872</td></tr>
