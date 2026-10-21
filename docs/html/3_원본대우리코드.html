@@ -97,7 +97,15 @@ nav.toc{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:14px} nav.toc a{color
 <tr><td>④ <b>sigmoid</b> (여기서 한 번만)</td><td>sigmoid(−2.60)</td><td><b>0.069</b></td><td><b>확률</b></td></tr>
 <tr><td>⑤ 평균</td><td>② ~ ④를 8번(마지막엔 256번) 해서 평균</td><td>최종 q</td><td>확률</td></tr>
 </table></div>
-  <div class="note"><b>기호 정리: 식마다 들어가는 기호가 다릅니다</b>
+  <div class="note"><b>먼저 간단하게: 식 세 개의 핵심</b>
+    <div class="tw"><table>
+      <tr><th>식</th><th>간단한 형태</th><th>뜻</th><th>어디에 쓰이나</th></tr>
+      <tr><td>1. 사전</td><td><b>logit p = w_0 + w_a · α</b></td><td>USGS만 보면 재해 확률이 이 정도</td><td>손실 (q가 p에서 멀어지면 벌점)</td></tr>
+      <tr><td>2. 관측</td><td><b>log DPM ≈ w_0x + w_x · q</b></td><td>재해가 나면 DPM이 이만큼 커짐</td><td>손실 (q가 DPM을 잘 설명하면 상)</td></tr>
+      <tr><td>3. 출발점</td><td><b>μ = a · α + c + δ</b></td><td>사후확률 q를 만드는 출발점</td><td>결과 q (flow, sigmoid를 거쳐)</td></tr>
+    </table></div>
+    <p>이 세 줄이 핵심이고, 아래 표의 w_e·ε, log 가능한 땅 비율, +2, 6·tanh는 이 위에 붙은 세부입니다.</p></div>
+  <div class="note"><b>세부까지 다 쓴 식 (기호 정리)</b>
     <div class="tw"><table>
       <tr><th>식</th><th>완전한 식</th><th>기호</th></tr>
       <tr><td>1. 재해 발생 (사전)</td><td>logit p = w_0 + w_a·α + w_e·ε (+ log 가능한 땅 비율)</td><td>w_0 기본값 · w_a USGS 영향 · <b>w_e·ε</b> 잡음 (ε는 매번 새로 뽑는 표준정규 난수, w_e는 그 크기). 이 페이지 여러 곳에서 w_e·ε를 빼고 "logit p = w_0 + w_a·α"로 줄여 썼습니다</td></tr>
