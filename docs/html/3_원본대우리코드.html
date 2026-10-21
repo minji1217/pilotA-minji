@@ -588,7 +588,39 @@ mu = 6 * tanh((self.mu(α) + mu_local) / 6)
 </table></div>
 </div>
 <p><span class="lb">δ도 양수로 묶나</span>아니요. δ는 0에서 시작해(<code>torch.zeros</code>) 시정촌·칸마다 자기 DPM에 맞춰 위로든 아래로든 움직입니다. 방향이 정해진 물리 관계가 아니라 "기본값에서 얼마나 벗어나나"를 나타내는 보정이라 부호를 정할 이유가 없고, 대신 μ 전체를 6·tanh로 −6 ~ +6 안에 묶습니다.</p>
-<h3 id="mu-tanh">왜 6·tanh(x/6)로 묶나</h3>
+<div class="expl" id="delta-learn"><p class="eh">"δ가 그 시정촌의 DPM에 맞춰 움직인다"는 뜻</p>
+    <p>δ는 DPM을 보고 바로 계산하는 값이 아니라 <b>학습하면서 조금씩 고쳐지는 값</b>이고, 고치는 방향을 DPM이 정해 줍니다.</p>
+    <ol>
+      <li>지금의 δ로 출발점과 사후확률 q를 계산합니다.</li>
+      <li>손실의 관측식이 그 시정촌의 실제 DPM과 비교합니다. DPM이 큰데 q가 낮으면 "재해 확률이 더 높아야 설명된다"며 δ를 조금 올리고, DPM이 작은데 q가 높으면 조금 내립니다.</li>
+      <li>3000번 반복하면 δ가 그 시정촌 DPM에 맞는 자리에 자리 잡습니다. 사전확률 항이 "USGS에서 너무 멀어지지 마라"고 당기므로 DPM이 강하게 말할 때만 크게 움직입니다.</li>
+    </ol>
+    <div class="cols">
+      <div class="tw"><table>
+        <tr><th>학습 횟수 (설명용)</th><th>칸 가 (DPM 큼)의 δ</th><th>칸 나 (DPM 작음)의 δ</th></tr>
+        <tr><td>처음</td><td>0</td><td>0</td></tr>
+        <tr><td>500번</td><td>+0.4</td><td>−0.2</td></tr>
+        <tr><td>1500번</td><td>+1.0</td><td>−0.5</td></tr>
+        <tr><td>3000번</td><td>+1.5</td><td>−0.8</td></tr>
+      </table></div>
+      <div class="tw"><table>
+        <tr><th>실제 (2016 구마모토, 시정촌)</th><th>USGS α</th><th>DPM</th><th>사후확률</th></tr>
+        <tr><td>天草市</td><td>0.00065</td><td>0.125</td><td><b>0.137</b></td></tr>
+        <tr><td>あさぎり町</td><td>0.00059</td><td>0.319</td><td><b>0.442</b></td></tr>
+      </table></div>
+    </div>
+    <p class="eh" style="margin-top:4px">DPM에 맞춰 학습되는 건 δ만이 아님</p>
+    <p>손실을 줄이는 방향으로 <b>모든 학습 값이 함께</b> 고쳐집니다. 다만 역할이 다릅니다.</p>
+    <div class="tw"><table>
+      <tr><th>학습 값</th><th>몇 개</th><th>DPM에 맞추는 방식</th></tr>
+      <tr><td>a, c (출발점), flow 공통 층</td><td>지진·재해마다 한 벌</td><td>모든 칸을 <b>평균적으로</b> 잘 맞추는 쪽으로. α가 같은 칸은 같은 값을 받음</td></tr>
+      <tr><td>w_0x, w_x, w_ex (관측식)</td><td>지진마다 한 벌</td><td>"재해가 나면 DPM이 얼마나 커지나"를 지진 전체에 맞춤</td></tr>
+      <tr><td>w_0, w_a, w_e (사전 식)</td><td>지진·재해마다 한 벌</td><td>USGS와 q의 관계를 지진 전체에 맞춤</td></tr>
+      <tr><td><b>δ, flow_local (칸별 보정)</b></td><td>칸마다 하나씩</td><td><b>그 칸 하나</b>의 DPM에 맞춤. α가 같아도 칸마다 다르게 움직일 수 있는 건 이것뿐</td></tr>
+    </table></div>
+    <p>즉 공통 값들은 "전체 규칙"을, δ와 flow_local은 "칸마다의 예외"를 맞춥니다. 天草市와 あさぎり町처럼 α가 같은데 DPM이 다른 두 곳을 다르게 만들 수 있는 건 칸별 보정 덕분입니다.</p>
+  </div>
+  <h3 id="mu-tanh">왜 6·tanh(x/6)로 묶나</h3>
 <div class="tw"><table>
 <tr><th>묶기 전 x</th><th>tanh(x)만</th><th>6·tanh(x/6)</th><th>설명</th></tr>
 <tr><td>1</td><td>0.76</td><td><b>0.99</b></td><td>tanh만 쓰면 보통 값도 줄어듦</td></tr>
