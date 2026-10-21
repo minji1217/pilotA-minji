@@ -452,6 +452,98 @@ body{background:#fff}
   </ul>
 </section>
 
+<section id="softmid">
+  <h2><span class="n">★</span>칸 soft의 5~10° 칸 문제: 산사태 · 액상화 둘 다 낮아져 있었음 (10.21 발견)</h2>
+  <p>칸 단위 soft는 칸의 경사 하나로 판단합니다. 10° 이상 칸은 산사태만, 5° 미만 칸은 액상화만 일어날 수 있다고 보고, 일어날 수 없는 쪽 재해의 사전확률을 <b>1/100로 낮춥니다</b> (로짓에 log 0.01 = −4.6을 더함). 그런데 그 사이인 <b>5~10° 칸</b>은 "10° 이상"도 "5° 미만"도 아니어서 <b>두 재해 모두</b> 낮아졌습니다.</p>
+  <figure>
+    <div class="tw"><svg viewBox="0 0 940 470" width="940" role="img" aria-label="경사 구간별로 soft가 산사태와 액상화 사전확률을 어떻게 다루는지 비교한 그림" style="max-width:100%;height:auto;min-width:660px">
+<defs><pattern id="hatch" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="7" height="7" fill="#eceef2"/><line x1="0" y1="0" x2="0" y2="7" stroke="#c9ced7" stroke-width="3"/></pattern></defs>
+<rect x="213" y="4" width="234" height="54" rx="8" fill="#f5f6f9" stroke="#e3e6ec"/>
+<text x="330.0" y="26" text-anchor="middle" font-size="16" font-weight="700" fill="#1d2430">평지 칸</text>
+<text x="330.0" y="47" text-anchor="middle" font-size="13" fill="#5b6577">경사 5° 미만 · 전체 칸의 24.2%</text>
+<rect x="453" y="4" width="234" height="54" rx="8" fill="#f5f6f9" stroke="#e3e6ec"/>
+<text x="570.0" y="26" text-anchor="middle" font-size="16" font-weight="700" fill="#1d2430">중간 칸</text>
+<text x="570.0" y="47" text-anchor="middle" font-size="13" fill="#5b6577">경사 5~10° · 전체 칸의 13.8%</text>
+<rect x="693" y="4" width="234" height="54" rx="8" fill="#f5f6f9" stroke="#e3e6ec"/>
+<text x="810.0" y="26" text-anchor="middle" font-size="16" font-weight="700" fill="#1d2430">비탈 칸</text>
+<text x="810.0" y="47" text-anchor="middle" font-size="13" fill="#5b6577">경사 10° 이상 · 전체 칸의 59.4%</text>
+<text x="4" y="90" font-size="15" font-weight="700" fill="#a2461f">지금까지 soft (②③④)</text>
+<text x="196" y="126" text-anchor="end" font-size="14" font-weight="500" fill="#b5651d">산사태</text>
+<rect x="213" y="102" width="234" height="38" rx="6" fill="url(#hatch)"/>
+<text x="330.0" y="126" text-anchor="middle" font-size="14" font-weight="700" fill="#5b6577">1/100로 낮춤</text>
+<rect x="453" y="102" width="234" height="38" rx="6" fill="url(#hatch)"/>
+<text x="570.0" y="126" text-anchor="middle" font-size="14" font-weight="700" fill="#5b6577">1/100로 낮춤</text>
+<rect x="693" y="102" width="234" height="38" rx="6" fill="#f8efe6"/>
+<text x="810.0" y="126" text-anchor="middle" font-size="14" font-weight="500" fill="#b5651d">그대로 (USGS 값)</text>
+<text x="196" y="170" text-anchor="end" font-size="14" font-weight="500" fill="#2d62b3">액상화</text>
+<rect x="213" y="146" width="234" height="38" rx="6" fill="#e9f0fa"/>
+<text x="330.0" y="170" text-anchor="middle" font-size="14" font-weight="500" fill="#2d62b3">그대로 (USGS 값)</text>
+<rect x="453" y="146" width="234" height="38" rx="6" fill="url(#hatch)"/>
+<text x="570.0" y="170" text-anchor="middle" font-size="14" font-weight="700" fill="#5b6577">1/100로 낮춤</text>
+<rect x="693" y="146" width="234" height="38" rx="6" fill="url(#hatch)"/>
+<text x="810.0" y="170" text-anchor="middle" font-size="14" font-weight="700" fill="#5b6577">1/100로 낮춤</text>
+<rect x="450" y="98" width="240" height="90" rx="9" fill="none" stroke="#a2461f" stroke-width="2.5"/>
+<text x="4" y="220" font-size="15" font-weight="700" fill="#1d2430">고친 soft (--soft-mid, 다시 돌리는 중)</text>
+<text x="196" y="256" text-anchor="end" font-size="14" font-weight="500" fill="#b5651d">산사태</text>
+<rect x="213" y="232" width="234" height="38" rx="6" fill="url(#hatch)"/>
+<text x="330.0" y="256" text-anchor="middle" font-size="14" font-weight="700" fill="#5b6577">1/100로 낮춤</text>
+<rect x="453" y="232" width="234" height="38" rx="6" fill="#f8efe6"/>
+<text x="570.0" y="256" text-anchor="middle" font-size="14" font-weight="500" fill="#b5651d">그대로 (USGS 값)</text>
+<rect x="693" y="232" width="234" height="38" rx="6" fill="#f8efe6"/>
+<text x="810.0" y="256" text-anchor="middle" font-size="14" font-weight="500" fill="#b5651d">그대로 (USGS 값)</text>
+<text x="196" y="300" text-anchor="end" font-size="14" font-weight="500" fill="#2d62b3">액상화</text>
+<rect x="213" y="276" width="234" height="38" rx="6" fill="#e9f0fa"/>
+<text x="330.0" y="300" text-anchor="middle" font-size="14" font-weight="500" fill="#2d62b3">그대로 (USGS 값)</text>
+<rect x="453" y="276" width="234" height="38" rx="6" fill="#e9f0fa"/>
+<text x="570.0" y="300" text-anchor="middle" font-size="14" font-weight="500" fill="#2d62b3">그대로 (USGS 값)</text>
+<rect x="693" y="276" width="234" height="38" rx="6" fill="url(#hatch)"/>
+<text x="810.0" y="300" text-anchor="middle" font-size="14" font-weight="700" fill="#5b6577">1/100로 낮춤</text>
+<text x="4" y="350" font-size="15" font-weight="700" fill="#1d2430">참고: 끄기 지도 (⑤)</text>
+<text x="196" y="386" text-anchor="end" font-size="14" font-weight="500" fill="#b5651d">산사태</text>
+<rect x="213" y="362" width="234" height="38" rx="6" fill="#d5d9e0"/>
+<text x="330.0" y="386" text-anchor="middle" font-size="14" font-weight="700" fill="#1d2430">0으로 끔</text>
+<rect x="453" y="362" width="234" height="38" rx="6" fill="#f8efe6"/>
+<text x="570.0" y="386" text-anchor="middle" font-size="14" font-weight="500" fill="#b5651d">그대로 (USGS 값)</text>
+<rect x="693" y="362" width="234" height="38" rx="6" fill="#f8efe6"/>
+<text x="810.0" y="386" text-anchor="middle" font-size="14" font-weight="500" fill="#b5651d">그대로 (USGS 값)</text>
+<text x="196" y="430" text-anchor="end" font-size="14" font-weight="500" fill="#2d62b3">액상화</text>
+<rect x="213" y="406" width="234" height="38" rx="6" fill="#e9f0fa"/>
+<text x="330.0" y="430" text-anchor="middle" font-size="14" font-weight="500" fill="#2d62b3">그대로 (USGS 값)</text>
+<rect x="453" y="406" width="234" height="38" rx="6" fill="#e9f0fa"/>
+<text x="570.0" y="430" text-anchor="middle" font-size="14" font-weight="500" fill="#2d62b3">그대로 (USGS 값)</text>
+<rect x="693" y="406" width="234" height="38" rx="6" fill="#d5d9e0"/>
+<text x="810.0" y="430" text-anchor="middle" font-size="14" font-weight="700" fill="#1d2430">0으로 끔</text>
+</svg></div>
+    <figcaption>칸마다 경사가 하나라 세 구간 중 하나로 정해집니다. 빗금 = 사전확률 1/100로 낮춤, 진한 회색 = 사후확률을 0으로 고정(끄기). 빨간 테두리가 문제였던 곳입니다. 물 칸(2.5%)은 셋 다 아님.</figcaption>
+  </figure>
+
+  <h3>실제 칸 하나: 2016 구마모토 · 甲佐町, 경사 5.5° (<code>4830769322</code>)</h3>
+  <div class="tw"><table>
+    <tr><th></th><th class="num"><span class="tag t-ls">산사태</span> 사전확률</th><th class="num"><span class="tag t-lq">액상화</span> 사전확률</th></tr>
+    <tr><td>USGS 값 (면적 평균)</td><td class="num">0.0175</td><td class="num">0.0663</td></tr>
+    <tr><td>로짓</td><td class="num">-4.03</td><td class="num">-2.64</td></tr>
+    <tr><td class="down">지금까지 soft: 로짓 − 4.6</td><td class="num down">-8.63 이면 0.00018</td><td class="num down">-7.25 이면 0.00071</td></tr>
+    <tr><td class="up">고친 soft: 그대로</td><td class="num up">0.0175</td><td class="num up">0.0663</td></tr>
+  </table></div>
+  <p class="meta">USGS는 이 칸에 액상화 6.6%, 산사태 1.8%를 주는데, 지금까지 soft는 둘 다 약 100분의 1로 만들어 "이 칸에서는 아무것도 안 일어난다"고 미리 정한 셈이었습니다.</p>
+
+  <h3>왜 이렇게 됐나, 시정촌 단위에서는 괜찮았나</h3>
+  <div class="grid2">
+    <div class="card"><h3>시정촌 단위: 비율이라 문제 거의 없음</h3>
+      <p class="meta">시정촌 안에 비탈·평지·중간 칸이 섞여 있어 <b>비율</b>의 log를 더합니다. 예: 熊本市는 비탈 20%, 평지 66%라서 산사태 log 0.20 = −1.60, 액상화 log 0.66 = −0.42. 중간 칸은 두 비율을 조금씩 줄일 뿐이고, 시정촌 전체가 중간 경사인 곳은 거의 없어 "둘 다 −4.6"은 사실상 안 생깁니다.</p></div>
+    <div class="card"><h3>칸 단위: 비율이 0 아니면 1</h3>
+      <p class="meta">같은 식을 칸에 그대로 옮기면 칸 하나의 비탈 비율은 (경사 ≥ 10°), 평지 비율은 (경사 &lt; 5°)라서 0 또는 1입니다. 5~10° 칸은 두 비율이 모두 0, 1% 바닥값으로 잘려 둘 다 log 0.01 = −4.6이 됩니다. 일부러 정한 규칙이 아니라 식을 옮기다 생긴 부작용입니다.</p></div>
+  </div>
+
+  <h3>무엇을 고쳤나, 무엇을 다시 돌리나</h3>
+  <ul>
+    <li><b>고친 규칙</b> (<code>run_cells_max.py --soft-mid</code>): 산사태는 경사 5° 미만 칸만, 액상화는 경사 10° 이상 칸만 낮춤. 5~10° 칸은 둘 다 USGS 값 그대로. 끄기 지도(⑤)가 5~10° 칸을 둘 다 켜 두는 것과 같아짐</li>
+    <li><b>다시 돌리는 것</b>: soft를 쓰는 ② · ③ · ④만, seed 0 다음 seed 1 (<code>run_cells_softmid.bat</code>, 결과 폴더 끝 <code>_aw_mid</code>, 기존 결과는 그대로 둠)</li>
+    <li><b>안 돌려도 되는 것</b>: ⑤ 끄기 지도 + U (원래 5~10° 칸 둘 다 켬), ① baseline (soft 없음), 시정촌 단위 실험 (비율이라 영향 거의 없음)</li>
+    <li>5° · 10° 기준 자체는 결과를 보기 전에 <code>terrain_fractions.py</code>에서 정한 값으로, 원본 LOCAL.mat에서 가져온 것이 아닙니다. 논문은 "액상화는 평지, 산사태는 비탈" 정도만 말합니다</li>
+  </ul>
+</section>
+
 <section>
   <h2><span class="n">★</span>토지이용과 물 칸</h2>
   <h3>토지이용 자료란</h3>
@@ -511,6 +603,7 @@ body{background:#fff}
     <tr><td>③ soft + U (끄기만)</td><td class="yes">○</td><td class="yes">○</td><td class="no">✗</td><td>연구실 PC</td><td>✅ 완료 · 아래 결과 · <b>seed 1 완료 (2.10)</b></td></tr>
     <tr><td>④ soft + U (분산만)</td><td class="yes">○</td><td class="no">✗</td><td class="yes">○</td><td>연구실 PC</td><td>✅ 완료 · 아래 결과 · <b>seed 1 완료 (2.10)</b></td></tr>
     <tr><td>⑤ 끄기 지도 + U</td><td class="no">✗ (끄기 지도로 0 고정)</td><td class="yes">○</td><td class="yes">○</td><td>연구실 PC</td><td>✅ 완료 · 아래 결과 · <b>seed 1 완료 (2.10)</b></td></tr>
+    <tr><td>②③④ 다시: 5~10° 칸 고친 soft (<a href="#softmid">★ 5~10° 칸 문제</a>)</td><td class="yes">○ (고침)</td><td>②③과 같음</td><td>②④와 같음</td><td>연구실 PC</td><td>🔄 seed 0 진행 중 (10.21 저녁 시작) · 다음 seed 1</td></tr>
   </table></div>
   <p class="meta">seed 1은 10.21 연구실 PC에서 5개 모두 끝남 (2.10). USGS 값 = 칸과 겹친 USGS 칸들의 면적 평균 (<code>raw/local_250m_byevent_usgs_aw.csv.gz</code>, 결과 폴더 끝 <code>_aw</code>). U 끄기는 논문 기준(불확실도 0·999만). 모두 BD 없음, flow K = 4, 3000 epoch, seed 0. 한 실험에 약 77분</p>
 </section>
@@ -534,7 +627,7 @@ body{background:#fff}
   <div class="tw"><table>
     <tr><th>실험</th><th>BD</th><th>불가능한 재해 끄기</th><th>soft (사전확률 깎기)</th><th>U 끄기</th><th>U 분산 (r⁰)</th><th>돌린 곳</th></tr>
     <tr><td>① baseline</td><td>없음</td><td>없음</td><td>없음</td><td>없음</td><td>모두 1</td><td>연구실 PC</td></tr>
-    <tr><td>② soft + U</td><td>없음</td><td>U로만</td><td>비탈 칸 액상화 · 평지 칸 산사태 · 중간 칸 둘 다 로짓 −4.6</td><td>불확실도 0·999 칸 = 0</td><td>그 칸의 USGS 불확실도</td><td>연구실 PC</td></tr>
+    <tr><td>② soft + U</td><td>없음</td><td>U로만</td><td>비탈 칸 액상화 · 평지 칸 산사태 · 중간 칸 둘 다 로짓 −4.6 (중간 칸은 부작용, <a href="#softmid">고쳐서 다시 돌리는 중</a>)</td><td>불확실도 0·999 칸 = 0</td><td>그 칸의 USGS 불확실도</td><td>연구실 PC</td></tr>
     <tr><td>③ soft + U (끄기만)</td><td>없음</td><td>U로만</td><td>SOFTU와 같음</td><td>불확실도 0·999 칸 = 0</td><td>모두 1</td><td>연구실 PC</td></tr>
     <tr><td>④ soft + U (분산만)</td><td>없음</td><td>없음</td><td>SOFTU와 같음</td><td>없음</td><td>그 칸의 USGS 불확실도 (0·999 칸은 1)</td><td>연구실 PC</td></tr>
     <tr><td>⑤ 끄기 지도 + U</td><td>없음</td><td>끄기 지도 + U: 비탈 칸 액상화 · 평지 칸 산사태 = 0 (중간 칸은 둘 다 켬)</td><td>없음</td><td>불확실도 0·999 칸 = 0</td><td>그 칸의 USGS 불확실도</td><td>연구실 PC</td></tr>
@@ -829,6 +922,7 @@ body{background:#fff}
   <ul>
     <li>완료: 면적 평균 5개 실험 (10.20, 연구실 PC)</li>
     <li>완료: seed 1 다섯 개 모두 (10.21, 연구실 PC). 결과는 2.10, 두 seed 평균은 2 · 2.9 · 3에도 덧붙임</li>
+    <li>진행 중: 5~10° 칸을 고친 soft로 ② · ③ · ④ 다시 (seed 0 · 1). 끝나면 지금 결과와 나란히 비교</li>
     <li>교수님 확인 (10.20): 칸(픽셀) 단위 실험은 학습도 픽셀 단위로 하는 것이 맞음 → 지금 방식 그대로</li>
     <li>나중에: 칸 단위 soft만 · U만 (효과 나눠 보기), flow K = 8, base 상관도로 잡음 칸 거르기, 시정촌으로 모으는 방법(최댓값 대 평균) 비교, GPU로 돌리기</li>
   </ul>
