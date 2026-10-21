@@ -401,6 +401,34 @@ mu = 6 * tanh((self.mu(α) + mu_local) / 6)
     </table></div>
   </div>
 
+  <h3>u, w, b는 어떻게 만드나: 원본 Linear(N, K·N) 대 우리 Linear(1, 3K) + 칸별 보정</h3>
+  <div class="cols">
+    <div class="code o"><div class="ch">원본 model.py (N = 배치 안 칸 수, K = 8)</div><pre><code>amor_u = Sequential(Linear(N, K*N), Hardtanh(-1, 1))
+amor_w = Sequential(Linear(N, K*N), Hardtanh(-1, 1))
+amor_b = Sequential(Linear(N, K),   Hardtanh(-1, 1))
+
+u = amor_u(a1).view(-1, K, N, 1)   # 배치 전체 α 벡터를 넣음
+w = amor_w(a1).view(-1, K, 1, N)
+b = amor_b(a1).view(-1, K, 1, 1)
+# k번째 밀기: 배치 전체를 한 벡터 z로
+f_z = z + u * tanh(w @ z + b)      # w @ z = 모든 칸을 섞은 숫자 하나</code></pre></div>
+    <div class="code u"><div class="ch">우리 model.py (K = 4)</div><pre><code>amor = Linear(1, 3*K)                     # 칸 하나의 α → 12개 (u, w, b × 4)
+flow_local = Parameter(randn(n_rows, 3*K)) # 칸마다 12개씩 보정
+
+uwb = 0.99 * tanh(amor(α) + flow_local)   # 칸마다 u, w, b 4쌍
+# k번째 밀기: 칸마다 따로
+t = tanh(w * r + b)                       # 그 칸의 r만 씀
+r = r + u * t</code></pre></div>
+  </div>
+  <div class="tw"><table>
+    <tr><th></th><th>원본</th><th>우리</th></tr>
+    <tr><td>u, w, b를 만드는 층</td><td><code>Linear(N, K·N)</code>: 배치 칸 N개의 α를 한꺼번에 넣어 N × K개를 냄 (N = 1,000이면 가중치 약 800만 개 × 2, N = 8,109면 약 10억 개)</td><td><code>Linear(1, 3K)</code>: 칸 하나의 α를 넣어 12개를 냄 (가중치 24개, 모든 칸이 같이 씀) + 칸별 보정 <code>flow_local</code> (칸마다 12개)</td></tr>
+    <tr><td>칸마다 다른 u, w, b</td><td>층의 출력 자리마다 가중치가 따로라 결과적으로 칸마다 다름</td><td>공통 층 값 + 칸별 보정이라 칸마다 다름</td></tr>
+    <tr><td>한 번 미는 식</td><td>z<sub>새</sub> = z + u · tanh(w<sup>T</sup>z + b). w<sup>T</sup>z는 배치의 모든 칸 값을 섞은 숫자 하나라, 한 단계에서 모든 칸이 <b>같은 tanh 값</b>을 받고 칸마다 다른 것은 u<sub>i</sub>뿐</td><td>r<sub>새</sub> = r + u · tanh(w · r + b). 칸마다 자기 r, w, b로 tanh를 따로 계산 (논문 식 3)</td></tr>
+    <tr><td>최대로 미는 양</td><td>한 번에 1, 8번이면 8</td><td>한 번에 0.99, 4번이면 약 4</td></tr>
+  </table></div>
+  <p>즉 둘 다 "칸마다 다르게 민다"는 점은 같지만, 원본은 거대한 층 하나가 배치 전체를 보고 칸마다 u를 정하고 tanh는 배치 전체가 공유하는 반면, 우리는 작은 공통 층과 칸별 보정으로 칸마다 u, w, b를 정하고 tanh도 칸마다 따로 계산합니다. 어떻게 미는지는 바로 아래 "flow는 어떻게 미나" 표에 4번 미는 실제 계산이 있습니다.</p>
+
   <h3>flow는 어떻게 미나: 식과 실제 계산</h3>
   <p class="note" style="font-size:16px;text-align:center"><b>r<sub>k</sub> = r<sub>k−1</sub> + u<sub>k</sub> · tanh(w<sub>k</sub> · r<sub>k−1</sub> + b<sub>k</sub>)</b> &nbsp; (k = 1, 2, 3, 4)</p>
   <p>u<sub>k</sub>는 미는 크기와 방향(−0.99 ~ 0.99), w<sub>k</sub>와 b<sub>k</sub>는 지금 값 r에 따라 tanh가 얼마가 될지 정합니다. 그래서 <b>현재 위치에 따라 밀리는 양이 달라집니다</b>. u, w, b는 칸마다, 그리고 4번 모두 다르며, 공통 층이 α로 만든 값에 칸별 보정값을 더해 정합니다.</p>
