@@ -356,8 +356,46 @@ body{background:#fff}
       <li>끄기 기준 비교도 새 U에서 차이 0.002 이하 → 논문 기준 유지</li>
     </ul></div></div>
     <div class="row"><b>다음</b><div><ul>
-      <li>칸 단위 seed 1로 흔들림 확인</li>
+      <li>칸 단위 seed 1로 흔들림 확인 (10.21 완료)</li>
       <li>10.22 (목) 랩미팅 발표자료</li>
+    </ul></div></div>
+  </div>
+</article>
+<article class="entry">
+  <div class="date"><span class="d">10.21</span><span class="w">수</span></div>
+  <div class="body">
+    <h2>칸 단위 seed 1: 5개 실험 흔들림 확인</h2>
+    <span class="status done">완료</span>
+    <div class="row"><b>목적</b><div><p>칸 단위 면적 평균 5개 실험을 무작위 순서(seed)만 바꿔 한 번 더 돌려, seed 0의 결론("칸 단위는 끄기가 핵심")이 흔들림 때문이 아닌지 확인한다.</p></div></div>
+    <div class="row"><b>방법</b><div><ul>
+      <li>설정은 10.20 면적 평균 실험과 같고 seed만 1 (<code>run_cells_aw_seed1.bat</code>, 연구실 PC, 순서 ⑤ ① ② ③ ④)</li>
+      <li>칸 결과(<code>cells_*_seed1.csv.gz</code>)를 시정촌으로 모아 <code>compare_latest</code>로 채점. 기본은 칸 최댓값, 섞기는 산사태만 칸 평균</li>
+    </ul></div></div>
+    <div class="row"><b>결과</b><div>
+      <div class="tw"><table>
+        <tr><th>칸 단위 면적 평균 (전체 AUC)</th><th class="num">seed 0</th><th class="num">seed 1</th><th class="num">평균</th><th class="num">섞기 평균</th></tr>
+        <tr><td>⑤ 끄기 지도 + U</td><td class="num">0.797</td><td class="num">0.821</td><td class="num"><b>0.809</b></td><td class="num">0.824</td></tr>
+        <tr><td>③ soft + U (끄기만)</td><td class="num">0.775</td><td class="num">0.827</td><td class="num"><b>0.801</b></td><td class="num">0.800</td></tr>
+        <tr><td>② soft + U</td><td class="num">0.793</td><td class="num">0.805</td><td class="num"><b>0.799</b></td><td class="num">0.812</td></tr>
+        <tr><td>④ soft + U (분산만)</td><td class="num">0.619</td><td class="num">0.745</td><td class="num"><b>0.682</b></td><td class="num">0.688</td></tr>
+        <tr><td>① baseline</td><td class="num">0.617</td><td class="num">0.679</td><td class="num"><b>0.648</b></td><td class="num">0.645</td></tr>
+        <tr><td class="muted">USGS 기준선</td><td class="num" colspan="4">0.854</td></tr>
+      </table></div>
+      <p class="meta">자세한 표 · 그래프 · 지진별은 칸 단위 실험 기록 2.10. 결과 폴더 <code>cells_max_*_aw/predictions_seed1.csv</code></p>
+    </div></div>
+    <div class="row"><b>고찰</b><div><ul>
+      <li>끄기가 있는 ⑤ · ③ · ②는 두 seed 평균 0.80 근처로 사실상 같고, 끄기가 없는 ④ · ①은 0.65 ~ 0.68로 낮음. seed 0 결론 그대로</li>
+      <li>seed 차이(최대 0.05, ③ · ④)가 끄기 있는 실험끼리의 차이(0.01)보다 커서 ⑤ · ③ · ② 중 순위를 매기기는 어려움</li>
+      <li>가장 크게 흔들리는 곳은 훗카이도 액상화(⑤ 0.619 대 0.754)와 ④의 노토반도 액상화(0.317 대 0.758). seed 0에서 칸 최댓값이 천장(0.99 이상)에 붙은 시정촌이 많았던 것이 원인</li>
+      <li>섞기(산사태 칸 평균)는 ⑤ · ②에서 두 seed 모두 오름 (⑤ 0.824). 결과를 보고 고른 조합이라 참고용</li>
+    </ul></div></div>
+    <div class="row"><b>함께 한 것</b><div><ul>
+      <li>원본 대 우리 코드 페이지 정리: 출발점(c, δ, 6·tanh) 한 흐름 도식, flow 층별 식 비교와 계산 예시, 학습된 a · c · δ 실제 값, DPM 배경 빼기 설명</li>
+      <li>실제 학습된 c는 −0.8 ~ 1이라 출발점을 USGS 수준까지 내리지는 않음 (출발 확률 약 26% · 74%). 출발점 입력은 원문대로 α 그대로 두기로 함</li>
+    </ul></div></div>
+    <div class="row"><b>다음</b><div><ul>
+      <li>10.22 (목) 랩미팅 발표</li>
+      <li>필요하면 seed 2로 세 개 평균, c · δ · 6·tanh를 하나씩 뺀 실험</li>
     </ul></div></div>
   </div>
 </article>
