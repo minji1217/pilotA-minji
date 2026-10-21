@@ -827,6 +827,86 @@ A, e: 모든 칸이 같은 값 (K = 4면 u·w·b 합쳐 24개)
     </table></div>
     <p><b>한 줄로</b>: 둘 다 칸마다 다른 u · w · b를 만듭니다. 원본은 "모든 칸의 α를 섞는 거대한 표"로, 우리는 "모든 칸이 같이 쓰는 작은 규칙 + 칸별 보정"으로 만듭니다. 원본 표의 편향₁, 편향₂, …는 우리의 칸별 보정과 비슷한 역할입니다 (다만 배치가 여러 개면 원본은 "배치 안의 같은 자리"끼리 편향을 같이 쓰므로, 칸마다 완전히 따로인 우리 보정과는 조금 다릅니다).</p>
   </div>
+  <div class="expl" id="flow-2layer-eq"><p class="eh">2층으로 늘리면: 식이 층별로 어떻게 되나 (칸 3개)</p>
+    <p>칸이 3개(α₁, α₂, α₃)이고 flow가 2층이면, 먼저 u · w · b를 층마다 만들고(1단계), 그걸로 층마다 밉니다(2단계).</p>
+    <p class="lb">1단계: u · w · b 만들기</p>
+    <div class="cols">
+      <div class="code o"><div class="ch">원본 Linear(N, K·N) = Linear(3, 6)</div><pre><code>입력: [α₁, α₂, α₃]   (배치의 모든 칸을 한꺼번에)
+
+[1층]
+u¹₁ = W₁₁·α₁ + W₁₂·α₂ + W₁₃·α₃ + 편향₁
+u¹₂ = W₂₁·α₁ + W₂₂·α₂ + W₂₃·α₃ + 편향₂
+u¹₃ = W₃₁·α₁ + W₃₂·α₂ + W₃₃·α₃ + 편향₃
+[2층]
+u²₁ = W₄₁·α₁ + W₄₂·α₂ + W₄₃·α₃ + 편향₄
+u²₂ = W₅₁·α₁ + W₅₂·α₂ + W₅₃·α₃ + 편향₅
+u²₃ = W₆₁·α₁ + W₆₂·α₂ + W₆₃·α₃ + 편향₆
+
+w¹₁ … w²₃ 도 같은 모양 (다른 가중치 표)
+b¹, b²  = 층마다 하나 (세 칸 공통)
+          Linear(3, 2): b^k = V_k1·α₁ + V_k2·α₂ + V_k3·α₃ + 편향
+모두 Hardtanh로 −1 ~ 1에서 자름
+
+u용 가중치 6 × 3 = 18개, w용 18개, b용 6개
+칸 N, 층 K면 N × N × K개씩</code></pre></div>
+      <div class="code u"><div class="ch">우리 Linear(1, 3K) = Linear(1, 6) + flow_local</div><pre><code>입력: 칸 하나의 α (칸마다 따로)
+
+칸 i 하나에 대해 6개를 한 번에:
+[u¹ᵢ, w¹ᵢ, b¹ᵢ, u²ᵢ, w²ᵢ, b²ᵢ]
+  = 0.99 · tanh( A · αᵢ + e + 보정ᵢ )
+
+즉 칸 1:
+u¹₁ = 0.99·tanh(A₁·α₁ + e₁ + 보정₁,₁)
+w¹₁ = 0.99·tanh(A₂·α₁ + e₂ + 보정₁,₂)
+b¹₁ = 0.99·tanh(A₃·α₁ + e₃ + 보정₁,₃)
+u²₁ = 0.99·tanh(A₄·α₁ + e₄ + 보정₁,₄)
+w²₁, b²₁ 도 같은 방식
+칸 2, 3은 α₁ 자리에 α₂, α₃, 보정₁ 자리에 보정₂, 보정₃
+
+A, e: 6개씩, 모든 칸이 같은 값 (12개)
+보정: 칸마다 6개 (층 K면 3K개)</code></pre></div>
+    </div>
+    <p class="lb" style="margin-top:6px">2단계: 층마다 밀기 (출발값 z⁰ 또는 r⁰에서)</p>
+    <div class="cols">
+      <div class="code o"><div class="ch">원본: 배치 전체를 한 벡터로</div><pre><code>출발: zᵢ⁰ = sigmoid(μᵢ + √분산·εᵢ)   (0 ~ 1)
+
+[1층]
+s¹ = w¹₁·z₁⁰ + w¹₂·z₂⁰ + w¹₃·z₃⁰ + b¹   (세 칸을 섞은 숫자 하나)
+z₁¹ = z₁⁰ + u¹₁ · tanh(s¹)
+z₂¹ = z₂⁰ + u¹₂ · tanh(s¹)
+z₃¹ = z₃⁰ + u¹₃ · tanh(s¹)
+
+[2층]
+s² = w²₁·z₁¹ + w²₂·z₂¹ + w²₃·z₃¹ + b²
+z₁² = z₁¹ + u²₁ · tanh(s²)
+z₂² = z₂¹ + u²₂ · tanh(s²)
+z₃² = z₃¹ + u²₃ · tanh(s²)
+
+끝: qᵢ = sigmoid(zᵢ²)   (뽑기 1개)</code></pre></div>
+      <div class="code u"><div class="ch">우리: 칸마다 따로</div><pre><code>출발: rᵢ⁰ = μᵢ + √분산·εᵢ,  μᵢ = 6·tanh((a·αᵢ + c + δᵢ)/6)
+
+[1층]
+r₁¹ = r₁⁰ + u¹₁ · tanh(w¹₁·r₁⁰ + b¹₁)
+r₂¹ = r₂⁰ + u¹₂ · tanh(w¹₂·r₂⁰ + b¹₂)
+r₃¹ = r₃⁰ + u¹₃ · tanh(w¹₃·r₃⁰ + b¹₃)
+
+[2층]
+r₁² = r₁¹ + u²₁ · tanh(w²₁·r₁¹ + b²₁)
+r₂² = r₂¹ + u²₂ · tanh(w²₂·r₂¹ + b²₂)
+r₃² = r₃¹ + u²₃ · tanh(w²₃·r₃¹ + b²₃)
+
+끝: qᵢ = sigmoid(rᵢ²)의 256개 평균</code></pre></div>
+    </div>
+    <div class="tw"><table>
+      <tr><th>층별로 보면</th><th>원본</th><th>우리</th></tr>
+      <tr><td>tanh 안</td><td>s^k = 세 칸 값을 w로 섞은 <b>숫자 하나</b> (모든 칸 공통)</td><td>w^k_i · r_i + b^k_i, <b>칸마다 따로</b></td></tr>
+      <tr><td>칸마다 다른 것</td><td>u만 (w, b는 섞는 데 쓰임)</td><td>u, w, b 모두</td></tr>
+      <tr><td>칸 2의 값이 칸 1에 영향</td><td>있음 (s^k를 통해)</td><td>없음</td></tr>
+      <tr><td>b</td><td>층마다 하나, 세 칸 공통</td><td>층마다 칸마다 하나</td></tr>
+      <tr><td>층 수</td><td>8 (예시는 2)</td><td>4 (예시는 2)</td></tr>
+    </table></div>
+    <p>위첨자(¹, ²)는 층, 아래첨자(₁, ₂, ₃)는 칸입니다. 실제 숫자를 넣어 끝까지 계산한 결과는 바로 아래 그래프와 표에 있습니다.</p>
+  </div>
   <div class="expl" id="flow-2layer"><p class="eh">더 실제처럼: 칸 3개 · flow 2층으로 끝까지 계산해 보기 (숫자는 설명용)</p>
 <p>칸 3개의 USGS α = 0.001, 0.001, 0.05 (칸 1, 2는 α가 같음). 칸 1은 DPM이 크고 칸 2는 작다고 가정합니다. 뽑기 잡음 ε = 0으로 두어 계산만 봅니다.</p>
 <figure><svg viewBox="0 0 1000 380" class="fig" role="img" aria-label="칸 3개 flow 2층 계산을 확률로 본 그림"><text x="10" y="24" class="fs b" style="fill:#a0612a">원본: 0.62 근처에서 출발해 좁은 범위에 머묾</text><line x1="50" y1="300" x2="440" y2="300" stroke="#eef2f6"/><text x="44" y="304" text-anchor="end" class="ft">0</text><line x1="50" y1="238" x2="440" y2="238" stroke="#eef2f6"/><text x="44" y="242" text-anchor="end" class="ft">0.25</text><line x1="50" y1="175" x2="440" y2="175" stroke="#eef2f6"/><text x="44" y="179" text-anchor="end" class="ft">0.5</text><line x1="50" y1="112" x2="440" y2="112" stroke="#eef2f6"/><text x="44" y="116" text-anchor="end" class="ft">0.75</text><line x1="50" y1="50" x2="440" y2="50" stroke="#eef2f6"/><text x="44" y="54" text-anchor="end" class="ft">1</text><text x="50" y="318" text-anchor="middle" class="ft">출발점</text><text x="245" y="318" text-anchor="middle" class="ft">1층 뒤</text><text x="440" y="318" text-anchor="middle" class="ft">2층 뒤 = q</text><polyline points="50,144 245,130 440,135" fill="none" stroke="#b03a2e" stroke-width="2.6"/><circle cx="50" cy="144" r="4" fill="#b03a2e"/><circle cx="245" cy="130" r="4" fill="#b03a2e"/><circle cx="440" cy="135" r="4" fill="#b03a2e"/><text x="448" y="127" class="ft" style="fill:#b03a2e;font-weight:700">0.66</text><polyline points="50,144 245,155 440,145" fill="none" stroke="#1f4f7a" stroke-width="2.6"/><circle cx="50" cy="144" r="4" fill="#1f4f7a"/><circle cx="245" cy="155" r="4" fill="#1f4f7a"/><circle cx="440" cy="145" r="4" fill="#1f4f7a"/><text x="448" y="149" class="ft" style="fill:#1f4f7a;font-weight:700">0.62</text><polyline points="50,143 245,137 440,145" fill="none" stroke="#7d8fa1" stroke-width="2.6"/><circle cx="50" cy="143" r="4" fill="#7d8fa1"/><circle cx="245" cy="137" r="4" fill="#7d8fa1"/><circle cx="440" cy="145" r="4" fill="#7d8fa1"/><text x="448" y="161" class="ft" style="fill:#7d8fa1;font-weight:700">0.62</text><text x="10" y="342" class="ft" style="fill:#1b2430">sigmoid ① 때문에 모두 0.62에서 출발. tanh가 세 칸 공통이라 u만으로 갈려 0.58 ~ 0.68에 머묾</text><text x="530" y="24" class="fs b" style="fill:#1f7a6b">우리: δ로 출발점부터 갈리고, 칸마다 따로 다듬음</text><line x1="570" y1="300" x2="960" y2="300" stroke="#eef2f6"/><text x="564" y="304" text-anchor="end" class="ft">0</text><line x1="570" y1="238" x2="960" y2="238" stroke="#eef2f6"/><text x="564" y="242" text-anchor="end" class="ft">0.25</text><line x1="570" y1="175" x2="960" y2="175" stroke="#eef2f6"/><text x="564" y="179" text-anchor="end" class="ft">0.5</text><line x1="570" y1="112" x2="960" y2="112" stroke="#eef2f6"/><text x="564" y="116" text-anchor="end" class="ft">0.75</text><line x1="570" y1="50" x2="960" y2="50" stroke="#eef2f6"/><text x="564" y="54" text-anchor="end" class="ft">1</text><text x="570" y="318" text-anchor="middle" class="ft">출발점</text><text x="765" y="318" text-anchor="middle" class="ft">1층 뒤</text><text x="960" y="318" text-anchor="middle" class="ft">2층 뒤 = q</text><polyline points="570,96 765,85 960,98" fill="none" stroke="#b03a2e" stroke-width="2.6"/><circle cx="570" cy="96" r="4" fill="#b03a2e"/><circle cx="765" cy="85" r="4" fill="#b03a2e"/><circle cx="960" cy="98" r="4" fill="#b03a2e"/><text x="968" y="102" class="ft" style="fill:#b03a2e;font-weight:700">0.81</text><polyline points="570,262 765,252 960,253" fill="none" stroke="#1f4f7a" stroke-width="2.6"/><circle cx="570" cy="262" r="4" fill="#1f4f7a"/><circle cx="765" cy="252" r="4" fill="#1f4f7a"/><circle cx="960" cy="253" r="4" fill="#1f4f7a"/><text x="968" y="257" class="ft" style="fill:#1f4f7a;font-weight:700">0.19</text><polyline points="570,144 765,143 960,149" fill="none" stroke="#7d8fa1" stroke-width="2.6"/><circle cx="570" cy="144" r="4" fill="#7d8fa1"/><circle cx="765" cy="143" r="4" fill="#7d8fa1"/><circle cx="960" cy="149" r="4" fill="#7d8fa1"/><text x="968" y="153" class="ft" style="fill:#7d8fa1;font-weight:700">0.61</text><text x="530" y="342" class="ft" style="fill:#1b2430">칸 1, 2는 α가 같지만 δ(+2.5, −0.8)로 출발점이 갈림. flow는 칸마다 따로</text><rect x="60" y="366" width="12" height="4" fill="#b03a2e"/><text x="78" y="372" class="ft" style="fill:#1b2430">칸 1 (α 0.001, DPM 큼)</text><rect x="360" y="366" width="12" height="4" fill="#1f4f7a"/><text x="378" y="372" class="ft" style="fill:#1b2430">칸 2 (α 0.001, DPM 작음)</text><rect x="660" y="366" width="12" height="4" fill="#7d8fa1"/><text x="678" y="372" class="ft" style="fill:#1b2430">칸 3 (α 0.05)</text></svg><p class="ft" style="margin-top:6px">세로축: 그 단계의 값을 sigmoid로 확률로 바꿔 읽은 것 (두 방식을 같은 눈금에서 비교하려고). 숫자는 아래 표와 같음.</p></figure>
