@@ -827,6 +827,36 @@ A, e: 모든 칸이 같은 값 (K = 4면 u·w·b 합쳐 24개)
     </table></div>
     <p><b>한 줄로</b>: 둘 다 칸마다 다른 u · w · b를 만듭니다. 원본은 "모든 칸의 α를 섞는 거대한 표"로, 우리는 "모든 칸이 같이 쓰는 작은 규칙 + 칸별 보정"으로 만듭니다. 원본 표의 편향₁, 편향₂, …는 우리의 칸별 보정과 비슷한 역할입니다 (다만 배치가 여러 개면 원본은 "배치 안의 같은 자리"끼리 편향을 같이 쓰므로, 칸마다 완전히 따로인 우리 보정과는 조금 다릅니다).</p>
   </div>
+  <div class="expl" id="flow-2layer"><p class="eh">더 실제처럼: 칸 3개 · flow 2층으로 끝까지 계산해 보기 (숫자는 설명용)</p>
+<p>칸 3개의 USGS α = 0.001, 0.001, 0.05 (칸 1, 2는 α가 같음). 칸 1은 DPM이 크고 칸 2는 작다고 가정합니다. 뽑기 잡음 ε = 0으로 두어 계산만 봅니다.</p>
+<div class="cols"><div>
+<p class="lb" style="color:var(--orig)">원본 (w_μ·w_a = 2, Linear(3, 6) 가중치는 임의 값)</p><div class="tw"><table><tr><th>단계</th><th>칸 1</th><th>칸 2</th><th>칸 3</th></tr>
+<tr><td>μ = 2·α</td><td>0.002</td><td>0.002</td><td>0.100</td></tr>
+<tr><td>sigmoid ① (0 ~ 1로 눌림)</td><td>0.500</td><td>0.500</td><td>0.525</td></tr>
+<tr><td>1층 u (칸마다)</td><td>0.615</td><td>−0.419</td><td>0.235</td></tr>
+<tr><td>1층 tanh(w·z + b) <span class="muted">(세 칸을 섞은 숫자 하나)</span></td><td colspan="3">w·z + b = 0.434, tanh = <b>0.409</b> (세 칸 모두 같은 값)</td></tr>
+<tr><td>1층 뒤 z = z + u·tanh</td><td>0.752</td><td>0.329</td><td>0.621</td></tr>
+<tr><td>2층 u (칸마다)</td><td>0.291</td><td>−0.480</td><td>0.411</td></tr>
+<tr><td>2층 tanh(w·z + b) <span class="muted">(세 칸을 섞은 숫자 하나)</span></td><td colspan="3">w·z + b = −0.335, tanh = <b>−0.323</b> (세 칸 모두 같은 값)</td></tr>
+<tr><td>2층 뒤 z = z + u·tanh</td><td>0.658</td><td>0.484</td><td>0.488</td></tr>
+<tr><td><b>sigmoid ② = q</b></td><td><b>0.659</b></td><td><b>0.619</b></td><td><b>0.620</b></td></tr></table></div>
+</div><div>
+<p class="lb" style="color:var(--ours)">우리 (a = 30, c = −1, δ = +2.5 · −0.8 · 0)</p><div class="tw"><table><tr><th>단계</th><th>칸 1</th><th>칸 2</th><th>칸 3</th></tr>
+<tr><td>μ = 6·tanh((30α − 1 + δ)/6)</td><td>1.498</td><td>−1.720</td><td>0.499</td></tr>
+<tr><td>1층 u, w, b (칸마다)</td><td>0.600, 0.457, −0.098</td><td>−0.374, 0.531, 0.000</td><td>0.288, 0.333, −0.074</td></tr>
+<tr><td>1층 tanh(w·r + b) <span class="muted">(칸마다 따로)</span></td><td>0.527</td><td>−0.723</td><td>0.092</td></tr>
+<tr><td>1층 뒤 r = r + u·tanh</td><td>1.814</td><td>−1.450</td><td>0.525</td></tr>
+<tr><td>2층 u, w, b (칸마다)</td><td>−0.457, 0.458, 0.288</td><td>0.001, 0.377, 0.195</td><td>−0.242, 0.488, 0.172</td></tr>
+<tr><td>2층 tanh(w·r + b) <span class="muted">(칸마다 따로)</span></td><td>0.807</td><td>−0.338</td><td>0.404</td></tr>
+<tr><td>2층 뒤 r = r + u·tanh</td><td>1.445</td><td>−1.450</td><td>0.427</td></tr>
+<tr><td><b>sigmoid = q</b></td><td><b>0.809</b></td><td><b>0.190</b></td><td><b>0.605</b></td></tr></table></div>
+</div></div>
+<ul>
+    <li><b>원본의 u는 사실상 편향값</b>: α가 0.001 근처라 W·α가 거의 0이고, u ≈ Hardtanh(편향)입니다 (칸 1의 1층 u = 0.615, 편향 0.6). 즉 원본은 "출력 자리마다의 편향"이 칸별 값 역할을 합니다.</li>
+    <li><b>원본은 tanh가 세 칸 공통</b>: w·z + b가 세 칸 값을 섞은 숫자 하나라, 한 층에서 모든 칸이 같은 tanh를 받고 u만 다릅니다. 칸 2(DPM 작음)를 낮추려 해도 그 tanh는 칸 1, 3에도 똑같이 작용합니다.</li>
+    <li><b>원본은 출발점이 0.5 근처</b>: sigmoid ① 때문에 세 칸 모두 0.5에서 출발하고, 2층으로는 멀리 못 가서 q가 0.62 ~ 0.66에 모였습니다.</li>
+    <li><b>우리는 δ로 출발점부터 갈림</b>: 칸 1(δ +2.5)은 1.50, 칸 2(δ −0.8)는 −1.72에서 출발하고, flow가 칸마다 따로 다듬어 q가 0.809 대 0.190로 갈립니다. α가 같은 칸 1, 2를 다르게 만든 것은 δ와 칸별 보정입니다.</li>
+  </ul></div>
   <h3 id="flow-why">왜 우리는 Linear(N, K·N)을 안 썼나</h3>
 <div class="tw"><table>
 <tr><th>경우</th><th>N (한 번에 넣는 칸 수)</th><th>Linear(N, K·N) 가중치 (u용 하나, K = 8)</th><th>우리 칸별 보정 (N × 12)</th></tr>
