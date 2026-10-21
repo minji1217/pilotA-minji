@@ -51,9 +51,11 @@ def load_cells(local_path, dpm_path, keep_water=False, off_rule="ours"):
     return c.sort_values(["event_idx", "muni_code", "mesh250"]).reset_index(drop=True)
 
 
-def to_rows(c, dpm_col, soft=False, unc=False, unc_mode="both", const_var=None, local_off=False):
+def to_rows(c, dpm_col, soft=False, soft_mid=False, unc=False, unc_mode="both", const_var=None, local_off=False):
     """soft: 시정촌 soft를 칸에 그대로 — 칸의 비탈 비율 = (경사 ≥ 10°), 평지 비율 = (경사 < 5°), 1% 미만은 1%로.
              칸은 경사가 하나라 비율이 0 아니면 1 → 비탈 칸은 액상화 로짓 −4.6, 평지 칸은 산사태 로짓 −4.6.
+             이대로면 중간 칸(5~10°)은 산사태·액상화 둘 다 −4.6이 된다.
+       soft_mid: 중간 칸은 깎지 않는다 (끄기 지도처럼 둘 다 가능) — 산사태는 경사 < 5°, 액상화는 경사 ≥ 10°만 −4.6.
        unc : 원 논문처럼 칸마다 USGS 불확실도 — 0·999 칸은 끄고, 나머지는 r⁰ 분산 = 그 칸의 불확실도.
        unc_mode: both = 끄기 + 분산 / off = 끄기만 (분산 1) / var = 분산만 (끄지 않음).
        const_var: 주면 모든 칸의 r⁰ 분산을 이 값으로 (USGS 불확실도 정보 없이 폭만 작게).
@@ -63,7 +65,10 @@ def to_rows(c, dpm_col, soft=False, unc=False, unc_mode="both", const_var=None, 
     n = len(c)
     log_frac = off = r0_var = None
     if soft:
-        fr = {"LS": (c["slope"] >= 10.0).astype(float), "LQ": (c["slope"] < 5.0).astype(float)}
+        if soft_mid:
+            fr = {"LS": (c["slope"] >= 5.0).astype(float), "LQ": (c["slope"] < 10.0).astype(float)}
+        else:
+            fr = {"LS": (c["slope"] >= 10.0).astype(float), "LQ": (c["slope"] < 5.0).astype(float)}
         log_frac = {k: torch.log(torch.as_tensor(v.clip(lower=0.01).to_numpy(), dtype=DTYPE)) for k, v in fr.items()}
         log_frac["BD"] = torch.zeros(n, dtype=DTYPE)
     if (unc and unc_mode in ("both", "off")) or local_off:
@@ -180,7 +185,7 @@ def _job_inner(args):
         return
     c = load_cells(a.local, a.dpm, a.keep_water, a.off_rule)
     c = c[c["이벤트"] == ev].reset_index(drop=True)
-    rows = to_rows(c, a.dpm_col, soft=a.soft, unc=a.unc, unc_mode=a.unc_mode, const_var=a.const_var, local_off=a.local_off)
+    rows = to_rows(c, a.dpm_col, soft=a.soft, soft_mid=a.soft_mid, unc=a.unc, unc_mode=a.unc_mode, const_var=a.const_var, local_off=a.local_off)
     ckpt = out / f"ckpt_{tag}_seed{seed}.pt"
     q, w = fit_cells(rows, epochs=a.epochs, seed=seed, tag=f"{ev} s{seed} {rows.n}칸", ckpt=ckpt)
     c = c.assign(p_ls=q["LS"].numpy(), p_lq=q["LQ"].numpy())
@@ -212,6 +217,7 @@ def main(argv=None):
     ap.add_argument("--dpm-col", default="DPM_배경차")
     ap.add_argument("--keep-water", action="store_true", help="물 칸(경우 0)도 쓴다")
     ap.add_argument("--soft", action="store_true", help="칸 경사로 soft (비탈 칸 액상화·평지 칸 산사태 로짓 −4.6)")
+    ap.add_argument("--soft-mid", action="store_true", help="--soft에서 중간 칸(5~10°)은 깎지 않음 (둘 다 가능)")
     ap.add_argument("--off-rule", choices=["ours", "paper"], default="ours",
                     help="--unc 끄기 판정: ours = 불확실도 0·999 또는 확률 0·999 / paper = 공식 코드처럼 불확실도 0·999만")
     ap.add_argument("--unc-mode", choices=["both", "off", "var"], default="both",
