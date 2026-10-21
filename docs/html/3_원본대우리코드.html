@@ -97,11 +97,19 @@ nav.toc{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:14px} nav.toc a{color
 <tr><td>④ <b>sigmoid</b> (여기서 한 번만)</td><td>sigmoid(−2.60)</td><td><b>0.069</b></td><td><b>확률</b></td></tr>
 <tr><td>⑤ 평균</td><td>② ~ ④를 8번(마지막엔 256번) 해서 평균</td><td>최종 q</td><td>확률</td></tr>
 </table></div>
+  <div class="note"><b>기호 정리: 식마다 들어가는 기호가 다릅니다</b>
+    <div class="tw"><table>
+      <tr><th>식</th><th>완전한 식</th><th>기호</th></tr>
+      <tr><td>1. 재해 발생 (사전)</td><td>logit p = w_0 + w_a·α + w_e·ε (+ log 가능한 땅 비율)</td><td>w_0 기본값 · w_a USGS 영향 · <b>w_e·ε</b> 잡음 (ε는 매번 새로 뽑는 표준정규 난수, w_e는 그 크기). 이 페이지 여러 곳에서 w_e·ε를 빼고 "logit p = w_0 + w_a·α"로 줄여 썼습니다</td></tr>
+      <tr><td>2. 관측</td><td>log(DPM + 2) ~ 정규분포(평균 w_0x + Σ w_x·q, 분산 w_ex²)</td><td>w_0x 기본 DPM · w_x 재해의 영향 · w_ex 흩어진 정도</td></tr>
+      <tr><td>3. 출발점</td><td>μ = 6·tanh((a·α + c + <b>δ</b>)/6), r⁰ = μ + √분산·ε</td><td>a 기울기 · c 절편 · <b>δ</b> 칸별 보정 (<code>mu_local</code>)</td></tr>
+    </table></div>
+    <p><b>δ는 3번 출발점 식에만</b> 있고 1번 사전 식에는 없습니다. <b>w_e·ε는 1번 사전 식에만</b> 있습니다. 1번 식의 ε와 3번 식의 ε는 이름만 같은 서로 다른 난수입니다.</p></div>
   <h3 id="big-three">우리 모델의 식 세 개: 어떤 숫자가 어디에 들어가나</h3>
 <p>μ 식(a, c, δ)은 세 식 중 하나일 뿐입니다. w_a와 w_x는 나머지 두 식에 들어가고, 원본에도 같은 자리에 있습니다.</p>
 <div class="tw"><table>
 <tr><th>식</th><th>무엇을 정하나</th><th>들어가는 숫자</th><th>코드</th></tr>
-<tr><td><b>1. 재해 발생 식</b> (사전)</td><td>사전확률 α만 봤을 때 재해가 날 확률<br/>logit p(재해) = w_0 + <b>w_a</b> × α</td><td>w_0, <b>w_a</b> (양수로 묶음), w_e</td><td><code>log_p_z</code>: <code>s = self.w_0[k] + w_a[k] * a[k]</code></td></tr>
+<tr><td><b>1. 재해 발생 식</b> (사전)</td><td>사전확률 α만 봤을 때 재해가 날 확률<br/>logit p(재해) = w_0 + <b>w_a</b> × α + w_e × ε (+ soft일 때 log(가능한 땅 비율))</td><td>w_0, <b>w_a</b> (양수로 묶음), w_e</td><td><code>log_p_z</code>: <code>s = self.w_0[k] + w_a[k] * a[k]</code></td></tr>
 <tr><td><b>2. 관측 식</b></td><td>재해가 나면 DPM이 얼마나 커지나<br/>log DPM의 평균 = w_0x + <b>w_x</b> × q</td><td>w_0x, <b>w_x</b> (양수로 묶음), w_ex</td><td><code>log_p_x</code>: <code>m = self.w_0x + Σ w_x[k] * q[k]</code></td></tr>
 <tr><td><b>3. 출발점 식</b> (변분분포)</td><td>사후확률을 뽑을 정규분포의 중심<br/>μ = 6·tanh((a × α + c + δ) / 6)</td><td><b>a, c, δ</b></td><td><code>FlowNode.forward</code>: <code>mu = 6*tanh((self.mu(h) + self.mu_local)/6)</code></td></tr>
 </table></div>
