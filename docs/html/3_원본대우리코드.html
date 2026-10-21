@@ -104,7 +104,13 @@ nav.toc{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:14px} nav.toc a{color
       <tr><td>2. 관측</td><td>log(DPM + 2) ~ 정규분포(평균 w_0x + Σ w_x·q, 분산 w_ex²)</td><td>w_0x 기본 DPM · w_x 재해의 영향 · w_ex 흩어진 정도</td></tr>
       <tr><td>3. 출발점</td><td>μ = 6·tanh((a·α + c + <b>δ</b>)/6), r⁰ = μ + √분산·ε</td><td>a 기울기 · c 절편 · <b>δ</b> 칸별 보정 (<code>mu_local</code>)</td></tr>
     </table></div>
-    <p><b>δ는 3번 출발점 식에만</b> 있고 1번 사전 식에는 없습니다. <b>w_e·ε는 1번 사전 식에만</b> 있습니다. 1번 식의 ε와 3번 식의 ε는 이름만 같은 서로 다른 난수입니다.</p></div>
+    <p><b>δ는 3번 출발점 식에만</b> 있고 1번 사전 식에는 없습니다. <b>w_e·ε는 1번 사전 식에만</b> 있습니다.</p>
+    <div class="tw"><table>
+      <tr><th>ε 두 개</th><th>어느 식</th><th>무엇인가</th><th>코드에서 실제로 뽑나</th></tr>
+      <tr><td><b>뽑기용 ε</b> (8개, 마지막 256개)</td><td>3번 출발점: r⁰ = μ + √분산·ε</td><td>사후확률을 어림하려고 flow에 넣기 전에 뽑는 난수. "우리의 추측(변분분포)"에서 표본을 만드는 용도</td><td><b>예</b>, 매 epoch 새로 뽑음 (<code>n = torch.randn(N, n_samples)</code>)</td></tr>
+      <tr><td><b>사전 잡음 ε</b></td><td>1번 사전: logit p = w_0 + w_a·α + w_e·ε</td><td>"같은 USGS 값이라도 실제 재해 여부는 조금씩 다를 수 있다"는 모델 가정. 세상(생성 모델)에 대한 설명의 일부</td><td><b>아니요</b>. 손실을 계산할 때 수식으로 평균을 미리 내서(Jensen 부등식, 논문 식 10) w_e²/2라는 숫자로만 남음 (<code>half = self.w_e[k] ** 2 / 2</code>)</td></tr>
+    </table></div>
+    <p>즉 둘은 이름만 같은 전혀 다른 난수입니다. 뽑기용 ε는 사후확률 계산에 쓰이고, 사전 잡음 ε는 손실 안의 사전 항에서 w_e²/2로만 나타납니다.</p></div>
   <h3 id="big-three">우리 모델의 식 세 개: 어떤 숫자가 어디에 들어가나</h3>
 <p>μ 식(a, c, δ)은 세 식 중 하나일 뿐입니다. w_a와 w_x는 나머지 두 식에 들어가고, 원본에도 같은 자리에 있습니다.</p>
 <div class="tw"><table>
