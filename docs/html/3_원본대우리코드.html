@@ -401,6 +401,16 @@ mu = 6 * tanh((self.mu(α) + mu_local) / 6)
     </table></div>
   </div>
 
+  <h3>u, w, b가 나오는 식</h3>
+  <div class="tw"><table>
+    <tr><th>식</th><th>u, w, b가 하는 일</th><th>코드 (우리 model.py)</th></tr>
+    <tr><td><b>① 한 번 밀기 (논문 식 3)</b><br>r<sub>k</sub> = r<sub>k−1</sub> + u<sub>k</sub> · tanh(w<sub>k</sub> · r<sub>k−1</sub> + b<sub>k</sub>)</td><td>u: 미는 크기와 방향 · w: 지금 값 r에 얼마나 민감하게 반응할지 · b: tanh 안에서 기준점을 옮김</td><td><code>t = tanh(w * r + b)</code><br><code>r = r + u * t</code></td></tr>
+    <tr><td><b>② 밀 때 생기는 보정 (논문 식 4)</b><br>log det = log(1 + u<sub>k</sub> · w<sub>k</sub> · (1 − tanh²(w<sub>k</sub> · r<sub>k−1</sub> + b<sub>k</sub>)))</td><td>밀면서 분포가 얼마나 늘어나거나 줄어드는지. 손실의 log q에 들어감</td><td><code>log_det = log(1 + u * w * (1 - t**2))</code></td></tr>
+    <tr><td><b>③ 출발값의 그럴듯함 갱신 (식 15)</b><br>log q(r<sub>K</sub>) = log q(r<sub>0</sub>) − Σ<sub>k</sub> log det<sub>k</sub></td><td>4번 민 뒤의 값이 얼마나 그럴듯한지. 손실(ELBO)의 한 항</td><td><code>log_q = log_q - log_det</code></td></tr>
+    <tr><td><b>④ u, w, b 만들기 (우리)</b><br>(u<sub>k</sub>, w<sub>k</sub>, b<sub>k</sub>) = 0.99 · tanh(A · α + e + 칸별 보정)</td><td>그 칸의 α를 공통 층(가중치 A, 절편 e, 24개)에 넣고 칸별 보정(12개)을 더한 뒤 −0.99 ~ 0.99로 묶음. k = 1 ~ 4마다 따로 3개씩, 칸마다 12개</td><td><code>uwb = 0.99 * tanh(self.amor(α) + self.flow_local)</code></td></tr>
+  </table></div>
+  <p>u, w, b는 ① 밀기 식에 직접 나오고, ② ③은 그 밀기 때문에 손실에 생기는 항입니다. ④는 u, w, b 자체를 어떻게 정하는지이며, 원본은 이 자리에 <code>Hardtanh(Linear(N, K·N)(배치 전체 α))</code>를 씁니다.</p>
+
   <h3>u, w, b는 어떻게 만드나: 원본 Linear(N, K·N) 대 우리 Linear(1, 3K) + 칸별 보정</h3>
   <div class="cols">
     <div class="code o"><div class="ch">원본 model.py (N = 배치 안 칸 수, K = 8)</div><pre><code>amor_u = Sequential(Linear(N, K*N), Hardtanh(-1, 1))
