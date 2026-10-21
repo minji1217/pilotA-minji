@@ -213,7 +213,7 @@ body{background:#fff}
     <tr><td>한 줄</td><td>시정촌 (지진마다 40~81줄)</td><td>250 m 칸 (지진마다 4.5만~32만 줄), 물 칸 제외</td></tr>
     <tr><td>DPM</td><td>시정촌 평균 − 프레임 중앙값</td><td>그 칸의 DPM_배경차 = 칸 안 40 m 화소 평균 − 프레임 중앙값 (<code>dpm_250m_v8</code>). 모델에는 똑같이 +2 해서 log</td></tr>
     <tr><td>USGS 사전확률</td><td>산사태 평균 · 액상화 최댓값</td><td>그 칸의 값</td></tr>
-    <tr><td>soft</td><td>비탈·평지 비율의 log</td><td>칸 경사로 비율 0 또는 1 → 로짓에 0 또는 −4.6을 더함 (중간 칸은 둘 다 −4.6을 더함)</td></tr>
+    <tr><td>soft</td><td>비탈·평지 비율의 log</td><td>칸 경사로 비율 0 또는 1 → 로짓에 0 또는 −4.6을 더함 (10.21 고침: 중간 칸은 그대로. 고치기 전에는 중간 칸도 둘 다 −4.6)</td></tr>
     <tr><td>U 끄기</td><td>시정촌 통째로 (산사태 6곳, 액상화 11곳)</td><td>칸마다</td></tr>
     <tr><td>U 분산</td><td>켜진 칸들의 불확실도 평균</td><td>그 칸의 불확실도</td></tr>
     <tr><td>시정촌 사후확률</td><td>그 줄의 값</td><td>칸 사후확률의 최댓값</td></tr>
@@ -627,7 +627,7 @@ body{background:#fff}
   <div class="tw"><table>
     <tr><th>실험</th><th>BD</th><th>불가능한 재해 끄기</th><th>soft (사전확률 깎기)</th><th>U 끄기</th><th>U 분산 (r⁰)</th><th>돌린 곳</th></tr>
     <tr><td>① baseline</td><td>없음</td><td>없음</td><td>없음</td><td>없음</td><td>모두 1</td><td>연구실 PC</td></tr>
-    <tr><td>② soft + U</td><td>없음</td><td>U로만</td><td>비탈 칸 액상화 · 평지 칸 산사태 · 중간 칸 둘 다 로짓에 −4.6을 더함 = 사전확률 약 1/100 (중간 칸은 부작용, <a href="#softmid">고쳐서 다시 돌리는 중</a>)</td><td>불확실도 0·999 칸 = 0</td><td>그 칸의 USGS 불확실도</td><td>연구실 PC</td></tr>
+    <tr><td>② soft + U</td><td>없음</td><td>U로만</td><td>비탈 칸 액상화 · 평지 칸 산사태에 로짓 −4.6을 더함 (사전확률 약 1/100). 중간 칸은 그대로 (10.21 고침, <a href="#softmid">고치기 전에는 중간 칸도 둘 다 −4.6</a>)</td><td>불확실도 0·999 칸 = 0</td><td>그 칸의 USGS 불확실도</td><td>연구실 PC</td></tr>
     <tr><td>③ soft + U (끄기만)</td><td>없음</td><td>U로만</td><td>SOFTU와 같음</td><td>불확실도 0·999 칸 = 0</td><td>모두 1</td><td>연구실 PC</td></tr>
     <tr><td>④ soft + U (분산만)</td><td>없음</td><td>없음</td><td>SOFTU와 같음</td><td>없음</td><td>그 칸의 USGS 불확실도 (0·999 칸은 1)</td><td>연구실 PC</td></tr>
     <tr><td>⑤ 끄기 지도 + U</td><td>없음</td><td>끄기 지도 + U: 비탈 칸 액상화 · 평지 칸 산사태 = 0 (중간 칸은 둘 다 켬)</td><td>없음</td><td>불확실도 0·999 칸 = 0</td><td>그 칸의 USGS 불확실도</td><td>연구실 PC</td></tr>
