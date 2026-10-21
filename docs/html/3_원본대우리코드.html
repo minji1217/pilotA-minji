@@ -41,7 +41,7 @@ nav.toc{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:14px} nav.toc a{color
 <h1>DisasterNet 원본 대 우리 코드</h1>
 <p class="lede">DisasterNet 공식 코드(<code>SusuXu/DisasterNet</code>)와 우리 구현(<code>disasternet/model.py</code>)의 차이를 코드, 그림, 실제 예시로 나란히 놓았습니다. 모델 구조는 같고, 계산 방법 8곳이 다릅니다.</p>
 <div class="note"><b>한눈에</b>: 식의 뼈대(출발점 정규분포, 칸마다 flow, 끝에 sigmoid 한 번, 여러 개 뽑아 평균, ELBO + triplet)는 <b>논문 식대로</b>입니다. 우리가 더한 것은 <b>칸별 보정(δ, flow_local), 6·tanh 천장, w_a · w_x 양수 제약</b>이고, 공식 코드는 sigmoid를 두 번 쓰고 flow를 배치 전체로 미는 등 논문 식과 다른 곳이 있어 따르지 않았습니다. 결과는 시정촌 0.606 대 원본 방식 0.572, 칸 0.797 대 0.670.</div>
-  <nav class="toc" aria-label="차례"><a href="#part-big">1. 큰 그림</a><a href="#part-map">2. 8가지 차이</a><a href="#part-mu">3. 자세히: 출발점 μ</a><a href="#part-flow">4. 자세히: flow</a><a href="#part-samp">5. 자세히: 뽑는 개수</a><a href="#part-sum">6. 정리</a><a href="#res">7. 결과</a><a href="#map">부록: 변수 대응표</a></nav>
+  <nav class="toc" aria-label="차례"><a href="#part-big">1. 큰 그림</a><a href="#part-map">2. 8가지 차이</a><a href="#part-mu">3. 자세히: 출발점 μ</a><a href="#part-flow">4. 자세히: flow</a><a href="#part-samp">5. 자세히: 뽑는 개수</a><a href="#part-sum">6. 정리</a><a href="#part-talk">발표용 설명</a><a href="#res">7. 결과</a><a href="#map">부록: 변수 대응표</a></nav>
 </header>
 <section id="part-big">
   <h2>1. 큰 그림: 무엇이 같고 무엇을 비교하나</h2>
@@ -841,6 +841,17 @@ q = mean(sigmoid(r))      # 끝에 sigmoid 한 번</code></pre></div>
     <tr><td>공식 코드가 논문 식과 다른 것 (따르지 않음)</td><td>flow 전 sigmoid 한 번 더, 배치 전체를 한 벡터로 미는 flow와 Linear(N, K·N), 1개만 뽑기, 손실의 절댓값</td></tr>
     <tr><td>원문대로 두기로 한 것 (10.21)</td><td>출발점 입력은 α 그대로 (logit(α)로 바꾸지 않음)</td></tr>
   </table></div>
+</section>
+<section id="part-talk">
+  <h2>발표용: 출발점 부분을 이렇게 설명하기</h2>
+  <div class="tw"><table>
+    <tr><th>무엇</th><th>한 일</th><th>왜</th></tr>
+    <tr><td>① flow 전 sigmoid</td><td>원본 코드에는 있지만 <b>뺌</b> (sigmoid는 논문대로 맨 끝에 한 번만)</td><td>논문 식에 없는 단계이고, 넣으면 모든 칸이 확률 0.5 ~ 0.73에서 출발해 사전확률이 출발점에 거의 반영되지 않음. 손실의 log q 계산도 맞지 않게 됨</td></tr>
+    <tr><td>② 6·tanh</td><td>출발점(점수)을 −6 ~ 6 안에 <b>부드럽게 묶음</b></td><td>①을 빼면 출발점이 점수 그대로라 제한이 없고, 칸마다 있는 δ가 계속 커질 수 있음. ±6이면 확률 0.25% ~ 99.75%를 다 표현하므로 그 밖은 막음. 보통 값은 바꾸지 않음</td></tr>
+    <tr><td>③ c (절편)</td><td>출발점 식을 a·α + c로 (곱하고 더하는 직선)</td><td>USGS 확률이 대부분 0.001 근처로 작아 곱하기만 하면 출발점이 0(확률 0.5)에 모임. c는 출발점 전체 높이를 학습으로 옮길 수 있게 함 (실제 학습값은 −0.8 ~ 1)</td></tr>
+  </table></div>
+  <p class="note"><b>한 문단으로</b>: "원본 코드는 flow 전에 sigmoid로 출발점을 0 ~ 1로 눌러 두는데, 논문 식에는 그런 단계가 없고 그렇게 하면 모든 칸이 반반 근처에서 출발합니다. 그래서 논문대로 sigmoid는 끝에 한 번만 쓰고, 대신 출발점이 극단으로 가지 않도록 6·tanh로 −6 ~ 6(확률 0.25 ~ 99.75%) 안에 부드럽게 묶었습니다. 또 USGS 확률이 매우 작아 곱하기만 하면 출발점이 0에 모이므로 절편 c를 두었습니다."</p>
+  <p class="muted" style="font-size:14px">주의: 6·tanh는 값을 0 ~ 1로 "퍼지게" 하는 장치가 아닙니다. 점수의 바깥 한계만 정하고, 그 안의 보통 값(−3 ~ 3)은 거의 그대로 둡니다. 확률(0 ~ 1)로 바꾸는 것은 맨 끝의 sigmoid입니다.</p>
 </section>
 <section id="res">
   <h2>7. 결과: 8가지를 모두 원본대로 되돌리면</h2>
