@@ -1,0 +1,192 @@
+<title>시정촌 대 칸 단위</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* 레이아웃: 한 줄 읽기 폭의 문서 + 그림·표는 폭을 넓게. 장마다 번호(실제 읽는 순서) */
+:root{
+  --bg:#ffffff; --fg:#1d2430; --muted:#5b6577; --line:#e3e6ec; --soft:#f5f6f9;
+  --accent:#2a4d7a; --ls:#b5651d; --lq:#2d62b3; --all:#3f8f5a; --warn:#a2461f; --pa:#7a6a9e;
+  --ls-bg:#f8efe6; --lq-bg:#e9f0fa; --all-bg:#eaf4ed; --warn-bg:#fbefe9;
+  --sans:'IBM Plex Sans KR',system-ui,-apple-system,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;
+  --mono:'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#14171c; --fg:#e7eaf0; --muted:#9aa3b2; --line:#2b313b; --soft:#1c2027;
+  --accent:#8fb3e6; --ls:#e0995a; --lq:#6f9de6; --all:#6cc08a; --warn:#ef8a62; --pa:#b3a3d9;
+  --ls-bg:#2a2119; --lq-bg:#18233a; --all-bg:#17281d; --warn-bg:#2d1d16; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#14171c; --fg:#e7eaf0; --muted:#9aa3b2; --line:#2b313b; --soft:#1c2027;
+  --accent:#8fb3e6; --ls:#e0995a; --lq:#6f9de6; --all:#6cc08a; --warn:#ef8a62; --pa:#b3a3d9;
+  --ls-bg:#2a2119; --lq-bg:#18233a; --all-bg:#17281d; --warn-bg:#2d1d16; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--sans);font-size:16px;line-height:1.7;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:40px 80px}
+main{max-width:880px;margin:0 auto;display:flex;flex-direction:column;gap:56px}
+section{display:flex;flex-direction:column;gap:16px;min-width:0}
+h1{font-size:clamp(28px,5vw,40px);line-height:1.25;margin:0;text-wrap:balance;letter-spacing:-.01em}
+h2{font-size:24px;margin:0;text-wrap:balance;display:flex;gap:12px;align-items:baseline}
+h2 .n{font-family:var(--mono);font-size:15px;color:var(--accent);font-weight:500}
+h3{font-size:18px;margin:8px 0 0}
+p{margin:0;max-width:68ch}
+.lede{font-size:18px;color:var(--fg)}
+.meta{color:var(--muted);font-size:14px}
+.eyebrow{font-family:var(--mono);font-size:13px;letter-spacing:.06em;color:var(--muted);text-transform:uppercase}
+code,.mono{font-family:var(--mono);font-size:.9em}
+code{background:var(--soft);padding:1px 5px;border-radius:4px}
+ul{margin:0;padding-left:1.2em;max-width:68ch}
+li+li{margin-top:4px}
+.tw{overflow-x:auto;min-width:0}
+table{border-collapse:collapse;width:100%;font-size:15px;font-variant-numeric:tabular-nums}
+th,td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+th{font-weight:500;color:var(--muted);font-size:14px}
+td.num,th.num{text-align:right;white-space:nowrap}
+.best{font-weight:700}
+.callout{background:var(--soft);border-radius:10px;padding:18px 20px;display:flex;flex-direction:column;gap:10px}
+.callout.warn{background:var(--warn-bg)}
+.callout.claude{border:1px solid var(--line);background:var(--bg)}
+.tag{display:inline-block;font-size:12px;padding:1px 8px;border-radius:99px;font-weight:500;white-space:nowrap}
+.t-ls{background:var(--ls-bg);color:var(--ls)} .t-lq{background:var(--lq-bg);color:var(--lq)} .t-all{background:var(--all-bg);color:var(--all)}
+.yes{color:var(--all);font-weight:700} .no{color:var(--muted)}
+figure{margin:0;display:flex;flex-direction:column;gap:8px;min-width:0}
+figcaption{font-size:14px;color:var(--muted)}
+svg text{font-family:var(--sans)}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}
+.card{border:1px solid var(--line);border-radius:10px;padding:16px 18px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.card h3{margin:0;font-size:17px}
+.card .k{font-family:var(--mono);font-size:13px;color:var(--muted)}
+/* 막대그래프 */
+.legend{display:flex;gap:18px;flex-wrap:wrap;font-size:14px}
+.legend span{display:flex;align-items:center;gap:6px}
+.sw{width:12px;height:12px;border-radius:3px;display:inline-block}
+.chart{display:flex;flex-direction:column;gap:14px}
+.brow{display:grid;grid-template-columns:minmax(150px,240px) 1fr;gap:14px;align-items:center}
+.brow.dn{} .brow.pa .blab{color:var(--pa)} .brow.base .blab{font-weight:700}
+.brow.ref .blab{color:var(--muted)} .brow.ref .fill{opacity:.45}
+.chart.sm .brow,.chart.sm .axis{grid-template-columns:minmax(90px,130px) 1fr;gap:10px} .chart.sm .blab{font-size:13px}
+@media (max-width:560px){.chart.sm .brow,.chart.sm .axis{grid-template-columns:1fr}}
+.blab{font-size:14px;line-height:1.35;text-align:right}
+.bars{display:flex;flex-direction:column;gap:3px;min-width:0}
+.bar{display:flex;align-items:center;gap:8px;height:14px}
+.fill{height:12px;border-radius:0 3px 3px 0;display:block}
+.fill.all{background:var(--all)} .fill.ls{background:var(--ls)} .fill.lq{background:var(--lq)}
+.track{flex:1;min-width:0}
+.bar b{width:44px;font-size:12px;font-weight:500;font-variant-numeric:tabular-nums;color:var(--muted)}
+.axis{display:grid;grid-template-columns:minmax(150px,240px) 1fr;gap:14px;font-size:12px;color:var(--muted)}
+.axis div:last-child{display:flex;justify-content:space-between;padding-right:52px}
+@media (max-width:560px){.brow,.axis{grid-template-columns:1fr}.blab{text-align:left}.axis div:first-child{display:none}}
+pre{background:var(--soft);border-radius:8px;padding:14px 16px;overflow-x:auto;font-family:var(--mono);font-size:13px;line-height:1.6;margin:0}
+.copy{align-self:flex-start;font:inherit;font-size:14px;padding:6px 14px;border-radius:6px;border:1px solid var(--accent);background:var(--bg);color:var(--accent);cursor:pointer}
+.copy:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+#prompt{white-space:pre-wrap}
+nav{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:14px}
+nav a{color:var(--accent);text-decoration:none}
+nav a:hover{text-decoration:underline}
+hr{border:0;border-top:1px solid var(--line);margin:0}
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:3px 10px}
+.mini{font-size:11px;color:var(--muted)}
+td.up{color:var(--all);font-weight:700} td.down{color:var(--warn);font-weight:700}
+.status{display:inline-block;font-size:12px;padding:2px 10px;border-radius:99px;background:var(--soft);color:var(--muted)}
+</style>
+
+<style>
+.flow2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.flowcol{border:1px solid var(--line);border-radius:10px;padding:16px 18px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.flowcol h3{margin:0;font-size:17px}
+.step{background:var(--soft);border-radius:8px;padding:10px 12px;font-size:14px;line-height:1.55}
+.step b{display:block;font-size:12px;color:var(--muted);font-weight:500;letter-spacing:.03em;margin-bottom:2px}
+.step.diff{background:var(--warn-bg)}
+.arrow{text-align:center;color:var(--muted);font-size:14px;line-height:1}
+.same-tag{font-size:12px;color:var(--all);font-weight:500}
+.diff-tag{font-size:12px;color:var(--warn);font-weight:500}
+@media (max-width:640px){.flow2{grid-template-columns:1fr}}
+</style>
+<main>
+<header style="display:flex;flex-direction:column;gap:14px">
+  <div class="eyebrow">비교 · 2026-10-20</div>
+  <h1>시정촌 단위 실험과 칸 단위 실험은 무엇이 다른가</h1>
+  <p class="lede">모델과 학습 방법은 그대로 두고, 한 줄(행)을 시정촌에서 250 m 칸으로 바꿨습니다. 그래서 입력을 만드는 방식과 시정촌 값을 내는 방식만 달라졌습니다.</p>
+  <p class="meta">자세한 결과: <a href="https://claude.ai/artifact/TcF9dowvBuwwu66vdqEaT6" style="color:var(--accent)">DisasterNet 실험 기록</a> (시정촌) · <a href="https://claude.ai/artifact/Uqmg4X8sLnLZeZX1jYmKpJ" style="color:var(--accent)">칸 단위 실험 기록</a></p>
+</header>
+
+<section>
+  <h2><span class="n">1</span>흐름을 나란히</h2>
+  <p class="meta">주황 칸 = 두 방식이 다른 단계, 회색 칸 = 같은 단계</p>
+  <div class="flow2">
+    <div class="flowcol">
+      <h3>시정촌 단위 (기존)</h3>
+      <div class="step diff"><b>한 줄</b>시정촌 하나. 지진마다 40~81줄</div>
+      <div class="arrow">↓</div>
+      <div class="step diff"><b>입력</b>DPM = 시정촌 평균 − 프레임 중앙값<br>USGS 확률 = 산사태 시정촌 평균, 액상화 시정촌 최댓값</div>
+      <div class="arrow">↓</div>
+      <div class="step diff"><b>soft · U</b>soft = log(비탈 비율·평지 비율)<br>U 끄기 = 시정촌 안 칸이 전부 0·999면 그 시정촌을 끔<br>U 분산 = 켜진 칸들의 불확실도 평균</div>
+      <div class="arrow">↓</div>
+      <div class="step"><b>모델 · 학습</b>r⁰ ~ N(μ, 분산) → planar flow 4번 → 샘플 8개 sigmoid 평균<br>ELBO + triplet, Adam, 3000 epoch</div>
+      <div class="arrow">↓</div>
+      <div class="step diff"><b>시정촌 사후확률</b>그 줄의 값 (샘플 256개 평균)</div>
+      <div class="arrow">↓</div>
+      <div class="step diff"><b>seed</b>5개 (0~4) 평균</div>
+    </div>
+    <div class="flowcol">
+      <h3>칸 단위 (교수님 지시 + 추가)</h3>
+      <div class="step diff"><b>한 줄</b>250 m 칸 하나. 지진마다 약 4.5만~32만 줄 (물 칸 제외)</div>
+      <div class="arrow">↓</div>
+      <div class="step diff"><b>입력</b>DPM = 그 칸의 DPM_배경차<br>USGS 확률 = 그 칸의 값 (999는 0)</div>
+      <div class="arrow">↓</div>
+      <div class="step diff"><b>soft · U</b>soft = 칸 경사로 0 또는 1 → 로짓 0 또는 −4.6<br>U 끄기 = 불확실도 0·999 칸만 끔<br>U 분산 = 그 칸의 불확실도</div>
+      <div class="arrow">↓</div>
+      <div class="step"><b>모델 · 학습</b>r⁰ ~ N(μ, 분산) → planar flow 4번 → 샘플 8개 sigmoid 평균<br>ELBO + triplet, Adam, 3000 epoch</div>
+      <div class="arrow">↓</div>
+      <div class="step diff"><b>시정촌 사후확률</b>시정촌 안 칸 사후확률의 <b style="display:inline;font-size:inherit;color:inherit">최댓값</b></div>
+      <div class="arrow">↓</div>
+      <div class="step diff"><b>seed</b>지금은 0 하나 (seed 1 진행 중)</div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2><span class="n">2</span>같은 것</h2>
+  <div class="tw"><table>
+    <tr><th>항목</th><th>두 방식 공통</th></tr>
+    <tr><td>노드</td><td>산사태 · 액상화 (BD 없음, 교수님 지시)</td></tr>
+    <tr><td>사후분포 출발점</td><td>r⁰ ~ N(μ, 분산), μ = 6·tanh((Linear(α) + 줄마다 보정값) / 6), 분산 기본 1</td></tr>
+    <tr><td>flow</td><td>planar, 4번 통과, u·w·b는 줄마다 따로</td></tr>
+    <tr><td>샘플</td><td>학습 때 8개 sigmoid 평균, 마지막 256개 평균</td></tr>
+    <tr><td>관측식</td><td>log(DPM_배경차 + 2)</td></tr>
+    <tr><td>손실</td><td>줄별 (−log p(x|z) + β·KL)의 합 + triplet (가중치 1, margin 1), β warm-up</td></tr>
+    <tr><td>최적화</td><td>Adam, lr 0.01, 3000 epoch, 매 epoch 그 지진의 모든 줄</td></tr>
+    <tr><td>학습 단위</td><td>지진마다 따로, 정답 없이</td></tr>
+    <tr><td>U 끄기 기준</td><td>논문 기준 (불확실도 0·999만)</td></tr>
+    <tr><td>평가</td><td>공통 263곳, 지진별 AUC를 시정촌 수로 가중평균</td></tr>
+  </table></div>
+</section>
+
+<section>
+  <h2><span class="n">3</span>다른 것</h2>
+  <div class="tw"><table>
+    <tr><th>항목</th><th>시정촌 단위</th><th>칸 단위</th></tr>
+    <tr><td>한 줄</td><td>시정촌 (지진마다 40~81줄)</td><td>250 m 칸 (지진마다 4.5만~32만 줄), 물 칸 제외</td></tr>
+    <tr><td>DPM</td><td>시정촌 평균 − 프레임 중앙값</td><td>그 칸의 값 (<code>dpm_250m_v8</code>)</td></tr>
+    <tr><td>USGS 사전확률</td><td>산사태 평균 · 액상화 최댓값</td><td>그 칸의 값</td></tr>
+    <tr><td>soft</td><td>비탈·평지 비율의 log</td><td>칸 경사로 0 또는 1 → 로짓 0 또는 −4.6 (중간 칸은 둘 다 −4.6)</td></tr>
+    <tr><td>U 끄기</td><td>시정촌 통째로 (산사태 6곳, 액상화 11곳)</td><td>칸마다</td></tr>
+    <tr><td>U 분산</td><td>켜진 칸들의 불확실도 평균</td><td>그 칸의 불확실도</td></tr>
+    <tr><td>시정촌 사후확률</td><td>그 줄의 값</td><td>칸 사후확률의 최댓값</td></tr>
+    <tr><td>seed</td><td>5개 평균</td><td>0 하나 (seed 1 진행 중)</td></tr>
+    <tr><td>학습 시간</td><td>실험 하나에 수 분</td><td>seed 하나에 PC로 1~1.5시간</td></tr>
+    <tr><td>triplet 비중</td><td colspan="2">식과 가중치는 같지만 모든 줄을 한 벡터로 묶어 재기 때문에, 줄이 많은 칸 단위에서는 ELBO 합에 비해 상대적으로 작아짐</td></tr>
+    <tr><td>추가 실험</td><td>BD 있음/없음, 같은 분산, 끄기 기준 비교 등</td><td>LOCAL 끄기 + U (끄기 지도로 0 고정, 진행 중)</td></tr>
+  </table></div>
+</section>
+
+<section>
+  <h2><span class="n">4</span>결과 비교 (같은 seed 0)</h2>
+  <div class="legend"><span><i class="sw" style="background:var(--muted);opacity:.55"></i>시정촌 단위 (seed 0)</span><span><i class="sw" style="background:var(--accent)"></i>칸 단위 (seed 0)</span></div>
+  <div class="chart"><div class="brow dn"><div class="blab">① DN</div><div class="bars"><div class="bar"><span class="track"><span class="fill" style="background:var(--muted);opacity:.55;width:27.6%"></span></span><b>0.638</b></div><div class="bar"><span class="track"><span class="fill" style="background:var(--accent);width:23.6%"></span></span><b>0.618</b></div></div></div><div class="brow dn"><div class="blab">SOFTU</div><div class="bars"><div class="bar"><span class="track"><span class="fill" style="background:var(--muted);opacity:.55;width:52.8%"></span></span><b>0.764</b></div><div class="bar"><span class="track"><span class="fill" style="background:var(--accent);width:57.2%"></span></span><b>0.786</b></div></div></div><div class="brow dn"><div class="blab">SOFTU_끄기만</div><div class="bars"><div class="bar"><span class="track"><span class="fill" style="background:var(--muted);opacity:.55;width:50.6%"></span></span><b>0.753</b></div><div class="bar"><span class="track"><span class="fill" style="background:var(--accent);width:55.4%"></span></span><b>0.777</b></div></div></div><div class="brow dn"><div class="blab">SOFTU_분산만</div><div class="bars"><div class="bar"><span class="track"><span class="fill" style="background:var(--muted);opacity:.55;width:49.2%"></span></span><b>0.746</b></div><div class="bar"><span class="track"><span class="fill" style="background:var(--accent);width:25.2%"></span></span><b>0.626</b></div></div></div><div class="axis"><div></div><div><span>0.5</span><span>0.75</span><span>1.0</span></div></div></div>
+  <p class="meta">전체 AUC, 막대는 0.5부터. USGS 기준선 0.854 · pilotA A2 0.855</p>
+  <ul>
+    <li>끄기를 쓴 실험(SOFTU, 끄기만)은 칸 단위가 약 0.02 높습니다. 액상화가 오르고 산사태는 내립니다</li>
+    <li>끄기가 없는 SOFTU_분산만은 칸 단위에서 크게 떨어집니다 (노토 액상화 0.352)</li>
+    <li>seed 하나끼리라 0.02 차이는 seed 흔들림 안일 수 있습니다</li>
+  </ul>
+</section>
+</main>

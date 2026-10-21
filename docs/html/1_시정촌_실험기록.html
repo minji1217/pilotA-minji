@@ -1,0 +1,866 @@
+<title>DisasterNet 실험 기록</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* 레이아웃: 한 줄 읽기 폭의 문서 + 그림·표는 폭을 넓게. 장마다 번호(실제 읽는 순서) */
+:root{
+  --bg:#ffffff; --fg:#1d2430; --muted:#5b6577; --line:#e3e6ec; --soft:#f5f6f9;
+  --accent:#2a4d7a; --ls:#b5651d; --lq:#2d62b3; --all:#3f8f5a; --warn:#a2461f; --pa:#7a6a9e;
+  --ls-bg:#f8efe6; --lq-bg:#e9f0fa; --all-bg:#eaf4ed; --warn-bg:#fbefe9;
+  --sans:'IBM Plex Sans KR',system-ui,-apple-system,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;
+  --mono:'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+@media (prefers-color-scheme:no-preference) and (max-width:0px){:root:not([data-theme="light"]){
+  --bg:#14171c; --fg:#e7eaf0; --muted:#9aa3b2; --line:#2b313b; --soft:#1c2027;
+  --accent:#8fb3e6; --ls:#e0995a; --lq:#6f9de6; --all:#6cc08a; --warn:#ef8a62; --pa:#b3a3d9;
+  --ls-bg:#2a2119; --lq-bg:#18233a; --all-bg:#17281d; --warn-bg:#2d1d16; color-scheme:dark}}
+:root[data-theme="dark-disabled"]{
+  --bg:#14171c; --fg:#e7eaf0; --muted:#9aa3b2; --line:#2b313b; --soft:#1c2027;
+  --accent:#8fb3e6; --ls:#e0995a; --lq:#6f9de6; --all:#6cc08a; --warn:#ef8a62; --pa:#b3a3d9;
+  --ls-bg:#2a2119; --lq-bg:#18233a; --all-bg:#17281d; --warn-bg:#2d1d16; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--sans);font-size:16px;line-height:1.7;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:40px 80px}
+main{max-width:1240px;margin:0 auto;display:flex;flex-direction:column;gap:56px}
+section{display:flex;flex-direction:column;gap:16px;min-width:0}
+h1{font-size:clamp(28px,5vw,40px);line-height:1.25;margin:0;text-wrap:balance;letter-spacing:-.01em}
+h2{font-size:24px;margin:0;text-wrap:balance;display:flex;gap:12px;align-items:baseline}
+h2 .n{font-family:var(--mono);font-size:15px;color:var(--accent);font-weight:500}
+h3{font-size:18px;margin:8px 0 0}
+p{margin:0;max-width:none}
+.lede{font-size:18px;color:var(--fg)}
+.meta{color:var(--muted);font-size:14px}
+.eyebrow{font-family:var(--mono);font-size:13px;letter-spacing:.06em;color:var(--muted);text-transform:uppercase}
+code,.mono{font-family:var(--mono);font-size:.9em}
+code{background:var(--soft);padding:1px 5px;border-radius:4px}
+ul{margin:0;padding-left:1.2em;max-width:none}
+li+li{margin-top:4px}
+.tw{overflow-x:auto;min-width:0}
+table{border-collapse:collapse;width:100%;font-size:15px;font-variant-numeric:tabular-nums}
+th,td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+th{font-weight:500;color:var(--muted);font-size:14px}
+td.num,th.num{text-align:right;white-space:nowrap}
+.best{font-weight:700}
+.callout{background:var(--soft);border-radius:10px;padding:18px 20px;display:flex;flex-direction:column;gap:10px}
+.callout.warn{background:var(--warn-bg)}
+.callout.claude{border:1px solid var(--line);background:var(--bg)}
+.tag{display:inline-block;font-size:12px;padding:1px 8px;border-radius:99px;font-weight:500;white-space:nowrap}
+.t-ls{background:var(--ls-bg);color:var(--ls)} .t-lq{background:var(--lq-bg);color:var(--lq)} .t-all{background:var(--all-bg);color:var(--all)}
+.yes{color:var(--all);font-weight:700} .no{color:var(--muted)}
+figure{margin:0;display:flex;flex-direction:column;gap:8px;min-width:0}
+figcaption{font-size:14px;color:var(--muted)}
+svg text{font-family:var(--sans)}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}
+.card{border:1px solid var(--line);border-radius:10px;padding:16px 18px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.card h3{margin:0;font-size:17px}
+.card .k{font-family:var(--mono);font-size:13px;color:var(--muted)}
+/* 막대그래프 */
+.legend{display:flex;gap:18px;flex-wrap:wrap;font-size:14px}
+.legend span{display:flex;align-items:center;gap:6px}
+.sw{width:12px;height:12px;border-radius:3px;display:inline-block}
+.chart{display:flex;flex-direction:column;gap:14px}
+.brow{display:grid;grid-template-columns:minmax(150px,240px) 1fr;gap:14px;align-items:center}
+.brow.dn{} .brow.pa .blab{color:var(--pa)} .brow.base .blab{font-weight:700}
+.brow.ref .blab{color:var(--muted)} .brow.ref .fill{opacity:.45}
+.chart.sm .brow,.chart.sm .axis{grid-template-columns:minmax(90px,130px) 1fr;gap:10px} .chart.sm .blab{font-size:13px}
+@media (max-width:560px){.chart.sm .brow,.chart.sm .axis{grid-template-columns:1fr}}
+.blab{font-size:14px;line-height:1.35;text-align:right}
+.bars{display:flex;flex-direction:column;gap:3px;min-width:0}
+.bar{display:flex;align-items:center;gap:8px;height:14px}
+.fill{height:12px;border-radius:0 3px 3px 0;display:block}
+.fill.all{background:var(--all)} .fill.ls{background:var(--ls)} .fill.lq{background:var(--lq)}
+.track{flex:1;min-width:0}
+.bar b{width:44px;font-size:12px;font-weight:500;font-variant-numeric:tabular-nums;color:var(--muted)}
+.axis{display:grid;grid-template-columns:minmax(150px,240px) 1fr;gap:14px;font-size:12px;color:var(--muted)}
+.axis div:last-child{display:flex;justify-content:space-between;padding-right:52px}
+@media (max-width:560px){.brow,.axis{grid-template-columns:1fr}.blab{text-align:left}.axis div:first-child{display:none}}
+pre{background:var(--soft);border-radius:8px;padding:14px 16px;overflow-x:auto;font-family:var(--mono);font-size:13px;line-height:1.6;margin:0}
+.copy{align-self:flex-start;font:inherit;font-size:14px;padding:6px 14px;border-radius:6px;border:1px solid var(--accent);background:var(--bg);color:var(--accent);cursor:pointer}
+.copy:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+#prompt{white-space:pre-wrap}
+nav{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:14px}
+nav a{color:var(--accent);text-decoration:none}
+nav a:hover{text-decoration:underline}
+hr{border:0;border-top:1px solid var(--line);margin:0}
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:3px 10px}
+.mini{font-size:11px;color:var(--muted)}
+td.up{color:var(--all);font-weight:700} td.down{color:var(--warn);font-weight:700}
+.status{display:inline-block;font-size:12px;padding:2px 10px;border-radius:99px;background:var(--soft);color:var(--muted)}
+.groups{display:flex;flex-direction:column;gap:16px}
+.groups .card{padding:20px 24px}
+.tc{display:grid;grid-template-columns:minmax(0,520px) minmax(0,1fr);gap:28px;align-items:start}
+.tc > *{min-width:0}
+@media (max-width:860px){.tc{grid-template-columns:1fr}}
+.st table{width:100%;border:1px solid var(--line);font-size:16px}
+.st th,.st td{border:1px solid var(--line);padding:11px 16px;text-align:center;vertical-align:middle}
+.st th{background:var(--soft);color:var(--fg);font-weight:600;font-size:15px}
+.st th.hl{background:var(--all-bg);color:var(--all)}
+.st td:first-child{font-weight:500;white-space:nowrap}
+.st td.num{text-align:center}
+.anal{border-left:3px solid var(--accent);background:var(--soft);border-radius:0 8px 8px 0;padding:12px 16px;display:flex;flex-direction:column;gap:6px}
+.anal > b{font-size:14px;color:var(--accent)}
+.anal ul{display:flex;flex-direction:column;gap:4px}
+.one{margin:2px 0 4px;padding:10px 14px;border-radius:8px;background:var(--all-bg);color:var(--fg);font-size:16px;line-height:1.6}
+.one b{color:var(--all)}
+.s8{display:flex;flex-direction:column;gap:12px}
+.s8 .steps{display:flex;gap:8px;align-items:center;font-size:14.5px;flex-wrap:wrap} .s8 .st{border:1px solid var(--line);border-radius:8px;padding:7px 11px;background:var(--soft)}
+.s8 .row{display:grid;grid-template-columns:140px minmax(0,1fr);align-items:center;border:1px solid var(--line);border-radius:12px;padding:6px 0;background:#fff;color:#1d2430}
+@media (max-width:760px){.s8 .row{grid-template-columns:1fr}}
+.s8 .lab{font-size:18px;font-weight:700;padding-left:16px} .s8 .lab small{display:block;font-size:12.5px;color:#5b6577;font-weight:400;margin-top:6px;line-height:1.5}
+.s8 .sub{color:var(--muted);font-size:14px;line-height:1.6;margin:0}
+.s8 .take{padding:12px 16px;background:var(--all-bg);border-radius:8px;font-size:15.5px;line-height:1.6} .s8 .take b{color:var(--all)}
+.cmpfig{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:14px}
+.cmpfig .cf{border:1px solid var(--line);border-radius:12px;padding:10px 12px;background:#fff}
+.w8s{display:grid;grid-template-columns:repeat(auto-fit,minmax(520px,1fr));gap:14px}
+@media (max-width:600px){.w8s{grid-template-columns:1fr}}
+.w8{border:1px solid var(--line);border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.w8h{display:flex;align-items:center;gap:10px;font-size:16.5px}
+.w8n{width:26px;height:26px;border-radius:50%;background:var(--accent);color:var(--bg);display:inline-flex;align-items:center;justify-content:center;font-size:14px;font-weight:700}
+.w8g{display:grid;grid-template-columns:1fr 1fr;gap:10px} .w8g>div{background:var(--soft);border-radius:8px;padding:8px 10px;font-size:14.5px;line-height:1.55}
+.w8l{font-size:12.5px;color:var(--muted);font-weight:600;margin-bottom:3px}
+.w8r{display:grid;grid-template-columns:84px 1fr;gap:8px;font-size:14.5px;line-height:1.6} .w8k{font-size:12.5px;color:var(--muted);font-weight:600;padding-top:2px}
+.ev0,.ev1,.ev2,.ev3{display:inline-block;font-size:12px;font-weight:600;padding:1px 8px;border-radius:99px;margin-right:4px}
+.ev0{background:#f1f3f6;color:#3a4352}.ev1{background:var(--lq-bg);color:var(--lq)}.ev2{background:var(--all-bg);color:var(--all)}.ev3{background:var(--warn-bg);color:var(--warn)}
+:root{color-scheme:light}
+body{background:#fff}
+</style>
+<style id="pairchart-css">
+.pc{display:flex;flex-direction:column;gap:8px;margin-top:6px}
+.pc .lg{display:flex;flex-wrap:wrap;gap:4px 16px;font-size:12.5px;color:var(--muted)}
+.pc .lg span{display:flex;align-items:center;gap:6px}
+.pc .lg i{width:22px;height:9px;border-radius:2px;display:inline-block}
+.pc .cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px 22px}
+.pc .col h4{margin:0 0 6px;font-size:14px;display:flex;align-items:center;gap:6px}
+.pc .col h4 i{width:10px;height:10px;border-radius:2px;display:inline-block}
+.pc .row{display:grid;grid-template-columns:92px 1fr;gap:8px;align-items:center;margin-bottom:5px}
+.pc .nm{font-size:12px;text-align:right;line-height:1.2}
+.pc .bb{display:flex;flex-direction:column;gap:2px}
+.pc .b{display:flex;align-items:center;gap:6px;height:10px}
+.pc .tr{flex:1;position:relative;height:8px;background:var(--soft);border-radius:2px}
+.pc .f{position:absolute;left:0;top:0;height:8px;border-radius:2px}
+.pc .b em{font-style:normal;font-size:11px;width:36px;color:var(--muted);font-variant-numeric:tabular-nums}
+.pc .b.B em{color:var(--fg);font-weight:600}
+.pc .ax{display:grid;grid-template-columns:92px 1fr;gap:8px;font-size:10.5px;color:var(--muted)}
+.pc .ax div:last-child{display:flex;justify-content:space-between;padding-right:42px}
+</style>
+<style id="autochart-css">
+.ac{display:flex;flex-direction:column;gap:6px;margin-top:6px;min-width:0}
+.ac .lg{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:12px;color:var(--muted)}
+.ac .lg span{display:flex;align-items:center;gap:5px}
+.ac .lg i{width:10px;height:10px;border-radius:2px;display:inline-block}
+.ac .r{display:grid;grid-template-columns:minmax(110px,220px) 1fr;gap:10px;align-items:center}
+.ac .l{font-size:12.5px;line-height:1.3;text-align:right;color:var(--fg)}
+.ac .bs{display:flex;flex-direction:column;gap:2px;min-width:0}
+.ac .b{display:flex;align-items:center;gap:6px;height:11px}
+.ac .tr{flex:1;min-width:0;position:relative;height:9px}
+.ac .f{position:absolute;top:0;height:9px;border-radius:2px}
+.ac .z{position:absolute;top:-2px;bottom:-2px;width:1px;background:var(--muted)}
+.ac .b em{font-style:normal;width:52px;font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums}
+.ac .ax{display:grid;grid-template-columns:minmax(110px,220px) 1fr;gap:10px;font-size:11px;color:var(--muted)}
+.ac .ax div:last-child{display:flex;justify-content:space-between;padding-right:58px}
+@media (max-width:620px){.ac .r,.ac .ax{grid-template-columns:1fr}.ac .l{text-align:left}.ac .ax div:first-child{display:none}}
+</style>
+<main>
+<header style="display:flex;flex-direction:column;gap:14px">
+  <div class="eyebrow">실험 기록 · 2026-10-19</div>
+  <h1>DisasterNet 시정촌 실험: BD 제거, SOFT·U 효과</h1>
+  <p class="lede">교수님 지시대로 건물붕괴(BD) 노드를 빼고 기존 4개 실험을 다시 돌렸습니다. 네 실험 모두 조금씩 올랐고, 가장 좋은 설정이 전체 AUC <b>0.751</b>(SOFTU_분산만, ④ SOFTU는 0.738)입니다. 여전히 USGS 기준선(<b>0.854</b>)과 pilotA(<b>0.855</b>)보다 낮습니다.</p>
+  <nav aria-label="목차"><a href="#s0">0 진행 현황</a><a href="#s1">1 핵심</a><a href="#sd">1.5 soft·U란</a><a href="#s2">2 설정</a><a href="#sall">2.5 모든 실험 그래프</a><a href="#su">U 불확실도 변경</a><a href="#s3">3 BD 제거</a><a href="#s4">4 SOFT 효과</a><a href="#s5">5 U 효과</a><a href="#s6">6 지진별</a><a href="#sx">원 DisasterNet과 차이</a><a href="#s7">7 칸 단위 실험</a><a href="#s8">8 다음</a></nav>
+</header>
+
+<section id="s0">
+  <h2><span class="n">0</span>진행 현황</h2>
+  <div class="tw"><table>
+    <tr><th>할 일</th><th>상태</th></tr>
+    <tr><td>기존 4개 실험 (BD 있음) — 보존</td><td class="yes">✅ 완료</td></tr>
+    <tr><td>BD 빼고 4개 실험 다시 돌리기</td><td class="yes">✅ 완료</td></tr>
+    <tr><td>SOFT 효과 분석 (정보 자체 / 직접 / 재학습)</td><td class="yes">✅ 완료</td></tr>
+    <tr><td>U 효과 분석 (끄기만 / 분산만 / 같은 분산)</td><td class="yes">✅ 완료</td></tr>
+    <tr><td>칸별 DPM · base 상관도 자료 받기</td><td class="yes">✅ 완료</td></tr>
+    <tr><td><b>교수님 지시: 칸 단위 학습 + 시정촌 최댓값</b> (seed 0)</td><td>⏳ 학습 중 (약 2시간)</td></tr>
+    <tr><td>칸 단위에 U · soft 얹기, base 상관도로 잡음 칸 거르기</td><td class="no">칸 단위 결과를 보고 진행</td></tr>
+    <tr><td>칸 단위 seed 5개로 확장</td><td class="no">칸 단위 결과를 보고 결정 (약 8~9시간)</td></tr>
+  </table></div>
+</section>
+
+<section id="s1">
+  <h2><span class="n">1</span>핵심</h2>
+  <div class="grid2">
+    <div class="card"><div class="k">BD 제거</div><h3>네 실험 모두 소폭 상승</h3><p>④ SOFTU 0.722 → 0.738. ① DN 0.606 → 0.614, ② SOFT 0.677 → 0.710, ③ DNU 0.669 → 0.675.</p></div>
+    <div class="card"><div class="k">SOFT</div><h3>산사태를 크게 올림</h3><p>① DN 0.614 → ② SOFT 0.710. 산사태 0.512 → 0.777, 액상화 0.647 → 0.688.</p></div>
+    <div class="card"><div class="k">U (USGS 불확실도)</div><h3>효과는 "끄기"가 아니라 "분산"</h3><p>분산만 써도 U 전체와 거의 같습니다 (0.681 대 0.675). 끄기만 쓰면 +0.02뿐입니다.</p></div>
+    <div class="card"><div class="k">분산</div><h3>같은 분산으로는 덜 오름</h3><p>모든 시정촌에 같은 분산 0.01을 주면 0.657, 0.001이면 0.616. 시정촌별 USGS 불확실도를 쓴 DNU_분산만은 0.681.</p></div>
+  </div>
+</section>
+
+<section id="sd">
+  <h2><span class="n">1.5</span>soft와 U는 무엇이고, 어떻게 만들어 넣었나</h2>
+  <p>둘 다 원 DisasterNet의 <b>"불가능한 재해 끄기"</b>를 시정촌 단위로 흉내 내려고 넣은 것입니다. 원본은 화소마다 비탈이면 액상화를, 평지면 산사태를, USGS가 계산하지 않은 화소면 둘 다 0으로 고정합니다. 시정촌에는 비탈과 평지가 섞여 있어서 그대로는 못 하므로 두 가지로 대신했습니다.</p>
+  <figure>
+    <div class="tw">
+    <svg viewBox="0 0 860 300" width="100%" style="min-width:640px" role="img" aria-label="soft와 U가 어떤 자료에서 어떤 과정을 거쳐 모델의 어디에 들어가는지">
+      <defs><marker id="ah3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10z" fill="var(--muted)"/></marker></defs>
+      <g font-size="13">
+        <text x="10" y="22" font-weight="700" fill="var(--ls)">soft</text>
+        <rect x="10" y="34" width="190" height="78" rx="8" fill="var(--soft)" stroke="var(--line)"/>
+        <text x="22" y="56" fill="var(--fg)" font-weight="700">국토수치정보</text>
+        <text x="22" y="76" fill="var(--muted)" font-size="12">경사 250 m (G04-d-11)</text>
+        <text x="22" y="94" fill="var(--muted)" font-size="12">행정구역 (N03, 지진 연도판)</text>
+        <rect x="250" y="34" width="250" height="78" rx="8" fill="var(--soft)" stroke="var(--line)"/>
+        <text x="262" y="56" fill="var(--fg)" font-weight="700">시정촌별 지형 비율</text>
+        <text x="262" y="76" fill="var(--muted)" font-size="12">비탈 비율 = 경사 ≥ 10° 칸의 비율</text>
+        <text x="262" y="94" fill="var(--muted)" font-size="12">평지 비율 = 경사 &lt; 5° 칸의 비율</text>
+        <rect x="550" y="34" width="300" height="78" rx="8" fill="var(--ls-bg)" stroke="var(--ls)"/>
+        <text x="562" y="56" fill="var(--ls)" font-weight="700">사전확률을 깎음</text>
+        <text x="562" y="76" fill="var(--fg)" font-size="12">산사태 로짓 + log(비탈 비율)</text>
+        <text x="562" y="94" fill="var(--fg)" font-size="12">액상화 로짓 + log(평지 비율)</text>
+
+        <text x="10" y="162" font-weight="700" fill="var(--lq)">U (USGS 불확실도)</text>
+        <rect x="10" y="174" width="190" height="96" rx="8" fill="var(--soft)" stroke="var(--line)"/>
+        <text x="22" y="196" fill="var(--fg)" font-weight="700">USGS 이벤트 페이지</text>
+        <text x="22" y="216" fill="var(--muted)" font-size="12">지진마다 ground-failure</text>
+        <text x="22" y="234" fill="var(--muted)" font-size="12">확률 지도 + 불확실도 지도</text>
+        <text x="22" y="252" fill="var(--muted)" font-size="12">(산사태·액상화 각각)</text>
+        <rect x="250" y="174" width="250" height="96" rx="8" fill="var(--soft)" stroke="var(--line)"/>
+        <text x="262" y="196" fill="var(--fg)" font-weight="700">250 m 칸마다 값 읽기 → 시정촌</text>
+        <text x="262" y="216" fill="var(--muted)" font-size="12">USGS가 계산한 칸 수</text>
+        <text x="262" y="234" fill="var(--muted)" font-size="12">(불확실도가 0·999가 아닌 칸)</text>
+        <text x="262" y="252" fill="var(--muted)" font-size="12">그 칸들의 불확실도 평균</text>
+        <rect x="550" y="174" width="300" height="44" rx="8" fill="var(--lq-bg)" stroke="var(--lq)"/>
+        <text x="562" y="194" fill="var(--lq)" font-weight="700">① 끄기</text>
+        <text x="562" y="210" fill="var(--fg)" font-size="12">계산한 칸이 0개면 그 재해 = 0 고정</text>
+        <rect x="550" y="226" width="300" height="44" rx="8" fill="var(--lq-bg)" stroke="var(--lq)"/>
+        <text x="562" y="246" fill="var(--lq)" font-weight="700">② 분산</text>
+        <text x="562" y="262" fill="var(--fg)" font-size="12">출발 분포 r⁰의 폭 = 불확실도 평균 (기본 1)</text>
+      </g>
+      <g stroke="var(--muted)" stroke-width="1.5" fill="none">
+        <path d="M200 73 H244" marker-end="url(#ah3)"/><path d="M500 73 H544" marker-end="url(#ah3)"/>
+        <path d="M200 222 H244" marker-end="url(#ah3)"/><path d="M500 210 L544 198" marker-end="url(#ah3)"/><path d="M500 234 L544 246" marker-end="url(#ah3)"/>
+      </g>
+    </svg>
+    </div>
+  </figure>
+
+  <div class="grid2">
+    <div class="card">
+      <div class="k">soft · 지형 비율로 사전확률 깎기</div>
+      <h3>자료</h3>
+      <ul>
+        <li>국토수치정보(nlftp.mlit.go.jp) <b>경사 5차메시 250 m</b> (G04-d-11, 2011년판). 지형은 몇 년 사이 거의 안 변하고 다섯 지진보다 앞섬</li>
+        <li>국토수치정보 <b>행정구역</b> (N03). 지진 연도판(2016 · 2018 · 2021 · 2024)으로 칸을 시정촌에 배정</li>
+      </ul>
+      <h3>만드는 법</h3>
+      <ul>
+        <li>250 m 칸의 중심이 들어가는 시정촌에 배정</li>
+        <li>비탈 비율 = 평균 경사 10° 이상 칸 ÷ 육지 칸, 평지 비율 = 5° 미만 칸 ÷ 육지 칸 (기준은 결과를 보기 전에 정함)</li>
+        <li>파일 <code>raw/terrain_fractions.csv</code>, 코드 <code>terrain_fractions.py</code></li>
+      </ul>
+      <h3>실험에 넣는 법</h3>
+      <ul>
+        <li>사전확률 로짓에 log(비율)을 더함. 1% 미만은 1%로 (log가 −∞가 되지 않게)</li>
+        <li>비율 1이면 그대로, 0에 가까울수록 끄기에 가까워짐</li>
+        <li>코드: <code>model.py</code>의 <code>log_p_z()</code> 안 <code>log_frac</code></li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="k">U · USGS 불확실도로 끄기 + 분산</div>
+      <h3>자료</h3>
+      <ul>
+        <li>USGS 지진 이벤트 페이지의 <b>ground-failure 제품</b>. 지진마다 해당 지진의 파일을 받음 (예: 구마모토 <code>us20005iis</code>)</li>
+        <li>산사태: <code>jessee_2017_model</code> / <code>_std</code> (2016·2018), <code>jessee_2018_model</code> / <code>_beta_sigma</code> (2021·2024)</li>
+        <li>액상화: <code>zhu_2017_general_model</code> / <code>_std</code> 또는 <code>_beta_sigma</code></li>
+        <li>불확실도 = "USGS가 그 위치의 확률을 얼마나 믿을 수 있나". 0이나 999는 계산 안 함</li>
+      </ul>
+      <h3>만드는 법</h3>
+      <ul>
+        <li>250 m 칸 중심에서 USGS 확률·불확실도 값을 읽음 (<code>usgs_cells.py</code>)</li>
+        <li>시정촌마다: USGS가 계산한 칸 수, 그 칸들의 불확실도 평균 (<code>run_muni_unc.py</code>)</li>
+        <li>파일 <code>raw/local_250m_byevent_usgs.csv</code></li>
+      </ul>
+      <h3>실험에 넣는 법</h3>
+      <ul>
+        <li><b>끄기</b>: 불확실도가 0·999가 아닌 칸(USGS가 계산한 칸)이 0개인 시정촌은 그 재해를 0으로 고정하고 DPM 설명에서도 뺌 (산사태 5곳, 액상화 11곳)</li>
+        <li><b>분산</b>: 사후분포 출발점 r⁰ ~ N(μ, 분산)의 분산을 1 대신 불확실도 평균으로</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3>USGS 확률 0 · 999와 불확실도 0 · 999의 관계</h3>
+  <p>250 m 칸 약 105만 개를 직접 세어 봤습니다.</p>
+  <div class="tw"><table>
+    <tr><th>지진</th><th>확률 = 0인 칸의 불확실도</th><th>확률 = 999(계산 안 함)인 칸의 불확실도</th></tr>
+    <tr><td>2016 구마모토 · 2018 오사카 · 2018 홋카이도 · 2021 후쿠시마 (USGS 옛 판)</td><td><b>항상 0</b></td><td>항상 999</td></tr>
+    <tr><td>2024 노토 (USGS 새 판, <code>beta_sigma</code>)</td><td><b>작은 양수가 남음</b> (산사태 71,600칸 · 액상화 46,482칸)</td><td>999</td></tr>
+  </table></div>
+  <ul>
+    <li>예외: 옛 판 액상화에서 확률은 양수인데 불확실도만 999인 칸이 45개 (구마모토 14, 오사카 31)</li>
+    <li><b>원 논문 공식 코드는 불확실도만 봅니다</b>: <code>q_LS[q_LS_var == 999] = 0</code>, <code>q_LS[q_LS_var == 0] = 0</code>. 사전확률 값은 끄기 판정에 쓰지 않습니다. 논문 본문에는 이 규칙에 대한 설명이 없습니다</li>
+    <li>옛 판에서는 확률 0과 불확실도 0이 항상 같이 나오므로 불확실도만 봐도 결과가 같습니다.</li>
+    <li><b>이 페이지의 실험은 모두 논문 기준(불확실도 0·999만)으로 끕니다</b> (<code>run_muni_unc.py --off-rule paper</code>). "불확실도 0·999 또는 확률 0·999"로 끄는 기준도 돌려 봤는데, 노토에서만 차이가 나고 결과가 거의 같습니다 (③ 0.675 대 0.675, ④ 0.739 대 0.738). 새 불확실도 기준으로 꺼지는 시정촌은 논문 기준 산사태 5곳·액상화 11곳, 확률까지 보면 산사태 8곳(노토 3곳 추가)·액상화 11곳입니다</li>
+    <li>노토 액상화는 칸의 약 60%(199,000칸)가 999입니다. USGS 액상화 모델이 니가타 쪽 넓은 지역을 계산하지 않아서, U로 꺼진 액상화 11곳이 전부 노토(니가타 쪽)입니다</li>
+  </ul>
+
+  <h3>두 끄기 기준의 AUC 비교 (시정촌, BD 없음, 새 불확실도)</h3>
+  <div class="tw"><table>
+    <tr><th rowspan="2">실험</th><th colspan="2" class="num">전체</th><th colspan="2" class="num">산사태</th><th colspan="2" class="num">액상화</th></tr>
+    <tr><th class="num">불확실도 + 확률로 끔</th><th class="num">불확실도로만 끔 (논문)</th><th class="num">불확실도 + 확률로 끔</th><th class="num">불확실도로만 끔 (논문)</th><th class="num">불확실도 + 확률로 끔</th><th class="num">불확실도로만 끔 (논문)</th></tr>
+<tr><td>③ DNU</td><td class="num">0.675</td><td class="num">0.675</td><td class="num">0.621</td><td class="num">0.621</td><td class="num">0.692</td><td class="num">0.693</td></tr>
+<tr><td>④ SOFTU</td><td class="num">0.739</td><td class="num">0.738</td><td class="num">0.791</td><td class="num">0.791</td><td class="num">0.722</td><td class="num">0.721</td></tr>
+<tr><td>DNU_끄기만</td><td class="num">0.637</td><td class="num">0.638</td><td class="num">0.538</td><td class="num">0.538</td><td class="num">0.668</td><td class="num">0.670</td></tr>
+<tr><td>DNU_분산만</td><td class="num">0.683</td><td class="num">0.681</td><td class="num">0.610</td><td class="num">0.610</td><td class="num">0.707</td><td class="num">0.705</td></tr>
+<tr><td>SOFTU_끄기만</td><td class="num">0.721</td><td class="num">0.722</td><td class="num">0.770</td><td class="num">0.770</td><td class="num">0.705</td><td class="num">0.706</td></tr>
+<tr><td>SOFTU_분산만</td><td class="num">0.753</td><td class="num">0.751</td><td class="num">0.792</td><td class="num">0.792</td><td class="num">0.740</td><td class="num">0.738</td></tr>
+  </table></div>
+  <div class="pc" data-custom="1"><div class="lg"><span><i style="background:var(--muted);opacity:.35"></i>위 막대 (연한) = 불확실도 + 확률로 끔</span><span><i style="background:var(--muted)"></i>아래 막대 (진한) = 불확실도로만 끔 (논문)</span></div><div class="cols"><div class="col"><h4><i style="background:var(--all)"></i>전체</h4><div class="row"><div class="nm">③ DNU</div><div class="bb"><div class="b"><span class="tr"><span class="f" style="width:35.0%;background:var(--all);opacity:.35"></span></span><em>0.675</em></div><div class="b B"><span class="tr"><span class="f" style="width:35.0%;background:var(--all)"></span></span><em>0.675</em></div></div></div><div class="row"><div class="nm">④ SOFTU</div><div class="bb"><div class="b"><span class="tr"><span class="f" style="width:47.8%;background:var(--all);opacity:.35"></span></span><em>0.739</em></div><div class="b B"><span class="tr"><span class="f" style="width:47.6%;background:var(--all)"></span></span><em>0.738</em></div></div></div><div class="row"><div class="nm">DNU_끄기만</div><div class="bb"><div class="b"><span class="tr"><span class="f" style="width:27.4%;background:var(--all);opacity:.35"></span></span><em>0.637</em></div><div class="b B"><span class="tr"><span class="f" style="width:27.6%;background:var(--all)"></span></span><em>0.638</em></div></div></div><div class="row"><div class="nm">DNU_분산만</div><div class="bb"><div class="b"><span class="tr"><span class="f" style="width:36.6%;background:var(--all);opacity:.35"></span></span><em>0.683</em></div><div class="b B"><span class="tr"><span class="f" style="width:36.2%;background:var(--all)"></span></span><em>0.681</em></div></div></div><div class="row"><div class="nm">SOFTU_끄기만</div><div class="bb"><div class="b"><span class="tr"><span class="f" style="width:44.2%;background:var(--all);opacity:.35"></span></span><em>0.721</em></div><div class="b B"><span class="tr"><span class="f" style="width:44.4%;background:var(--all)"></span></span><em>0.722</em></div></div></div><div class="row"><div class="nm">SOFTU_분산만</div><div class="bb"><div class="b"><span class="tr"><span class="f" style="width:50.6%;background:var(--all);opacity:.35"></span></span><em>0.753</em></div><div class="b B"><span class="tr"><span class="f" style="width:50.2%;background:var(--all)"></span></span><em>0.751</em></div></div></div><div class="ax"><div></div><div><span>0.5</span><span>0.75</span><span>1.0</span></div></div></div><div class="col"><h4><i style="background:var(--ls)"></i>산사태</h4><div class="row"><div class="nm">③ DNU</div><div class="bb"><div class="b"><span class="tr"><span class="f" style="width:24.2%;background:var(--ls);opacity:.35"></span></span><em>0.621</em></div><div class="b B"><span class="tr"><span class="f" style="width:24.2%;background:var(--ls)"></span></span><em>0.621</em></div></div></div><div class="row"><div class="nm">④ SOFTU</div><div class="bb"><div class="b"><span class="tr"><span class="f" style="width:58.2%;background:var(--ls);opacity:.35"></span></span><em>0.791</em></div><div class="b B"><span class="tr"><span class="f" style="width:58.2%;background:var(--ls)"></span></span><em>0.791</em></div></div></div><div class="row"><div class="nm">DNU_끄기만</div><div class="bb"><div class="b"><span class="tr"><span class="f" style="width:7.6%;background:var(--ls);opacity:.35"></span></span><em>0.538</em></div><div class="b B"><span class="tr"><span class="f" style="width:7.6%;background:var(--ls)"></span></span><em>0.538</em></div></div></div><div class="row"><div class="nm">DNU_분산만</div><div class="bb"><div class="b"><span class="tr"><span class="f" style="width:22.0%;background:var(--ls);opacity:.35"></span></span><em>0.610</em></div><div class="b B"><span class="tr"><span class="f" style="width:22.0%;background:var(--ls)"></span></span><em>0.610</em></div></div></div><div class="row"><div class="nm">SOFTU_끄기만</div><div class="bb"><div class="b"><span class="tr"><span class="f" style="width:54.0%;background:var(--ls);opacity:.35"></span></span><em>0.770</em></div><div class="b B"><span class="tr"><span class="f" style="width:54.0%;background:var(--ls)"></span></span><em>0.770</em></div></div></div><div class="row"><div class="nm">SOFTU_분산만</div><div class="bb"><div class="b"><span class="tr"><span class="f" style="width:58.4%;background:var(--ls);opacity:.35"></span></span><em>0.792</em></div><div class="b B"><span class="tr"><span class="f" style="width:58.4%;background:var(--ls)"></span></span><em>0.792</em></div></div></div><div class="ax"><div></div><div><span>0.5</span><span>0.75</span><span>1.0</span></div></div></div><div class="col"><h4><i style="background:var(--lq)"></i>액상화</h4><div class="row"><div class="nm">③ DNU</div><div class="bb"><div class="b"><span class="tr"><span class="f" style="width:38.4%;background:var(--lq);opacity:.35"></span></span><em>0.692</em></div><div class="b B"><span class="tr"><span class="f" style="width:38.6%;background:var(--lq)"></span></span><em>0.693</em></div></div></div><div class="row"><div class="nm">④ SOFTU</div><div class="bb"><div class="b"><span class="tr"><span class="f" style="width:44.4%;background:var(--lq);opacity:.35"></span></span><em>0.722</em></div><div class="b B"><span class="tr"><span class="f" style="width:44.2%;background:var(--lq)"></span></span><em>0.721</em></div></div></div><div class="row"><div class="nm">DNU_끄기만</div><div class="bb"><div class="b"><span class="tr"><span class="f" style="width:33.6%;background:var(--lq);opacity:.35"></span></span><em>0.668</em></div><div class="b B"><span class="tr"><span class="f" style="width:34.0%;background:var(--lq)"></span></span><em>0.670</em></div></div></div><div class="row"><div class="nm">DNU_분산만</div><div class="bb"><div class="b"><span class="tr"><span class="f" style="width:41.4%;background:var(--lq);opacity:.35"></span></span><em>0.707</em></div><div class="b B"><span class="tr"><span class="f" style="width:41.0%;background:var(--lq)"></span></span><em>0.705</em></div></div></div><div class="row"><div class="nm">SOFTU_끄기만</div><div class="bb"><div class="b"><span class="tr"><span class="f" style="width:41.0%;background:var(--lq);opacity:.35"></span></span><em>0.705</em></div><div class="b B"><span class="tr"><span class="f" style="width:41.2%;background:var(--lq)"></span></span><em>0.706</em></div></div></div><div class="row"><div class="nm">SOFTU_분산만</div><div class="bb"><div class="b"><span class="tr"><span class="f" style="width:48.0%;background:var(--lq);opacity:.35"></span></span><em>0.740</em></div><div class="b B"><span class="tr"><span class="f" style="width:47.6%;background:var(--lq)"></span></span><em>0.738</em></div></div></div><div class="ax"><div></div><div><span>0.5</span><span>0.75</span><span>1.0</span></div></div></div></div></div>
+  <p class="meta">"불확실도 + 확률로 끔" = 불확실도 0·999 <b>또는</b> USGS 사전확률 0·999면 끔. "불확실도로만 끔 (논문)" = 불확실도 0·999일 때만 끔 (이 페이지의 다른 표는 모두 이 기준). 차이는 노토에서만 납니다.</p>
+  <div class="anal"><b>결과 분석</b><ul><li><b>두 기준의 차이는 모든 실험에서 0.002 이하</b>입니다. 전체 AUC는 ③ 0.675 대 0.675, ④ 0.739 대 0.738, SOFTU_분산만 0.753 대 0.751</li><li><b>산사태 AUC는 여섯 실험 모두 똑같습니다.</b> 확률까지 보면 산사태로 꺼지는 시정촌이 3곳 늘지만 모두 노토이고, 산사태 평가는 구마모토·오사카·홋카이도만 쓰기 때문입니다</li><li>액상화만 0.001~0.002 다릅니다. 노토 시정촌의 분산 평균에서 확률 0·999 픽셀이 빠지는 차이입니다</li><li>→ 원 논문 공식 코드와 같은 <b>논문 기준(불확실도로만 끔)을 그대로 씁니다</b></li></ul></div>
+
+  <h3>실제 값 예시</h3>
+  <div class="tw"><table>
+    <tr><th>시정촌</th><th class="num">비탈 비율</th><th class="num">평지 비율</th><th class="num">soft: 산사태 로짓</th><th class="num">soft: 액상화 로짓</th><th class="num">U: 산사태 분산</th><th class="num">U: 액상화 분산</th></tr>
+    <tr><td>熊本市 (구마모토)</td><td class="num">0.20</td><td class="num">0.66</td><td class="num">−1.60</td><td class="num">−0.42</td><td class="num">0.012</td><td class="num">0.021</td></tr>
+    <tr><td>益城町 (구마모토)</td><td class="num">0.33</td><td class="num">0.54</td><td class="num">−1.11</td><td class="num">−0.62</td><td class="num">0.051</td><td class="num">0.019</td></tr>
+    <tr><td>厚真町 (홋카이도)</td><td class="num">0.58</td><td class="num">0.31</td><td class="num">−0.54</td><td class="num">−1.18</td><td class="num">0.018</td><td class="num">0.022</td></tr>
+    <tr><td>輪島市 (노토)</td><td class="num">0.80</td><td class="num">0.05</td><td class="num">−0.23</td><td class="num">−3.08</td><td class="num">0.050</td><td class="num">0.003</td></tr>
+  </table></div>
+  
+  <p class="meta">soft 로짓은 사전확률 로짓에 더해지는 값 (= log 비율). 輪島市는 평지가 5%뿐이라 액상화 사전확률이 크게 깎입니다. 네 곳 모두 USGS가 계산한 칸이 있어 U 끄기 대상은 아닙니다. 분산은 기본값 1과 비교해 아주 작습니다.</p>
+</section>
+
+<section id="s2">
+  <h2><span class="n">2</span>설정</h2>
+  <p>모델·학습·평가는 기존과 같고 <b>BD 노드만 뺐습니다</b>. 산사태·액상화 두 노드가 DPM을 설명합니다.</p>
+  <div class="tw"><table>
+    <tr><th>실험</th><th>soft (지형 비율)</th><th>U 끄기</th><th>U 분산</th><th>결과 폴더 <span class="mono">outputs/disasternet/</span></th></tr>
+    <tr><td>① DN</td><td class="no">✗</td><td class="no">✗</td><td class="no">✗</td><td><code>nobd_DN</code></td></tr>
+    <tr><td>② SOFT</td><td class="yes">○</td><td class="no">✗</td><td class="no">✗</td><td><code>nobd_SOFT</code></td></tr>
+    <tr><td>③ DNU</td><td class="no">✗</td><td class="yes">○</td><td class="yes">○</td><td><code>px_DNU</code></td></tr>
+    <tr><td>④ SOFTU</td><td class="yes">○</td><td class="yes">○</td><td class="yes">○</td><td><code>px_SOFTU</code></td></tr>
+    <tr><td colspan="5" style="color:var(--muted);font-size:14px;padding-top:14px">U 분리 — soft 없는 ① 위에서</td></tr>
+    <tr><td>DNU_끄기만</td><td class="no">✗</td><td class="yes">○</td><td class="no">✗</td><td><code>px_DNU_off</code></td></tr>
+    <tr><td>DNU_분산만</td><td class="no">✗</td><td class="no">✗</td><td class="yes">○</td><td><code>px_DNU_var</code></td></tr>
+    <tr><td colspan="5" style="color:var(--muted);font-size:14px;padding-top:14px">U 분리 — soft 있는 ② 위에서 (같은 결론인지 확인용)</td></tr>
+    <tr><td>SOFTU_끄기만</td><td class="yes">○</td><td class="yes">○</td><td class="no">✗</td><td><code>px_SOFTU_off</code></td></tr>
+    <tr><td>SOFTU_분산만</td><td class="yes">○</td><td class="no">✗</td><td class="yes">○</td><td><code>px_SOFTU_var</code></td></tr>
+    <tr><td colspan="5" style="color:var(--muted);font-size:14px;padding-top:14px">비교용 — 분산을 모든 시정촌에 같은 값으로</td></tr>
+    <tr><td>같은 분산 0.01</td><td class="no">✗</td><td class="no">✗</td><td>모두 0.01</td><td><code>nobd_DN_cvar01</code></td></tr>
+    <tr><td>같은 분산 0.001</td><td class="no">✗</td><td class="no">✗</td><td>모두 0.001</td><td><code>nobd_DN_cvar001</code></td></tr>
+  </table></div>
+  <ul>
+    <li><b>soft</b>: 사전확률 로짓에 log(비탈 비율) / log(평지 비율)을 더함</li>
+    <li><b>U 끄기</b>: 중심점이 시정촌 안인 USGS 칸 중 불확실도가 0·999가 아닌 칸이 하나도 없으면 그 재해를 0으로 고정 (산사태 5곳, 액상화 11곳)</li>
+    <li><b>U 분산</b>: 사후분포 출발점 r⁰의 분산 = 중심점이 시정촌 안인 켜진 USGS 칸들의 불확실도 평균 (사전확률 표와 같은 방식, 물 포함). 시정촌마다 다른 값 (전체 시정촌 평균: 산사태 0.005, 액상화 0.013). 안 쓰면 모든 시정촌 1</li>
+    <li>평가: 공통 263곳, 지진별 AUC를 시정촌 수로 가중평균, seed 5개 평균 (<code>compare_latest.py</code>)</li>
+    <li>BD 있는 기존 결과(<code>input_v5_*_lqmax</code>)는 그대로 보존했습니다</li>
+    <li>U를 쓴 실험의 끄기 기준: <b>논문 기준</b> (불확실도 0·999만). 결과 폴더는 <code>px_*</code> (새 불확실도; 확률까지 보고 끈 비교용은 <code>pxo_*</code>)</li>
+    <li>이름: <b>끄기만</b> = USGS 불확실도를 끄기에만 씀, <b>분산만</b> = 분산에만 씀. 결과 폴더 이름은 코드 옵션을 따라 <code>_off</code> / <code>_var</code>로 남아 있습니다</li>
+  </ul>
+</section>
+
+<section id="sall">
+  <h2><span class="n">2.5</span>모든 실험 한눈에</h2>
+  <div class="legend"><span><i class="sw" style="background:var(--all)"></i>전체 (200곳)</span><span><i class="sw" style="background:var(--ls)"></i>산사태 (49곳)</span><span><i class="sw" style="background:var(--lq)"></i>액상화 (151곳)</span></div>
+  <div class="chart" role="img" aria-label="모든 실험의 전체·산사태·액상화 AUC">
+  <div class="mini" style="margin-top:6px;font-size:13px;font-weight:500">기준선</div><div class="brow base"><div class="blab">USGS 기준선</div><div class="bars"><div class="bar"><span class="track"><span class="fill all" style="width:70.9%"></span></span><b>0.854</b></div><div class="bar"><span class="track"><span class="fill ls" style="width:45.7%"></span></span><b>0.729</b></div><div class="bar"><span class="track"><span class="fill lq" style="width:79.0%"></span></span><b>0.895</b></div></div></div><div class="brow pa"><div class="blab">pilotA A2</div><div class="bars"><div class="bar"><span class="track"><span class="fill all" style="width:71.1%"></span></span><b>0.855</b></div><div class="bar"><span class="track"><span class="fill ls" style="width:74.4%"></span></span><b>0.872</b></div><div class="bar"><span class="track"><span class="fill lq" style="width:70.0%"></span></span><b>0.850</b></div></div></div><div class="mini" style="margin-top:6px;font-size:13px;font-weight:500">기본 4개 (BD 없음)</div><div class="brow dn"><div class="blab">① DN</div><div class="bars"><div class="bar"><span class="track"><span class="fill all" style="width:22.8%"></span></span><b>0.614</b></div><div class="bar"><span class="track"><span class="fill ls" style="width:2.5%"></span></span><b>0.512</b></div><div class="bar"><span class="track"><span class="fill lq" style="width:29.3%"></span></span><b>0.647</b></div></div></div><div class="brow dn"><div class="blab">② SOFT</div><div class="bars"><div class="bar"><span class="track"><span class="fill all" style="width:42.0%"></span></span><b>0.710</b></div><div class="bar"><span class="track"><span class="fill ls" style="width:55.3%"></span></span><b>0.777</b></div><div class="bar"><span class="track"><span class="fill lq" style="width:37.6%"></span></span><b>0.688</b></div></div></div><div class="brow dn"><div class="blab">③ DNU</div><div class="bars"><div class="bar"><span class="track"><span class="fill all" style="width:35.0%"></span></span><b>0.675</b></div><div class="bar"><span class="track"><span class="fill ls" style="width:24.2%"></span></span><b>0.621</b></div><div class="bar"><span class="track"><span class="fill lq" style="width:38.6%"></span></span><b>0.693</b></div></div></div><div class="brow dn"><div class="blab">④ SOFTU</div><div class="bars"><div class="bar"><span class="track"><span class="fill all" style="width:47.6%"></span></span><b>0.738</b></div><div class="bar"><span class="track"><span class="fill ls" style="width:58.2%"></span></span><b>0.791</b></div><div class="bar"><span class="track"><span class="fill lq" style="width:44.2%"></span></span><b>0.721</b></div></div></div><div class="mini" style="margin-top:6px;font-size:13px;font-weight:500">U 분리 — soft 없는 ① 위에서</div><div class="brow dn"><div class="blab">DNU_끄기만</div><div class="bars"><div class="bar"><span class="track"><span class="fill all" style="width:27.6%"></span></span><b>0.638</b></div><div class="bar"><span class="track"><span class="fill ls" style="width:7.6%"></span></span><b>0.538</b></div><div class="bar"><span class="track"><span class="fill lq" style="width:34.0%"></span></span><b>0.670</b></div></div></div><div class="brow dn"><div class="blab">DNU_분산만</div><div class="bars"><div class="bar"><span class="track"><span class="fill all" style="width:36.2%"></span></span><b>0.681</b></div><div class="bar"><span class="track"><span class="fill ls" style="width:22.0%"></span></span><b>0.610</b></div><div class="bar"><span class="track"><span class="fill lq" style="width:41.0%"></span></span><b>0.705</b></div></div></div><div class="mini" style="margin-top:6px;font-size:13px;font-weight:500">U 분리 — soft 있는 ② 위에서</div><div class="brow dn"><div class="blab">SOFTU_끄기만</div><div class="bars"><div class="bar"><span class="track"><span class="fill all" style="width:44.4%"></span></span><b>0.722</b></div><div class="bar"><span class="track"><span class="fill ls" style="width:54.0%"></span></span><b>0.770</b></div><div class="bar"><span class="track"><span class="fill lq" style="width:41.2%"></span></span><b>0.706</b></div></div></div><div class="brow dn"><div class="blab">SOFTU_분산만</div><div class="bars"><div class="bar"><span class="track"><span class="fill all" style="width:50.2%"></span></span><b>0.751</b></div><div class="bar"><span class="track"><span class="fill ls" style="width:58.4%"></span></span><b>0.792</b></div><div class="bar"><span class="track"><span class="fill lq" style="width:47.6%"></span></span><b>0.738</b></div></div></div><div class="mini" style="margin-top:6px;font-size:13px;font-weight:500">비교용 — 같은 분산</div><div class="brow dn"><div class="blab">같은 분산 0.01</div><div class="bars"><div class="bar"><span class="track"><span class="fill all" style="width:31.3%"></span></span><b>0.657</b></div><div class="bar"><span class="track"><span class="fill ls" style="width:15.8%"></span></span><b>0.579</b></div><div class="bar"><span class="track"><span class="fill lq" style="width:36.4%"></span></span><b>0.682</b></div></div></div><div class="brow dn"><div class="blab">같은 분산 0.001</div><div class="bars"><div class="bar"><span class="track"><span class="fill all" style="width:23.2%"></span></span><b>0.616</b></div><div class="bar"><span class="track"><span class="fill ls" style="width:7.9%"></span></span><b>0.540</b></div><div class="bar"><span class="track"><span class="fill lq" style="width:28.2%"></span></span><b>0.641</b></div></div></div><div class="axis"><div></div><div><span>0.5</span><span>0.75</span><span>1.0</span></div></div>
+  </div>
+  <p class="meta">모두 BD 없음 · 공통 263곳 · seed 5개 평균 · 막대는 0.5부터. BD 있는 기존 결과와의 비교는 3장에 있습니다.</p>
+  <div class="anal"><b>결과 분석</b><ul><li><b>전체 AUC가 가장 높은 것은 SOFTU_분산만 0.751</b>, 다음이 ④ SOFTU 0.738입니다. 가장 낮은 것은 ① DN 0.614와 같은 분산 0.001 0.616</li><li><b>산사태</b>: soft를 쓴 실험(② · ④ · SOFTU_끄기만 · SOFTU_분산만)이 0.770~0.792로 USGS 기준선(0.729)을 넘습니다. 하지만 pilotA(0.872)보다는 낮습니다. soft가 없는 실험은 0.512~0.621</li><li><b>액상화</b>: 가장 높은 SOFTU_분산만도 0.738로, USGS 기준선(0.895)·pilotA(0.850)와 차이가 가장 큽니다</li><li>전체로는 모든 실험이 USGS 기준선(0.854)과 pilotA(0.855)에 못 미칩니다. 아래 묶음별로 soft·U·분산의 효과를 나눠 봤습니다</li></ul></div>
+
+  <h3>묶음별 분석</h3>
+  <div class="groups">
+    <div class="card">
+      <div class="k">묶음 1 · 기본 4개</div>
+      <h3>soft는 산사태를 크게 올리고, 액상화는 soft와 U가 비슷함</h3>
+      <p class="one">① DN에 soft·U를 더해 보면 <b>soft는 산사태를 크게 올리고(+0.265)</b>, 액상화는 soft와 U가 비슷하게 올리며(+0.041 · +0.046), <b>둘 다 쓴 ④가 전체 +0.124로 가장 많이 오릅니다.</b></p>
+      <div class="tc"><div class="tw st"><table>
+        <tr><th></th><th class="num hl">전체</th><th class="num">산사태</th><th class="num">액상화</th></tr>
+        <tr><td>① → ② soft 추가</td><td class="num up">+0.096</td><td class="num up">+0.265</td><td class="num up">+0.041</td></tr>
+        <tr><td>① → ③ U 추가</td><td class="num up">+0.061</td><td class="num up">+0.109</td><td class="num up">+0.046</td></tr>
+        <tr><td>① → ④ 둘 다</td><td class="num up">+0.124</td><td class="num up">+0.279</td><td class="num up">+0.074</td></tr>
+      </table></div>
+  <div class="ac" data-auto="1"><div class="lg"><span><i style="background:var(--all)"></i>전체</span><span><i style="background:var(--ls)"></i>산사태</span><span><i style="background:var(--lq)"></i>액상화</span></div><div class="r"><div class="l">① → ② soft 추가</div><div class="bs"><div class="b"><span class="tr"><span class="f" style="left:0;width:32.8%;background:var(--all)"></span></span><em>0.096</em></div><div class="b"><span class="tr"><span class="f" style="left:0;width:90.5%;background:var(--ls)"></span></span><em>0.265</em></div><div class="b"><span class="tr"><span class="f" style="left:0;width:14.0%;background:var(--lq)"></span></span><em>0.041</em></div></div></div><div class="r"><div class="l">① → ③ U 추가</div><div class="bs"><div class="b"><span class="tr"><span class="f" style="left:0;width:20.8%;background:var(--all)"></span></span><em>0.061</em></div><div class="b"><span class="tr"><span class="f" style="left:0;width:37.2%;background:var(--ls)"></span></span><em>0.109</em></div><div class="b"><span class="tr"><span class="f" style="left:0;width:15.7%;background:var(--lq)"></span></span><em>0.046</em></div></div></div><div class="r"><div class="l">① → ④ 둘 다</div><div class="bs"><div class="b"><span class="tr"><span class="f" style="left:0;width:42.3%;background:var(--all)"></span></span><em>0.124</em></div><div class="b"><span class="tr"><span class="f" style="left:0;width:95.2%;background:var(--ls)"></span></span><em>0.279</em></div><div class="b"><span class="tr"><span class="f" style="left:0;width:25.3%;background:var(--lq)"></span></span><em>0.074</em></div></div></div><div class="ax"><div></div><div><span>0.00</span><span>0.15</span><span>0.29</span></div></div></div></div>
+  
+  
+      <ul>
+        <li><b>산사태는 soft가 핵심</b>입니다 (0.512 → 0.777). 비탈이 적은 시정촌의 산사태 확률을 깎는 지형 정보가 크게 통합니다</li>
+        <li><b>액상화는 soft와 U가 비슷합니다</b> (U 0.693 대 soft 0.688). seed별로 보면 soft 0.655–0.770, U 0.643–0.746으로 겹치고, seed 0에서는 soft가 더 높습니다. 둘 다 ①(0.647)보다는 높습니다</li>
+        <li><b>둘의 효과는 일부 겹칩니다.</b> 따로 더하면 +0.157인데 같이 쓰면 +0.124입니다</li>
+        <li>가장 좋은 ④도 <b>USGS 기준선(0.854)에 못 미칩니다.</b> 산사태는 USGS(0.729)를 넘지만 pilotA(0.872)보다 낮고, 액상화는 USGS(0.895)와 차이가 큽니다 (0.722)</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="k">묶음 2 · U 분리 (soft 없는 ① 위에서)</div>
+      <h3>U의 효과는 거의 분산에서 옴</h3>
+      <p class="one">soft 없는 ①에 U의 두 역할을 하나씩 켜 보면 <b>분산만 켜도 +0.067로 U 전체(+0.061)만큼 오르고</b>, 끄기만은 +0.024에 그칩니다.</p>
+      <div class="tc"><div class="tw st"><table>
+        <tr><th>①에 더한 것</th><th class="num hl">전체</th><th class="num">산사태</th><th class="num">액상화</th></tr>
+        <tr><td>끄기만</td><td class="num">+0.024</td><td class="num">+0.026</td><td class="num">+0.023</td></tr>
+        <tr><td>분산만</td><td class="num up">+0.067</td><td class="num up">+0.098</td><td class="num up">+0.058</td></tr>
+        <tr><td>둘 다 (③)</td><td class="num up">+0.061</td><td class="num up">+0.109</td><td class="num up">+0.046</td></tr>
+      </table></div>
+  <div class="ac" data-auto="1"><div class="lg"><span><i style="background:var(--all)"></i>전체</span><span><i style="background:var(--ls)"></i>산사태</span><span><i style="background:var(--lq)"></i>액상화</span></div><div class="r"><div class="l">끄기만</div><div class="bs"><div class="b"><span class="tr"><span class="f" style="left:0;width:21.0%;background:var(--all)"></span></span><em>0.024</em></div><div class="b"><span class="tr"><span class="f" style="left:0;width:22.7%;background:var(--ls)"></span></span><em>0.026</em></div><div class="b"><span class="tr"><span class="f" style="left:0;width:20.1%;background:var(--lq)"></span></span><em>0.023</em></div></div></div><div class="r"><div class="l">분산만</div><div class="bs"><div class="b"><span class="tr"><span class="f" style="left:0;width:58.5%;background:var(--all)"></span></span><em>0.067</em></div><div class="b"><span class="tr"><span class="f" style="left:0;width:85.6%;background:var(--ls)"></span></span><em>0.098</em></div><div class="b"><span class="tr"><span class="f" style="left:0;width:50.7%;background:var(--lq)"></span></span><em>0.058</em></div></div></div><div class="r"><div class="l">둘 다 (③)</div><div class="bs"><div class="b"><span class="tr"><span class="f" style="left:0;width:53.3%;background:var(--all)"></span></span><em>0.061</em></div><div class="b"><span class="tr"><span class="f" style="left:0;width:95.2%;background:var(--ls)"></span></span><em>0.109</em></div><div class="b"><span class="tr"><span class="f" style="left:0;width:40.2%;background:var(--lq)"></span></span><em>0.046</em></div></div></div><div class="ax"><div></div><div><span>0.00</span><span>0.06</span><span>0.11</span></div></div></div></div>
+  
+  
+      <ul>
+        <li><b>전체로는 분산만 써도 U 전체와 거의 같습니다</b> (0.681 대 0.675)</li>
+        <li><b>끄기는 효과가 작습니다.</b> 산사태로 꺼지는 5곳은 모두 정답이 없고, 액상화 11곳은 평가 대상의 7%뿐입니다</li>
+        <li>산사태만 보면 둘 다 쓴 쪽이 조금 더 높고(0.621 대 0.610), 액상화는 분산만 쓴 쪽이 조금 더 높습니다 (0.705 대 0.693). 둘 다 seed 흔들림 수준의 차이입니다</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="k">묶음 3 · U 분리 (soft 있는 ② 위에서)</div>
+      <h3>soft 위에서도 같은 결론, 효과는 절반으로</h3>
+      <p class="one">soft를 켠 ②에서도 <b>분산이 효과의 대부분(+0.041, 끄기만 +0.012)</b>이지만, soft가 이미 산사태를 올려 놓아 <b>오르는 폭은 묶음 2의 절반 정도</b>입니다.</p>
+      <div class="tc"><div class="tw st"><table>
+        <tr><th>②에 더한 것</th><th class="num hl">전체</th><th class="num">산사태</th><th class="num">액상화</th></tr>
+        <tr><td>끄기만</td><td class="num">+0.012</td><td class="num down">−0.007</td><td class="num">+0.018</td></tr>
+        <tr><td>분산만</td><td class="num up">+0.041</td><td class="num">+0.015</td><td class="num up">+0.050</td></tr>
+        <tr><td>둘 다 (④)</td><td class="num up">+0.028</td><td class="num">+0.014</td><td class="num up">+0.033</td></tr>
+      </table></div>
+  <div class="ac" data-auto="1"><div class="lg"><span><i style="background:var(--all)"></i>전체</span><span><i style="background:var(--ls)"></i>산사태</span><span><i style="background:var(--lq)"></i>액상화</span></div><div class="r"><div class="l">끄기만</div><div class="bs"><div class="b"><span class="tr"><span class="z" style="left:50.0%"></span><span class="f" style="left:50.0%;width:12.0%;background:var(--all)"></span></span><em>+0.012</em></div><div class="b"><span class="tr"><span class="z" style="left:50.0%"></span><span class="f" style="left:43.0%;width:7.0%;background:var(--ls)"></span></span><em>-0.007</em></div><div class="b"><span class="tr"><span class="z" style="left:50.0%"></span><span class="f" style="left:50.0%;width:18.0%;background:var(--lq)"></span></span><em>+0.018</em></div></div></div><div class="r"><div class="l">분산만</div><div class="bs"><div class="b"><span class="tr"><span class="z" style="left:50.0%"></span><span class="f" style="left:50.0%;width:41.0%;background:var(--all)"></span></span><em>+0.041</em></div><div class="b"><span class="tr"><span class="z" style="left:50.0%"></span><span class="f" style="left:50.0%;width:15.0%;background:var(--ls)"></span></span><em>+0.015</em></div><div class="b"><span class="tr"><span class="z" style="left:50.0%"></span><span class="f" style="left:50.0%;width:50.0%;background:var(--lq)"></span></span><em>+0.050</em></div></div></div><div class="r"><div class="l">둘 다 (④)</div><div class="bs"><div class="b"><span class="tr"><span class="z" style="left:50.0%"></span><span class="f" style="left:50.0%;width:28.0%;background:var(--all)"></span></span><em>+0.028</em></div><div class="b"><span class="tr"><span class="z" style="left:50.0%"></span><span class="f" style="left:50.0%;width:14.0%;background:var(--ls)"></span></span><em>+0.014</em></div><div class="b"><span class="tr"><span class="z" style="left:50.0%"></span><span class="f" style="left:50.0%;width:33.0%;background:var(--lq)"></span></span><em>+0.033</em></div></div></div><div class="ax"><div></div><div><span>-0.05</span><span>+0.00</span><span>+0.05</span></div></div></div></div>
+  
+  
+      <ul>
+        <li>soft를 켜도 <b>효과는 분산에서 오고, 끄기는 작습니다</b>. 묶음 2와 같은 결론입니다</li>
+        <li>다만 <b>soft가 있으면 분산이 더 올리는 폭이 줄어듭니다</b>. soft 없을 때는 ① DN 0.614 → DNU_분산만 0.681 (+0.067), soft 있을 때는 ② SOFT 0.710 → SOFTU_분산만 0.751 (+0.041)</li>
+        <li>산사태는 soft 위에서 분산 효과가 없습니다 (+0.098 → +0.015). seed별로 ② SOFT 0.710–0.844, SOFTU_분산만 0.708–0.836으로 완전히 겹칩니다. soft가 이미 산사태를 0.512 → 0.777로 올려 놓았기 때문입니다</li>
+        <li>액상화는 soft 위에서도 분산이 평균 +0.050 올리는 경향입니다. seed 5개 중 4개에서 SOFTU_분산만이 더 높지만, 범위는 겹칩니다 (② SOFT 0.655–0.770, SOFTU_분산만 0.707–0.765)</li>
+        <li>가장 높은 값은 SOFTU_분산만(0.751)이고 ④(0.738)보다 0.013 높지만 seed 흔들림 수준입니다</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="k">묶음 4 · 비교용 같은 분산</div>
+      <h3>시정촌마다 다른 USGS 값(DNU_분산만)이 가장 높음</h3>
+      <p class="one">모두에게 같은 분산 0.01만 줘도 U 효과의 약 64%가 나오지만, <b>시정촌마다 다른 USGS 불확실도를 준 DNU_분산만(0.681)이 가장 높습니다.</b></p>
+      <div class="tw st" style="max-width:820px"><table>
+        <tr><th>실험</th><th>산사태 분산</th><th>액상화 분산</th></tr>
+        <tr><td>① DN</td><td>모두 1</td><td>모두 1</td></tr>
+        <tr><td>같은 분산 0.01</td><td>모두 0.01</td><td>모두 0.01 (산사태와 같은 값)</td></tr>
+        <tr><td>같은 분산 0.001</td><td>모두 0.001</td><td>모두 0.001 (산사태와 같은 값)</td></tr>
+        <tr><td>DNU_분산만</td><td>시정촌마다 USGS 산사태 값</td><td>시정촌마다 USGS 액상화 값</td></tr>
+      </table></div>
+      <p class="meta">네 실험 모두 끄기·soft 없음, BD 없음. 분산만 다르게 줌</p>
+      <div class="tc"><div class="tw st"><table>
+        <tr><th>r⁰ 분산</th><th class="num hl">전체</th><th class="num">산사태</th><th class="num">액상화</th></tr>
+        <tr><td>① DN · 모두 1</td><td class="num">0.614</td><td class="num">0.512</td><td class="num">0.647</td></tr>
+        <tr><td>모두 0.001</td><td class="num">0.616</td><td class="num">0.540</td><td class="num">0.641</td></tr>
+        <tr><td>모두 0.01</td><td class="num">0.657</td><td class="num">0.579</td><td class="num">0.682</td></tr>
+        <tr><td>DNU_분산만 · USGS 값</td><td class="num up">0.681</td><td class="num up">0.610</td><td class="num up">0.705</td></tr>
+      </table></div>
+      <div class="chart sm" data-custom="1">
+        <div class="legend"><span><i class="sw" style="background:var(--all)"></i>전체</span><span><i class="sw" style="background:var(--ls)"></i>산사태</span><span><i class="sw" style="background:var(--lq)"></i>액상화</span></div>
+        <div class="brow dn"><div class="blab">① DN · 모두 1</div><div class="bars"><div class="bar"><span class="track"><span class="fill all" style="width:22.8%"></span></span><b>0.614</b></div><div class="bar"><span class="track"><span class="fill ls" style="width:2.4%"></span></span><b>0.512</b></div><div class="bar"><span class="track"><span class="fill lq" style="width:29.4%"></span></span><b>0.647</b></div></div></div>
+        <div class="brow dn"><div class="blab">모두 0.001</div><div class="bars"><div class="bar"><span class="track"><span class="fill all" style="width:23.2%"></span></span><b>0.616</b></div><div class="bar"><span class="track"><span class="fill ls" style="width:8.0%"></span></span><b>0.540</b></div><div class="bar"><span class="track"><span class="fill lq" style="width:28.2%"></span></span><b>0.641</b></div></div></div>
+        <div class="brow dn"><div class="blab">모두 0.01</div><div class="bars"><div class="bar"><span class="track"><span class="fill all" style="width:31.4%"></span></span><b>0.657</b></div><div class="bar"><span class="track"><span class="fill ls" style="width:15.8%"></span></span><b>0.579</b></div><div class="bar"><span class="track"><span class="fill lq" style="width:36.4%"></span></span><b>0.682</b></div></div></div>
+        <div class="brow dn"><div class="blab">DNU_분산만 · USGS 값</div><div class="bars"><div class="bar"><span class="track"><span class="fill all" style="width:36.2%"></span></span><b>0.681</b></div><div class="bar"><span class="track"><span class="fill ls" style="width:22.0%"></span></span><b>0.610</b></div><div class="bar"><span class="track"><span class="fill lq" style="width:41.0%"></span></span><b>0.705</b></div></div></div>
+        <div class="axis"><div></div><div><span>0.5</span><span>0.75</span><span>1.0</span></div></div>
+        <p class="meta">모두 ① DN(BD·soft·U 끄기 없음)에서 r⁰ 분산만 바꾼 것. 막대는 0.5부터</p>
+      </div></div>
+      <ul>
+        <li><b>네 가지 중 DNU_분산만이 전체·산사태·액상화 모두 가장 높습니다</b> (0.681 / 0.610 / 0.705). 모두에게 같은 값을 주는 것보다 시정촌마다 다른 USGS 불확실도를 쓰는 쪽이 낫습니다</li>
+        <li><b>작을수록 좋은 건 아닙니다.</b> 모두 0.001은 ①과 거의 같고(전체 0.614 → 0.616), 모두 0.01은 올랐습니다 (0.657)</li>
+        <li>전체 AUC가 ①보다 모두 0.01은 +0.043, USGS 값(DNU_분산만)은 +0.067 올랐습니다. 같은 0.01은 USGS 값의 약 64%입니다</li>
+      </ul>
+    </div>
+  </div>
+  <div class="callout"><b>네 묶음을 합친 결론</b>
+    <p>soft와 U는 둘 다 AUC를 올리고, 같이 쓰면 효과가 일부 겹칩니다. U의 효과는 끄기보다 분산에서 나옵니다. 가장 좋은 설정(SOFTU_분산만 0.751, ④ SOFTU 0.738)도 USGS 기준선(0.854)과 pilotA(0.855)에는 못 미칩니다.</p>
+  </div>
+</section>
+
+
+<section id="auc">
+  <h2><span class="n">★</span>AUC는 어떻게 계산하나, pilotA A2는 어떤 설정인가</h2>
+  <h3>AUC 계산 (DisasterNet · pilotA · USGS 모두 같은 코드 <code>compare_latest</code>)</h3>
+  <p><b>1단계</b>: 재해 × 지진마다 그 지진의 시정촌 사후확률과 0/1 정답으로 AUC를 냅니다 (정답이 있는 조합만: 산사태 3개 지진, 액상화 4개 지진). <b>2단계</b>: 그 조합에서 평가한 시정촌 수로 가중평균합니다. 예시는 칸 단위 ⑤ 끄기 지도 + U (면적 평균, seed 0).</p>
+  <div class="tw"><table>
+    <tr><th>재해</th><th>지진</th><th class="num">시정촌 수 (양성/음성)</th><th class="num">AUC</th></tr>
+    <tr><td>산사태</td><td>구마모토</td><td class="num">29 (26/3)</td><td class="num">0.769</td></tr>
+    <tr><td>산사태</td><td>오사카</td><td class="num">7 (5/2)</td><td class="num">1.000</td></tr>
+    <tr><td>산사태</td><td>홋카이도</td><td class="num">13 (9/4)</td><td class="num">0.583</td></tr>
+    <tr><td>액상화</td><td>구마모토</td><td class="num">40 (18/22)</td><td class="num">0.907</td></tr>
+    <tr><td>액상화</td><td>홋카이도</td><td class="num">40 (17/23)</td><td class="num">0.619</td></tr>
+    <tr><td>액상화</td><td>후쿠시마</td><td class="num">7 (6/1)</td><td class="num">0.500</td></tr>
+    <tr><td>액상화</td><td>노토</td><td class="num">64 (33/31)</td><td class="num">0.907</td></tr>
+  </table></div>
+  <ul>
+    <li><b>산사태 (49곳)</b> = (29 × 0.769 + 7 × 1.000 + 13 × 0.583) ÷ 49 = <b>0.753</b></li>
+    <li><b>액상화 (151곳)</b> = (40 × 0.907 + 40 × 0.619 + 7 × 0.500 + 64 × 0.907) ÷ 151 = <b>0.812</b></li>
+    <li><b>전체 (200곳)</b> = (49 × 0.753 + 151 × 0.812) ÷ 200 = <b>0.797</b></li>
+  </ul>
+  <p class="meta">시정촌이 많은 지진(노토 64곳)일수록 크게 반영되고, 적은 오사카·후쿠시마(7곳)는 적게 반영됩니다. 전체도 시정촌 수로 가중하므로 액상화(151곳)가 결과를 더 좌우합니다. 평가 시정촌과 정답은 DisasterNet · pilotA · USGS가 모두 같습니다.</p>
+
+  <h3>pilotA A2 설정</h3>
+  <div class="tw"><table>
+    <tr><th>항목</th><th>pilotA A2</th><th>DisasterNet (우리)</th></tr>
+    <tr><td>관측 자료</td><td>시정촌별 피해 통계 6가지 (사망 · 중상 · 경상 · 전파 · 반파 · 일부파손)</td><td>위성 DPM</td></tr>
+    <tr><td>관측 모델</td><td>잠재상태 4가지(산사태·액상화 있음/없음 조합)마다 예상 피해량을 만들고, 실제 피해가 그 상태에서 얼마나 그럴듯한지 음이항(Negative Binomial) 분포로 계산</td><td>재해가 DPM을 키운다는 로그정규 관측 식</td></tr>
+    <tr><td>사전확률</td><td>산사태: USGS 산사태 확률 + 시정촌 면적 비율(log cov) + 산지 지표(κ·z_mtn) · 액상화: USGS 액상화 확률(최댓값), 절편 b만 학습</td><td>USGS 확률 (soft를 쓰면 + log 비탈·평지 비율)</td></tr>
+    <tr><td>정답 사용</td><td><b>사용</b>: 평가 지진을 뺀 나머지 지진의 <b>산사태 정답만</b> 학습에 씀 (액상화 정답은 안 씀). A1은 액상화 정답도 씀</td><td>사용 안 함 (비지도)</td></tr>
+    <tr><td>분리 방식</td><td>지진 5개를 하나씩 빼고 나머지 4개로 학습, 뺀 지진을 예측 (leave-one-event-out)</td><td>지진마다 따로, 정답 없이 학습</td></tr>
+    <tr><td>뺀 지진 예측</td><td>뺀 지진의 피해 규모 보정값 α_e 하나만 그 지진의 피해 통계로 맞추고(정답은 안 씀), 나머지는 학습된 값 고정 (<code>p_ls_alpha_fit</code>, <code>p_lq_alpha_fit</code>)</td><td>해당 없음</td></tr>
+    <tr><td>정규화 · 학습</td><td>L2 계수 λ = 10, Adam lr 0.02, 3000 epoch, seed 0</td><td>Adam lr 0.01, 3000 epoch, seed 5개(시정촌)</td></tr>
+    <tr><td>결과 (전체 / 산사태 / 액상화)</td><td>0.855 / 0.872 / 0.850</td><td>시정촌 최고 0.751, 칸 최고 0.797</td></tr>
+  </table></div>
+  <p class="meta">코드: pilotA <code>train.py --holdout-event &lt;지진&gt; --lam-gamma 10 --no-lq-labels</code> (A1은 <code>--no-lq-labels</code> 없이), 결과 파일 <code>outputs/holdout_detail_lqnolab_holdout-*.csv</code>. pilotA는 다른 지진의 정답과 피해 통계를 쓰고 DisasterNet은 정답 없이 위성 DPM만 쓰므로, DisasterNet이 pilotA보다 낮은 것은 어느 정도 자연스럽습니다.</p>
+</section>
+<section id="su">
+  <h2><span class="n">U</span>불확실도 계산 변경 (10.20): 이전 대 새 결과</h2>
+  <p>USGS 불확실도(U)를 시정촌 값으로 만드는 방식을 <b>USGS 사전확률 표와 같은 방식</b>으로 바꾸고, U를 쓰는 실험을 모두 다시 돌렸습니다. 이 페이지의 다른 표·그래프는 모두 새 불확실도 값입니다.</p>
+  <div class="tw"><table>
+    <tr><th></th><th>이전 불확실도</th><th>새 불확실도 (지금)</th></tr>
+    <tr><td>세는 칸</td><td>우리 250 m 칸 (칸 중심점 아래 USGS 값)</td><td>USGS 칸 (중심점이 시정촌 안인 칸) — 사전확률 표와 같음</td></tr>
+    <tr><td>물</td><td>물 칸 제외</td><td>포함 (사전확률 표와 같음)</td></tr>
+    <tr><td>끄는 시정촌</td><td>산사태 6곳, 액상화 11곳</td><td>산사태 5곳, 액상화 11곳</td></tr>
+    <tr><td>결과 폴더</td><td><code>nobd_*_paper</code>, <code>input_v5_muni_unc_paper</code></td><td><code>px_*</code>, <code>pxbd_*</code></td></tr>
+  </table></div>
+  <h3>바꾸기 전과 지금: 어떤 칸을 평균하나</h3>
+  <figure><svg viewBox="0 0 960 305" role="img" aria-label="시정촌 단위. 사전확률과 바꾼 뒤 불확실도는 USGS 칸 중심점이 시정촌 안이면 채택. 바꾸기 전 불확실도는 250 m 칸 중심점 기준이었다. 칸은 미터 축척으로 그려 USGS 산사태 칸은 세로로 긴 직사각형, 250 m 칸은 가로로 긴 직사각형" style="width:100%;max-width:960px;height:auto"><style>.pin{fill:var(--ls);opacity:.35;stroke:var(--muted);stroke-width:.6} .pin2{fill:var(--lq);opacity:.35;stroke:var(--muted);stroke-width:.6} .pout{fill:none;stroke:var(--muted);stroke-width:.6}
+.din{fill:var(--fg)} .dout{fill:var(--muted);opacity:.35} .muni{fill:none;stroke:var(--accent);stroke-width:3}
+.cin{fill:var(--all);fill-opacity:.35;stroke:var(--all);stroke-opacity:.6;stroke-width:.8} .cout{fill:var(--all);fill-opacity:.1;stroke:var(--all);stroke-opacity:.35;stroke-width:.8} .pg{fill:none;stroke:var(--muted);stroke-width:1.2} .dred{fill:var(--warn)}
+.t{fill:var(--fg);font-size:14px;font-weight:700} .s{fill:var(--muted);font-size:12px} .x{fill:var(--warn);font-size:12px} .o{fill:var(--all);font-size:12px}</style>
+<rect x="10" y="10" width="30" height="36" class="pout"/><circle cx="25.0" cy="28.0" r="3" class="dout"/><rect x="10" y="46" width="30" height="36" class="pout"/><circle cx="25.0" cy="64.0" r="3" class="dout"/><rect x="10" y="82" width="30" height="36" class="pout"/><circle cx="25.0" cy="100.0" r="3" class="dout"/><rect x="10" y="118" width="30" height="36" class="pout"/><circle cx="25.0" cy="136.0" r="3" class="dout"/><rect x="10" y="154" width="30" height="36" class="pout"/><circle cx="25.0" cy="172.0" r="3" class="dout"/><rect x="10" y="190" width="30" height="36" class="pout"/><circle cx="25.0" cy="208.0" r="3" class="dout"/><rect x="10" y="226" width="30" height="36" class="pout"/><circle cx="25.0" cy="244.0" r="3" class="dout"/><rect x="10" y="262" width="30" height="36" class="pout"/><circle cx="25.0" cy="280.0" r="3" class="dout"/><rect x="40" y="10" width="30" height="36" class="pout"/><circle cx="55.0" cy="28.0" r="3" class="dout"/><rect x="40" y="46" width="30" height="36" class="pout"/><circle cx="55.0" cy="64.0" r="3" class="dout"/><rect x="40" y="82" width="30" height="36" class="pin"/><circle cx="55.0" cy="100.0" r="3" class="din"/><rect x="40" y="118" width="30" height="36" class="pin"/><circle cx="55.0" cy="136.0" r="3" class="din"/><rect x="40" y="154" width="30" height="36" class="pin"/><circle cx="55.0" cy="172.0" r="3" class="din"/><rect x="40" y="190" width="30" height="36" class="pout"/><circle cx="55.0" cy="208.0" r="3" class="dout"/><rect x="40" y="226" width="30" height="36" class="pout"/><circle cx="55.0" cy="244.0" r="3" class="dout"/><rect x="40" y="262" width="30" height="36" class="pout"/><circle cx="55.0" cy="280.0" r="3" class="dout"/><rect x="70" y="10" width="30" height="36" class="pout"/><circle cx="85.0" cy="28.0" r="3" class="dout"/><rect x="70" y="46" width="30" height="36" class="pin"/><circle cx="85.0" cy="64.0" r="3" class="din"/><rect x="70" y="82" width="30" height="36" class="pin"/><circle cx="85.0" cy="100.0" r="3" class="din"/><rect x="70" y="118" width="30" height="36" class="pin"/><circle cx="85.0" cy="136.0" r="3" class="din"/><rect x="70" y="154" width="30" height="36" class="pin"/><circle cx="85.0" cy="172.0" r="3" class="din"/><rect x="70" y="190" width="30" height="36" class="pin"/><circle cx="85.0" cy="208.0" r="3" class="din"/><rect x="70" y="226" width="30" height="36" class="pout"/><circle cx="85.0" cy="244.0" r="3" class="dout"/><rect x="70" y="262" width="30" height="36" class="pout"/><circle cx="85.0" cy="280.0" r="3" class="dout"/><rect x="100" y="10" width="30" height="36" class="pout"/><circle cx="115.0" cy="28.0" r="3" class="dout"/><rect x="100" y="46" width="30" height="36" class="pin"/><circle cx="115.0" cy="64.0" r="3" class="din"/><rect x="100" y="82" width="30" height="36" class="pin"/><circle cx="115.0" cy="100.0" r="3" class="din"/><rect x="100" y="118" width="30" height="36" class="pin"/><circle cx="115.0" cy="136.0" r="3" class="din"/><rect x="100" y="154" width="30" height="36" class="pin"/><circle cx="115.0" cy="172.0" r="3" class="din"/><rect x="100" y="190" width="30" height="36" class="pin"/><circle cx="115.0" cy="208.0" r="3" class="din"/><rect x="100" y="226" width="30" height="36" class="pin"/><circle cx="115.0" cy="244.0" r="3" class="din"/><rect x="100" y="262" width="30" height="36" class="pout"/><circle cx="115.0" cy="280.0" r="3" class="dout"/><rect x="130" y="10" width="30" height="36" class="pout"/><circle cx="145.0" cy="28.0" r="3" class="dout"/><rect x="130" y="46" width="30" height="36" class="pin"/><circle cx="145.0" cy="64.0" r="3" class="din"/><rect x="130" y="82" width="30" height="36" class="pin"/><circle cx="145.0" cy="100.0" r="3" class="din"/><rect x="130" y="118" width="30" height="36" class="pin"/><circle cx="145.0" cy="136.0" r="3" class="din"/><rect x="130" y="154" width="30" height="36" class="pin"/><circle cx="145.0" cy="172.0" r="3" class="din"/><rect x="130" y="190" width="30" height="36" class="pin"/><circle cx="145.0" cy="208.0" r="3" class="din"/><rect x="130" y="226" width="30" height="36" class="pin"/><circle cx="145.0" cy="244.0" r="3" class="din"/><rect x="130" y="262" width="30" height="36" class="pout"/><circle cx="145.0" cy="280.0" r="3" class="dout"/><rect x="160" y="10" width="30" height="36" class="pout"/><circle cx="175.0" cy="28.0" r="3" class="dout"/><rect x="160" y="46" width="30" height="36" class="pin"/><circle cx="175.0" cy="64.0" r="3" class="din"/><rect x="160" y="82" width="30" height="36" class="pin"/><circle cx="175.0" cy="100.0" r="3" class="din"/><rect x="160" y="118" width="30" height="36" class="pin"/><circle cx="175.0" cy="136.0" r="3" class="din"/><rect x="160" y="154" width="30" height="36" class="pin"/><circle cx="175.0" cy="172.0" r="3" class="din"/><rect x="160" y="190" width="30" height="36" class="pin"/><circle cx="175.0" cy="208.0" r="3" class="din"/><rect x="160" y="226" width="30" height="36" class="pout"/><circle cx="175.0" cy="244.0" r="3" class="dout"/><rect x="160" y="262" width="30" height="36" class="pout"/><circle cx="175.0" cy="280.0" r="3" class="dout"/><rect x="190" y="10" width="30" height="36" class="pout"/><circle cx="205.0" cy="28.0" r="3" class="dout"/><rect x="190" y="46" width="30" height="36" class="pin"/><circle cx="205.0" cy="64.0" r="3" class="din"/><rect x="190" y="82" width="30" height="36" class="pin"/><circle cx="205.0" cy="100.0" r="3" class="din"/><rect x="190" y="118" width="30" height="36" class="pin"/><circle cx="205.0" cy="136.0" r="3" class="din"/><rect x="190" y="154" width="30" height="36" class="pin"/><circle cx="205.0" cy="172.0" r="3" class="din"/><rect x="190" y="190" width="30" height="36" class="pin"/><circle cx="205.0" cy="208.0" r="3" class="din"/><rect x="190" y="226" width="30" height="36" class="pout"/><circle cx="205.0" cy="244.0" r="3" class="dout"/><rect x="190" y="262" width="30" height="36" class="pout"/><circle cx="205.0" cy="280.0" r="3" class="dout"/><rect x="220" y="10" width="30" height="36" class="pout"/><circle cx="235.0" cy="28.0" r="3" class="dout"/><rect x="220" y="46" width="30" height="36" class="pin"/><circle cx="235.0" cy="64.0" r="3" class="din"/><rect x="220" y="82" width="30" height="36" class="pin"/><circle cx="235.0" cy="100.0" r="3" class="din"/><rect x="220" y="118" width="30" height="36" class="pin"/><circle cx="235.0" cy="136.0" r="3" class="din"/><rect x="220" y="154" width="30" height="36" class="pin"/><circle cx="235.0" cy="172.0" r="3" class="din"/><rect x="220" y="190" width="30" height="36" class="pin"/><circle cx="235.0" cy="208.0" r="3" class="din"/><rect x="220" y="226" width="30" height="36" class="pout"/><circle cx="235.0" cy="244.0" r="3" class="dout"/><rect x="220" y="262" width="30" height="36" class="pout"/><circle cx="235.0" cy="280.0" r="3" class="dout"/><rect x="250" y="10" width="30" height="36" class="pout"/><circle cx="265.0" cy="28.0" r="3" class="dout"/><rect x="250" y="46" width="30" height="36" class="pout"/><circle cx="265.0" cy="64.0" r="3" class="dout"/><rect x="250" y="82" width="30" height="36" class="pout"/><circle cx="265.0" cy="100.0" r="3" class="dout"/><rect x="250" y="118" width="30" height="36" class="pin"/><circle cx="265.0" cy="136.0" r="3" class="din"/><rect x="250" y="154" width="30" height="36" class="pout"/><circle cx="265.0" cy="172.0" r="3" class="dout"/><rect x="250" y="190" width="30" height="36" class="pout"/><circle cx="265.0" cy="208.0" r="3" class="dout"/><rect x="250" y="226" width="30" height="36" class="pout"/><circle cx="265.0" cy="244.0" r="3" class="dout"/><rect x="250" y="262" width="30" height="36" class="pout"/><circle cx="265.0" cy="280.0" r="3" class="dout"/><rect x="280" y="10" width="30" height="36" class="pout"/><circle cx="295.0" cy="28.0" r="3" class="dout"/><rect x="280" y="46" width="30" height="36" class="pout"/><circle cx="295.0" cy="64.0" r="3" class="dout"/><rect x="280" y="82" width="30" height="36" class="pout"/><circle cx="295.0" cy="100.0" r="3" class="dout"/><rect x="280" y="118" width="30" height="36" class="pout"/><circle cx="295.0" cy="136.0" r="3" class="dout"/><rect x="280" y="154" width="30" height="36" class="pout"/><circle cx="295.0" cy="172.0" r="3" class="dout"/><rect x="280" y="190" width="30" height="36" class="pout"/><circle cx="295.0" cy="208.0" r="3" class="dout"/><rect x="280" y="226" width="30" height="36" class="pout"/><circle cx="295.0" cy="244.0" r="3" class="dout"/><rect x="280" y="262" width="30" height="36" class="pout"/><circle cx="295.0" cy="280.0" r="3" class="dout"/><polygon points="60,40 230,30 270,120 240,230 120,250 40,170" class="muni"/>
+
+<rect x="334" y="14" width="34" height="28" class="cout"/><rect x="334" y="42" width="34" height="28" class="cout"/><rect x="334" y="70" width="34" height="28" class="cout"/><rect x="334" y="98" width="34" height="28" class="cout"/><rect x="334" y="126" width="34" height="28" class="cout"/><rect x="334" y="154" width="34" height="28" class="cout"/><rect x="334" y="182" width="34" height="28" class="cout"/><rect x="334" y="210" width="34" height="28" class="cout"/><rect x="334" y="238" width="34" height="28" class="cout"/><rect x="334" y="266" width="34" height="28" class="cout"/><rect x="368" y="14" width="34" height="28" class="cout"/><rect x="368" y="42" width="34" height="28" class="cin"/><circle cx="385.0" cy="56.0" r="3" class="dred"/><rect x="368" y="70" width="34" height="28" class="cin"/><circle cx="385.0" cy="84.0" r="3" class="dred"/><rect x="368" y="98" width="34" height="28" class="cin"/><circle cx="385.0" cy="112.0" r="3" class="dred"/><rect x="368" y="126" width="34" height="28" class="cin"/><circle cx="385.0" cy="140.0" r="3" class="dred"/><rect x="368" y="154" width="34" height="28" class="cin"/><circle cx="385.0" cy="168.0" r="3" class="dred"/><rect x="368" y="182" width="34" height="28" class="cout"/><rect x="368" y="210" width="34" height="28" class="cout"/><rect x="368" y="238" width="34" height="28" class="cout"/><rect x="368" y="266" width="34" height="28" class="cout"/><rect x="402" y="14" width="34" height="28" class="cout"/><rect x="402" y="42" width="34" height="28" class="cin"/><circle cx="419.0" cy="56.0" r="3" class="dred"/><rect x="402" y="70" width="34" height="28" class="cin"/><circle cx="419.0" cy="84.0" r="3" class="dred"/><rect x="402" y="98" width="34" height="28" class="cin"/><circle cx="419.0" cy="112.0" r="3" class="dred"/><rect x="402" y="126" width="34" height="28" class="cin"/><circle cx="419.0" cy="140.0" r="3" class="dred"/><rect x="402" y="154" width="34" height="28" class="cin"/><circle cx="419.0" cy="168.0" r="3" class="dred"/><rect x="402" y="182" width="34" height="28" class="cin"/><circle cx="419.0" cy="196.0" r="3" class="dred"/><rect x="402" y="210" width="34" height="28" class="cin"/><circle cx="419.0" cy="224.0" r="3" class="dred"/><rect x="402" y="238" width="34" height="28" class="cout"/><rect x="402" y="266" width="34" height="28" class="cout"/><rect x="436" y="14" width="34" height="28" class="cout"/><rect x="436" y="42" width="34" height="28" class="cin"/><circle cx="453.0" cy="56.0" r="3" class="dred"/><rect x="436" y="70" width="34" height="28" class="cin"/><circle cx="453.0" cy="84.0" r="3" class="dred"/><rect x="436" y="98" width="34" height="28" class="cin"/><circle cx="453.0" cy="112.0" r="3" class="dred"/><rect x="436" y="126" width="34" height="28" class="cin"/><circle cx="453.0" cy="140.0" r="3" class="dred"/><rect x="436" y="154" width="34" height="28" class="cin"/><circle cx="453.0" cy="168.0" r="3" class="dred"/><rect x="436" y="182" width="34" height="28" class="cin"/><circle cx="453.0" cy="196.0" r="3" class="dred"/><rect x="436" y="210" width="34" height="28" class="cin"/><circle cx="453.0" cy="224.0" r="3" class="dred"/><rect x="436" y="238" width="34" height="28" class="cout"/><rect x="436" y="266" width="34" height="28" class="cout"/><rect x="470" y="14" width="34" height="28" class="cout"/><rect x="470" y="42" width="34" height="28" class="cin"/><circle cx="487.0" cy="56.0" r="3" class="dred"/><rect x="470" y="70" width="34" height="28" class="cin"/><circle cx="487.0" cy="84.0" r="3" class="dred"/><rect x="470" y="98" width="34" height="28" class="cin"/><circle cx="487.0" cy="112.0" r="3" class="dred"/><rect x="470" y="126" width="34" height="28" class="cin"/><circle cx="487.0" cy="140.0" r="3" class="dred"/><rect x="470" y="154" width="34" height="28" class="cin"/><circle cx="487.0" cy="168.0" r="3" class="dred"/><rect x="470" y="182" width="34" height="28" class="cin"/><circle cx="487.0" cy="196.0" r="3" class="dred"/><rect x="470" y="210" width="34" height="28" class="cin"/><circle cx="487.0" cy="224.0" r="3" class="dred"/><rect x="470" y="238" width="34" height="28" class="cout"/><rect x="470" y="266" width="34" height="28" class="cout"/><rect x="504" y="14" width="34" height="28" class="cout"/><rect x="504" y="42" width="34" height="28" class="cin"/><circle cx="521.0" cy="56.0" r="3" class="dred"/><rect x="504" y="70" width="34" height="28" class="cin"/><circle cx="521.0" cy="84.0" r="3" class="dred"/><rect x="504" y="98" width="34" height="28" class="cin"/><circle cx="521.0" cy="112.0" r="3" class="dred"/><rect x="504" y="126" width="34" height="28" class="cin"/><circle cx="521.0" cy="140.0" r="3" class="dred"/><rect x="504" y="154" width="34" height="28" class="cin"/><circle cx="521.0" cy="168.0" r="3" class="dred"/><rect x="504" y="182" width="34" height="28" class="cin"/><circle cx="521.0" cy="196.0" r="3" class="dred"/><rect x="504" y="210" width="34" height="28" class="cin"/><circle cx="521.0" cy="224.0" r="3" class="dred"/><rect x="504" y="238" width="34" height="28" class="cout"/><rect x="504" y="266" width="34" height="28" class="cout"/><rect x="538" y="14" width="34" height="28" class="cout"/><rect x="538" y="42" width="34" height="28" class="cin"/><circle cx="555.0" cy="56.0" r="3" class="dred"/><rect x="538" y="70" width="34" height="28" class="cin"/><circle cx="555.0" cy="84.0" r="3" class="dred"/><rect x="538" y="98" width="34" height="28" class="cin"/><circle cx="555.0" cy="112.0" r="3" class="dred"/><rect x="538" y="126" width="34" height="28" class="cin"/><circle cx="555.0" cy="140.0" r="3" class="dred"/><rect x="538" y="154" width="34" height="28" class="cin"/><circle cx="555.0" cy="168.0" r="3" class="dred"/><rect x="538" y="182" width="34" height="28" class="cin"/><circle cx="555.0" cy="196.0" r="3" class="dred"/><rect x="538" y="210" width="34" height="28" class="cin"/><circle cx="555.0" cy="224.0" r="3" class="dred"/><rect x="538" y="238" width="34" height="28" class="cout"/><rect x="538" y="266" width="34" height="28" class="cout"/><rect x="572" y="14" width="34" height="28" class="cout"/><rect x="572" y="42" width="34" height="28" class="cout"/><rect x="572" y="70" width="34" height="28" class="cout"/><rect x="572" y="98" width="34" height="28" class="cout"/><rect x="572" y="126" width="34" height="28" class="cout"/><rect x="572" y="154" width="34" height="28" class="cout"/><rect x="572" y="182" width="34" height="28" class="cout"/><rect x="572" y="210" width="34" height="28" class="cout"/><rect x="572" y="238" width="34" height="28" class="cout"/><rect x="572" y="266" width="34" height="28" class="cout"/><rect x="330" y="10" width="30" height="36" class="pg"/><rect x="330" y="46" width="30" height="36" class="pg"/><rect x="330" y="82" width="30" height="36" class="pg"/><rect x="330" y="118" width="30" height="36" class="pg"/><rect x="330" y="154" width="30" height="36" class="pg"/><rect x="330" y="190" width="30" height="36" class="pg"/><rect x="330" y="226" width="30" height="36" class="pg"/><rect x="330" y="262" width="30" height="36" class="pg"/><rect x="360" y="10" width="30" height="36" class="pg"/><rect x="360" y="46" width="30" height="36" class="pg"/><rect x="360" y="82" width="30" height="36" class="pg"/><rect x="360" y="118" width="30" height="36" class="pg"/><rect x="360" y="154" width="30" height="36" class="pg"/><rect x="360" y="190" width="30" height="36" class="pg"/><rect x="360" y="226" width="30" height="36" class="pg"/><rect x="360" y="262" width="30" height="36" class="pg"/><rect x="390" y="10" width="30" height="36" class="pg"/><rect x="390" y="46" width="30" height="36" class="pg"/><rect x="390" y="82" width="30" height="36" class="pg"/><rect x="390" y="118" width="30" height="36" class="pg"/><rect x="390" y="154" width="30" height="36" class="pg"/><rect x="390" y="190" width="30" height="36" class="pg"/><rect x="390" y="226" width="30" height="36" class="pg"/><rect x="390" y="262" width="30" height="36" class="pg"/><rect x="420" y="10" width="30" height="36" class="pg"/><rect x="420" y="46" width="30" height="36" class="pg"/><rect x="420" y="82" width="30" height="36" class="pg"/><rect x="420" y="118" width="30" height="36" class="pg"/><rect x="420" y="154" width="30" height="36" class="pg"/><rect x="420" y="190" width="30" height="36" class="pg"/><rect x="420" y="226" width="30" height="36" class="pg"/><rect x="420" y="262" width="30" height="36" class="pg"/><rect x="450" y="10" width="30" height="36" class="pg"/><rect x="450" y="46" width="30" height="36" class="pg"/><rect x="450" y="82" width="30" height="36" class="pg"/><rect x="450" y="118" width="30" height="36" class="pg"/><rect x="450" y="154" width="30" height="36" class="pg"/><rect x="450" y="190" width="30" height="36" class="pg"/><rect x="450" y="226" width="30" height="36" class="pg"/><rect x="450" y="262" width="30" height="36" class="pg"/><rect x="480" y="10" width="30" height="36" class="pg"/><rect x="480" y="46" width="30" height="36" class="pg"/><rect x="480" y="82" width="30" height="36" class="pg"/><rect x="480" y="118" width="30" height="36" class="pg"/><rect x="480" y="154" width="30" height="36" class="pg"/><rect x="480" y="190" width="30" height="36" class="pg"/><rect x="480" y="226" width="30" height="36" class="pg"/><rect x="480" y="262" width="30" height="36" class="pg"/><rect x="510" y="10" width="30" height="36" class="pg"/><rect x="510" y="46" width="30" height="36" class="pg"/><rect x="510" y="82" width="30" height="36" class="pg"/><rect x="510" y="118" width="30" height="36" class="pg"/><rect x="510" y="154" width="30" height="36" class="pg"/><rect x="510" y="190" width="30" height="36" class="pg"/><rect x="510" y="226" width="30" height="36" class="pg"/><rect x="510" y="262" width="30" height="36" class="pg"/><rect x="540" y="10" width="30" height="36" class="pg"/><rect x="540" y="46" width="30" height="36" class="pg"/><rect x="540" y="82" width="30" height="36" class="pg"/><rect x="540" y="118" width="30" height="36" class="pg"/><rect x="540" y="154" width="30" height="36" class="pg"/><rect x="540" y="190" width="30" height="36" class="pg"/><rect x="540" y="226" width="30" height="36" class="pg"/><rect x="540" y="262" width="30" height="36" class="pg"/><rect x="570" y="10" width="30" height="36" class="pg"/><rect x="570" y="46" width="30" height="36" class="pg"/><rect x="570" y="82" width="30" height="36" class="pg"/><rect x="570" y="118" width="30" height="36" class="pg"/><rect x="570" y="154" width="30" height="36" class="pg"/><rect x="570" y="190" width="30" height="36" class="pg"/><rect x="570" y="226" width="30" height="36" class="pg"/><rect x="570" y="262" width="30" height="36" class="pg"/><rect x="600" y="10" width="30" height="36" class="pg"/><rect x="600" y="46" width="30" height="36" class="pg"/><rect x="600" y="82" width="30" height="36" class="pg"/><rect x="600" y="118" width="30" height="36" class="pg"/><rect x="600" y="154" width="30" height="36" class="pg"/><rect x="600" y="190" width="30" height="36" class="pg"/><rect x="600" y="226" width="30" height="36" class="pg"/><rect x="600" y="262" width="30" height="36" class="pg"/><polygon points="380,40 550,30 590,120 560,230 440,250 360,170" class="muni"/>
+
+<rect x="650" y="10" width="30" height="36" class="pout"/><circle cx="665.0" cy="28.0" r="3" class="dout"/><rect x="650" y="46" width="30" height="36" class="pout"/><circle cx="665.0" cy="64.0" r="3" class="dout"/><rect x="650" y="82" width="30" height="36" class="pout"/><circle cx="665.0" cy="100.0" r="3" class="dout"/><rect x="650" y="118" width="30" height="36" class="pout"/><circle cx="665.0" cy="136.0" r="3" class="dout"/><rect x="650" y="154" width="30" height="36" class="pout"/><circle cx="665.0" cy="172.0" r="3" class="dout"/><rect x="650" y="190" width="30" height="36" class="pout"/><circle cx="665.0" cy="208.0" r="3" class="dout"/><rect x="650" y="226" width="30" height="36" class="pout"/><circle cx="665.0" cy="244.0" r="3" class="dout"/><rect x="650" y="262" width="30" height="36" class="pout"/><circle cx="665.0" cy="280.0" r="3" class="dout"/><rect x="680" y="10" width="30" height="36" class="pout"/><circle cx="695.0" cy="28.0" r="3" class="dout"/><rect x="680" y="46" width="30" height="36" class="pout"/><circle cx="695.0" cy="64.0" r="3" class="dout"/><rect x="680" y="82" width="30" height="36" class="pin2"/><circle cx="695.0" cy="100.0" r="3" class="din"/><rect x="680" y="118" width="30" height="36" class="pin2"/><circle cx="695.0" cy="136.0" r="3" class="din"/><rect x="680" y="154" width="30" height="36" class="pin2"/><circle cx="695.0" cy="172.0" r="3" class="din"/><rect x="680" y="190" width="30" height="36" class="pout"/><circle cx="695.0" cy="208.0" r="3" class="dout"/><rect x="680" y="226" width="30" height="36" class="pout"/><circle cx="695.0" cy="244.0" r="3" class="dout"/><rect x="680" y="262" width="30" height="36" class="pout"/><circle cx="695.0" cy="280.0" r="3" class="dout"/><rect x="710" y="10" width="30" height="36" class="pout"/><circle cx="725.0" cy="28.0" r="3" class="dout"/><rect x="710" y="46" width="30" height="36" class="pin2"/><circle cx="725.0" cy="64.0" r="3" class="din"/><rect x="710" y="82" width="30" height="36" class="pin2"/><circle cx="725.0" cy="100.0" r="3" class="din"/><rect x="710" y="118" width="30" height="36" class="pin2"/><circle cx="725.0" cy="136.0" r="3" class="din"/><rect x="710" y="154" width="30" height="36" class="pin2"/><circle cx="725.0" cy="172.0" r="3" class="din"/><rect x="710" y="190" width="30" height="36" class="pin2"/><circle cx="725.0" cy="208.0" r="3" class="din"/><rect x="710" y="226" width="30" height="36" class="pout"/><circle cx="725.0" cy="244.0" r="3" class="dout"/><rect x="710" y="262" width="30" height="36" class="pout"/><circle cx="725.0" cy="280.0" r="3" class="dout"/><rect x="740" y="10" width="30" height="36" class="pout"/><circle cx="755.0" cy="28.0" r="3" class="dout"/><rect x="740" y="46" width="30" height="36" class="pin2"/><circle cx="755.0" cy="64.0" r="3" class="din"/><rect x="740" y="82" width="30" height="36" class="pin2"/><circle cx="755.0" cy="100.0" r="3" class="din"/><rect x="740" y="118" width="30" height="36" class="pin2"/><circle cx="755.0" cy="136.0" r="3" class="din"/><rect x="740" y="154" width="30" height="36" class="pin2"/><circle cx="755.0" cy="172.0" r="3" class="din"/><rect x="740" y="190" width="30" height="36" class="pin2"/><circle cx="755.0" cy="208.0" r="3" class="din"/><rect x="740" y="226" width="30" height="36" class="pin2"/><circle cx="755.0" cy="244.0" r="3" class="din"/><rect x="740" y="262" width="30" height="36" class="pout"/><circle cx="755.0" cy="280.0" r="3" class="dout"/><rect x="770" y="10" width="30" height="36" class="pout"/><circle cx="785.0" cy="28.0" r="3" class="dout"/><rect x="770" y="46" width="30" height="36" class="pin2"/><circle cx="785.0" cy="64.0" r="3" class="din"/><rect x="770" y="82" width="30" height="36" class="pin2"/><circle cx="785.0" cy="100.0" r="3" class="din"/><rect x="770" y="118" width="30" height="36" class="pin2"/><circle cx="785.0" cy="136.0" r="3" class="din"/><rect x="770" y="154" width="30" height="36" class="pin2"/><circle cx="785.0" cy="172.0" r="3" class="din"/><rect x="770" y="190" width="30" height="36" class="pin2"/><circle cx="785.0" cy="208.0" r="3" class="din"/><rect x="770" y="226" width="30" height="36" class="pin2"/><circle cx="785.0" cy="244.0" r="3" class="din"/><rect x="770" y="262" width="30" height="36" class="pout"/><circle cx="785.0" cy="280.0" r="3" class="dout"/><rect x="800" y="10" width="30" height="36" class="pout"/><circle cx="815.0" cy="28.0" r="3" class="dout"/><rect x="800" y="46" width="30" height="36" class="pin2"/><circle cx="815.0" cy="64.0" r="3" class="din"/><rect x="800" y="82" width="30" height="36" class="pin2"/><circle cx="815.0" cy="100.0" r="3" class="din"/><rect x="800" y="118" width="30" height="36" class="pin2"/><circle cx="815.0" cy="136.0" r="3" class="din"/><rect x="800" y="154" width="30" height="36" class="pin2"/><circle cx="815.0" cy="172.0" r="3" class="din"/><rect x="800" y="190" width="30" height="36" class="pin2"/><circle cx="815.0" cy="208.0" r="3" class="din"/><rect x="800" y="226" width="30" height="36" class="pout"/><circle cx="815.0" cy="244.0" r="3" class="dout"/><rect x="800" y="262" width="30" height="36" class="pout"/><circle cx="815.0" cy="280.0" r="3" class="dout"/><rect x="830" y="10" width="30" height="36" class="pout"/><circle cx="845.0" cy="28.0" r="3" class="dout"/><rect x="830" y="46" width="30" height="36" class="pin2"/><circle cx="845.0" cy="64.0" r="3" class="din"/><rect x="830" y="82" width="30" height="36" class="pin2"/><circle cx="845.0" cy="100.0" r="3" class="din"/><rect x="830" y="118" width="30" height="36" class="pin2"/><circle cx="845.0" cy="136.0" r="3" class="din"/><rect x="830" y="154" width="30" height="36" class="pin2"/><circle cx="845.0" cy="172.0" r="3" class="din"/><rect x="830" y="190" width="30" height="36" class="pin2"/><circle cx="845.0" cy="208.0" r="3" class="din"/><rect x="830" y="226" width="30" height="36" class="pout"/><circle cx="845.0" cy="244.0" r="3" class="dout"/><rect x="830" y="262" width="30" height="36" class="pout"/><circle cx="845.0" cy="280.0" r="3" class="dout"/><rect x="860" y="10" width="30" height="36" class="pout"/><circle cx="875.0" cy="28.0" r="3" class="dout"/><rect x="860" y="46" width="30" height="36" class="pin2"/><circle cx="875.0" cy="64.0" r="3" class="din"/><rect x="860" y="82" width="30" height="36" class="pin2"/><circle cx="875.0" cy="100.0" r="3" class="din"/><rect x="860" y="118" width="30" height="36" class="pin2"/><circle cx="875.0" cy="136.0" r="3" class="din"/><rect x="860" y="154" width="30" height="36" class="pin2"/><circle cx="875.0" cy="172.0" r="3" class="din"/><rect x="860" y="190" width="30" height="36" class="pin2"/><circle cx="875.0" cy="208.0" r="3" class="din"/><rect x="860" y="226" width="30" height="36" class="pout"/><circle cx="875.0" cy="244.0" r="3" class="dout"/><rect x="860" y="262" width="30" height="36" class="pout"/><circle cx="875.0" cy="280.0" r="3" class="dout"/><rect x="890" y="10" width="30" height="36" class="pout"/><circle cx="905.0" cy="28.0" r="3" class="dout"/><rect x="890" y="46" width="30" height="36" class="pout"/><circle cx="905.0" cy="64.0" r="3" class="dout"/><rect x="890" y="82" width="30" height="36" class="pout"/><circle cx="905.0" cy="100.0" r="3" class="dout"/><rect x="890" y="118" width="30" height="36" class="pin2"/><circle cx="905.0" cy="136.0" r="3" class="din"/><rect x="890" y="154" width="30" height="36" class="pout"/><circle cx="905.0" cy="172.0" r="3" class="dout"/><rect x="890" y="190" width="30" height="36" class="pout"/><circle cx="905.0" cy="208.0" r="3" class="dout"/><rect x="890" y="226" width="30" height="36" class="pout"/><circle cx="905.0" cy="244.0" r="3" class="dout"/><rect x="890" y="262" width="30" height="36" class="pout"/><circle cx="905.0" cy="280.0" r="3" class="dout"/><rect x="920" y="10" width="30" height="36" class="pout"/><circle cx="935.0" cy="28.0" r="3" class="dout"/><rect x="920" y="46" width="30" height="36" class="pout"/><circle cx="935.0" cy="64.0" r="3" class="dout"/><rect x="920" y="82" width="30" height="36" class="pout"/><circle cx="935.0" cy="100.0" r="3" class="dout"/><rect x="920" y="118" width="30" height="36" class="pout"/><circle cx="935.0" cy="136.0" r="3" class="dout"/><rect x="920" y="154" width="30" height="36" class="pout"/><circle cx="935.0" cy="172.0" r="3" class="dout"/><rect x="920" y="190" width="30" height="36" class="pout"/><circle cx="935.0" cy="208.0" r="3" class="dout"/><rect x="920" y="226" width="30" height="36" class="pout"/><circle cx="935.0" cy="244.0" r="3" class="dout"/><rect x="920" y="262" width="30" height="36" class="pout"/><circle cx="935.0" cy="280.0" r="3" class="dout"/><polygon points="700,40 870,30 910,120 880,230 760,250 680,170" class="muni"/>
+
+
+</svg><figcaption>①과 ③은 <b>USGS 칸의 중심점</b>이 시정촌 경계 안이면 그 USGS 칸을 채택합니다 (경계는 지진 연도판 N03, 정령지정도시는 구를 합침). ②는 우리 250 m 칸의 중심점을 기준으로 했던 이전 방식입니다. ③ 코드로 사전확률을 계산하면 직접 만든 표와 똑같이 나옵니다 (산사태 평균 최대 차이 0.00004, 액상화 최댓값 0.000005).</figcaption></figure>
+  <div class="grid2" style="grid-template-columns:repeat(auto-fit,minmax(220px,1fr));margin-top:6px">
+  <div class="card"><h3 style="font-size:15px">① 사전확률</h3><p class="meta">USGS 칸 중심점(●)이 시정촌 안 → 그 USGS 칸들의 평균 · 최댓값. 물 포함.</p><p class="meta">USGS 산사태 칸: 실제 약 230 × 170~195 m</p></div>
+  <div class="card"><h3 style="font-size:15px">② 불확실도 — 바꾸기 전</h3><p class="meta">옅은 초록 = 우리 250 m 칸, 회색 선 = USGS 칸. 시정촌 안 초록 칸의 중심점(●) 아래 USGS 값을 평균. 물 제외. <b>①과 다름</b></p><p class="meta">250 m 칸: 실제 약 230 × 260~290 m</p></div>
+  <div class="card"><h3 style="font-size:15px">③ 불확실도 — 바꾼 뒤 (지금)</h3><p class="meta">①과 똑같이 USGS 칸 중심점이 시정촌 안 → 같은 USGS 칸들을 평균. 물 포함. <b>①과 같음</b></p><p class="meta">액상화 USGS 칸은 산사태 칸보다 가로·세로 2배 (실제 약 460 × 340~390 m)</p></div>
+</div>
+  <div class="tw"><table>
+    <tr><th>시정촌 단위</th><th>기준 중심점</th><th>계산</th><th>물</th></tr>
+    <tr><td>사전확률</td><td>USGS 칸</td><td>산사태 평균 · 액상화 최댓값</td><td>포함</td></tr>
+    <tr><td>불확실도 (바꾸기 전)</td><td>250 m 칸</td><td>켜진 칸 수(끄기) · 켜진 칸 평균(분산)</td><td>제외</td></tr>
+    <tr><td><b>불확실도 (지금)</b></td><td><b>USGS 칸</b></td><td>켜진 USGS 칸 수(끄기) · 켜진 USGS 칸 평균(분산)</td><td><b>포함</b></td></tr>
+    <tr><td>DPM</td><td>40 m 화소 전부</td><td>시정촌 평균 − 프레임 중앙값</td><td>포함</td></tr>
+  </table></div>
+  <p class="meta">바꾸기 전과 지금의 불확실도 차이는 작습니다 (분산 상관 산사태 0.9999 · 액상화 0.997, 끄는 시정촌 산사태 6 → 5곳 · 액상화 11곳 그대로). 바꾼 방식으로 U를 쓰는 시정촌 실험(③ DNU · ④ SOFTU · 끄기만 · 분산만)을 다시 돌리는 중. 시정촌 DPM에서 물을 빼고 돌려 봐도 결과가 거의 같아서 시정촌은 물 포함으로 통일했습니다.</p>
+  <h4 style="margin:4px 0 0;font-size:15px">예시: 益城町 (2016 구마모토)</h4>
+  <div class="tw"><table>
+    <tr><th></th><th>세는 칸</th><th class="num">쓴 칸</th><th class="num">켜진 칸</th><th class="num">평균 불확실도 (= 분산)</th></tr>
+    <tr><td>산사태 — 바꾸기 전</td><td>250 m 칸 (물 10개 뺀)</td><td class="num">963</td><td class="num">567</td><td class="num">0.0513</td></tr>
+    <tr><td>산사태 — 지금</td><td>USGS 칸 (실제 약 230 × 170~195 m, 물 포함)</td><td class="num">1,456</td><td class="num">864</td><td class="num">0.0508</td></tr>
+    <tr><td>액상화 — 바꾸기 전</td><td>250 m 칸 (물 10개 뺀)</td><td class="num">963</td><td class="num">613</td><td class="num">0.0191</td></tr>
+    <tr><td>액상화 — 지금</td><td>USGS 칸 (실제 약 460 × 340~390 m, 물 포함)</td><td class="num">361</td><td class="num">228</td><td class="num">0.0188</td></tr>
+  </table></div>
+  <div class="ac" data-auto="1"><div class="lg"><span><i style="background:var(--all)"></i>쓴 칸</span><span><i style="background:var(--ls)"></i>켜진 칸</span></div><div class="r"><div class="l">산사태 — 바꾸기 전</div><div class="bs"><div class="b"><span class="tr"><span class="f" style="left:0;width:63.0%;background:var(--all)"></span></span><em>963</em></div><div class="b"><span class="tr"><span class="f" style="left:0;width:37.1%;background:var(--ls)"></span></span><em>567</em></div></div></div><div class="r"><div class="l">산사태 — 지금</div><div class="bs"><div class="b"><span class="tr"><span class="f" style="left:0;width:95.2%;background:var(--all)"></span></span><em>1456</em></div><div class="b"><span class="tr"><span class="f" style="left:0;width:56.5%;background:var(--ls)"></span></span><em>864</em></div></div></div><div class="r"><div class="l">액상화 — 바꾸기 전</div><div class="bs"><div class="b"><span class="tr"><span class="f" style="left:0;width:63.0%;background:var(--all)"></span></span><em>963</em></div><div class="b"><span class="tr"><span class="f" style="left:0;width:40.1%;background:var(--ls)"></span></span><em>613</em></div></div></div><div class="r"><div class="l">액상화 — 지금</div><div class="bs"><div class="b"><span class="tr"><span class="f" style="left:0;width:23.6%;background:var(--all)"></span></span><em>361</em></div><div class="b"><span class="tr"><span class="f" style="left:0;width:14.9%;background:var(--ls)"></span></span><em>228</em></div></div></div><div class="ax"><div></div><div><span>0</span><span>764</span><span>1,529</span></div></div></div>
+  
+  
+  <p class="meta">세는 칸이 달라 개수는 다르지만(산사태 칸은 작아서 더 많고, 액상화 칸은 커서 더 적음) 같은 땅을 평균한 것이라 값은 거의 같습니다. 지금 방식은 사전확률과 불확실도가 똑같은 USGS 칸(산사태 1,456개 · 액상화 361개)에서 계산됩니다. 켜진 칸 = 불확실도가 0·999가 아닌 칸.</p>
+  <h4 style="margin:10px 0 0;font-size:15px">예시: 가장 많이 바뀐 곳 (2021 후쿠시마, 시정촌 코드 04203, 해안)</h4>
+  <div class="tw"><table>
+    <tr><th></th><th>세는 칸</th><th class="num">쓴 칸</th><th class="num">켜진 칸</th><th class="num">평균 불확실도 (= 분산)</th></tr>
+    <tr><td>액상화 — 바꾸기 전</td><td>250 m 칸 (279개 중 물 30개 = 11% 뺀)</td><td class="num">249</td><td class="num">244</td><td class="num">0.0192</td></tr>
+    <tr><td>액상화 — 지금</td><td>USGS 칸 (물 포함)</td><td class="num">109</td><td class="num">107</td><td class="num">0.0255</td></tr>
+  </table></div>
+  <p class="meta">물이 많은 해안 시정촌은 지금 방식에서 바다·하천 쪽 USGS 칸도 평균에 들어가 액상화 불확실도가 커졌습니다 (+0.0063). 전체에서 가장 큰 변화입니다.</p>
+  <h4 style="margin:10px 0 0;font-size:15px">전체 시정촌에서 얼마나 바뀌었나</h4>
+  <div class="tw"><table>
+    <tr><th>바뀐 크기 (지금 − 바꾸기 전)</th><th class="num">산사태 불확실도</th><th class="num">액상화 불확실도</th></tr>
+    <tr><td>중앙값</td><td class="num">0.0000</td><td class="num">+0.0002</td></tr>
+    <tr><td>가운데 50% 범위</td><td class="num">0.0000 ~ 0.0000</td><td class="num">0.0000 ~ +0.0007</td></tr>
+    <tr><td>가장 크게 바뀐 곳</td><td class="num">−0.0011 ~ +0.0009</td><td class="num">−0.0009 ~ +0.0063</td></tr>
+    <tr><td>꺼지는 시정촌</td><td class="num">6곳 → 5곳</td><td class="num">11곳 → 11곳</td></tr>
+  </table></div>
+  <div class="anal"><b>정리</b><ul>
+    <li>바뀐 것은 두 가지: <b>세는 칸</b>(우리 250 m 칸 → USGS 칸 자체)과 <b>물</b>(빼기 → 넣기). 둘 다 USGS 사전확률 표와 같게 맞춘 것입니다</li>
+    <li>같은 땅의 USGS 값을 평균하므로 <b>대부분 소수 넷째 자리에서만 달라집니다</b>. 해안 시정촌의 액상화만 조금 커집니다</li>
+    <li>그래서 결과 AUC도 −0.015 ~ +0.008만 바뀌고 결론은 같습니다 (아래 표)</li>
+    <li>칸(픽셀) 단위는 시정촌으로 모으지 않고 칸마다 자기 값을 쓰므로 이 작업이 필요 없습니다. 대신 칸 값을 읽는 방식(칸 중심점 → 겹친 면적 평균)을 바꿨습니다 (칸 단위 실험 기록 2.7장)</li>
+  </ul></div>
+
+  <h3>결과 비교</h3>
+  <div class="tw"><table>
+    <tr><th>실험 (seed 5개)</th><th class="num">이전 (전체 / 산사태 / 액상화)</th><th class="num">새 (전체 / 산사태 / 액상화)</th><th class="num">전체 차이</th></tr>
+    <tr><td>③ DNU</td><td class="num">0.690 / 0.628 / 0.709</td><td class="num">0.675 / 0.621 / 0.693</td><td class="num">-0.015</td></tr><tr><td>④ SOFTU</td><td class="num">0.739 / 0.793 / 0.722</td><td class="num">0.738 / 0.791 / 0.721</td><td class="num">-0.001</td></tr><tr><td>DNU_끄기만</td><td class="num">0.637 / 0.535 / 0.670</td><td class="num">0.638 / 0.538 / 0.670</td><td class="num">+0.001</td></tr><tr><td>DNU_분산만</td><td class="num">0.686 / 0.601 / 0.714</td><td class="num">0.681 / 0.610 / 0.705</td><td class="num">-0.005</td></tr><tr><td>SOFTU_끄기만</td><td class="num">0.722 / 0.770 / 0.706</td><td class="num">0.722 / 0.770 / 0.706</td><td class="num">+0.000</td></tr><tr><td>SOFTU_분산만</td><td class="num">0.743 / 0.791 / 0.727</td><td class="num">0.751 / 0.792 / 0.738</td><td class="num">+0.008</td></tr><tr><td>BD 있음 ③</td><td class="num">0.661 / 0.549 / 0.697</td><td class="num">0.669 / 0.553 / 0.707</td><td class="num">+0.008</td></tr><tr><td>BD 있음 ④</td><td class="num">0.714 / 0.749 / 0.703</td><td class="num">0.722 / 0.746 / 0.715</td><td class="num">+0.008</td></tr>
+  </table></div>
+  <div class="pc" data-custom="1"><div class="lg"><span><i style="background:var(--muted);opacity:.35"></i>위 막대 (연한) = 이전 불확실도</span><span><i style="background:var(--muted)"></i>아래 막대 (진한) = 새 불확실도 (지금)</span></div><div class="cols"><div class="col"><h4><i style="background:var(--all)"></i>전체</h4><div class="row"><div class="nm">③ DNU</div><div class="bb"><div class="b"><span class="tr"><span class="f" style="width:38.0%;background:var(--all);opacity:.35"></span></span><em>0.690</em></div><div class="b B"><span class="tr"><span class="f" style="width:35.0%;background:var(--all)"></span></span><em>0.675</em></div></div></div><div class="row"><div class="nm">④ SOFTU</div><div class="bb"><div class="b"><span class="tr"><span class="f" style="width:47.8%;background:var(--all);opacity:.35"></span></span><em>0.739</em></div><div class="b B"><span class="tr"><span class="f" style="width:47.6%;background:var(--all)"></span></span><em>0.738</em></div></div></div><div class="row"><div class="nm">DNU_끄기만</div><div class="bb"><div class="b"><span class="tr"><span class="f" style="width:27.4%;background:var(--all);opacity:.35"></span></span><em>0.637</em></div><div class="b B"><span class="tr"><span class="f" style="width:27.6%;background:var(--all)"></span></span><em>0.638</em></div></div></div><div class="row"><div class="nm">DNU_분산만</div><div class="bb"><div class="b"><span class="tr"><span class="f" style="width:37.2%;background:var(--all);opacity:.35"></span></span><em>0.686</em></div><div class="b B"><span class="tr"><span class="f" style="width:36.2%;background:var(--all)"></span></span><em>0.681</em></div></div></div><div class="row"><div class="nm">SOFTU_끄기만</div><div class="bb"><div class="b"><span class="tr"><span class="f" style="width:44.4%;background:var(--all);opacity:.35"></span></span><em>0.722</em></div><div class="b B"><span class="tr"><span class="f" style="width:44.4%;background:var(--all)"></span></span><em>0.722</em></div></div></div><div class="row"><div class="nm">SOFTU_분산만</div><div class="bb"><div class="b"><span class="tr"><span class="f" style="width:48.6%;background:var(--all);opacity:.35"></span></span><em>0.743</em></div><div class="b B"><span class="tr"><span class="f" style="width:50.2%;background:var(--all)"></span></span><em>0.751</em></div></div></div><div class="row"><div class="nm">BD 있음 ③</div><div class="bb"><div class="b"><span class="tr"><span class="f" style="width:32.2%;background:var(--all);opacity:.35"></span></span><em>0.661</em></div><div class="b B"><span class="tr"><span class="f" style="width:33.8%;background:var(--all)"></span></span><em>0.669</em></div></div></div><div class="row"><div class="nm">BD 있음 ④</div><div class="bb"><div class="b"><span class="tr"><span class="f" style="width:42.8%;background:var(--all);opacity:.35"></span></span><em>0.714</em></div><div class="b B"><span class="tr"><span class="f" style="width:44.4%;background:var(--all)"></span></span><em>0.722</em></div></div></div><div class="ax"><div></div><div><span>0.5</span><span>0.75</span><span>1.0</span></div></div></div><div class="col"><h4><i style="background:var(--ls)"></i>산사태</h4><div class="row"><div class="nm">③ DNU</div><div class="bb"><div class="b"><span class="tr"><span class="f" style="width:25.6%;background:var(--ls);opacity:.35"></span></span><em>0.628</em></div><div class="b B"><span class="tr"><span class="f" style="width:24.2%;background:var(--ls)"></span></span><em>0.621</em></div></div></div><div class="row"><div class="nm">④ SOFTU</div><div class="bb"><div class="b"><span class="tr"><span class="f" style="width:58.6%;background:var(--ls);opacity:.35"></span></span><em>0.793</em></div><div class="b B"><span class="tr"><span class="f" style="width:58.2%;background:var(--ls)"></span></span><em>0.791</em></div></div></div><div class="row"><div class="nm">DNU_끄기만</div><div class="bb"><div class="b"><span class="tr"><span class="f" style="width:7.0%;background:var(--ls);opacity:.35"></span></span><em>0.535</em></div><div class="b B"><span class="tr"><span class="f" style="width:7.6%;background:var(--ls)"></span></span><em>0.538</em></div></div></div><div class="row"><div class="nm">DNU_분산만</div><div class="bb"><div class="b"><span class="tr"><span class="f" style="width:20.2%;background:var(--ls);opacity:.35"></span></span><em>0.601</em></div><div class="b B"><span class="tr"><span class="f" style="width:22.0%;background:var(--ls)"></span></span><em>0.610</em></div></div></div><div class="row"><div class="nm">SOFTU_끄기만</div><div class="bb"><div class="b"><span class="tr"><span class="f" style="width:54.0%;background:var(--ls);opacity:.35"></span></span><em>0.770</em></div><div class="b B"><span class="tr"><span class="f" style="width:54.0%;background:var(--ls)"></span></span><em>0.770</em></div></div></div><div class="row"><div class="nm">SOFTU_분산만</div><div class="bb"><div class="b"><span class="tr"><span class="f" style="width:58.2%;background:var(--ls);opacity:.35"></span></span><em>0.791</em></div><div class="b B"><span class="tr"><span class="f" style="width:58.4%;background:var(--ls)"></span></span><em>0.792</em></div></div></div><div class="row"><div class="nm">BD 있음 ③</div><div class="bb"><div class="b"><span class="tr"><span class="f" style="width:9.8%;background:var(--ls);opacity:.35"></span></span><em>0.549</em></div><div class="b B"><span class="tr"><span class="f" style="width:10.6%;background:var(--ls)"></span></span><em>0.553</em></div></div></div><div class="row"><div class="nm">BD 있음 ④</div><div class="bb"><div class="b"><span class="tr"><span class="f" style="width:49.8%;background:var(--ls);opacity:.35"></span></span><em>0.749</em></div><div class="b B"><span class="tr"><span class="f" style="width:49.2%;background:var(--ls)"></span></span><em>0.746</em></div></div></div><div class="ax"><div></div><div><span>0.5</span><span>0.75</span><span>1.0</span></div></div></div><div class="col"><h4><i style="background:var(--lq)"></i>액상화</h4><div class="row"><div class="nm">③ DNU</div><div class="bb"><div class="b"><span class="tr"><span class="f" style="width:41.8%;background:var(--lq);opacity:.35"></span></span><em>0.709</em></div><div class="b B"><span class="tr"><span class="f" style="width:38.6%;background:var(--lq)"></span></span><em>0.693</em></div></div></div><div class="row"><div class="nm">④ SOFTU</div><div class="bb"><div class="b"><span class="tr"><span class="f" style="width:44.4%;background:var(--lq);opacity:.35"></span></span><em>0.722</em></div><div class="b B"><span class="tr"><span class="f" style="width:44.2%;background:var(--lq)"></span></span><em>0.721</em></div></div></div><div class="row"><div class="nm">DNU_끄기만</div><div class="bb"><div class="b"><span class="tr"><span class="f" style="width:34.0%;background:var(--lq);opacity:.35"></span></span><em>0.670</em></div><div class="b B"><span class="tr"><span class="f" style="width:34.0%;background:var(--lq)"></span></span><em>0.670</em></div></div></div><div class="row"><div class="nm">DNU_분산만</div><div class="bb"><div class="b"><span class="tr"><span class="f" style="width:42.8%;background:var(--lq);opacity:.35"></span></span><em>0.714</em></div><div class="b B"><span class="tr"><span class="f" style="width:41.0%;background:var(--lq)"></span></span><em>0.705</em></div></div></div><div class="row"><div class="nm">SOFTU_끄기만</div><div class="bb"><div class="b"><span class="tr"><span class="f" style="width:41.2%;background:var(--lq);opacity:.35"></span></span><em>0.706</em></div><div class="b B"><span class="tr"><span class="f" style="width:41.2%;background:var(--lq)"></span></span><em>0.706</em></div></div></div><div class="row"><div class="nm">SOFTU_분산만</div><div class="bb"><div class="b"><span class="tr"><span class="f" style="width:45.4%;background:var(--lq);opacity:.35"></span></span><em>0.727</em></div><div class="b B"><span class="tr"><span class="f" style="width:47.6%;background:var(--lq)"></span></span><em>0.738</em></div></div></div><div class="row"><div class="nm">BD 있음 ③</div><div class="bb"><div class="b"><span class="tr"><span class="f" style="width:39.4%;background:var(--lq);opacity:.35"></span></span><em>0.697</em></div><div class="b B"><span class="tr"><span class="f" style="width:41.4%;background:var(--lq)"></span></span><em>0.707</em></div></div></div><div class="row"><div class="nm">BD 있음 ④</div><div class="bb"><div class="b"><span class="tr"><span class="f" style="width:40.6%;background:var(--lq);opacity:.35"></span></span><em>0.703</em></div><div class="b B"><span class="tr"><span class="f" style="width:43.0%;background:var(--lq)"></span></span><em>0.715</em></div></div></div><div class="ax"><div></div><div><span>0.5</span><span>0.75</span><span>1.0</span></div></div></div></div></div>
+  <ul>
+    <li>차이는 −0.015 ~ +0.008로, 같은 설정을 다른 코드로 돌렸을 때의 seed 흔들림(0.01 ~ 0.03)보다 작거나 비슷합니다</li>
+    <li>결론은 그대로: BD를 빼면 오름 · soft는 산사태를 크게 올림 · U 효과는 대부분 분산 · USGS · pilotA보다 낮음</li>
+    <li>가장 좋은 시정촌 설정은 SOFTU_분산만 0.751 (이전 0.743)</li>
+    <li>U를 안 쓰는 ① DN · ② SOFT · 같은 분산 0.01 · 0.001은 바뀌지 않음</li>
+    <li>방법 그림: <a href="https://claude.ai/artifact/JLjReHFo7rtBAbQHed2ZVH" style="color:var(--accent)">설정 정리</a></li>
+  </ul>
+</section>
+
+<section id="s3">
+  <h2><span class="n">3</span>BD 제거: 기존 대 새 결과</h2>
+  <div class="legend"><span><i class="sw" style="background:var(--all)"></i>전체 (200곳)</span><span><i class="sw" style="background:var(--ls)"></i>산사태 (49곳)</span><span><i class="sw" style="background:var(--lq)"></i>액상화 (151곳)</span></div>
+  <div class="chart" role="img" aria-label="BD 없는 4개 실험과 기준선 AUC">
+  <div class="brow base"><div class="blab">USGS 기준선</div><div class="bars"><div class="bar"><span class="track"><span class="fill all" style="width:70.9%"></span></span><b>0.854</b></div><div class="bar"><span class="track"><span class="fill ls" style="width:45.7%"></span></span><b>0.729</b></div><div class="bar"><span class="track"><span class="fill lq" style="width:79.0%"></span></span><b>0.895</b></div></div></div><div class="brow pa"><div class="blab">pilotA A2</div><div class="bars"><div class="bar"><span class="track"><span class="fill all" style="width:71.1%"></span></span><b>0.855</b></div><div class="bar"><span class="track"><span class="fill ls" style="width:74.4%"></span></span><b>0.872</b></div><div class="bar"><span class="track"><span class="fill lq" style="width:70.0%"></span></span><b>0.850</b></div></div></div><div class="brow dn"><div class="blab">① DN</div><div class="bars"><div class="bar"><span class="track"><span class="fill all" style="width:22.8%"></span></span><b>0.614</b></div><div class="bar"><span class="track"><span class="fill ls" style="width:2.5%"></span></span><b>0.512</b></div><div class="bar"><span class="track"><span class="fill lq" style="width:29.3%"></span></span><b>0.647</b></div></div></div><div class="brow dn"><div class="blab">② SOFT</div><div class="bars"><div class="bar"><span class="track"><span class="fill all" style="width:42.0%"></span></span><b>0.710</b></div><div class="bar"><span class="track"><span class="fill ls" style="width:55.3%"></span></span><b>0.777</b></div><div class="bar"><span class="track"><span class="fill lq" style="width:37.6%"></span></span><b>0.688</b></div></div></div><div class="brow dn"><div class="blab">③ DNU</div><div class="bars"><div class="bar"><span class="track"><span class="fill all" style="width:35.0%"></span></span><b>0.675</b></div><div class="bar"><span class="track"><span class="fill ls" style="width:24.2%"></span></span><b>0.621</b></div><div class="bar"><span class="track"><span class="fill lq" style="width:38.6%"></span></span><b>0.693</b></div></div></div><div class="brow dn"><div class="blab">④ SOFTU</div><div class="bars"><div class="bar"><span class="track"><span class="fill all" style="width:47.6%"></span></span><b>0.738</b></div><div class="bar"><span class="track"><span class="fill ls" style="width:58.2%"></span></span><b>0.791</b></div><div class="bar"><span class="track"><span class="fill lq" style="width:44.2%"></span></span><b>0.721</b></div></div></div><div class="axis"><div></div><div><span>0.5</span><span>0.75</span><span>1.0</span></div></div>
+  </div>
+  <div class="tw"><table>
+    <tr><th rowspan="2">실험</th><th colspan="2" class="num">전체</th><th colspan="2" class="num">산사태</th><th colspan="2" class="num">액상화</th></tr>
+    <tr><th class="num">BD 있음</th><th class="num">BD 없음</th><th class="num">BD 있음</th><th class="num">BD 없음</th><th class="num">BD 있음</th><th class="num">BD 없음</th></tr>
+    <tr><td>① DN</td><td class="num">0.606</td><td class="num up">0.614</td><td class="num">0.557</td><td class="num down">0.512</td><td class="num">0.621</td><td class="num up">0.647</td></tr><tr><td>② SOFT</td><td class="num">0.677</td><td class="num up">0.710</td><td class="num">0.771</td><td class="num up">0.777</td><td class="num">0.647</td><td class="num up">0.688</td></tr><tr><td>③ DNU</td><td class="num">0.669</td><td class="num up">0.675</td><td class="num">0.553</td><td class="num up">0.621</td><td class="num">0.707</td><td class="num down">0.693</td></tr><tr><td>④ SOFTU</td><td class="num">0.722</td><td class="num up">0.738</td><td class="num">0.746</td><td class="num up">0.791</td><td class="num">0.715</td><td class="num">0.721</td></tr>
+  </table></div>
+  <div class="pc" data-custom="1"><div class="lg"><span><i style="background:var(--muted);opacity:.35"></i>위 막대 (연한) = BD 있음</span><span><i style="background:var(--muted)"></i>아래 막대 (진한) = BD 없음</span></div><div class="cols"><div class="col"><h4><i style="background:var(--all)"></i>전체</h4><div class="row"><div class="nm">① DN</div><div class="bb"><div class="b"><span class="tr"><span class="f" style="width:21.2%;background:var(--all);opacity:.35"></span></span><em>0.606</em></div><div class="b B"><span class="tr"><span class="f" style="width:22.8%;background:var(--all)"></span></span><em>0.614</em></div></div></div><div class="row"><div class="nm">② SOFT</div><div class="bb"><div class="b"><span class="tr"><span class="f" style="width:35.4%;background:var(--all);opacity:.35"></span></span><em>0.677</em></div><div class="b B"><span class="tr"><span class="f" style="width:42.0%;background:var(--all)"></span></span><em>0.710</em></div></div></div><div class="row"><div class="nm">③ DNU</div><div class="bb"><div class="b"><span class="tr"><span class="f" style="width:33.8%;background:var(--all);opacity:.35"></span></span><em>0.669</em></div><div class="b B"><span class="tr"><span class="f" style="width:35.0%;background:var(--all)"></span></span><em>0.675</em></div></div></div><div class="row"><div class="nm">④ SOFTU</div><div class="bb"><div class="b"><span class="tr"><span class="f" style="width:44.4%;background:var(--all);opacity:.35"></span></span><em>0.722</em></div><div class="b B"><span class="tr"><span class="f" style="width:47.6%;background:var(--all)"></span></span><em>0.738</em></div></div></div><div class="ax"><div></div><div><span>0.5</span><span>0.75</span><span>1.0</span></div></div></div><div class="col"><h4><i style="background:var(--ls)"></i>산사태</h4><div class="row"><div class="nm">① DN</div><div class="bb"><div class="b"><span class="tr"><span class="f" style="width:11.4%;background:var(--ls);opacity:.35"></span></span><em>0.557</em></div><div class="b B"><span class="tr"><span class="f" style="width:2.4%;background:var(--ls)"></span></span><em>0.512</em></div></div></div><div class="row"><div class="nm">② SOFT</div><div class="bb"><div class="b"><span class="tr"><span class="f" style="width:54.2%;background:var(--ls);opacity:.35"></span></span><em>0.771</em></div><div class="b B"><span class="tr"><span class="f" style="width:55.4%;background:var(--ls)"></span></span><em>0.777</em></div></div></div><div class="row"><div class="nm">③ DNU</div><div class="bb"><div class="b"><span class="tr"><span class="f" style="width:10.6%;background:var(--ls);opacity:.35"></span></span><em>0.553</em></div><div class="b B"><span class="tr"><span class="f" style="width:24.2%;background:var(--ls)"></span></span><em>0.621</em></div></div></div><div class="row"><div class="nm">④ SOFTU</div><div class="bb"><div class="b"><span class="tr"><span class="f" style="width:49.2%;background:var(--ls);opacity:.35"></span></span><em>0.746</em></div><div class="b B"><span class="tr"><span class="f" style="width:58.2%;background:var(--ls)"></span></span><em>0.791</em></div></div></div><div class="ax"><div></div><div><span>0.5</span><span>0.75</span><span>1.0</span></div></div></div><div class="col"><h4><i style="background:var(--lq)"></i>액상화</h4><div class="row"><div class="nm">① DN</div><div class="bb"><div class="b"><span class="tr"><span class="f" style="width:24.2%;background:var(--lq);opacity:.35"></span></span><em>0.621</em></div><div class="b B"><span class="tr"><span class="f" style="width:29.4%;background:var(--lq)"></span></span><em>0.647</em></div></div></div><div class="row"><div class="nm">② SOFT</div><div class="bb"><div class="b"><span class="tr"><span class="f" style="width:29.4%;background:var(--lq);opacity:.35"></span></span><em>0.647</em></div><div class="b B"><span class="tr"><span class="f" style="width:37.6%;background:var(--lq)"></span></span><em>0.688</em></div></div></div><div class="row"><div class="nm">③ DNU</div><div class="bb"><div class="b"><span class="tr"><span class="f" style="width:41.4%;background:var(--lq);opacity:.35"></span></span><em>0.707</em></div><div class="b B"><span class="tr"><span class="f" style="width:38.6%;background:var(--lq)"></span></span><em>0.693</em></div></div></div><div class="row"><div class="nm">④ SOFTU</div><div class="bb"><div class="b"><span class="tr"><span class="f" style="width:43.0%;background:var(--lq);opacity:.35"></span></span><em>0.715</em></div><div class="b B"><span class="tr"><span class="f" style="width:44.2%;background:var(--lq)"></span></span><em>0.721</em></div></div></div><div class="ax"><div></div><div><span>0.5</span><span>0.75</span><span>1.0</span></div></div></div></div></div>
+  </div>
+  
+  <p class="meta">초록 = 0.005 넘게 오름, 주황 = 0.005 넘게 내림. 전체는 네 실험 모두 BD를 빼면 올랐습니다. 산사태 ①(0.557 → 0.512)과 액상화 ③(0.707 → 0.693)만 내렸습니다. ③·④는 BD 있음·없음 모두 같은 새 불확실도(사전확률 방식)와 같은 끄기 기준(논문 기준)입니다.</p>
+  <div class="anal"><b>결과 분석</b><ul><li><b>BD를 빼면 전체 AUC가 네 실험 모두 오릅니다</b>: ① +0.008, ② +0.033, ③ +0.006, ④ +0.016</li><li><b>U를 쓴 ③ · ④는 산사태가 크게 오릅니다</b> (③ 0.553 → 0.621, ④ 0.746 → 0.791). BD가 없으면 DPM을 산사태·액상화 두 노드만으로 설명해서, 산사태 쪽에 DPM이 더 실리는 것으로 보입니다</li><li><b>soft만 쓴 ②는 액상화가 오릅니다</b> (0.647 → 0.688)</li><li>내린 곳은 ① 산사태(0.557 → 0.512)와 ③ 액상화(0.707 → 0.693) 두 곳입니다. seed 흔들림(0.01~0.03)을 생각하면 ③ 액상화는 같은 수준입니다</li><li>→ 교수님 지시대로 <b>BD 없음을 기본으로</b> 갑니다. 이 페이지의 다른 결과는 모두 BD 없음</li></ul></div>
+</section>
+
+<section id="s4">
+  <h2><span class="n">4</span>SOFT의 효과</h2>
+  <div class="tw"><table>
+    <tr><th></th><th class="num">전체</th><th class="num">산사태</th><th class="num">액상화</th></tr>
+    <tr><td>① DN</td><td class="num">0.614</td><td class="num">0.512</td><td class="num">0.647</td></tr>
+    <tr><td>② SOFT</td><td class="num">0.710</td><td class="num up">0.777</td><td class="num">0.688</td></tr>
+    <tr><td>③ DNU</td><td class="num">0.675</td><td class="num">0.621</td><td class="num">0.693</td></tr>
+    <tr><td>④ SOFTU</td><td class="num">0.738</td><td class="num up">0.791</td><td class="num">0.721</td></tr>
+  </table></div>
+  <div class="ac" data-auto="1"><div class="lg"><span><i style="background:var(--all)"></i>전체</span><span><i style="background:var(--ls)"></i>산사태</span><span><i style="background:var(--lq)"></i>액상화</span></div><div class="r"><div class="l">① DN</div><div class="bs"><div class="b"><span class="tr"><span class="f" style="left:0;width:22.8%;background:var(--all)"></span></span><em>0.614</em></div><div class="b"><span class="tr"><span class="f" style="left:0;width:2.4%;background:var(--ls)"></span></span><em>0.512</em></div><div class="b"><span class="tr"><span class="f" style="left:0;width:29.4%;background:var(--lq)"></span></span><em>0.647</em></div></div></div><div class="r"><div class="l">② SOFT</div><div class="bs"><div class="b"><span class="tr"><span class="f" style="left:0;width:42.0%;background:var(--all)"></span></span><em>0.710</em></div><div class="b"><span class="tr"><span class="f" style="left:0;width:55.4%;background:var(--ls)"></span></span><em>0.777</em></div><div class="b"><span class="tr"><span class="f" style="left:0;width:37.6%;background:var(--lq)"></span></span><em>0.688</em></div></div></div><div class="r"><div class="l">③ DNU</div><div class="bs"><div class="b"><span class="tr"><span class="f" style="left:0;width:35.0%;background:var(--all)"></span></span><em>0.675</em></div><div class="b"><span class="tr"><span class="f" style="left:0;width:24.2%;background:var(--ls)"></span></span><em>0.621</em></div><div class="b"><span class="tr"><span class="f" style="left:0;width:38.6%;background:var(--lq)"></span></span><em>0.693</em></div></div></div><div class="r"><div class="l">④ SOFTU</div><div class="bs"><div class="b"><span class="tr"><span class="f" style="left:0;width:47.6%;background:var(--all)"></span></span><em>0.738</em></div><div class="b"><span class="tr"><span class="f" style="left:0;width:58.2%;background:var(--ls)"></span></span><em>0.791</em></div><div class="b"><span class="tr"><span class="f" style="left:0;width:44.2%;background:var(--lq)"></span></span><em>0.721</em></div></div></div><div class="ax"><div></div><div><span>0.50</span><span>0.75</span><span>1.00</span></div></div></div>
+  
+  
+  <ul>
+    <li>soft를 넣으면 전체 +0.096 (① → ②), U 위에서는 +0.063 (③ → ④)</li>
+    <li><b>산사태에서 효과가 큽니다</b>: +0.265 (① → ②), +0.170 (③ → ④)</li>
+    <li>액상화는 +0.041 (① → ②), +0.028 (③ → ④)</li>
+  </ul>
+</section>
+
+<section id="s5">
+  <h2><span class="n">5</span>U(USGS 불확실도)의 두 가지 역할과 효과</h2>
+  <p>USGS가 산사태·액상화 확률과 함께 내는 불확실도 지도는 그 위치의 확률을 얼마나 믿을 수 있는지를 나타냅니다. 원 DisasterNet 공식 코드도 같은 두 가지 용도로 씁니다.</p>
+  <div class="grid2">
+    <div class="card"><div class="k">역할 ①</div><h3>끄기</h3><p>불확실도가 0 또는 999 = USGS가 계산하지 않은 곳 → 그 재해의 사후확률을 0으로 고정하고 DPM 설명에서도 뺌.</p><p class="meta">중심점이 시정촌 안인 USGS 칸이 전부 0·999면 끔 → 산사태 5곳, 액상화 11곳</p></div>
+    <div class="card"><div class="k">역할 ②</div><h3>분산</h3><p>사후분포를 만드는 출발점 r⁰ ~ N(μ, 분산)의 분산으로 씀.</p><p class="meta">중심점이 시정촌 안인 켜진 USGS 칸들의 불확실도 평균 (안 쓰면 1)</p></div>
+  </div>
+  <h3>역할 ② 분산이 실제로 하는 일: 시정촌마다 출발점을 8개 뽑아 평균</h3>
+  <div class="s8"><div class="steps"><span class="st">① 표준정규에서 <b>ε 8개</b>를 뽑음</span>→<span class="st">② r⁰ = μ + √분산 × ε (8개)</span>→<span class="st">③ 각각 flow → sigmoid → 확률 8개</span>→<span class="st">④ <b>8개 평균</b> = 이 시정촌의 사후확률 q</span></div>
+<p class="sub">같은 ε 8개(-1.6, -1.0, -0.6, -0.2, +0.1, +0.5, +0.9, +1.4)를 두 경우에 똑같이 썼습니다. 다른 건 분산(√분산 = 배율) 하나뿐입니다. 이 과정을 매 epoch 모든 시정촌에서 각자 따로 하고, 학습이 끝난 뒤 마지막에는 8개 대신 256개를 뽑아 평균합니다.</p>
+<div class="row"><div class="lab" style="color:#8a6a2f">U 안 씀<small>분산 = 1 (기본값)</small></div><svg viewBox="0 0 1100 200" width="100%" style="max-width:1100px;height:auto" font-family="IBM Plex Sans KR,sans-serif">
+<text x="60" y="26" font-size="15" font-weight="700" fill="#1d2430">뽑은 출발점 r⁰ = μ + √1 × ε  (8개)</text>
+<polyline points="60.0,148.9 68.3,148.6 76.7,148.1 85.0,147.5 93.3,146.8 101.7,145.8 110.0,144.7 118.3,143.3 126.7,141.6 135.0,139.5 143.3,137.1 151.7,134.4 160.0,131.2 168.3,127.6 176.7,123.6 185.0,119.2 193.3,114.3 201.7,109.2 210.0,103.8 218.3,98.1 226.7,92.4 235.0,86.6 243.3,81.0 251.7,75.6 260.0,70.6 268.3,66.2 276.7,62.3 285.0,59.2 293.3,56.9 301.7,55.5 310.0,55.0 318.3,55.5 326.7,56.9 335.0,59.2 343.3,62.3 351.7,66.2 360.0,70.6 368.3,75.6 376.7,81.0 385.0,86.6 393.3,92.4 401.7,98.1 410.0,103.8 418.3,109.2 426.7,114.3 435.0,119.2 443.3,123.6 451.7,127.6 460.0,131.2 468.3,134.4 476.7,137.1 485.0,139.5 493.3,141.6 501.7,143.3 510.0,144.7 518.3,145.8 526.7,146.8 535.0,147.5 543.3,148.1 551.7,148.6 560.0,148.9" fill="#8a6a2f" fill-opacity=".12" stroke="#8a6a2f" stroke-width="2"/>
+<line x1="60" y1="150" x2="560" y2="150" stroke="#8a93a3" stroke-width="1.5"/><line x1="60.0" y1="150" x2="60.0" y2="156" stroke="#8a93a3"/><text x="60.0" y="172" font-size="13" text-anchor="middle" fill="#5b6577">-5</text><line x1="143.33333333333331" y1="150" x2="143.33333333333331" y2="156" stroke="#8a93a3"/><text x="143.33333333333331" y="172" font-size="13" text-anchor="middle" fill="#5b6577">-4</text><line x1="226.66666666666666" y1="150" x2="226.66666666666666" y2="156" stroke="#8a93a3"/><text x="226.66666666666666" y="172" font-size="13" text-anchor="middle" fill="#5b6577">-3</text><line x1="310.0" y1="150" x2="310.0" y2="156" stroke="#8a93a3"/><text x="310.0" y="172" font-size="13" text-anchor="middle" fill="#5b6577">-2</text><line x1="393.3333333333333" y1="150" x2="393.3333333333333" y2="156" stroke="#8a93a3"/><text x="393.3333333333333" y="172" font-size="13" text-anchor="middle" fill="#5b6577">-1</text><line x1="476.6666666666667" y1="150" x2="476.6666666666667" y2="156" stroke="#8a93a3"/><text x="476.6666666666667" y="172" font-size="13" text-anchor="middle" fill="#5b6577">0</text><line x1="560.0" y1="150" x2="560.0" y2="156" stroke="#8a93a3"/><text x="560.0" y="172" font-size="13" text-anchor="middle" fill="#5b6577">1</text>
+<line x1="310.0" y1="45" x2="310.0" y2="150" stroke="#1d2430" stroke-dasharray="4 4"/><text x="316.0" y="58" font-size="13" fill="#1d2430">μ = −2</text>
+<circle cx="176.7" cy="150" r="7" fill="#8a6a2f" fill-opacity=".85" stroke="#fff" stroke-width="1.5"/><circle cx="226.7" cy="150" r="7" fill="#8a6a2f" fill-opacity=".85" stroke="#fff" stroke-width="1.5"/><circle cx="260.0" cy="150" r="7" fill="#8a6a2f" fill-opacity=".85" stroke="#fff" stroke-width="1.5"/><circle cx="293.3" cy="150" r="7" fill="#8a6a2f" fill-opacity=".85" stroke="#fff" stroke-width="1.5"/><circle cx="318.3" cy="150" r="7" fill="#8a6a2f" fill-opacity=".85" stroke="#fff" stroke-width="1.5"/><circle cx="351.7" cy="150" r="7" fill="#8a6a2f" fill-opacity=".85" stroke="#fff" stroke-width="1.5"/><circle cx="385.0" cy="150" r="7" fill="#8a6a2f" fill-opacity=".85" stroke="#fff" stroke-width="1.5"/><circle cx="426.7" cy="150" r="7" fill="#8a6a2f" fill-opacity=".85" stroke="#fff" stroke-width="1.5"/>
+<text x="610" y="140" font-size="26" fill="#8a93a3">→</text><text x="596" y="118" font-size="12" fill="#5b6577">flow → sigmoid</text>
+<text x="700" y="26" font-size="15" font-weight="700" fill="#1d2430">확률 8개 → 평균 = 사후확률 q</text>
+<line x1="700" y1="150" x2="1060" y2="150" stroke="#8a93a3" stroke-width="1.5"/><line x1="700.0" y1="150" x2="700.0" y2="156" stroke="#8a93a3"/><text x="700.0" y="172" font-size="13" text-anchor="middle" fill="#5b6577">0.0</text><line x1="760.0" y1="150" x2="760.0" y2="156" stroke="#8a93a3"/><text x="760.0" y="172" font-size="13" text-anchor="middle" fill="#5b6577">0.1</text><line x1="820.0" y1="150" x2="820.0" y2="156" stroke="#8a93a3"/><text x="820.0" y="172" font-size="13" text-anchor="middle" fill="#5b6577">0.2</text><line x1="880.0" y1="150" x2="880.0" y2="156" stroke="#8a93a3"/><text x="880.0" y="172" font-size="13" text-anchor="middle" fill="#5b6577">0.3</text><line x1="940.0" y1="150" x2="940.0" y2="156" stroke="#8a93a3"/><text x="940.0" y="172" font-size="13" text-anchor="middle" fill="#5b6577">0.4</text><line x1="1000.0" y1="150" x2="1000.0" y2="156" stroke="#8a93a3"/><text x="1000.0" y="172" font-size="13" text-anchor="middle" fill="#5b6577">0.5</text><line x1="1060.0" y1="150" x2="1060.0" y2="156" stroke="#8a93a3"/><text x="1060.0" y="172" font-size="13" text-anchor="middle" fill="#5b6577">0.6</text>
+<circle cx="716.0" cy="150" r="7" fill="#8a6a2f" fill-opacity=".85" stroke="#fff" stroke-width="1.5"/><circle cx="728.5" cy="150" r="7" fill="#8a6a2f" fill-opacity=".85" stroke="#fff" stroke-width="1.5"/><circle cx="741.5" cy="150" r="7" fill="#8a6a2f" fill-opacity=".85" stroke="#fff" stroke-width="1.5"/><circle cx="759.9" cy="150" r="7" fill="#8a6a2f" fill-opacity=".85" stroke="#fff" stroke-width="1.5"/><circle cx="778.1" cy="150" r="7" fill="#8a6a2f" fill-opacity=".85" stroke="#fff" stroke-width="1.5"/><circle cx="809.5" cy="150" r="7" fill="#8a6a2f" fill-opacity=".85" stroke="#fff" stroke-width="1.5"/><circle cx="849.8" cy="150" r="7" fill="#8a6a2f" fill-opacity=".85" stroke="#fff" stroke-width="1.5"/><circle cx="912.6" cy="150" r="7" fill="#8a6a2f" fill-opacity=".85" stroke="#fff" stroke-width="1.5"/>
+<line x1="787.0" y1="70" x2="787.0" y2="150" stroke="#8a6a2f" stroke-width="3"/><text x="787.0" y="62" font-size="15" font-weight="700" text-anchor="middle" fill="#8a6a2f">q = 0.14</text>
+<text x="700" y="195" font-size="13" fill="#5b6577">8개 범위 0.03 ~ 0.35</text>
+</svg></div><div class="row"><div class="lab" style="color:#2d62b3">U 씀<small>분산 = 0.0508<br>(益城町 USGS 산사태 불확실도 평균)</small></div><svg viewBox="0 0 1100 200" width="100%" style="max-width:1100px;height:auto" font-family="IBM Plex Sans KR,sans-serif">
+<text x="60" y="26" font-size="15" font-weight="700" fill="#1d2430">뽑은 출발점 r⁰ = μ + √0.0508 × ε  (8개)</text>
+<polyline points="234.9,150.0 236.7,150.0 238.6,149.9 240.5,149.9 242.4,149.9 244.3,149.8 246.1,149.7 248.0,149.6 249.9,149.4 251.8,149.2 253.7,148.9 255.5,148.6 257.4,148.1 259.3,147.5 261.2,146.8 263.0,145.8 264.9,144.7 266.8,143.3 268.7,141.6 270.6,139.5 272.4,137.1 274.3,134.4 276.2,131.2 278.1,127.6 279.9,123.6 281.8,119.2 283.7,114.3 285.6,109.2 287.5,103.8 289.3,98.1 291.2,92.4 293.1,86.6 295.0,81.0 296.9,75.6 298.7,70.6 300.6,66.2 302.5,62.3 304.4,59.2 306.2,56.9 308.1,55.5 310.0,55.0 311.9,55.5 313.8,56.9 315.6,59.2 317.5,62.3 319.4,66.2 321.3,70.6 323.1,75.6 325.0,81.0 326.9,86.6 328.8,92.4 330.7,98.1 332.5,103.8 334.4,109.2 336.3,114.3 338.2,119.2 340.1,123.6 341.9,127.6 343.8,131.2 345.7,134.4 347.6,137.1 349.4,139.5 351.3,141.6 353.2,143.3 355.1,144.7 357.0,145.8 358.8,146.8 360.7,147.5 362.6,148.1 364.5,148.6 366.3,148.9 368.2,149.2 370.1,149.4 372.0,149.6 373.9,149.7 375.7,149.8 377.6,149.9 379.5,149.9 381.4,149.9 383.3,150.0 385.1,150.0" fill="#2d62b3" fill-opacity=".12" stroke="#2d62b3" stroke-width="2"/>
+<line x1="60" y1="150" x2="560" y2="150" stroke="#8a93a3" stroke-width="1.5"/><line x1="60.0" y1="150" x2="60.0" y2="156" stroke="#8a93a3"/><text x="60.0" y="172" font-size="13" text-anchor="middle" fill="#5b6577">-5</text><line x1="143.33333333333331" y1="150" x2="143.33333333333331" y2="156" stroke="#8a93a3"/><text x="143.33333333333331" y="172" font-size="13" text-anchor="middle" fill="#5b6577">-4</text><line x1="226.66666666666666" y1="150" x2="226.66666666666666" y2="156" stroke="#8a93a3"/><text x="226.66666666666666" y="172" font-size="13" text-anchor="middle" fill="#5b6577">-3</text><line x1="310.0" y1="150" x2="310.0" y2="156" stroke="#8a93a3"/><text x="310.0" y="172" font-size="13" text-anchor="middle" fill="#5b6577">-2</text><line x1="393.3333333333333" y1="150" x2="393.3333333333333" y2="156" stroke="#8a93a3"/><text x="393.3333333333333" y="172" font-size="13" text-anchor="middle" fill="#5b6577">-1</text><line x1="476.6666666666667" y1="150" x2="476.6666666666667" y2="156" stroke="#8a93a3"/><text x="476.6666666666667" y="172" font-size="13" text-anchor="middle" fill="#5b6577">0</text><line x1="560.0" y1="150" x2="560.0" y2="156" stroke="#8a93a3"/><text x="560.0" y="172" font-size="13" text-anchor="middle" fill="#5b6577">1</text>
+<line x1="310.0" y1="45" x2="310.0" y2="150" stroke="#1d2430" stroke-dasharray="4 4"/><text x="316.0" y="58" font-size="13" fill="#1d2430">μ = −2</text>
+<circle cx="279.9" cy="150" r="7" fill="#2d62b3" fill-opacity=".85" stroke="#fff" stroke-width="1.5"/><circle cx="291.2" cy="150" r="7" fill="#2d62b3" fill-opacity=".85" stroke="#fff" stroke-width="1.5"/><circle cx="298.7" cy="150" r="7" fill="#2d62b3" fill-opacity=".85" stroke="#fff" stroke-width="1.5"/><circle cx="306.2" cy="150" r="7" fill="#2d62b3" fill-opacity=".85" stroke="#fff" stroke-width="1.5"/><circle cx="311.9" cy="150" r="7" fill="#2d62b3" fill-opacity=".85" stroke="#fff" stroke-width="1.5"/><circle cx="319.4" cy="150" r="7" fill="#2d62b3" fill-opacity=".85" stroke="#fff" stroke-width="1.5"/><circle cx="326.9" cy="150" r="7" fill="#2d62b3" fill-opacity=".85" stroke="#fff" stroke-width="1.5"/><circle cx="336.3" cy="150" r="7" fill="#2d62b3" fill-opacity=".85" stroke="#fff" stroke-width="1.5"/>
+<text x="610" y="140" font-size="26" fill="#8a93a3">→</text><text x="596" y="118" font-size="12" fill="#5b6577">flow → sigmoid</text>
+<text x="700" y="26" font-size="15" font-weight="700" fill="#1d2430">확률 8개 → 평균 = 사후확률 q</text>
+<line x1="700" y1="150" x2="1060" y2="150" stroke="#8a93a3" stroke-width="1.5"/><line x1="700.0" y1="150" x2="700.0" y2="156" stroke="#8a93a3"/><text x="700.0" y="172" font-size="13" text-anchor="middle" fill="#5b6577">0.0</text><line x1="760.0" y1="150" x2="760.0" y2="156" stroke="#8a93a3"/><text x="760.0" y="172" font-size="13" text-anchor="middle" fill="#5b6577">0.1</text><line x1="820.0" y1="150" x2="820.0" y2="156" stroke="#8a93a3"/><text x="820.0" y="172" font-size="13" text-anchor="middle" fill="#5b6577">0.2</text><line x1="880.0" y1="150" x2="880.0" y2="156" stroke="#8a93a3"/><text x="880.0" y="172" font-size="13" text-anchor="middle" fill="#5b6577">0.3</text><line x1="940.0" y1="150" x2="940.0" y2="156" stroke="#8a93a3"/><text x="940.0" y="172" font-size="13" text-anchor="middle" fill="#5b6577">0.4</text><line x1="1000.0" y1="150" x2="1000.0" y2="156" stroke="#8a93a3"/><text x="1000.0" y="172" font-size="13" text-anchor="middle" fill="#5b6577">0.5</text><line x1="1060.0" y1="150" x2="1060.0" y2="156" stroke="#8a93a3"/><text x="1060.0" y="172" font-size="13" text-anchor="middle" fill="#5b6577">0.6</text>
+<circle cx="751.7" cy="150" r="7" fill="#2d62b3" fill-opacity=".85" stroke="#fff" stroke-width="1.5"/><circle cx="758.5" cy="150" r="7" fill="#2d62b3" fill-opacity=".85" stroke="#fff" stroke-width="1.5"/><circle cx="763.4" cy="150" r="7" fill="#2d62b3" fill-opacity=".85" stroke="#fff" stroke-width="1.5"/><circle cx="768.7" cy="150" r="7" fill="#2d62b3" fill-opacity=".85" stroke="#fff" stroke-width="1.5"/><circle cx="773.0" cy="150" r="7" fill="#2d62b3" fill-opacity=".85" stroke="#fff" stroke-width="1.5"/><circle cx="778.9" cy="150" r="7" fill="#2d62b3" fill-opacity=".85" stroke="#fff" stroke-width="1.5"/><circle cx="785.3" cy="150" r="7" fill="#2d62b3" fill-opacity=".85" stroke="#fff" stroke-width="1.5"/><circle cx="793.9" cy="150" r="7" fill="#2d62b3" fill-opacity=".85" stroke="#fff" stroke-width="1.5"/>
+<line x1="771.7" y1="70" x2="771.7" y2="150" stroke="#2d62b3" stroke-width="3"/><text x="771.7" y="62" font-size="15" font-weight="700" text-anchor="middle" fill="#2d62b3">q = 0.12</text>
+<text x="700" y="195" font-size="13" fill="#5b6577">8개 범위 0.09 ~ 0.16</text>
+</svg></div>
+<div class="take">분산이 1이면 8개가 넓게 흩어지고(확률 0.03~0.35), USGS 불확실도(0.0508)를 쓰면 <b>μ 근처에 좁게 모입니다</b>(확률 0.09~0.16). 즉 뽑을 때마다의 흔들림(샘플링 잡음)이 줄어듭니다. μ는 시정촌마다 학습되는 값(δ 포함)이라 사전확률 쪽으로 당겨지는 효과는 아닙니다.</div>
+<p class="sub">μ = −2와 ε 8개는 설명용 예시, 분산 0.0508은 실제 값. 그림에서는 flow를 생략했습니다 (실제로는 r⁰가 flow 4단계를 지난 뒤 sigmoid).</p>
+
+  <div class="tw"><table>
+    <tr><th>방식</th><th>r⁰ 분산</th><th>뽑는 개수</th><th>사후확률</th></tr>
+    <tr><td>우리 ① DN (U 안 씀, 기존 기본판)</td><td>모든 시정촌 1</td><td>시정촌마다 학습 중 8개, 마지막 256개</td><td>뽑은 값들의 평균</td></tr>
+    <tr><td>우리 U 씀 (③ · ④ · 분산만)</td><td>시정촌마다 USGS 불확실도 평균</td><td>같음</td><td>같음</td></tr>
+    <tr><td>원 DisasterNet 공식 코드</td><td>화소마다 USGS 불확실도</td><td>화소마다 1개</td><td>마지막 epoch에 뽑은 그 1개 값</td></tr>
+  </table></div>
+  <div class="anal"><b>왜 원 공식 코드는 화소마다 1개였나 (논문·코드에 이유는 없음, 추정)</b><ul>
+    <li><b>화소가 너무 많음</b>: 지진 하나에 수십만~수백만 화소, 학습 때 8,109개씩 묶어 돌림. 8개씩 뽑으면 flow 계산량·메모리가 8배</li>
+    <li><b>1개로도 학습은 됨</b>: 이런 모델(VAE, 변분추론)은 샘플 1개로 학습하는 게 표준. 한 번 뽑은 값은 흔들리지만 수천 번의 학습 단계에서 평균되어 맞는 방향으로 학습됨</li>
+    <li><b>흔들림이 지도 전체에서 상쇄</b>: 결과를 수많은 화소의 ROC·AUC로 보므로 화소 하나가 조금 튀어도 영향이 작음</li>
+    <li>약점: 결과가 마지막 epoch에 뽑힌 1개 값이라, 같은 화소도 운에 따라 조금 높게·낮게 나올 수 있음</li>
+  </ul></div>
+  <div class="anal"><b>우리가 8개(마지막 256개)로 한 이유</b><ul>
+    <li><b>시정촌 단위</b>: 지진마다 40~80줄뿐이라 계산이 가볍고, 값 하나하나가 AUC에 크게 영향. 1개만 뽑으면 시정촌 값이 운에 따라 튀어 결과가 불안정</li>
+    <li><b>칸 단위</b>: 시정촌 값 = 칸 사후확률의 최댓값. 칸마다 1개만 뽑으면 운 좋게 높게 뽑힌 칸 하나가 시정촌 값을 차지할 수 있어 평균으로 흔들림을 줄임</li>
+    <li>→ 원본은 화소가 많아 1개로 충분했고, 우리는 행이 적거나 최댓값을 써서 흔들림에 민감하므로 여러 개를 평균</li>
+  </ul></div>
+  </div>
+  <p>두 역할을 하나씩만 켜고, 분산은 USGS 값 대신 모든 시정촌에 같은 값도 줘 봤습니다.</p>
+  <div class="tw"><table>
+    <tr><th></th><th>끄기</th><th>분산</th><th class="num">전체</th><th class="num">산사태</th><th class="num">액상화</th></tr>
+    <tr><td>① DN</td><td class="no">✗</td><td>1 (기본)</td><td class="num">0.614</td><td class="num">0.512</td><td class="num">0.647</td></tr>
+    <tr><td>DNU_끄기만</td><td class="yes">○</td><td>1</td><td class="num">0.638</td><td class="num">0.538</td><td class="num">0.670</td></tr>
+    <tr><td>같은 분산 0.001</td><td class="no">✗</td><td>0.001 (모두)</td><td class="num">0.616</td><td class="num">0.540</td><td class="num">0.641</td></tr>
+    <tr><td>같은 분산 0.01</td><td class="no">✗</td><td>0.01 (모두)</td><td class="num">0.657</td><td class="num">0.579</td><td class="num">0.682</td></tr>
+    <tr><td><b>DNU_분산만</b></td><td class="no">✗</td><td><b>USGS 값</b></td><td class="num best">0.681</td><td class="num">0.610</td><td class="num best">0.705</td></tr>
+    <tr><td>③ DNU</td><td class="yes">○</td><td>USGS 값</td><td class="num">0.675</td><td class="num best">0.621</td><td class="num">0.693</td></tr>
+    <tr><td colspan="6" style="color:var(--muted);font-size:14px">soft 위에서도 같음 — ② SOFT 0.710 · SOFTU_끄기만 0.722 · SOFTU_분산만 0.751 · ④ SOFTU 0.738</td></tr>
+  </table></div>
+  <div class="ac" data-auto="1"><div class="lg"><span><i style="background:var(--all)"></i>전체</span><span><i style="background:var(--ls)"></i>산사태</span><span><i style="background:var(--lq)"></i>액상화</span></div><div class="r"><div class="l">① DN</div><div class="bs"><div class="b"><span class="tr"><span class="f" style="left:0;width:22.8%;background:var(--all)"></span></span><em>0.614</em></div><div class="b"><span class="tr"><span class="f" style="left:0;width:2.4%;background:var(--ls)"></span></span><em>0.512</em></div><div class="b"><span class="tr"><span class="f" style="left:0;width:29.4%;background:var(--lq)"></span></span><em>0.647</em></div></div></div><div class="r"><div class="l">DNU_끄기만</div><div class="bs"><div class="b"><span class="tr"><span class="f" style="left:0;width:27.6%;background:var(--all)"></span></span><em>0.638</em></div><div class="b"><span class="tr"><span class="f" style="left:0;width:7.6%;background:var(--ls)"></span></span><em>0.538</em></div><div class="b"><span class="tr"><span class="f" style="left:0;width:34.0%;background:var(--lq)"></span></span><em>0.670</em></div></div></div><div class="r"><div class="l">같은 분산 0.001</div><div class="bs"><div class="b"><span class="tr"><span class="f" style="left:0;width:23.2%;background:var(--all)"></span></span><em>0.616</em></div><div class="b"><span class="tr"><span class="f" style="left:0;width:8.0%;background:var(--ls)"></span></span><em>0.540</em></div><div class="b"><span class="tr"><span class="f" style="left:0;width:28.2%;background:var(--lq)"></span></span><em>0.641</em></div></div></div><div class="r"><div class="l">같은 분산 0.01</div><div class="bs"><div class="b"><span class="tr"><span class="f" style="left:0;width:31.4%;background:var(--all)"></span></span><em>0.657</em></div><div class="b"><span class="tr"><span class="f" style="left:0;width:15.8%;background:var(--ls)"></span></span><em>0.579</em></div><div class="b"><span class="tr"><span class="f" style="left:0;width:36.4%;background:var(--lq)"></span></span><em>0.682</em></div></div></div><div class="r"><div class="l">DNU_분산만</div><div class="bs"><div class="b"><span class="tr"><span class="f" style="left:0;width:36.2%;background:var(--all)"></span></span><em>0.681</em></div><div class="b"><span class="tr"><span class="f" style="left:0;width:22.0%;background:var(--ls)"></span></span><em>0.610</em></div><div class="b"><span class="tr"><span class="f" style="left:0;width:41.0%;background:var(--lq)"></span></span><em>0.705</em></div></div></div><div class="r"><div class="l">③ DNU</div><div class="bs"><div class="b"><span class="tr"><span class="f" style="left:0;width:35.0%;background:var(--all)"></span></span><em>0.675</em></div><div class="b"><span class="tr"><span class="f" style="left:0;width:24.2%;background:var(--ls)"></span></span><em>0.621</em></div><div class="b"><span class="tr"><span class="f" style="left:0;width:38.6%;background:var(--lq)"></span></span><em>0.693</em></div></div></div><div class="ax"><div></div><div><span>0.50</span><span>0.75</span><span>1.00</span></div></div></div>
+  
+  
+  <ul>
+    <li><b>끄기 효과는 작습니다.</b> 꺼진 액상화 11곳은 전부 노토(정답 0), 산사태 5곳은 전부 정답이 없습니다. 그래서 끄기만 썼을 때 오르는 폭이 +0.024에 그칩니다</li>
+    <li><b>효과의 대부분은 분산입니다.</b> 분산만 써도 U 전체와 거의 같습니다 (0.681 대 0.675)</li>
+    <li><b>같은 분산과 비교</b>: 모두에게 같은 0.01을 주면 0.657, 0.001이면 0.616으로, 시정촌별 USGS 불확실도를 쓴 DNU_분산만(0.681)보다 낮습니다</li>
+  </ul>
+  <div class="callout"><b>정리</b><p>U의 효과는 대부분 <b>분산</b>에서 나오고, <b>끄기</b>의 효과는 작습니다 (끄기만 0.638, 분산만 0.681, 둘 다 0.675).</p></div>
+</section>
+
+<section id="s6">
+  <h2><span class="n">6</span>지진별 (BD 없음)</h2>
+  <div class="tw"><table>
+    <tr><th></th><th class="num">USGS</th><th class="num">pilotA A2</th><th class="num">①</th><th class="num">②</th><th class="num">③</th><th class="num">④</th></tr>
+    <tr><td><span class="tag t-ls">산사태</span> 구마모토 (26/3)</td><td class="num">0.641</td><td class="num">0.846</td><td class="num">0.544</td><td class="num">0.818</td><td class="num">0.669</td><td class="num best">0.838</td></tr>
+    <tr><td><span class="tag t-ls">산사태</span> 오사카 (5/2)</td><td class="num">1.000</td><td class="num">1.000</td><td class="num">0.220</td><td class="num">0.840</td><td class="num">0.400</td><td class="num">0.980</td></tr>
+    <tr><td><span class="tag t-ls">산사태</span> 홋카이도 (9/4)</td><td class="num">0.778</td><td class="num">0.861</td><td class="num">0.600</td><td class="num">0.650</td><td class="num">0.633</td><td class="num">0.583</td></tr>
+    <tr><td><span class="tag t-lq">액상화</span> 구마모토 (18/22)</td><td class="num">0.947</td><td class="num">0.949</td><td class="num">0.628</td><td class="num">0.806</td><td class="num">0.672</td><td class="num">0.823</td></tr>
+    <tr><td><span class="tag t-lq">액상화</span> 홋카이도 (17/23)</td><td class="num">0.926</td><td class="num">0.913</td><td class="num">0.590</td><td class="num">0.640</td><td class="num">0.657</td><td class="num">0.675</td></tr>
+    <tr><td><span class="tag t-lq">액상화</span> 후쿠시마 (6/1)</td><td class="num">0.500</td><td class="num">0.667</td><td class="num">0.567</td><td class="num">0.667</td><td class="num">0.600</td><td class="num">0.767</td></tr>
+    <tr><td><span class="tag t-lq">액상화</span> 노토 (33/31)</td><td class="num">0.887</td><td class="num">0.768</td><td class="num">0.703</td><td class="num">0.647</td><td class="num">0.739</td><td class="num">0.682</td></tr>
+  </table></div>
+  <div class="ac" data-auto="1"><div class="lg"><span><i style="background:var(--all)"></i>USGS</span><span><i style="background:var(--ls)"></i>pilotA A2</span><span><i style="background:var(--lq)"></i>①</span><span><i style="background:var(--accent)"></i>②</span><span><i style="background:var(--warn)"></i>③</span><span><i style="background:var(--muted)"></i>④</span></div><div class="r"><div class="l">산사태 구마모토 (26/3)</div><div class="bs"><div class="b"><span class="tr"><span class="f" style="left:0;width:61.0%;background:var(--all)"></span></span><em>0.641</em></div><div class="b"><span class="tr"><span class="f" style="left:0;width:80.6%;background:var(--ls)"></span></span><em>0.846</em></div><div class="b"><span class="tr"><span class="f" style="left:0;width:51.8%;background:var(--lq)"></span></span><em>0.544</em></div><div class="b"><span class="tr"><span class="f" style="left:0;width:77.9%;background:var(--accent)"></span></span><em>0.818</em></div><div class="b"><span class="tr"><span class="f" style="left:0;width:63.7%;background:var(--warn)"></span></span><em>0.669</em></div><div class="b"><span class="tr"><span class="f" style="left:0;width:79.8%;background:var(--muted)"></span></span><em>0.838</em></div></div></div><div class="r"><div class="l">산사태 오사카 (5/2)</div><div class="bs"><div class="b"><span class="tr"><span class="f" style="left:0;width:95.2%;background:var(--all)"></span></span><em>1.000</em></div><div class="b"><span class="tr"><span class="f" style="left:0;width:95.2%;background:var(--ls)"></span></span><em>1.000</em></div><div class="b"><span class="tr"><span class="f" style="left:0;width:21.0%;background:var(--lq)"></span></span><em>0.220</em></div><div class="b"><span class="tr"><span class="f" style="left:0;width:80.0%;background:var(--accent)"></span></span><em>0.840</em></div><div class="b"><span class="tr"><span class="f" style="left:0;width:38.1%;background:var(--warn)"></span></span><em>0.400</em></div><div class="b"><span class="tr"><span class="f" style="left:0;width:93.3%;background:var(--muted)"></span></span><em>0.980</em></div></div></div><div class="r"><div class="l">산사태 홋카이도 (9/4)</div><div class="bs"><div class="b"><span class="tr"><span class="f" style="left:0;width:74.1%;background:var(--all)"></span></span><em>0.778</em></div><div class="b"><span class="tr"><span class="f" style="left:0;width:82.0%;background:var(--ls)"></span></span><em>0.861</em></div><div class="b"><span class="tr"><span class="f" style="left:0;width:57.1%;background:var(--lq)"></span></span><em>0.600</em></div><div class="b"><span class="tr"><span class="f" style="left:0;width:61.9%;background:var(--accent)"></span></span><em>0.650</em></div><div class="b"><span class="tr"><span class="f" style="left:0;width:60.3%;background:var(--warn)"></span></span><em>0.633</em></div><div class="b"><span class="tr"><span class="f" style="left:0;width:55.5%;background:var(--muted)"></span></span><em>0.583</em></div></div></div><div class="r"><div class="l">액상화 구마모토 (18/22)</div><div class="bs"><div class="b"><span class="tr"><span class="f" style="left:0;width:90.2%;background:var(--all)"></span></span><em>0.947</em></div><div class="b"><span class="tr"><span class="f" style="left:0;width:90.4%;background:var(--ls)"></span></span><em>0.949</em></div><div class="b"><span class="tr"><span class="f" style="left:0;width:59.8%;background:var(--lq)"></span></span><em>0.628</em></div><div class="b"><span class="tr"><span class="f" style="left:0;width:76.8%;background:var(--accent)"></span></span><em>0.806</em></div><div class="b"><span class="tr"><span class="f" style="left:0;width:64.0%;background:var(--warn)"></span></span><em>0.672</em></div><div class="b"><span class="tr"><span class="f" style="left:0;width:78.4%;background:var(--muted)"></span></span><em>0.823</em></div></div></div><div class="r"><div class="l">액상화 홋카이도 (17/23)</div><div class="bs"><div class="b"><span class="tr"><span class="f" style="left:0;width:88.2%;background:var(--all)"></span></span><em>0.926</em></div><div class="b"><span class="tr"><span class="f" style="left:0;width:87.0%;background:var(--ls)"></span></span><em>0.913</em></div><div class="b"><span class="tr"><span class="f" style="left:0;width:56.2%;background:var(--lq)"></span></span><em>0.590</em></div><div class="b"><span class="tr"><span class="f" style="left:0;width:61.0%;background:var(--accent)"></span></span><em>0.640</em></div><div class="b"><span class="tr"><span class="f" style="left:0;width:62.6%;background:var(--warn)"></span></span><em>0.657</em></div><div class="b"><span class="tr"><span class="f" style="left:0;width:64.3%;background:var(--muted)"></span></span><em>0.675</em></div></div></div><div class="r"><div class="l">액상화 후쿠시마 (6/1)</div><div class="bs"><div class="b"><span class="tr"><span class="f" style="left:0;width:47.6%;background:var(--all)"></span></span><em>0.500</em></div><div class="b"><span class="tr"><span class="f" style="left:0;width:63.5%;background:var(--ls)"></span></span><em>0.667</em></div><div class="b"><span class="tr"><span class="f" style="left:0;width:54.0%;background:var(--lq)"></span></span><em>0.567</em></div><div class="b"><span class="tr"><span class="f" style="left:0;width:63.5%;background:var(--accent)"></span></span><em>0.667</em></div><div class="b"><span class="tr"><span class="f" style="left:0;width:57.1%;background:var(--warn)"></span></span><em>0.600</em></div><div class="b"><span class="tr"><span class="f" style="left:0;width:73.0%;background:var(--muted)"></span></span><em>0.767</em></div></div></div><div class="r"><div class="l">액상화 노토 (33/31)</div><div class="bs"><div class="b"><span class="tr"><span class="f" style="left:0;width:84.5%;background:var(--all)"></span></span><em>0.887</em></div><div class="b"><span class="tr"><span class="f" style="left:0;width:73.1%;background:var(--ls)"></span></span><em>0.768</em></div><div class="b"><span class="tr"><span class="f" style="left:0;width:67.0%;background:var(--lq)"></span></span><em>0.703</em></div><div class="b"><span class="tr"><span class="f" style="left:0;width:61.6%;background:var(--accent)"></span></span><em>0.647</em></div><div class="b"><span class="tr"><span class="f" style="left:0;width:70.4%;background:var(--warn)"></span></span><em>0.739</em></div><div class="b"><span class="tr"><span class="f" style="left:0;width:65.0%;background:var(--muted)"></span></span><em>0.682</em></div></div></div><div class="ax"><div></div><div><span>0.00</span><span>0.53</span><span>1.05</span></div></div></div>
+  
+  
+  <p class="meta">괄호는 양성/음성 시정촌 수. 산사태 구마모토에서는 ④가 pilotA(0.846)와 비슷하지만, 액상화는 모든 지진에서 USGS에 크게 못 미칩니다.</p>
+  <div class="anal"><b>결과 분석</b><ul><li><b>산사태 구마모토</b>(양성 26곳)는 soft가 크게 올립니다 (① 0.544 → ② 0.818). ④ 0.838은 pilotA(0.846)와 비슷하고 USGS(0.641)보다 높습니다</li><li><b>산사태 오사카</b>는 시정촌이 7곳뿐이라 값이 크게 흔들립니다 (① 0.220 → ④ 0.980). 한 곳만 순서가 바뀌어도 AUC가 크게 달라집니다</li><li><b>산사태 홋카이도</b>는 네 실험 모두 USGS(0.778)보다 낮고, ④가 0.583으로 가장 낮습니다. soft는 조금 올리지만 (① 0.600 → ② 0.650), U 위에서는 오히려 내립니다 (③ 0.633 → ④ 0.583)</li><li><b>액상화 구마모토 · 홋카이도</b>는 soft·U로 오르지만 (구마모토 0.628 → 0.823, 홋카이도 0.590 → 0.675), USGS(0.947 · 0.926)와 차이가 큽니다</li><li><b>액상화 노토</b>(64곳, 액상화 평가의 약 42%)는 soft가 오히려 내립니다 (① 0.703 → ② 0.647). U는 올립니다 (③ 0.739). 그래서 액상화 전체에서 soft와 U가 비슷하게 나옵니다</li><li><b>액상화 후쿠시마</b>는 음성이 1곳뿐이라 AUC가 0.5~0.77 사이에서 흔들려 판단에 쓰기 어렵습니다</li></ul></div>
+</section>
+
+<section id="sx">
+  <h2><span class="n">↔</span>원 DisasterNet과 무엇이 다른가</h2>
+  <p>원 논문(Li et al., KDD 2023)과 공식 코드(<code>SusuXu/DisasterNet</code>)를 기준으로, 지금 시정촌 실험이 어디가 다른지 정리했습니다. 공식 코드를 최대한 그대로 시정촌 입력에 옮긴 판(<code>orig_port.py</code>)도 돌려 봤지만 전체 AUC 0.54~0.57로 더 낮아서, 아래 "우리" 방식으로 진행했습니다.</p>
+  <h3>자료·단위</h3>
+  <div class="tw"><table>
+    <tr><th></th><th>원 DisasterNet</th><th>우리 (시정촌 실험)</th></tr>
+    <tr><td>단위</td><td><b>화소</b> (위치 하나 = 사후확률 하나)</td><td><b>시정촌</b> 한 줄. 칸(250 m) 단위는 진행 중</td></tr>
+    <tr><td>관측 DPM</td><td>NASA ARIA 팀의 DPM</td><td>직접 만든 DPM (Sentinel-1 40 m 상관도 차이)을 시정촌 평균 − 프레임 중앙값으로</td></tr>
+    <tr><td>사전확률 α</td><td>화소별 USGS 산사태·액상화 확률</td><td>시정촌 안 USGS 산사태 <b>평균</b>, 액상화 <b>최댓값</b></td></tr>
+    <tr><td>노드</td><td>산사태 · 액상화 · <b>건물붕괴</b></td><td>산사태 · 액상화 (BD는 교수님 지시로 뺌)</td></tr>
+    <tr><td>건물붕괴 사전확률</td><td>취약도 곡선 + 건물 윤곽</td><td>없음 (BD 제거)</td></tr>
+    <tr><td>불가능한 재해 끄기</td><td>화소마다: LOCAL 지도(경사·토지이용) · 건물 윤곽 · USGS 계산 안 한 화소</td><td>시정촌에는 비탈·평지가 섞여 끌 수 없음 → <b>soft</b>(지형 비율로 깎기)와 <b>U 끄기</b>(USGS 칸이 하나도 없는 시정촌만)로 대신</td></tr>
+    <tr><td>평가</td><td>화소별 정답 지도로 ROC·AUC (코드 밖에서, 비공개)</td><td>시정촌 0/1 정답으로 지진별 AUC → 시정촌 수 가중 (263곳)</td></tr>
+  </table></div>
+  <h3>모델·학습</h3>
+  <div class="tw"><table>
+    <tr><th></th><th>원 DisasterNet (공식 코드)</th><th>우리</th></tr>
+    <tr><td>사후분포 출발점 μ</td><td>α에 대한 선형식 (μ = w_mu · w_a·α 꼴). 위치마다 자유값 없음</td><td>그 식 + <b>시정촌마다 자유 보정값</b>(offset), ±6 안으로 묶음</td></tr>
+    <tr><td>출발점 분산</td><td>산사태·액상화 = USGS 불확실도, BD = 학습 [1, 5]</td><td>기본 1. U를 쓰면 USGS 불확실도 시정촌 평균</td></tr>
+    <tr><td>flow</td><td>planar, K = 8 (논문은 지진별 3/4/8). 배치 8109화소를 한 벡터로 묶어 u·w·b를 만듦</td><td>planar, K = 4. 시정촌마다 따로</td></tr>
+    <tr><td>flow 단계마다</td><td>꺼진 화소 다시 0으로 (최솟값–최댓값 정규화는 학습 전 시험 계산에만 있고 최종 학습에는 없음)</td><td>마지막에 한 번 0 곱하기 (결과 같음), 마지막에 sigmoid</td></tr>
+    <tr><td>샘플 수</td><td>화소마다 1개, 마지막 epoch의 값이 결과</td><td>학습 중 8개, 끝나고 256개 평균이 결과</td></tr>
+    <tr><td>가중치 부호</td><td>제약 없음</td><td>w_a, w_x를 양수로 묶음 (행이 적어 부호가 뒤집히는 것을 막으려고)</td></tr>
+    <tr><td>관측식</td><td>log DPM</td><td>log(DPM_배경차 + 2) (배경차는 음수가 있어서)</td></tr>
+    <tr><td>손실</td><td>β·|평균 log p(x|z)| + KL + triplet</td><td>ELBO 합 + β warm-up + triplet</td></tr>
+    <tr><td>최적화</td><td>RMSprop, lr 1e-5, 30 epoch</td><td>Adam, lr 0.01, 3000 epoch, seed 5개</td></tr>
+  </table></div>
+  <h3>학습 방식 8가지: 왜 바꿨나 (시정촌 단위 기준, 칸 단위도 같은 코드)</h3>
+  <p>모델 구조(인과 그래프 + flow 변분추론 + USGS 사전확률·불확실도)는 그대로 두고, 아래 8가지를 바꿨습니다. 근거 표시: <span class="ev0">자료 때문에 어쩔 수 없음</span> <span class="ev1">논문 식을 따름 (공식 코드에만 있는 처리를 뺌)</span> <span class="ev2">우리 선택</span> <span class="ev3">기록된 이유 없음</span></p>
+  <div class="w8s"><div class="w8"><div class="w8h"><span class="w8n">1</span><b>μ (출발점 중심)</b></div>
+    <div class="w8g"><div><div class="w8l">원 DisasterNet</div>μ = w_μ · (w_a · α) + b_μ. 모든 위치가 가중치를 공유 → <b>α가 같으면 μ도 같음</b></div><div><div class="w8l">우리</div>μ = 6·tanh((a·α + c + <b>δ</b>)/6). δ = 시정촌마다 학습하는 보정값, ±6 안</div></div>
+    <div class="w8r"><span class="w8k">어디서 계산</span><div><code>model.py</code> <code>FlowNode.forward</code>: <code>mu = 6*tanh((self.mu(h) + self.mu_local)/6)</code> (<code>mu_local</code> = δ)</div></div>
+    <div class="w8r"><span class="w8k">실제 예시</span><div>2016 구마모토의 天草市와 あさぎり町은 USGS 산사태 사전확률이 0.00065 대 0.00059로 거의 같지만 DPM은 0.125 대 0.319로 2.5배 차이. 원본 식이면 두 곳의 μ가 똑같이 출발합니다. 우리 ③ DNU(seed 5개 평균)는 δ로 따로 움직여 산사태 사후확률이 0.137 대 0.442로 갈립니다</div></div>
+    <div class="w8r"><span class="w8k">왜 바꿨나</span><div>시정촌마다 자기 DPM에 맞춰 출발점이 움직일 수 있게 하려고 (위치마다 따로 추론하는 변분추론에 더 가깝게). ±6은 δ가 한없이 커지는 것을 막으려고 (sigmoid(6) ≈ 0.998이라 확률 범위는 거의 다 씀)</div></div>
+    <div class="w8r"><span class="w8k">근거</span><div><span class="ev2">우리 선택</span> 원본과 다른 설계라 발표 때 밝힐 것. δ만 뺀 실험은 따로 안 함</div></div></div><div class="w8"><div class="w8h"><span class="w8n">2</span><b>flow: 배치 한 벡터 대 행마다 따로, K</b></div>
+    <div class="w8g"><div><div class="w8l">원 DisasterNet</div>u, w = Linear(N, K·N)(배치의 α 벡터 전체). <b>한 위치의 flow가 같은 배치 안 다른 위치들의 α에 좌우</b>. K = 8</div><div><div class="w8l">우리</div>u, w, b를 행마다 따로 (자기 α에서 만든 값 + 행별 보정). K = 4</div></div>
+    <div class="w8r"><span class="w8k">어디서 계산</span><div>원본 <code>model.py</code> <code>amor_u = Linear(batch_size, num_flows*batch_size)</code> · 우리 <code>model.py</code> <code>amor</code> + <code>flow_local</code></div></div>
+    <div class="w8r"><span class="w8k">실제 예시</span><div>원본 배치 8,109화소 × K = 8이면 u·w 가중치만 <b>10.5억 개</b> (이 클라우드에서 만들어 보니 메모리 15 GB를 넘어 멈춤). 시정촌은 지진마다 39~81줄이라 지진마다 Linear 크기가 달라지고, 행 순서를 섞으면 같은 시정촌의 변환이 달라집니다</div></div>
+    <div class="w8r"><span class="w8k">왜 바꿨나</span><div>논문 식(식 3·4)은 위치마다의 planar flow인데, 배치를 한 벡터로 묶는 것은 공식 코드의 구현 방식이라 논문 식을 따랐습니다. K = 4는 논문이 지진별로 3·4·8을 썼는데 그중 하나를 고른 것</div></div>
+    <div class="w8r"><span class="w8k">근거</span><div><span class="ev1">논문 식 기준</span> · K = 4는 <span class="ev3">기록된 이유 없음</span> (K = 8 비교는 "나중에" 목록에 있음)</div></div></div><div class="w8"><div class="w8h"><span class="w8n">3</span><b>뽑는 개수</b></div>
+    <div class="w8g"><div><div class="w8l">원 DisasterNet</div>위치마다 ε 1개. 결과 = 마지막 epoch에 뽑힌 그 값</div><div><div class="w8l">우리</div>학습 중 8개, 끝나고 256개를 뽑아 sigmoid 평균</div></div>
+    <div class="w8r"><span class="w8k">어디서 계산</span><div><code>model.py</code> <code>posteriors</code>: <code>q = sigmoid(r).mean(1)</code> (n_samples = 8, 마지막 추론 256)</div></div>
+    <div class="w8r"><span class="w8k">실제 예시</span><div>5장 그림처럼 益城町에서 분산 1이면 한 번 뽑은 확률이 0.03 ~ 0.35 중 어디든 나올 수 있습니다. 1개면 결과가 그 순간의 난수에 좌우되고, 8개·256개 평균이면 거의 고정됩니다</div></div>
+    <div class="w8r"><span class="w8k">왜 바꿨나</span><div>사후확률 q = E[sigmoid(r)]을 몬테카를로로 추정하는 것이라 모델·목적함수는 같고 추정 정확도만 다릅니다. 시정촌은 값 하나가 AUC에 크게 영향을 줘서 흔들림을 줄였습니다</div></div>
+    <div class="w8r"><span class="w8k">근거</span><div><span class="ev1">같은 목적함수, 추정만 정확하게</span></div></div></div><div class="w8"><div class="w8h"><span class="w8n">4</span><b>꺼진 칸 0 덮기 (정규화는 학습에 없음)</b></div>
+    <div class="w8g"><div><div class="w8l">원 DisasterNet</div>학습 코드(model.py)는 flow 한 단계마다 꺼진 화소를 0으로 덮음. 최솟값–최댓값 정규화는 DisasterNet.py 앞부분의 학습 전 시험 계산에만 있고 최종 결과에 쓰이지 않음</div><div><div class="w8l">우리</div>flow가 끝난 뒤 꺼진 행의 사후확률에 0을 한 번 곱함</div></div>
+    <div class="w8r"><span class="w8k">어디서 계산</span><div>원본 <code>method/model/model.py</code> (정규화는 <code>method/DisasterNet.py</code> 246·255행, 학습 전 시험 계산) · 우리 <code>posteriors</code>: <code>q * keep</code></div></div>
+    <div class="w8r"><span class="w8k">실제 예시</span><div>우리 flow는 행끼리 섞이지 않아서, 단계마다 0으로 덮든 마지막에 한 번 0을 곱하든 결과가 같습니다</div></div>
+    <div class="w8r"><span class="w8k">왜 바꿨나</span><div>계산을 단순하게 하려고. 결과는 같으므로 사실상 차이가 없는 항목입니다</div></div>
+    <div class="w8r"><span class="w8k">근거</span><div><span class="ev1">결과가 같은 방식</span></div></div></div><div class="w8"><div class="w8h"><span class="w8n">5</span><b>가중치 부호</b></div>
+    <div class="w8g"><div><div class="w8l">원 DisasterNet</div>w_a(사전확률 → 재해), w_x(재해 → DPM) 부호 제약 없음</div><div><div class="w8l">우리</div>softplus로 양수: w = log(1 + e<sup>raw</sup>) > 0</div></div>
+    <div class="w8r"><span class="w8k">어디서 계산</span><div><code>model.py</code> <code>w_a</code>, <code>w_x</code> property (<code>F.softplus</code>)</div></div>
+    <div class="w8r"><span class="w8k">실제 예시</span><div>w_a가 음수면 "USGS 확률이 높을수록 재해가 덜 남", w_x가 음수면 "재해가 나면 DPM이 작아짐"이 되어 물리적으로 반대입니다</div></div>
+    <div class="w8r"><span class="w8k">왜 바꿨나</span><div>행이 지진마다 수십 개뿐이면 제약 없이 두었을 때 이렇게 부호가 뒤집힌 해에 빠지는 것을 합성 데이터에서 확인했습니다 (방향만 고정, 크기는 학습)</div></div>
+    <div class="w8r"><span class="w8k">근거</span><div><span class="ev2">우리 선택</span> · 합성 데이터에서 확인 (<code>model.py</code> 주석)</div></div></div><div class="w8"><div class="w8h"><span class="w8n">6</span><b>관측식</b></div>
+    <div class="w8g"><div><div class="w8l">원 DisasterNet</div>log DPM (ARIA DPM은 양수)</div><div><div class="w8l">우리</div>log(DPM_배경차 + 2)</div></div>
+    <div class="w8r"><span class="w8k">어디서 계산</span><div><code>model.py</code> <code>prepare_inputs(obs_offset=2)</code></div></div>
+    <div class="w8r"><span class="w8k">실제 예시</span><div>DPM_배경차 = 시정촌 평균 − 프레임 중앙값이라 264곳 중 <b>92곳이 음수</b>입니다 (가장 작은 값: 2021 후쿠시마 双葉町 −0.133). log(−0.133)은 계산이 안 되므로 모두 +2 → log(1.867) = 0.62</div></div>
+    <div class="w8r"><span class="w8k">왜 바꿨나</span><div>음수에는 log를 쓸 수 없어서. DPM 차이는 [−1, 1] 안이라 모든 시정촌에 같은 상수를 더하면 순서가 유지됩니다</div></div>
+    <div class="w8r"><span class="w8k">근거</span><div><span class="ev0">자료 때문에 어쩔 수 없음</span></div></div></div><div class="w8"><div class="w8h"><span class="w8n">7</span><b>손실</b></div>
+    <div class="w8g"><div><div class="w8l">원 DisasterNet</div>β·<b>|평균 log p(x|z)|</b> + (log q − β·log p(z) − log det) + triplet</div><div><div class="w8l">우리</div>−Σ[log p(x|z) − β·KL] + triplet (표준 ELBO, β warm-up은 원본과 같음)</div></div>
+    <div class="w8r"><span class="w8k">어디서 계산</span><div>원본 <code>exp.py</code> <code>loss = beta*abs(mean(log_p_xz)) + kl + penalty</code> · 우리 <code>model.py</code> <code>_fit_group</code></div></div>
+    <div class="w8r"><span class="w8k">실제 예시</span><div>절댓값 때문에 log p(x|z)가 양수가 되면(관측을 잘 설명할수록 커짐) 손실을 줄이려고 오히려 설명을 나쁘게 만드는 쪽으로 학습됩니다. 실제로 칸 단위 학습 로그의 −ELBO/칸이 −5 정도까지 내려가는데, 이는 log p가 양수 영역이라는 뜻입니다</div></div>
+    <div class="w8r"><span class="w8k">왜 바꿨나</span><div>논문의 목적함수(식 8·11·12)는 ELBO이고 절댓값은 공식 코드에만 있습니다. 논문 식을 따랐습니다</div></div>
+    <div class="w8r"><span class="w8k">근거</span><div><span class="ev1">논문 식 기준</span></div></div></div><div class="w8"><div class="w8h"><span class="w8n">8</span><b>최적화</b></div>
+    <div class="w8g"><div><div class="w8l">원 DisasterNet</div>RMSprop, lr 1e-5, 30 epoch, 8,109화소씩 배치</div><div><div class="w8l">우리</div>Adam, lr 0.01, 3000 epoch, 매번 지진의 모든 행</div></div>
+    <div class="w8r"><span class="w8k">어디서 계산</span><div>원본 <code>DisasterNet.py</code> (<code>lr=0.00001</code>, <code>epochs=30</code>, <code>batch_size=8109</code>) · 우리 <code>_fit_group</code> / <code>fit_cells</code></div></div>
+    <div class="w8r"><span class="w8k">실제 예시</span><div>원본은 화소가 수십만 개라 epoch마다 배치 수십~수백 번 → 30 epoch에 갱신 수천 번. 시정촌은 지진마다 39~81줄로 배치가 1개라 <b>30 epoch = 갱신 30번</b>, 한 번에 1e-5씩이면 가중치가 처음 난수 값에서 거의 안 움직입니다</div></div>
+    <div class="w8r"><span class="w8k">왜 바꿨나</span><div>행이 적어 전체 배치로 바꾸고, 갱신 횟수(3000번)를 원본의 화소 단위 학습과 비슷하게 맞췄습니다</div></div>
+    <div class="w8r"><span class="w8k">근거</span><div><span class="ev2">우리 선택</span> · 원본 이식판을 3000 epoch로 늘려도 0.542로 낮음 (아래)</div></div></div></div>
+  <h4 style="margin:6px 0 0;font-size:15px">8가지를 모두 원본대로 되돌린 판 (<code>orig_port.py</code>, 시정촌 입력, BD 있음, seed 5개)</h4>
+  <div class="tw st" style="max-width:760px"><table>
+    <tr><th>판</th><th class="num hl">전체</th><th class="num">산사태</th><th class="num">액상화</th></tr>
+    <tr><td>원본 그대로 (30 epoch)</td><td class="num">0.572</td><td class="num">0.536</td><td class="num">0.583</td></tr>
+    <tr><td>원본, epoch만 3000</td><td class="num">0.542</td><td class="num">0.452</td><td class="num">0.571</td></tr>
+    <tr><td>우리 ① DN (BD 있음)</td><td class="num up">0.606</td><td class="num up">0.557</td><td class="num up">0.621</td></tr>
+  </table></div>
+  <p class="meta">같은 입력(BD 있음, 끄기·soft 없음)에서 비교. 8가지를 하나씩만 되돌린 실험은 하지 않아서, 어느 항목이 얼마나 차이를 만드는지는 모릅니다.</p>
+  <h4 style="margin:6px 0 0;font-size:15px">칸(250 m) 단위에서도 원본대로 되돌려 봄 (<code>orig_cells.py</code>, 10.20)</h4>
+  <div class="tw st" style="max-width:760px"><table>
+    <tr><th>칸 단위 (끄기 지도 + U, 면적 평균, BD 없음, seed 0)</th><th class="num hl">전체</th><th class="num">산사태</th><th class="num">액상화</th></tr>
+    <tr><td>공식 코드 학습 방식 (배치 1,000)</td><td class="num">0.670</td><td class="num">0.754</td><td class="num">0.643</td></tr>
+    <tr><td>지금 방식 (⑤ 끄기 지도 + U)</td><td class="num up">0.797</td><td class="num">0.753</td><td class="num up">0.812</td></tr>
+  </table></div>
+  <div class="anal"><b>결과 분석</b><ul>
+    <li>칸이 103만 개라 "원본 설정은 화소가 많을 때를 전제로 해서 칸에서는 잘 맞을 수도 있다"는 가능성을 확인한 것인데, <b>칸 단위에서도 지금 방식이 0.127 높습니다</b>. 차이는 거의 다 액상화(0.812 대 0.643)에서 나고, 산사태는 같습니다 (0.753 대 0.754)</li>
+    <li>공식 코드 방식은 시정촌 값(칸 최댓값)이 거의 1에 몰립니다 (중앙값 산사태 0.87 · 액상화 0.98). 칸마다 한 번 뽑은 값이라 높게 뽑힌 칸 하나가 최댓값을 차지해 시정촌 사이 순서가 잘 안 갈리는 것으로 보입니다 (추정)</li>
+    <li>→ 시정촌 단위(0.572 대 0.606)와 칸 단위(0.670 대 0.797) 모두 지금 방식이 높아서, 학습 방식은 지금대로 갑니다. 단, 칸 단위는 seed 1개이고 배치는 공식 코드 기본값 1,000 (실행 때 쓴 8,109칸은 가중치 10억 개 이상이라 메모리 부족)이라 참고용입니다. 자세한 표는 칸 단위 실험 기록 2.8장</li>
+  </ul></div>
+  <h3>평가 단위: 원본은 화소 1:1, 우리는 시정촌</h3>
+  <div class="cmpfig"><div class="cf"><svg viewBox="0 0 520 330" width="100%" style="max-width:520px" font-family="IBM Plex Sans KR,sans-serif"><text x="10" y="20" font-size="14" font-weight="700" fill="#1d2430">원 DisasterNet: 화소마다 ε 1개</text><text x="10" y="50" font-size="13" font-weight="600" fill="#1d2430">화소 A</text><text x="10" y="66" font-size="11.5" fill="#5b6577">분산 0.05 (그 화소 USGS)</text><polyline points="147.0,90.0 148.5,90.0 150.0,90.0 151.5,90.0 153.0,89.9 154.5,89.9 156.0,89.9 157.5,89.8 159.0,89.7 160.5,89.6 161.9,89.5 163.4,89.3 164.9,89.1 166.4,88.8 167.9,88.5 169.4,88.0 170.9,87.5 172.4,86.8 173.9,86.0 175.4,85.0 176.9,83.9 178.3,82.6 179.8,81.1 181.3,79.4 182.8,77.5 184.3,75.4 185.8,73.1 187.3,70.7 188.8,68.1 190.3,65.4 191.8,62.7 193.3,60.0 194.7,57.3 196.2,54.8 197.7,52.4 199.2,50.3 200.7,48.5 202.2,47.0 203.7,45.9 205.2,45.2 206.7,45.0 208.2,45.2 209.6,45.9 211.1,47.0 212.6,48.5 214.1,50.3 215.6,52.4 217.1,54.8 218.6,57.3 220.1,60.0 221.6,62.7 223.1,65.4 224.6,68.1 226.0,70.7 227.5,73.1 229.0,75.4 230.5,77.5 232.0,79.4 233.5,81.1 235.0,82.6 236.5,83.9 238.0,85.0 239.5,86.0 241.0,86.8 242.4,87.5 243.9,88.0 245.4,88.5 246.9,88.8 248.4,89.1 249.9,89.3 251.4,89.5 252.9,89.6 254.4,89.7 255.9,89.8 257.4,89.9 258.8,89.9 260.3,89.9 261.8,90.0 263.3,90.0 264.8,90.0 266.3,90.0" fill="#8a6a2f" fill-opacity=".12" stroke="#8a6a2f" stroke-width="2"/><line x1="40" y1="90" x2="340" y2="90" stroke="#8a93a3"/><circle cx="220.1" cy="90" r="7" fill="#8a6a2f" stroke="#fff" stroke-width="1.5"/><text x="352" y="94" font-size="18" fill="#8a93a3">→</text><text x="378" y="95" font-size="14" font-weight="700" fill="#8a6a2f">q = 0.14</text><text x="452" y="95" font-size="13" fill="#5b6577">↔ 정답 1</text><text x="10" y="145" font-size="13" font-weight="600" fill="#1d2430">화소 B</text><text x="10" y="161" font-size="11.5" fill="#5b6577">분산 0.02 (그 화소 USGS)</text><polyline points="235.6,185.0 236.6,185.0 237.5,185.0 238.4,185.0 239.4,184.9 240.3,184.9 241.3,184.9 242.2,184.8 243.2,184.7 244.1,184.6 245.0,184.5 246.0,184.3 246.9,184.1 247.9,183.8 248.8,183.5 249.8,183.0 250.7,182.5 251.6,181.8 252.6,181.0 253.5,180.0 254.5,178.9 255.4,177.6 256.4,176.1 257.3,174.4 258.2,172.5 259.2,170.4 260.1,168.1 261.1,165.7 262.0,163.1 263.0,160.4 263.9,157.7 264.8,155.0 265.8,152.3 266.7,149.8 267.7,147.4 268.6,145.3 269.6,143.5 270.5,142.0 271.4,140.9 272.4,140.2 273.3,140.0 274.3,140.2 275.2,140.9 276.2,142.0 277.1,143.5 278.0,145.3 279.0,147.4 279.9,149.8 280.9,152.3 281.8,155.0 282.8,157.7 283.7,160.4 284.6,163.1 285.6,165.7 286.5,168.1 287.5,170.4 288.4,172.5 289.4,174.4 290.3,176.1 291.2,177.6 292.2,178.9 293.1,180.0 294.1,181.0 295.0,181.8 296.0,182.5 296.9,183.0 297.8,183.5 298.8,183.8 299.7,184.1 300.7,184.3 301.6,184.5 302.6,184.6 303.5,184.7 304.4,184.8 305.4,184.9 306.3,184.9 307.3,184.9 308.2,185.0 309.2,185.0 310.1,185.0 311.0,185.0" fill="#8a6a2f" fill-opacity=".12" stroke="#8a6a2f" stroke-width="2"/><line x1="40" y1="185" x2="340" y2="185" stroke="#8a93a3"/><circle cx="261.1" cy="185" r="7" fill="#8a6a2f" stroke="#fff" stroke-width="1.5"/><text x="352" y="189" font-size="18" fill="#8a93a3">→</text><text x="378" y="190" font-size="14" font-weight="700" fill="#8a6a2f">q = 0.23</text><text x="452" y="190" font-size="13" fill="#5b6577">↔ 정답 0</text><text x="10" y="240" font-size="13" font-weight="600" fill="#1d2430">화소 C</text><text x="10" y="256" font-size="11.5" fill="#5b6577">분산 0.04 (그 화소 USGS)</text><polyline points="86.7,280.0 88.0,280.0 89.3,280.0 90.7,280.0 92.0,279.9 93.3,279.9 94.7,279.9 96.0,279.8 97.3,279.7 98.7,279.6 100.0,279.5 101.3,279.3 102.7,279.1 104.0,278.8 105.3,278.5 106.7,278.0 108.0,277.5 109.3,276.8 110.7,276.0 112.0,275.0 113.3,273.9 114.7,272.6 116.0,271.1 117.3,269.4 118.7,267.5 120.0,265.4 121.3,263.1 122.7,260.7 124.0,258.1 125.3,255.4 126.7,252.7 128.0,250.0 129.3,247.3 130.7,244.8 132.0,242.4 133.3,240.3 134.7,238.5 136.0,237.0 137.3,235.9 138.7,235.2 140.0,235.0 141.3,235.2 142.7,235.9 144.0,237.0 145.3,238.5 146.7,240.3 148.0,242.4 149.3,244.8 150.7,247.3 152.0,250.0 153.3,252.7 154.7,255.4 156.0,258.1 157.3,260.7 158.7,263.1 160.0,265.4 161.3,267.5 162.7,269.4 164.0,271.1 165.3,272.6 166.7,273.9 168.0,275.0 169.3,276.0 170.7,276.8 172.0,277.5 173.3,278.0 174.7,278.5 176.0,278.8 177.3,279.1 178.7,279.3 180.0,279.5 181.3,279.6 182.7,279.7 184.0,279.8 185.3,279.9 186.7,279.9 188.0,279.9 189.3,280.0 190.7,280.0 192.0,280.0 193.3,280.0" fill="#8a6a2f" fill-opacity=".12" stroke="#8a6a2f" stroke-width="2"/><line x1="40" y1="280" x2="340" y2="280" stroke="#8a93a3"/><circle cx="145.3" cy="280" r="7" fill="#8a6a2f" stroke="#fff" stroke-width="1.5"/><text x="352" y="284" font-size="18" fill="#8a93a3">→</text><text x="378" y="285" font-size="14" font-weight="700" fill="#8a6a2f">q = 0.05</text><text x="452" y="285" font-size="13" fill="#5b6577">↔ 정답 0</text><text x="10" y="322" font-size="12" fill="#5b6577">마지막 epoch에 뽑힌 그 1개 값이 결과 · 화소 수십만 개를 정답 지도와 1:1로 AUC</text></svg></div><div class="cf"><svg viewBox="0 0 520 330" width="100%" style="max-width:520px" font-family="IBM Plex Sans KR,sans-serif"><text x="10" y="20" font-size="14" font-weight="700" fill="#1d2430">우리: 시정촌마다 ε 8개 → 평균</text><text x="10" y="60" font-size="13" font-weight="600" fill="#1d2430">益城町 (시정촌 하나)</text><text x="10" y="76" font-size="11.5" fill="#5b6577">분산 0.0508 (시정촌 USGS 불확실도 평균)</text><polyline points="146.6,180.0 148.1,180.0 149.6,179.9 151.1,179.9 152.6,179.9 154.1,179.8 155.6,179.8 157.1,179.7 158.6,179.5 160.1,179.3 161.6,179.1 163.1,178.8 164.6,178.4 166.1,177.9 167.6,177.3 169.1,176.5 170.6,175.5 172.1,174.3 173.6,172.9 175.1,171.2 176.6,169.2 178.1,166.8 179.6,164.2 181.1,161.1 182.6,157.8 184.1,154.0 185.6,150.0 187.1,145.6 188.6,141.1 190.1,136.3 191.6,131.5 193.1,126.6 194.6,121.9 196.1,117.4 197.7,113.2 199.2,109.4 200.7,106.2 202.2,103.5 203.7,101.6 205.2,100.4 206.7,100.0 208.2,100.4 209.7,101.6 211.2,103.5 212.7,106.2 214.2,109.4 215.7,113.2 217.2,117.4 218.7,121.9 220.2,126.6 221.7,131.5 223.2,136.3 224.7,141.1 226.2,145.6 227.7,150.0 229.2,154.0 230.7,157.8 232.2,161.1 233.7,164.2 235.2,166.8 236.7,169.2 238.2,171.2 239.7,172.9 241.2,174.3 242.7,175.5 244.2,176.5 245.7,177.3 247.2,177.9 248.7,178.4 250.2,178.8 251.7,179.1 253.2,179.3 254.7,179.5 256.3,179.7 257.8,179.8 259.3,179.8 260.8,179.9 262.3,179.9 263.8,179.9 265.3,180.0 266.8,180.0" fill="#2d62b3" fill-opacity=".12" stroke="#2d62b3" stroke-width="2"/><line x1="40" y1="180" x2="340" y2="180" stroke="#8a93a3"/><circle cx="182.6" cy="180" r="6" fill="#2d62b3" fill-opacity=".85" stroke="#fff" stroke-width="1.2"/><circle cx="191.6" cy="180" r="6" fill="#2d62b3" fill-opacity=".85" stroke="#fff" stroke-width="1.2"/><circle cx="197.7" cy="180" r="6" fill="#2d62b3" fill-opacity=".85" stroke="#fff" stroke-width="1.2"/><circle cx="203.7" cy="180" r="6" fill="#2d62b3" fill-opacity=".85" stroke="#fff" stroke-width="1.2"/><circle cx="208.2" cy="180" r="6" fill="#2d62b3" fill-opacity=".85" stroke="#fff" stroke-width="1.2"/><circle cx="214.2" cy="180" r="6" fill="#2d62b3" fill-opacity=".85" stroke="#fff" stroke-width="1.2"/><circle cx="220.2" cy="180" r="6" fill="#2d62b3" fill-opacity=".85" stroke="#fff" stroke-width="1.2"/><circle cx="227.7" cy="180" r="6" fill="#2d62b3" fill-opacity=".85" stroke="#fff" stroke-width="1.2"/><text x="352" y="185" font-size="18" fill="#8a93a3">→</text><text x="378" y="108" font-size="11.5" fill="#5b6577">0.086</text><text x="378" y="123" font-size="11.5" fill="#5b6577">0.097</text><text x="378" y="138" font-size="11.5" fill="#5b6577">0.106</text><text x="378" y="153" font-size="11.5" fill="#5b6577">0.115</text><text x="378" y="168" font-size="11.5" fill="#5b6577">0.122</text><text x="378" y="183" font-size="11.5" fill="#5b6577">0.132</text><text x="378" y="198" font-size="11.5" fill="#5b6577">0.142</text><text x="378" y="213" font-size="11.5" fill="#5b6577">0.157</text><line x1="376" y1="232" x2="420" y2="232" stroke="#5b6577"/><text x="378" y="252" font-size="14" font-weight="700" fill="#2d62b3">평균 q = 0.12</text><text x="378" y="272" font-size="13" fill="#5b6577">↔ 시정촌 정답 0/1</text><text x="10" y="322" font-size="12" fill="#5b6577">마지막에는 256개 평균 · 지진마다 시정촌 40~80곳을 시정촌 정답과 비교해 AUC</text></svg></div></div>
+  <p class="meta">μ와 ε는 설명용 예시, 益城町 분산 0.0508은 실제 값. 그림에서는 flow를 생략 (실제로는 r⁰ → flow 4단계 → sigmoid). 원본 화소들의 분산·정답도 예시입니다.</p>
+  <div class="tw"><table>
+    <tr><th></th><th>원 DisasterNet</th><th>우리</th></tr>
+    <tr><td>정답 자료</td><td>화소별 정답 지도 (실제 산사태·액상화·건물붕괴 위치)</td><td>시정촌별 0/1 정답 (그 시정촌에 피해가 있었나)</td></tr>
+    <tr><td>비교 단위</td><td>화소 하나의 사후확률 ↔ 그 화소의 정답</td><td>시정촌 하나의 사후확률 ↔ 그 시정촌의 정답 (칸 단위 실험도 칸 최댓값으로 시정촌 값을 만들어 평가)</td></tr>
+    <tr><td>AUC 계산</td><td>화소 수십만 개로 ROC·AUC</td><td>지진마다 시정촌 40~80곳으로 AUC → 시정촌 수로 가중평균 (263곳)</td></tr>
+    <tr><td>평가 코드</td><td>공개 안 됨 (논문에 결과만)</td><td>직접 작성</td></tr>
+  </table></div>
+  <p class="meta">정답이 시정촌 단위라 화소별로 평가할 수 없습니다. 같은 모델이라도 평가 단위·정답이 달라 원 논문 AUC와 직접 비교하기 어렵고, 그래서 같은 시정촌 기준인 USGS 기준선(0.854)·pilotA(0.855)와 비교합니다.</p>
+  <h3>어느 쪽이 더 불안정한가: 값 하나 대 AUC 숫자</h3>
+  <div class="tw"><table>
+    <tr><th></th><th>값 하나</th><th>AUC 숫자</th></tr>
+    <tr><td>원본 (화소 1:1)</td><td>불안정: 화소마다 1개만 뽑음</td><td>안정: 평가 화소가 수십만 개라 몇 개가 튀어도 전체 비율은 거의 그대로</td></tr>
+    <tr><td>우리 (시정촌)</td><td>안정: 8개(마지막 256개) 평균</td><td>불안정: 평가 시정촌이 지진마다 40~80곳이라 한두 곳 순서만 바뀌어도 크게 흔들림</td></tr>
+  </table></div>
+  <div class="anal"><b>정리</b><ul>
+    <li>AUC는 "피해 난 곳이 안 난 곳보다 높은 확률을 받았나"를 모든 쌍에서 세는 값이라, 화소처럼 쌍이 아주 많으면 몇 개가 운으로 튀어도 숫자가 거의 안 바뀝니다. 다만 무작위 흔들림은 순서를 조금 섞어 AUC를 살짝 낮추는 쪽으로 작용할 수 있습니다</li>
+    <li>우리는 평가 개수가 적어 AUC가 흔들립니다. 예: 산사태 오사카(7곳)는 실험에 따라 0.220~1.000, 액상화 후쿠시마(음성 1곳)는 0.5~0.77</li>
+    <li>그래서 값 하나는 여러 개 평균으로, AUC의 흔들림은 seed 5개 평균으로 줄입니다. 칸 단위는 아직 seed 1개라 0.02 정도 차이는 우연일 수 있습니다</li>
+  </ul></div>
+  <div class="callout"><b>칸 단위 실험이 원본과 가까워지는 점</b>
+    <ul>
+      <li>단위가 화소(250 m 칸)가 되고, 칸마다 자기 DPM과 자기 USGS 확률을 씀</li>
+      <li>칸은 비탈 아니면 평지라 끄기(LOCAL의 경사 부분)를 원본처럼 할 수 있음 — 기본판은 교수님 말씀대로 끄기 없이, 추가판에서 얹을 예정</li>
+      <li>다른 점은 남음: 평가는 여전히 시정촌 단위(칸 최댓값), BD 없음, 시정촌 대신 칸마다 보정값</li>
+    </ul>
+  </div>
+</section>
+
+<section id="s7">
+  <h2><span class="n">7</span>칸 단위 + 시정촌 최댓값 <span class="status">진행 중</span></h2>
+  <p>교수님 지시: BD 없음, 끄기·soft 없음, 학습은 하던 대로, <b>시정촌 사후확률 = 시정촌 안 칸들의 사후확률 최댓값</b>.</p>
+  <ul>
+    <li>칸: 250 m (1/4 메시), 264개 시정촌 안 약 102만 칸. 칸마다 자기 DPM(<code>dpm_250m_v8</code>)과 자기 USGS 확률</li>
+    <li>물 칸은 뺌 (물은 원래 상관도가 낮아 DPM이 커서 최댓값을 오염시킴). USGS가 계산 안 한 칸(999)은 확률 0</li>
+    <li>결과는 별도 페이지 <a href="https://claude.ai/artifact/Uqmg4X8sLnLZeZX1jYmKpJ" style="color:var(--accent)">칸 단위 실험 기록</a>에 있습니다</li>
+    <li>받아 둔 자료: 칸별 base 상관도(<code>dpm_250m_v8_base</code>). 칸의 54%가 0.3 미만이라, 최댓값이 숲·논 칸의 잡음에 끌려가면 "상관도 낮은 칸 빼기"를 비교할 예정</li>
+  </ul>
+</section>
+
+<section id="s8">
+  <h2><span class="n">8</span>다음</h2>
+  <ol style="margin:0;padding-left:1.3em;max-width:68ch">
+    <li>칸 단위 seed 0 결과 확인 → 시정촌 단위 ① DN(BD 없음, 0.614)과 비교</li>
+    <li>칸 단위에 U(칸별 999 끄기 + 칸별 불확실도 분산)와 soft(칸에서는 비탈·평지 끄기)를 하나씩 얹기</li>
+    <li>최댓값이 잡음 칸에 끌려가면 base 상관도로 거르기</li>
+    <li>괜찮으면 seed 5개로 확장 (약 8~9시간)</li>
+  </ol>
+</section>
+</main>

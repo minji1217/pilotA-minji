@@ -1,0 +1,854 @@
+<title>DisasterNet 원본 대 우리 코드</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* 레이아웃: 위에 전체 흐름 그림 → 8가지 차이를 같은 틀(코드 두 칸 / 그림 + 예시)로 → 결과. 흰 배경 고정 */
+:root{--bg:#ffffff;--fg:#1b2430;--muted:#5d6b7a;--line:#e1e7ee;--soft:#f4f7fa;--orig:#a0612a;--orig-bg:#fbf3ea;--ours:#1f7a6b;--ours-bg:#e8f4f1;--accent:#1f4f7a;
+--sans:'IBM Plex Sans KR',system-ui,-apple-system,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;--mono:'IBM Plex Mono',ui-monospace,Menlo,Consolas,monospace;color-scheme:light}
+body{background:var(--bg);color:var(--fg);font-family:var(--sans);font-size:15.5px;line-height:1.65;margin:0;padding-block:28px 64px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+main{max-width:1180px;margin:0 auto;display:flex;flex-direction:column;gap:40px}
+h1{font-size:30px;line-height:1.25;margin:0;text-wrap:balance} h2{font-size:21px;margin:0;text-wrap:balance} h3{font-size:18px;margin:0}
+p{margin:0} .lede{font-size:17px;max-width:72ch;color:var(--fg)} .muted{color:var(--muted)}
+section{display:flex;flex-direction:column;gap:14px;min-width:0}
+.fig{width:100%;height:auto;max-width:100%} .fig text{font-family:var(--sans)}
+.fl{font-size:14px;font-weight:600;fill:var(--fg)} .mk{font-size:17px;font-weight:700;fill:var(--accent)} .fs{font-size:12.5px;fill:var(--fg)} .ft{font-size:11px;fill:var(--muted)} .b{font-weight:700}
+.flowbox{border:1px solid var(--line);border-radius:12px;padding:14px 16px;overflow-x:auto} .flowbox svg{min-width:760px}
+.tw{overflow-x:auto} table{border-collapse:collapse;width:100%;font-size:14.5px;font-variant-numeric:tabular-nums}
+th,td{border-bottom:1px solid var(--line);padding:9px 10px;text-align:left;vertical-align:top} th{background:var(--soft);font-weight:600;font-size:13.5px}
+td.n{text-align:right;white-space:nowrap} .win{color:var(--ours);font-weight:700}
+.tag{display:inline-block;font-size:12px;font-weight:600;padding:2px 9px;border-radius:99px;white-space:nowrap}
+.t-data{background:#eef0f3;color:#3b4652} .t-paper{background:#e6eef8;color:var(--accent)} .t-ours{background:var(--ours-bg);color:var(--ours)}
+.item{border:1px solid var(--line);border-radius:14px;padding:18px 20px;display:flex;flex-direction:column;gap:14px;min-width:0}
+.ih{display:flex;align-items:center;gap:12px;flex-wrap:wrap} .num{font-size:22px;font-weight:700;color:var(--accent);line-height:1}
+.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,460px),1fr));gap:14px} .cols>*{min-width:0}
+.code{border-radius:10px;overflow:hidden;border:1px solid var(--line)} .code .ch{font-size:12.5px;font-weight:600;padding:6px 12px}
+.code.o .ch{background:var(--orig-bg);color:var(--orig)} .code.u .ch{background:var(--ours-bg);color:var(--ours)}
+.code pre{margin:0;padding:12px 14px;overflow-x:auto;background:#fbfcfd;font-family:var(--mono);font-size:12.8px;line-height:1.6}
+.file{font-family:var(--mono);font-size:12px;color:var(--muted);margin-top:4px}
+figure{margin:0;border:1px solid var(--line);border-radius:10px;padding:10px;background:#fff}
+.txt{display:flex;flex-direction:column;gap:10px} .lb{display:block;font-size:12.5px;font-weight:700;color:var(--muted);letter-spacing:.02em;margin-bottom:2px}
+.res{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:14px}
+.rc{border:1px solid var(--line);border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:6px}
+.big{font-size:26px;font-weight:700;font-variant-numeric:tabular-nums} .vs{color:var(--muted);font-weight:500;font-size:16px}
+.expl{border:1px solid var(--line);border-radius:10px;padding:12px 14px;display:flex;flex-direction:column;gap:10px;background:#fcfdfe} .eh{font-weight:700;color:var(--accent)}
+mark.mo{background:#f6e2cc;color:inherit} mark.mu{background:#cfe9e2;color:inherit}
+.note{background:var(--soft);border-radius:10px;padding:12px 16px;font-size:14.5px}
+nav.toc{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:14px} nav.toc a{color:var(--accent);text-decoration:none} nav.toc a:hover,nav.toc a:focus-visible{text-decoration:underline}
+@media (max-width:560px){h1{font-size:24px}}
+</style>
+<main>
+<header style="display:flex;flex-direction:column;gap:12px">
+  <h1>DisasterNet 원본 대 우리 코드</h1>
+  <p class="lede">DisasterNet 공식 코드(<code>SusuXu/DisasterNet</code>)와 우리 구현(<code>disasternet/model.py</code>)의 차이를 코드, 그림, 실제 예시로 나란히 놓았습니다. 모델 구조는 같고, 계산 방법 8곳이 다릅니다.</p>
+  <nav class="toc" aria-label="차례"><a href="#d1">① 출발점 중심 μ</a><a href="#d2">② flow: 배치를 한 벡터로 대 행마다, K</a><a href="#d3">③ 뽑는 개수</a><a href="#d4">④ 꺼진 칸 0 덮기 (정규화는 학습에 없음)</a><a href="#d5">⑤ 가중치 부호</a><a href="#d6">⑥ 관측식</a><a href="#d7">⑦ 손실</a><a href="#d8">⑧ 최적화</a><a href="#eqs">출발점·flow 식</a><a href="#flowstep">flow 한 번에 얼마나</a><a href="#res">결과</a></nav>
+</header>
+
+
+<section>
+  <h2>원본 공식 코드의 구조</h2>
+  <p>공식 저장소의 실행 파일은 <code>method/DisasterNet.py</code> 하나이고, 안에서 두 가지를 차례로 합니다.</p>
+  <div class="tw"><table>
+    <tr><th>순서</th><th>하는 일</th><th>코드</th><th>최종 결과에 쓰이나</th></tr>
+    <tr><td>1</td><td>자료 읽기 (USGS 사전확률·불확실도, DPM, LOCAL, 건물 윤곽), 배치 크기 8,109</td><td><code>DisasterNet.py</code> 앞부분</td><td>예</td></tr>
+    <tr><td>2</td><td><b>학습 전 시험 계산</b>: 손으로 정한 가중치(w_0LS = 0.2956 등)로 사후확률을 한 번 계산하고 <code>q_*_K_1.mat</code>으로 저장. 여기에만 b_μ와 최솟값–최댓값 정규화가 있음</td><td><code>DisasterNet.py</code> 200~290행</td><td>아니요 (학습에 넘겨지지 않음)</td></tr>
+    <tr><td>3</td><td><b>학습</b>: <code>model/model.py</code>의 모델과 <code>optimization/exp.py</code>의 <code>run()</code>을 불러 RMSprop으로 학습하고 <code>final_Q*.mat</code>으로 저장</td><td><code>DisasterNet.py</code>가 <code>from model.model import DisasterNet</code>, <code>from optimization.exp import run</code>으로 불러씀</td><td><b>예 (이게 최종 결과)</b></td></tr>
+  </table></div>
+  <div class="expl">
+    <p class="eh">이 페이지에서 세 가지를 구분합니다</p>
+    <div class="tw"><table>
+      <tr><th>이름</th><th>뜻</th><th>결과</th></tr>
+      <tr><td>원 DisasterNet (공식 코드)</td><td>위 3번 학습 코드 (<code>model.py</code> + <code>exp.py</code>, 설정은 <code>DisasterNet.py</code>). 각 항목의 왼쪽 코드</td><td>논문 결과 (화소, Haiti 등)</td></tr>
+      <tr><td>원본 따라 하기 (비교 실험)</td><td>위 3번을 우리 자료에 그대로 옮긴 것 (<code>orig_port.py</code> 시정촌, <code>orig_cells.py</code> 칸). 맨 아래 결과</td><td>시정촌 0.572, 칸 0.670</td></tr>
+      <tr><td>우리 방식</td><td>논문 식을 우리가 직접 구현한 것 (<code>disasternet/model.py</code>). 각 항목의 오른쪽 코드. 공식 코드를 따라 한 것이 아님</td><td>시정촌 최고 0.751, 칸 최고 0.797</td></tr>
+    </table></div>
+  </div>
+</section>
+<section>
+  <h2>같은 것: 모델 구조</h2>
+  <div class="tw"><table>
+    <tr><th>부분</th><th>원본과 우리 모두</th></tr>
+    <tr><td>인과 그래프</td><td>재해 노드(산사태·액상화)가 위성 DPM을 만든다고 봄. BD(건물붕괴)는 교수님 지시로 우리만 뺌</td></tr>
+    <tr><td>사전확률</td><td>USGS 산사태·액상화 확률</td></tr>
+    <tr><td>사후확률 만드는 법</td><td>정규분포에서 출발점 r⁰을 뽑음 → planar flow → sigmoid</td></tr>
+    <tr><td>USGS 불확실도</td><td>① 0·999(계산 안 함)이면 끄기 ② r⁰의 분산</td></tr>
+    <tr><td>학습</td><td>ELBO(DPM 설명 + 사전확률과의 거리) + triplet, β warm-up, 정답 없이 지진마다 따로</td></tr>
+  </table></div>
+</section>
+
+
+
+<section>
+  <h2>논문 식 대 우리 식</h2>
+  <p>BD 노드를 뺀 산사태·액상화 기준. 굵은 글씨가 다른 부분입니다.</p>
+  <div class="tw"><table>
+    <tr><th>식</th><th>논문 (Li et al., KDD 2023)</th><th>우리</th><th>다른 점</th></tr>
+    <tr><td>1. 재해 발생 (사전)</td><td>logit p(재해) = w_0 + w_a·α + w_e·ε<br>(식 1·9, ε는 표준정규 잡음)</td><td>logit p(재해) = w_0 + w_a·α + w_e·ε<br><b>w_a &gt; 0</b></td><td>같은 식. w_a를 양수로 묶음 (⑤)</td></tr>
+    <tr><td>2. 관측</td><td>log DPM ~ 정규분포(평균 w_0x + Σ w_x·z, 분산 w_ex²)<br>(식 7)</td><td>log(<b>DPM + 2</b>) ~ 정규분포(평균 w_0x + Σ w_x·z, 분산 w_ex²)<br><b>w_x &gt; 0</b></td><td>같은 식. DPM에 2를 더함 (⑥, 음수 때문), w_x를 양수로 묶음 (⑤)</td></tr>
+    <tr><td>3. 출발점 (변분분포)</td><td>r⁰ ~ 정규분포(μ, σ²)<br>μ = φ(부모; W_μ)<br>(식 2, φ의 형태는 정하지 않음. 공식 코드는 μ = w_μ·w_a·α, σ² = USGS 불확실도)</td><td>r⁰ ~ 정규분포(μ, σ²)<br><b>μ = 6·tanh((a·α + c + δ)/6)</b><br>σ² = USGS 불확실도 (안 쓰면 1)</td><td>μ의 형태: 더하는 수 c, 시정촌별 보정 δ, ±6 묶기 (①)</td></tr>
+    <tr><td>4. flow</td><td>r^K = f_K ∘ … ∘ f_1(r⁰), f(r) = r + u·tanh(w·r + b)<br>(식 3·4, 위치마다)</td><td>같음, 칸마다, <b>K = 4</b></td><td>같은 식 (공식 코드는 배치를 한 벡터로 묶어 계산, K = 8)</td></tr>
+    <tr><td>5. 사후확률</td><td>q = E[sigmoid(r^K)]<br>(식 6)</td><td>q = sigmoid(r^K)의 <b>8개(마지막 256개) 평균</b></td><td>같은 식 (공식 코드는 1개 뽑기)</td></tr>
+    <tr><td>6. 손실</td><td>ELBO = E log p(DPM | z) + E log p(z) − E log q + triplet<br>(식 8·11·12)</td><td>같음 (β warm-up 포함)</td><td>같은 식 (공식 코드 기본 옵션은 |log p| 절댓값)</td></tr>
+  </table></div>
+  <p class="note">즉 식 자체는 1·2·4·5·6번이 논문과 같고, 다른 것은 <b>w_a·w_x를 양수로 묶은 것</b>(1·2번), <b>DPM + 2</b>(2번), <b>μ의 형태</b>(3번)뿐입니다. 논문은 μ를 "부모 입력의 함수"라고만 해서 형태가 정해져 있지 않습니다.</p>
+</section>
+
+<section id="mu">
+  <h2>출발점 μ 자세히: 코드의 어느 부분을 무엇으로 바꿨나</h2>
+  <p>식의 형태가 논문과 다른 곳은 여기 하나입니다. 출발점 r⁰를 뽑는 줄(r⁰ = μ + √분산 × ε)은 원본과 같고, <b>μ를 계산하는 한 줄만</b> 바꿨습니다.</p>
+  <div class="cols">
+    <div class="cc"><div class="code o"><div class="ch">원 DisasterNet (model.py)</div><pre><code>a_LS_1  = self.w_aLS * a_LS            # w_a × α
+<mark class="mo">z_LS_mu = self.w_mu_LS * a_LS_1</mark>         # μ = w_μ × w_a × α
+std_LS  = qvar_LS.sqrt()               # √분산 (USGS 불확실도)
+eps_LS  = torch.randn_like(std_LS)     # ε 1개
+z_LS    = eps_LS * std_LS + z_LS_mu    # r⁰</code></pre></div></div>
+    <div class="cc"><div class="code u"><div class="ch">우리 (model.py · FlowNode.forward)</div><pre><code><mark class="mu">mu  = 6.0 * torch.tanh((self.mu(h) + self.mu_local) / 6.0)</mark>
+std = var.sqrt()                       # √분산 (USGS 불확실도, 안 쓰면 1)
+n   = torch.randn(N, n_samples)        # ε 8개 (마지막 256개)
+r   = mu + std * n                     # r⁰</code></pre></div></div>
+  </div>
+  <div class="tw"><table>
+    <tr><th>원본 μ의 부분</th><th>우리 μ의 부분</th><th>뜻</th></tr>
+    <tr><td><code>self.w_mu_LS * self.w_aLS * a_LS</code></td><td><code>self.mu(h)</code> = a × α + c</td><td>α에 곱하는 수. 원본은 두 수의 곱(w_μ × w_a), 우리는 한 수 a. 우리는 더하는 수 c도 있음</td></tr>
+    <tr><td>없음</td><td><code>+ self.mu_local</code> = δ</td><td>시정촌(칸)마다 따로 학습하는 보정. 0에서 시작, 플러스·마이너스 모두 가능</td></tr>
+    <tr><td>없음</td><td><code>6.0 * torch.tanh(( … ) / 6.0)</code></td><td>전체를 −6 ~ +6 안으로 부드럽게 묶음</td></tr>
+    <tr><td><code>eps * std + mu</code></td><td><code>mu + std * n</code></td><td>같음 (뽑는 개수만 1개 대 8개)</td></tr>
+  </table></div>
+
+  <h3>무엇을 학습하고, 누가 같이 쓰나</h3>
+  <div class="tw"><table>
+    <tr><th>숫자</th><th>원 DisasterNet</th><th>우리</th></tr>
+    <tr><td>μ에서 α에 곱하는 수</td><td>w_μ, w_a: <b>학습</b>, 지진 하나의 모든 화소가 같이 씀</td><td>a: <b>학습</b>, 지진 하나의 모든 시정촌(칸)이 같이 씀</td></tr>
+    <tr><td>μ에서 더하는 수</td><td>없음</td><td>c: <b>학습</b>, 모두 같이 씀</td></tr>
+    <tr><td>μ 보정 δ</td><td>없음</td><td><b>학습</b>, 시정촌(칸)마다 하나씩 따로</td></tr>
+    <tr><td>flow의 u, w, b</td><td>Linear(N, K·N) 가중치: <b>학습</b>, 배치 전체를 한꺼번에 입력 (위치마다 따로 가진 숫자는 없음)</td><td>작은 Linear(1, 3K) 가중치: <b>학습</b>, 모두 같이 씀 + 칸별 보정(<code>flow_local</code>): <b>학습</b>, 행마다 따로</td></tr>
+    <tr><td>재해 발생 식 (w_0, w_a, w_e)</td><td><b>학습</b>, 모두 같이 씀</td><td><b>학습</b>, 모두 같이 씀 (w_a 양수)</td></tr>
+    <tr><td>관측 식 (w_0x, w_x, w_ex)</td><td><b>학습</b>, 모두 같이 씀</td><td><b>학습</b>, 모두 같이 씀 (w_x 양수)</td></tr>
+    <tr><td>r⁰의 분산</td><td>USGS 불확실도: <b>고정</b> (학습 안 함)</td><td>USGS 불확실도 또는 1: <b>고정</b></td></tr>
+    <tr><td>ε</td><td>매번 새로 뽑는 난수 (학습 아님), 위치마다 1개</td><td>매번 새로 뽑는 난수, 행마다 8개 (마지막 256개)</td></tr>
+    <tr><td>학습 단위</td><td colspan="2">지진(재해 자료)마다 따로 학습. 정답은 쓰지 않음 (둘 다 같음)</td></tr>
+  </table></div>
+  <p>원본은 위치마다 따로 가진 숫자가 하나도 없고 모든 숫자를 화소 전체가 같이 씁니다 (화소가 수십만 개라 가능). 우리는 대부분 같이 쓰되, <b>δ와 flow 칸별 보정만 행마다 따로</b> 둡니다.</p>
+
+  <h3>왜 c가 필요한가: 실제 예시</h3>
+  <div class="cols">
+    <figure><svg viewBox="0 0 520 210" class="fig" role="img" aria-label="구마모토 시정촌 산사태 사전확률 분포"><rect x="30" y="90" width="70" height="70" fill="#1f4f7a" fill-opacity=".75"/><text x="65" y="84" text-anchor="middle" class="fs b">10곳</text><text x="65" y="178" text-anchor="middle" class="ft">0~0.001</text><rect x="126" y="69" width="70" height="91" fill="#1f4f7a" fill-opacity=".75"/><text x="161" y="63" text-anchor="middle" class="fs b">13곳</text><text x="161" y="178" text-anchor="middle" class="ft">0.001~0.005</text><rect x="222" y="132" width="70" height="28" fill="#1f4f7a" fill-opacity=".75"/><text x="257" y="126" text-anchor="middle" class="fs b">4곳</text><text x="257" y="178" text-anchor="middle" class="ft">0.005~0.01</text><rect x="318" y="104" width="70" height="56" fill="#1f4f7a" fill-opacity=".75"/><text x="353" y="98" text-anchor="middle" class="fs b">8곳</text><text x="353" y="178" text-anchor="middle" class="ft">0.01~0.03</text><rect x="414" y="125" width="70" height="35" fill="#1f4f7a" fill-opacity=".75"/><text x="449" y="119" text-anchor="middle" class="fs b">5곳</text><text x="449" y="178" text-anchor="middle" class="ft">0.03~0.06</text><line x1="20" y1="160" x2="510" y2="160" stroke="#c4cfd9"/><text x="20" y="200" class="fs" fill="#5d6b7a">2016 구마모토 40개 시정촌의 USGS 산사태 사전확률 (실제 값). 절반이 0.001 근처</text></svg></figure>
+    <div class="txt">
+      <p><span class="lb">USGS 산사태 사전확률은 원래 작음</span>시정촌이라서 작은 것이 아니라 USGS 산사태 확률 자체가 작습니다. 시정촌 산사태(평균) 중앙값 0.0009, 0.01 미만 92% · 칸 산사태 중앙값 0.0007, 0.01 미만 94%. 칸 액상화도 83%가 0.01 미만입니다 (시정촌 액상화는 최댓값으로 모아서 중앙값 0.23).</p>
+      <p><span class="lb">그래서 곱하기만 하면</span>α가 거의 0이라 μ = (곱하는 수) × α도 거의 0이고, 출발 확률 sigmoid(0) = 0.5입니다. 그림 아래쪽처럼 구마모토 40곳 중 대부분이 0.5 근처에서 출발합니다. 실제로는 산사태가 난 시정촌보다 안 난 시정촌이 많아 0.5는 너무 높은 출발점입니다.</p>
+    </div>
+  </div>
+  <div class="cols">
+    <figure><svg viewBox="0 0 560 315" class="fig" role="img" aria-label="c가 있을 때와 없을 때 출발 확률"><line x1="60.0" y1="30" x2="60.0" y2="250" stroke="#eef2f6"/><text x="60.0" y="266" text-anchor="middle" class="ft">0</text><line x1="136.66666666666669" y1="30" x2="136.66666666666669" y2="250" stroke="#eef2f6"/><text x="136.66666666666669" y="266" text-anchor="middle" class="ft">0.01</text><line x1="213.33333333333334" y1="30" x2="213.33333333333334" y2="250" stroke="#eef2f6"/><text x="213.33333333333334" y="266" text-anchor="middle" class="ft">0.02</text><line x1="290.0" y1="30" x2="290.0" y2="250" stroke="#eef2f6"/><text x="290.0" y="266" text-anchor="middle" class="ft">0.03</text><line x1="366.6666666666667" y1="30" x2="366.6666666666667" y2="250" stroke="#eef2f6"/><text x="366.6666666666667" y="266" text-anchor="middle" class="ft">0.04</text><line x1="443.33333333333337" y1="30" x2="443.33333333333337" y2="250" stroke="#eef2f6"/><text x="443.33333333333337" y="266" text-anchor="middle" class="ft">0.05</text><line x1="520.0" y1="30" x2="520.0" y2="250" stroke="#eef2f6"/><text x="520.0" y="266" text-anchor="middle" class="ft">0.06</text><line x1="60" y1="250" x2="520" y2="250" stroke="#eef2f6"/><text x="54" y="254" text-anchor="end" class="ft">0</text><line x1="60" y1="195.0" x2="520" y2="195.0" stroke="#eef2f6"/><text x="54" y="199.0" text-anchor="end" class="ft">0.25</text><line x1="60" y1="140.0" x2="520" y2="140.0" stroke="#eef2f6"/><text x="54" y="144.0" text-anchor="end" class="ft">0.5</text><line x1="60" y1="85.0" x2="520" y2="85.0" stroke="#eef2f6"/><text x="54" y="89.0" text-anchor="end" class="ft">0.75</text><line x1="60" y1="30" x2="520" y2="30" stroke="#eef2f6"/><text x="54" y="34" text-anchor="end" class="ft">1</text><polyline points="60.0,140.0 67.7,138.4 75.3,136.7 83.0,135.1 90.7,133.4 98.3,131.8 106.0,130.1 113.7,128.5 121.3,126.9 129.0,125.2 136.7,123.6 144.3,122.0 152.0,120.4 159.7,118.8 167.3,117.2 175.0,115.7 182.7,114.1 190.3,112.5 198.0,111.0 205.7,109.5 213.3,108.0 221.0,106.5 228.7,105.0 236.3,103.5 244.0,102.0 251.7,100.6 259.3,99.2 267.0,97.7 274.7,96.3 282.3,95.0 290.0,93.6 297.7,92.2 305.3,90.9 313.0,89.6 320.7,88.3 328.3,87.0 336.0,85.8 343.7,84.5 351.3,83.3 359.0,82.1 366.7,80.9 374.3,79.8 382.0,78.6 389.7,77.5 397.3,76.4 405.0,75.3 412.7,74.2 420.3,73.2 428.0,72.1 435.7,71.1 443.3,70.1 451.0,69.2 458.7,68.2 466.3,67.3 474.0,66.3 481.7,65.4 489.3,64.6 497.0,63.7 504.7,62.8 512.3,62.0 520.0,61.2" fill="none" stroke="#a0612a" stroke-width="2.5"/><polyline points="60.0,239.6 67.7,239.3 75.3,239.0 83.0,238.6 90.7,238.3 98.3,238.0 106.0,237.6 113.7,237.3 121.3,236.9 129.0,236.5 136.7,236.1 144.3,235.8 152.0,235.3 159.7,234.9 167.3,234.5 175.0,234.1 182.7,233.6 190.3,233.2 198.0,232.7 205.7,232.2 213.3,231.7 221.0,231.2 228.7,230.7 236.3,230.1 244.0,229.6 251.7,229.0 259.3,228.4 267.0,227.9 274.7,227.3 282.3,226.6 290.0,226.0 297.7,225.3 305.3,224.7 313.0,224.0 320.7,223.3 328.3,222.6 336.0,221.9 343.7,221.1 351.3,220.4 359.0,219.6 366.7,218.8 374.3,218.0 382.0,217.2 389.7,216.3 397.3,215.4 405.0,214.6 412.7,213.7 420.3,212.7 428.0,211.8 435.7,210.8 443.3,209.9 451.0,208.9 458.7,207.9 466.3,206.8 474.0,205.8 481.7,204.7 489.3,203.6 497.0,202.5 504.7,201.4 512.3,200.2 520.0,199.1" fill="none" stroke="#1f7a6b" stroke-width="2.5"/><circle cx="60.0" cy="140.0" r="4" fill="#a0612a" fill-opacity=".55"/><circle cx="60.0" cy="239.6" r="4" fill="#1f7a6b" fill-opacity=".55"/><circle cx="63.8" cy="139.2" r="4" fill="#a0612a" fill-opacity=".55"/><circle cx="63.8" cy="239.4" r="4" fill="#1f7a6b" fill-opacity=".55"/><circle cx="64.6" cy="139.0" r="4" fill="#a0612a" fill-opacity=".55"/><circle cx="64.6" cy="239.4" r="4" fill="#1f7a6b" fill-opacity=".55"/><circle cx="64.6" cy="139.0" r="4" fill="#a0612a" fill-opacity=".55"/><circle cx="64.6" cy="239.4" r="4" fill="#1f7a6b" fill-opacity=".55"/><circle cx="64.6" cy="139.0" r="4" fill="#a0612a" fill-opacity=".55"/><circle cx="64.6" cy="239.4" r="4" fill="#1f7a6b" fill-opacity=".55"/><circle cx="65.4" cy="138.8" r="4" fill="#a0612a" fill-opacity=".55"/><circle cx="65.4" cy="239.4" r="4" fill="#1f7a6b" fill-opacity=".55"/><circle cx="66.1" cy="138.7" r="4" fill="#a0612a" fill-opacity=".55"/><circle cx="66.1" cy="239.3" r="4" fill="#1f7a6b" fill-opacity=".55"/><circle cx="66.9" cy="138.5" r="4" fill="#a0612a" fill-opacity=".55"/><circle cx="66.9" cy="239.3" r="4" fill="#1f7a6b" fill-opacity=".55"/><circle cx="66.9" cy="138.5" r="4" fill="#a0612a" fill-opacity=".55"/><circle cx="66.9" cy="239.3" r="4" fill="#1f7a6b" fill-opacity=".55"/><circle cx="66.9" cy="138.5" r="4" fill="#a0612a" fill-opacity=".55"/><circle cx="66.9" cy="239.3" r="4" fill="#1f7a6b" fill-opacity=".55"/><circle cx="67.7" cy="138.4" r="4" fill="#a0612a" fill-opacity=".55"/><circle cx="67.7" cy="239.3" r="4" fill="#1f7a6b" fill-opacity=".55"/><circle cx="67.7" cy="138.4" r="4" fill="#a0612a" fill-opacity=".55"/><circle cx="67.7" cy="239.3" r="4" fill="#1f7a6b" fill-opacity=".55"/><circle cx="67.7" cy="138.4" r="4" fill="#a0612a" fill-opacity=".55"/><circle cx="67.7" cy="239.3" r="4" fill="#1f7a6b" fill-opacity=".55"/><circle cx="68.4" cy="138.2" r="4" fill="#a0612a" fill-opacity=".55"/><circle cx="68.4" cy="239.2" r="4" fill="#1f7a6b" fill-opacity=".55"/><circle cx="69.2" cy="138.0" r="4" fill="#a0612a" fill-opacity=".55"/><circle cx="69.2" cy="239.2" r="4" fill="#1f7a6b" fill-opacity=".55"/><circle cx="69.2" cy="138.0" r="4" fill="#a0612a" fill-opacity=".55"/><circle cx="69.2" cy="239.2" r="4" fill="#1f7a6b" fill-opacity=".55"/><circle cx="70.7" cy="137.7" r="4" fill="#a0612a" fill-opacity=".55"/><circle cx="70.7" cy="239.1" r="4" fill="#1f7a6b" fill-opacity=".55"/><circle cx="79.2" cy="135.9" r="4" fill="#a0612a" fill-opacity=".55"/><circle cx="79.2" cy="238.8" r="4" fill="#1f7a6b" fill-opacity=".55"/><circle cx="79.9" cy="135.7" r="4" fill="#a0612a" fill-opacity=".55"/><circle cx="79.9" cy="238.8" r="4" fill="#1f7a6b" fill-opacity=".55"/><circle cx="83.8" cy="134.9" r="4" fill="#a0612a" fill-opacity=".55"/><circle cx="83.8" cy="238.6" r="4" fill="#1f7a6b" fill-opacity=".55"/><circle cx="86.8" cy="134.2" r="4" fill="#a0612a" fill-opacity=".55"/><circle cx="86.8" cy="238.5" r="4" fill="#1f7a6b" fill-opacity=".55"/><circle cx="96.0" cy="132.3" r="4" fill="#a0612a" fill-opacity=".55"/><circle cx="96.0" cy="238.1" r="4" fill="#1f7a6b" fill-opacity=".55"/><circle cx="96.8" cy="132.1" r="4" fill="#a0612a" fill-opacity=".55"/><circle cx="96.8" cy="238.0" r="4" fill="#1f7a6b" fill-opacity=".55"/><circle cx="108.3" cy="129.6" r="4" fill="#a0612a" fill-opacity=".55"/><circle cx="108.3" cy="237.5" r="4" fill="#1f7a6b" fill-opacity=".55"/><circle cx="111.4" cy="129.0" r="4" fill="#a0612a" fill-opacity=".55"/><circle cx="111.4" cy="237.4" r="4" fill="#1f7a6b" fill-opacity=".55"/><circle cx="114.4" cy="128.3" r="4" fill="#a0612a" fill-opacity=".55"/><circle cx="114.4" cy="237.2" r="4" fill="#1f7a6b" fill-opacity=".55"/><circle cx="127.5" cy="125.6" r="4" fill="#a0612a" fill-opacity=".55"/><circle cx="127.5" cy="236.6" r="4" fill="#1f7a6b" fill-opacity=".55"/><circle cx="144.3" cy="122.0" r="4" fill="#a0612a" fill-opacity=".55"/><circle cx="144.3" cy="235.8" r="4" fill="#1f7a6b" fill-opacity=".55"/><circle cx="145.1" cy="121.9" r="4" fill="#a0612a" fill-opacity=".55"/><circle cx="145.1" cy="235.7" r="4" fill="#1f7a6b" fill-opacity=".55"/><circle cx="150.5" cy="120.7" r="4" fill="#a0612a" fill-opacity=".55"/><circle cx="150.5" cy="235.4" r="4" fill="#1f7a6b" fill-opacity=".55"/><circle cx="161.2" cy="118.5" r="4" fill="#a0612a" fill-opacity=".55"/><circle cx="161.2" cy="234.8" r="4" fill="#1f7a6b" fill-opacity=".55"/><circle cx="187.3" cy="113.2" r="4" fill="#a0612a" fill-opacity=".55"/><circle cx="187.3" cy="233.3" r="4" fill="#1f7a6b" fill-opacity=".55"/><circle cx="191.1" cy="112.4" r="4" fill="#a0612a" fill-opacity=".55"/><circle cx="191.1" cy="233.1" r="4" fill="#1f7a6b" fill-opacity=".55"/><circle cx="228.7" cy="105.0" r="4" fill="#a0612a" fill-opacity=".55"/><circle cx="228.7" cy="230.7" r="4" fill="#1f7a6b" fill-opacity=".55"/><circle cx="285.4" cy="94.4" r="4" fill="#a0612a" fill-opacity=".55"/><circle cx="285.4" cy="226.4" r="4" fill="#1f7a6b" fill-opacity=".55"/><circle cx="318.4" cy="88.7" r="4" fill="#a0612a" fill-opacity=".55"/><circle cx="318.4" cy="223.5" r="4" fill="#1f7a6b" fill-opacity=".55"/><circle cx="369.0" cy="80.6" r="4" fill="#a0612a" fill-opacity=".55"/><circle cx="369.0" cy="218.6" r="4" fill="#1f7a6b" fill-opacity=".55"/><circle cx="378.2" cy="79.2" r="4" fill="#a0612a" fill-opacity=".55"/><circle cx="378.2" cy="217.6" r="4" fill="#1f7a6b" fill-opacity=".55"/><circle cx="418.0" cy="73.5" r="4" fill="#a0612a" fill-opacity=".55"/><circle cx="418.0" cy="213.0" r="4" fill="#1f7a6b" fill-opacity=".55"/><circle cx="475.5" cy="66.2" r="4" fill="#a0612a" fill-opacity=".55"/><circle cx="475.5" cy="205.6" r="4" fill="#1f7a6b" fill-opacity=".55"/><text x="328.33333333333337" y="75.02952217992612" class="fs" fill="#a0612a">곱하기만: 30 × α</text><text x="328.33333333333337" y="244.59826119876837" class="fs" fill="#1f7a6b">c 더함: 30 × α − 3</text><text x="71.83333333333334" y="112.0" class="fs" fill="#a0612a">거의 다 0.5 근처</text><text x="71.83333333333334" y="229.0" class="fs" fill="#1f7a6b">0.05 근처</text><text x="290" y="286" text-anchor="middle" class="ft">가로: USGS 산사태 사전확률 α · 세로: 출발 확률 sigmoid(μ)</text><text x="290" y="304" text-anchor="middle" class="ft">점 = 구마모토 시정촌 40곳 (α는 실제 값, a = 30·c = −3은 설명용)</text></svg></figure>
+    <div class="txt">
+      <p><span class="lb">여기서 "출발 확률"이란</span>우리 모델은 sigmoid를 flow 전에 쓰지 않고 맨 끝에 한 번만 씁니다. 출발점 μ는 점수(로짓)라 그대로는 감이 안 와서, "flow가 아무것도 안 했다면 끝의 sigmoid를 지나 확률이 얼마가 될까" = sigmoid(μ)로 바꿔 읽은 값입니다. 코드가 이 값을 따로 계산하지는 않습니다.</p>
+      <p><span class="lb">c를 더하면 (c = −3은 설명용, 실제 학습된 c는 아래 "실제로 학습된 a, c 값" 표)</span>c는 출발점 전체를 위아래로 옮기는 수입니다. c = −3이면 α ≈ 0인 시정촌은 0.05 근처, α = 0.05인 시정촌은 0.18에서 출발합니다. 사전확률이 높을수록 출발점이 높은 순서는 그대로이고, 전체 높이만 알맞게 내려갑니다. 알맞은 c는 학습이 찾습니다.</p>
+      <p><span class="lb">c 없이도 되지 않나</span>원본은 c 없이 flow가 0.5 근처에서 시작한 값을 옮겨야 합니다. 화소가 수십만 개이고 flow가 8단계라 가능하다고 볼 수 있지만, 우리는 행이 적고 flow가 4단계라 출발점부터 알맞은 높이에 두었습니다. 논문은 μ를 "부모 입력의 함수"라고만 해서, 곱하고 더하는 선형 함수는 그 범위 안의 기본 선택입니다. c만 뺀 실험은 아직 없습니다.</p>
+    </div>
+  </div>
+  <h3>왜 6·tanh(x/6)인가: tanh만 쓰면 안 되나</h3>
+  <div class="tw"><table>
+    <tr><th>묶기 전 x</th><th>tanh(x)만</th><th>6·tanh(x/6)</th><th>설명</th></tr>
+    <tr><td>1</td><td>0.76</td><td><b>0.99</b></td><td>tanh만 쓰면 보통 값도 줄어듦</td></tr>
+    <tr><td>3</td><td>0.995</td><td><b>2.77</b></td><td>tanh만 쓰면 3과 10이 구분이 안 됨</td></tr>
+    <tr><td>10</td><td>1.00</td><td><b>5.59</b></td><td></td></tr>
+    <tr><td>100</td><td>1.00</td><td><b>6.00</b></td><td>둘 다 천장에서 멈춤</td></tr>
+  </table></div>
+  <p>6·tanh(x/6)은 출발점 μ에 쓰는 "천장"입니다 (flow 뒤가 아님). tanh만 쓰면 천장이 1이라 μ가 −1 ~ +1(확률 0.27 ~ 0.73)에 갇힙니다. 6으로 나눠 tanh가 거의 그대로 내보내는 작은 값으로 만들고, 나온 값에 6을 곱해 원래 크기로 되돌리면, <b>보통 값은 거의 그대로이고 천장만 6으로 올라갑니다</b>. 6은 sigmoid(±6) = 0.9975 · 0.0025라 확률 0.25% ~ 99.75%를 다 쓸 수 있는 높이입니다. sigmoid는 그 뒤 flow를 다 지난 맨 마지막에 한 번, 로짓을 0 ~ 1 확률로 바꿀 때 씁니다.</p>
+  <h3>천장은 왜 하필 6인가</h3>
+  <div class="tw"><table>
+    <tr><th>천장</th><th>출발점이 표현할 수 있는 최대 확률</th><th>최소 확률</th><th>문제</th></tr>
+    <tr><td>1</td><td>73%</td><td>27%</td><td>너무 좁음. "거의 확실히 안 남(1%)"을 표현 못 함</td></tr>
+    <tr><td>3</td><td>95%</td><td>5%</td><td>아직 좁음. 대부분 재해가 안 난 곳인데 5% 아래로 못 내려감</td></tr>
+    <tr><td><b>6 (우리)</b></td><td><b>99.75%</b></td><td><b>0.25%</b></td><td>거의 0%부터 거의 100%까지 다 표현</td></tr>
+    <tr><td>10</td><td>99.995%</td><td>0.005%</td><td>6과 거의 같음. 대신 δ가 더 멀리 가게 둠</td></tr>
+    <tr><td>없음</td><td>100%</td><td>0%</td><td>δ가 끝없이 커질 수 있음</td></tr>
+  </table></div>
+  <p>딱 6이어야 하는 이유는 없습니다. 확률을 거의 다 쓸 수 있으면서(±6이면 0.25% ~ 99.75%) 너무 넓지 않은 둥근 숫자로 고른 것이고, 5나 8로 해도 결과는 거의 비슷했을 것입니다 (다른 값으로 비교해 보지는 않음). 음량 조절기에 비유하면, 최대치가 너무 낮으면(1, 3) 큰 소리를 못 내고, 6보다 높여도 귀로 듣는 소리(확률)는 거의 안 달라지며, 최대치가 없으면 볼륨이 끝없이 올라가 고장 납니다. 발표 때는 "로짓 ±6이면 확률 0.25 ~ 99.75%를 다 덮어서, 그 이상은 의미 없는 범위라 막았다"고 설명하면 됩니다.</p>
+
+
+  <h3>계산 순서 (숫자는 a = 30, c = −3, δ는 설명용, α는 あさぎり町 실제 값)</h3>
+  <div class="flowbox"><svg viewBox="0 0 1040 200" class="fig" role="img" aria-label="μ 계산 단계 예시"><text x="85" y="20" text-anchor="middle" class="fs b">α (USGS 사전확률)</text><text x="265" y="20" text-anchor="middle" class="fs b">a·α + c</text><text x="425" y="20" text-anchor="middle" class="fs b">+ δ</text><text x="585" y="20" text-anchor="middle" class="fs b">÷ 6</text><text x="745" y="20" text-anchor="middle" class="fs b">tanh</text><text x="905" y="20" text-anchor="middle" class="fs b">× 6 = μ</text><rect x="10" y="40" width="150" height="40" rx="7" fill="#f4f7fa" stroke="#9fb1c2"/><text x="85" y="65" text-anchor="middle" class="fl">0.00059</text><line x1="160" y1="60" x2="187" y2="60" stroke="#7d8fa1" stroke-width="1.5"/><rect x="190" y="40" width="150" height="40" rx="7" fill="#f4f7fa" stroke="#9fb1c2"/><text x="265" y="65" text-anchor="middle" class="fl">-2.98</text><line x1="340" y1="60" x2="347" y2="60" stroke="#7d8fa1" stroke-width="1.5"/><rect x="350" y="40" width="150" height="40" rx="7" fill="#f4f7fa" stroke="#9fb1c2"/><text x="425" y="65" text-anchor="middle" class="fl">-0.48</text><line x1="500" y1="60" x2="507" y2="60" stroke="#7d8fa1" stroke-width="1.5"/><rect x="510" y="40" width="150" height="40" rx="7" fill="#f4f7fa" stroke="#9fb1c2"/><text x="585" y="65" text-anchor="middle" class="fl">-0.08</text><line x1="660" y1="60" x2="667" y2="60" stroke="#7d8fa1" stroke-width="1.5"/><rect x="670" y="40" width="150" height="40" rx="7" fill="#f4f7fa" stroke="#9fb1c2"/><text x="745" y="65" text-anchor="middle" class="fl">-0.080</text><line x1="820" y1="60" x2="827" y2="60" stroke="#7d8fa1" stroke-width="1.5"/><rect x="830" y="40" width="150" height="40" rx="7" fill="#e8f4f1" stroke="#9fb1c2"/><text x="905" y="65" text-anchor="middle" class="fl">-0.48</text><text x="10" y="98" class="fs" fill="#5d6b7a">あさぎり町 (보통 값): δ = 2.5. 묶기 전 -0.48, 묶은 뒤 -0.48</text><rect x="10" y="120" width="150" height="40" rx="7" fill="#f4f7fa" stroke="#9fb1c2"/><text x="85" y="145" text-anchor="middle" class="fl">0.00059</text><line x1="160" y1="140" x2="187" y2="140" stroke="#7d8fa1" stroke-width="1.5"/><rect x="190" y="120" width="150" height="40" rx="7" fill="#f4f7fa" stroke="#9fb1c2"/><text x="265" y="145" text-anchor="middle" class="fl">-2.98</text><line x1="340" y1="140" x2="347" y2="140" stroke="#7d8fa1" stroke-width="1.5"/><rect x="350" y="120" width="150" height="40" rx="7" fill="#f4f7fa" stroke="#9fb1c2"/><text x="425" y="145" text-anchor="middle" class="fl">12.02</text><line x1="500" y1="140" x2="507" y2="140" stroke="#7d8fa1" stroke-width="1.5"/><rect x="510" y="120" width="150" height="40" rx="7" fill="#f4f7fa" stroke="#9fb1c2"/><text x="585" y="145" text-anchor="middle" class="fl">2.00</text><line x1="660" y1="140" x2="667" y2="140" stroke="#7d8fa1" stroke-width="1.5"/><rect x="670" y="120" width="150" height="40" rx="7" fill="#f4f7fa" stroke="#9fb1c2"/><text x="745" y="145" text-anchor="middle" class="fl">0.964</text><line x1="820" y1="140" x2="827" y2="140" stroke="#7d8fa1" stroke-width="1.5"/><rect x="830" y="120" width="150" height="40" rx="7" fill="#e8f4f1" stroke="#9fb1c2"/><text x="905" y="145" text-anchor="middle" class="fl">5.79</text><text x="10" y="178" class="fs" fill="#5d6b7a">δ가 아주 커진 경우: δ = 15. 묶기 전 12.02, 묶은 뒤 5.79</text></svg></div>
+  <div class="cols">
+    <figure><svg viewBox="0 0 560 330" class="fig" role="img" aria-label="6·tanh(x/6) 그래프"><line x1="50.0" y1="20" x2="50.0" y2="310" stroke="#eef2f6"/><text x="50.0" y="325" text-anchor="middle" class="ft">-15</text><line x1="126.66666666666666" y1="20" x2="126.66666666666666" y2="310" stroke="#eef2f6"/><text x="126.66666666666666" y="325" text-anchor="middle" class="ft">-10</text><line x1="203.33333333333331" y1="20" x2="203.33333333333331" y2="310" stroke="#eef2f6"/><text x="203.33333333333331" y="325" text-anchor="middle" class="ft">-5</text><line x1="280.0" y1="20" x2="280.0" y2="310" stroke="#eef2f6"/><text x="280.0" y="325" text-anchor="middle" class="ft">0</text><line x1="356.66666666666663" y1="20" x2="356.66666666666663" y2="310" stroke="#eef2f6"/><text x="356.66666666666663" y="325" text-anchor="middle" class="ft">5</text><line x1="433.33333333333337" y1="20" x2="433.33333333333337" y2="310" stroke="#eef2f6"/><text x="433.33333333333337" y="325" text-anchor="middle" class="ft">10</text><line x1="510.0" y1="20" x2="510.0" y2="310" stroke="#eef2f6"/><text x="510.0" y="325" text-anchor="middle" class="ft">15</text><line x1="50" y1="285" x2="510" y2="285" stroke="#eef2f6"/><text x="44" y="289" text-anchor="end" class="ft">-12</text><line x1="50" y1="225" x2="510" y2="225" stroke="#eef2f6"/><text x="44" y="229" text-anchor="end" class="ft">-6</text><line x1="50" y1="165" x2="510" y2="165" stroke="#eef2f6"/><text x="44" y="169" text-anchor="end" class="ft">0</text><line x1="50" y1="105" x2="510" y2="105" stroke="#eef2f6"/><text x="44" y="109" text-anchor="end" class="ft">6</text><line x1="50" y1="45" x2="510" y2="45" stroke="#eef2f6"/><text x="44" y="49" text-anchor="end" class="ft">12</text><line x1="50" y1="105" x2="510" y2="105" stroke="#a0612a" stroke-dasharray="5 4"/><line x1="50" y1="225" x2="510" y2="225" stroke="#a0612a" stroke-dasharray="5 4"/><text x="508" y="99" text-anchor="end" class="fs" fill="#a0612a">+6 (확률 0.9975)</text><text x="508" y="241" text-anchor="end" class="fs" fill="#a0612a">−6 (확률 0.0025)</text><polyline points="57.7,310.0 59.2,309.0 60.7,308.0 62.3,307.0 63.8,306.0 65.3,305.0 66.9,304.0 68.4,303.0 69.9,302.0 71.5,301.0 73.0,300.0 74.5,299.0 76.1,298.0 77.6,297.0 79.1,296.0 80.7,295.0 82.2,294.0 83.7,293.0 85.3,292.0 86.8,291.0 88.3,290.0 89.9,289.0 91.4,288.0 92.9,287.0 94.5,286.0 96.0,285.0 97.5,284.0 99.1,283.0 100.6,282.0 102.1,281.0 103.7,280.0 105.2,279.0 106.7,278.0 108.3,277.0 109.8,276.0 111.3,275.0 112.9,274.0 114.4,273.0 115.9,272.0 117.5,271.0 119.0,270.0 120.5,269.0 122.1,268.0 123.6,267.0 125.1,266.0 126.7,265.0 128.2,264.0 129.7,263.0 131.3,262.0 132.8,261.0 134.3,260.0 135.9,259.0 137.4,258.0 138.9,257.0 140.5,256.0 142.0,255.0 143.5,254.0 145.1,253.0 146.6,252.0 148.1,251.0 149.7,250.0 151.2,249.0 152.7,248.0 154.3,247.0 155.8,246.0 157.3,245.0 158.9,244.0 160.4,243.0 161.9,242.0 163.5,241.0 165.0,240.0 166.5,239.0 168.1,238.0 169.6,237.0 171.1,236.0 172.7,235.0 174.2,234.0 175.7,233.0 177.3,232.0 178.8,231.0 180.3,230.0 181.9,229.0 183.4,228.0 184.9,227.0 186.5,226.0 188.0,225.0 189.5,224.0 191.1,223.0 192.6,222.0 194.1,221.0 195.7,220.0 197.2,219.0 198.7,218.0 200.3,217.0 201.8,216.0 203.3,215.0 204.9,214.0 206.4,213.0 207.9,212.0 209.5,211.0 211.0,210.0 212.5,209.0 214.1,208.0 215.6,207.0 217.1,206.0 218.7,205.0 220.2,204.0 221.7,203.0 223.3,202.0 224.8,201.0 226.3,200.0 227.9,199.0 229.4,198.0 230.9,197.0 232.5,196.0 234.0,195.0 235.5,194.0 237.1,193.0 238.6,192.0 240.1,191.0 241.7,190.0 243.2,189.0 244.7,188.0 246.3,187.0 247.8,186.0 249.3,185.0 250.9,184.0 252.4,183.0 253.9,182.0 255.5,181.0 257.0,180.0 258.5,179.0 260.1,178.0 261.6,177.0 263.1,176.0 264.7,175.0 266.2,174.0 267.7,173.0 269.3,172.0 270.8,171.0 272.3,170.0 273.9,169.0 275.4,168.0 276.9,167.0 278.5,166.0 280.0,165.0 281.5,164.0 283.1,163.0 284.6,162.0 286.1,161.0 287.7,160.0 289.2,159.0 290.7,158.0 292.3,157.0 293.8,156.0 295.3,155.0 296.9,154.0 298.4,153.0 299.9,152.0 301.5,151.0 303.0,150.0 304.5,149.0 306.1,148.0 307.6,147.0 309.1,146.0 310.7,145.0 312.2,144.0 313.7,143.0 315.3,142.0 316.8,141.0 318.3,140.0 319.9,139.0 321.4,138.0 322.9,137.0 324.5,136.0 326.0,135.0 327.5,134.0 329.1,133.0 330.6,132.0 332.1,131.0 333.7,130.0 335.2,129.0 336.7,128.0 338.3,127.0 339.8,126.0 341.3,125.0 342.9,124.0 344.4,123.0 345.9,122.0 347.5,121.0 349.0,120.0 350.5,119.0 352.1,118.0 353.6,117.0 355.1,116.0 356.7,115.0 358.2,114.0 359.7,113.0 361.3,112.0 362.8,111.0 364.3,110.0 365.9,109.0 367.4,108.0 368.9,107.0 370.5,106.0 372.0,105.0 373.5,104.0 375.1,103.0 376.6,102.0 378.1,101.0 379.7,100.0 381.2,99.0 382.7,98.0 384.3,97.0 385.8,96.0 387.3,95.0 388.9,94.0 390.4,93.0 391.9,92.0 393.5,91.0 395.0,90.0 396.5,89.0 398.1,88.0 399.6,87.0 401.1,86.0 402.7,85.0 404.2,84.0 405.7,83.0 407.3,82.0 408.8,81.0 410.3,80.0 411.9,79.0 413.4,78.0 414.9,77.0 416.5,76.0 418.0,75.0 419.5,74.0 421.1,73.0 422.6,72.0 424.1,71.0 425.7,70.0 427.2,69.0 428.7,68.0 430.3,67.0 431.8,66.0 433.3,65.0 434.9,64.0 436.4,63.0 437.9,62.0 439.5,61.0 441.0,60.0 442.5,59.0 444.1,58.0 445.6,57.0 447.1,56.0 448.7,55.0 450.2,54.0 451.7,53.0 453.3,52.0 454.8,51.0 456.3,50.0 457.9,49.0 459.4,48.0 460.9,47.0 462.5,46.0 464.0,45.0 465.5,44.0 467.1,43.0 468.6,42.0 470.1,41.0 471.7,40.0 473.2,39.0 474.7,38.0 476.3,37.0 477.8,36.0 479.3,35.0 480.9,34.0 482.4,33.0 483.9,32.0 485.5,31.0 487.0,30.0 488.5,29.0 490.1,28.0 491.6,27.0 493.1,26.0 494.7,25.0 496.2,24.0 497.7,23.0 499.3,22.0 500.8,21.0 502.3,20.0" fill="none" stroke="#9fb1c2" stroke-width="1.5" stroke-dasharray="3 3"/><polyline points="50.0,224.2 51.5,224.2 53.1,224.1 54.6,224.1 56.1,224.1 57.7,224.1 59.2,224.0 60.7,224.0 62.3,224.0 63.8,223.9 65.3,223.9 66.9,223.8 68.4,223.8 69.9,223.8 71.5,223.7 73.0,223.7 74.5,223.6 76.1,223.6 77.6,223.5 79.1,223.5 80.7,223.4 82.2,223.4 83.7,223.3 85.3,223.3 86.8,223.2 88.3,223.2 89.9,223.1 91.4,223.0 92.9,223.0 94.5,222.9 96.0,222.8 97.5,222.8 99.1,222.7 100.6,222.6 102.1,222.5 103.7,222.5 105.2,222.4 106.7,222.3 108.3,222.2 109.8,222.1 111.3,222.0 112.9,221.9 114.4,221.8 115.9,221.7 117.5,221.6 119.0,221.5 120.5,221.4 122.1,221.2 123.6,221.1 125.1,221.0 126.7,220.9 128.2,220.7 129.7,220.6 131.3,220.4 132.8,220.3 134.3,220.1 135.9,220.0 137.4,219.8 138.9,219.7 140.5,219.5 142.0,219.3 143.5,219.1 145.1,218.9 146.6,218.7 148.1,218.5 149.7,218.3 151.2,218.1 152.7,217.9 154.3,217.7 155.8,217.4 157.3,217.2 158.9,217.0 160.4,216.7 161.9,216.4 163.5,216.2 165.0,215.9 166.5,215.6 168.1,215.3 169.6,215.0 171.1,214.7 172.7,214.4 174.2,214.1 175.7,213.7 177.3,213.4 178.8,213.0 180.3,212.7 181.9,212.3 183.4,211.9 184.9,211.5 186.5,211.1 188.0,210.7 189.5,210.3 191.1,209.8 192.6,209.4 194.1,208.9 195.7,208.5 197.2,208.0 198.7,207.5 200.3,207.0 201.8,206.5 203.3,205.9 204.9,205.4 206.4,204.8 207.9,204.3 209.5,203.7 211.0,203.1 212.5,202.5 214.1,201.9 215.6,201.3 217.1,200.6 218.7,200.0 220.2,199.3 221.7,198.6 223.3,197.9 224.8,197.2 226.3,196.5 227.9,195.8 229.4,195.0 230.9,194.3 232.5,193.5 234.0,192.7 235.5,191.9 237.1,191.1 238.6,190.3 240.1,189.5 241.7,188.6 243.2,187.8 244.7,186.9 246.3,186.1 247.8,185.2 249.3,184.3 250.9,183.4 252.4,182.5 253.9,181.6 255.5,180.6 257.0,179.7 258.5,178.8 260.1,177.8 261.6,176.8 263.1,175.9 264.7,174.9 266.2,173.9 267.7,173.0 269.3,172.0 270.8,171.0 272.3,170.0 273.9,169.0 275.4,168.0 276.9,167.0 278.5,166.0 280.0,165.0 281.5,164.0 283.1,163.0 284.6,162.0 286.1,161.0 287.7,160.0 289.2,159.0 290.7,158.0 292.3,157.0 293.8,156.1 295.3,155.1 296.9,154.1 298.4,153.2 299.9,152.2 301.5,151.2 303.0,150.3 304.5,149.4 306.1,148.4 307.6,147.5 309.1,146.6 310.7,145.7 312.2,144.8 313.7,143.9 315.3,143.1 316.8,142.2 318.3,141.4 319.9,140.5 321.4,139.7 322.9,138.9 324.5,138.1 326.0,137.3 327.5,136.5 329.1,135.7 330.6,135.0 332.1,134.2 333.7,133.5 335.2,132.8 336.7,132.1 338.3,131.4 339.8,130.7 341.3,130.0 342.9,129.4 344.4,128.7 345.9,128.1 347.5,127.5 349.0,126.9 350.5,126.3 352.1,125.7 353.6,125.2 355.1,124.6 356.7,124.1 358.2,123.5 359.7,123.0 361.3,122.5 362.8,122.0 364.3,121.5 365.9,121.1 367.4,120.6 368.9,120.2 370.5,119.7 372.0,119.3 373.5,118.9 375.1,118.5 376.6,118.1 378.1,117.7 379.7,117.3 381.2,117.0 382.7,116.6 384.3,116.3 385.8,115.9 387.3,115.6 388.9,115.3 390.4,115.0 391.9,114.7 393.5,114.4 395.0,114.1 396.5,113.8 398.1,113.6 399.6,113.3 401.1,113.0 402.7,112.8 404.2,112.6 405.7,112.3 407.3,112.1 408.8,111.9 410.3,111.7 411.9,111.5 413.4,111.3 414.9,111.1 416.5,110.9 418.0,110.7 419.5,110.5 421.1,110.3 422.6,110.2 424.1,110.0 425.7,109.9 427.2,109.7 428.7,109.6 430.3,109.4 431.8,109.3 433.3,109.1 434.9,109.0 436.4,108.9 437.9,108.8 439.5,108.6 441.0,108.5 442.5,108.4 444.1,108.3 445.6,108.2 447.1,108.1 448.7,108.0 450.2,107.9 451.7,107.8 453.3,107.7 454.8,107.6 456.3,107.5 457.9,107.5 459.4,107.4 460.9,107.3 462.5,107.2 464.0,107.2 465.5,107.1 467.1,107.0 468.6,107.0 470.1,106.9 471.7,106.8 473.2,106.8 474.7,106.7 476.3,106.7 477.8,106.6 479.3,106.6 480.9,106.5 482.4,106.5 483.9,106.4 485.5,106.4 487.0,106.3 488.5,106.3 490.1,106.2 491.6,106.2 493.1,106.2 494.7,106.1 496.2,106.1 497.7,106.0 499.3,106.0 500.8,106.0 502.3,105.9 503.9,105.9 505.4,105.9 506.9,105.9 508.5,105.8 510.0,105.8" fill="none" stroke="#1f7a6b" stroke-width="3"/><text x="418.0" y="35" class="fs" fill="#5d6b7a">묶지 않으면 (μ = x)</text><text x="402.6666666666667" y="145" class="fs" fill="#1f7a6b">6·tanh(x/6)</text><text x="280" y="16" text-anchor="middle" class="ft">가로: 묶기 전 값 x = a·α + c + δ · 세로: μ</text></svg></figure>
+    <div class="txt">
+      <p><span class="lb">왜 ÷6, tanh, ×6인가</span>tanh는 어떤 값이 들어와도 −1 ~ +1 사이로 내보내는 함수입니다. 0 근처에서는 들어온 값을 거의 그대로 내보내고(tanh(0.1) ≈ 0.0997), 값이 커질수록 ±1에 붙어 멈춥니다. 6으로 나눠 넣으면 웬만한 값은 0 근처라 거의 그대로 통과하고, 나온 값에 다시 6을 곱하면 원래 크기로 돌아옵니다. 결과적으로 <b>보통 값은 거의 그대로(2는 1.93, −3은 −2.77), 아주 큰 값만 ±6에서 멈춥니다</b> (10은 5.59, 100은 6.00).</p>
+      <p><span class="lb">왜 하필 6인가</span>μ는 로짓(확률을 펼친 값)입니다. sigmoid(6) = 0.9975, sigmoid(−6) = 0.0025라서 ±6이면 확률 0.25% ~ 99.75%를 다 쓸 수 있습니다. 더 넓혀도 확률은 거의 안 바뀌고, 좁히면 아주 확실한 곳(0.3% 미만, 99.7% 이상)을 표현하지 못합니다.</p>
+      <p><span class="lb">왜 묶나</span>δ는 시정촌마다 따로 학습되는데 시정촌이 적으면 한 곳의 δ가 끝없이 커질 수 있습니다 (그 시정촌 DPM을 더 맞추려고 μ를 계속 밀어 올림). 묶어 두면 ±6 이상은 의미가 없으니 거기서 멈춥니다.</p>
+      <p><span class="lb">왜 tanh로 부드럽게</span>"6보다 크면 6"처럼 딱 자르면 그 너머에서는 기울기가 0이 되어 학습이 멈추고 다시 돌아오지 못합니다. tanh는 끝까지 조금씩 기울어 있어 학습이 계속 움직일 수 있습니다.</p>
+    </div>
+  </div>
+</section>
+
+<section id="samp">
+  <h2>왜 8개(마지막 256개)를 뽑아 평균내나</h2>
+
+  <h3>8개와 256개는 따로 뽑는 것 (8개가 256개로 늘어나는 게 아님)</h3>
+  <div class="cols">
+    <div class="txt">
+      <p><span class="lb">1단계: 학습 (3000번 반복)</span>반복할 때마다 시정촌마다 ε을 새로 8개 뽑습니다. 그 8개로 사후확률을 어림하고 가중치(a, c, δ, flow 등)를 조금씩 고칩니다. 다음 반복에서는 또 새로 8개를 뽑고, 앞에서 뽑은 8개는 버립니다. 이렇게 3000번 하면 가중치가 다 학습됩니다.</p>
+      <p><span class="lb">2단계: 최종 결과 (딱 한 번)</span>이제 가중치는 고정이고 더 고치지 않습니다. 고정된 모델로 시정촌마다 ε을 새로 256개 뽑아, 각각 r⁰ · flow · sigmoid로 확률로 바꾸고 평균을 냅니다. 이것이 그 시정촌의 최종 사후확률이고 AUC 계산에 쓰입니다.</p>
+      <p><span class="lb">비유</span>학습은 연습할 때마다 주사위를 8번씩 던져 보며 감을 익히는 것(3000번 연습, 매번 새로 던짐)이고, 결과는 연습이 끝난 뒤 마지막에 256번 던져 평균을 내 최종 답으로 적는 것입니다. 학습 때 8개만 쓰는 건 3000번 반복하니 계산을 아끼려는 것이고, 마지막에 256개를 쓰는 건 한 번뿐이니 정확하게 하려는 것입니다.</p>
+    </div>
+    <div class="code u"><div class="ch">흐름</div><pre><code>학습:  [8개 뽑기, 가중치 고침] × 3000번
+       (8개는 매번 새로 뽑고, 쓰고 버림)
+
+결과:  가중치 고정
+       256개 새로 뽑기
+       평균 = 최종 사후확률 (한 번)
+
+코드: _fit_group / fit_cells
+  학습 반복: posteriors(..., n_samples=8)
+  끝난 뒤:   posteriors(..., n_samples=256)</code></pre></div>
+  </div>
+  <h3>그림으로 보는 "8개 뽑아 평균"</h3>
+  <div class="flowbox"><svg viewBox="0 0 1040 420" class="fig" role="img" aria-label="한 시정촌에서 8개를 뽑아 평균내는 과정"><text x="130.0" y="24" text-anchor="middle" class="fs b">뽑은 ε (표준정규 난수)</text><rect x="20" y="40" width="220" height="30" rx="6" fill="#f4f7fa" stroke="#c4cfd9"/><text x="130.0" y="60" text-anchor="middle" class="fl">-1.6</text><rect x="20" y="80" width="220" height="30" rx="6" fill="#f4f7fa" stroke="#c4cfd9"/><text x="130.0" y="100" text-anchor="middle" class="fl">-1.0</text><rect x="20" y="120" width="220" height="30" rx="6" fill="#f4f7fa" stroke="#c4cfd9"/><text x="130.0" y="140" text-anchor="middle" class="fl">-0.6</text><rect x="20" y="160" width="220" height="30" rx="6" fill="#f4f7fa" stroke="#c4cfd9"/><text x="130.0" y="180" text-anchor="middle" class="fl">-0.2</text><rect x="20" y="200" width="220" height="30" rx="6" fill="#f4f7fa" stroke="#c4cfd9"/><text x="130.0" y="220" text-anchor="middle" class="fl">+0.1</text><rect x="20" y="240" width="220" height="30" rx="6" fill="#f4f7fa" stroke="#c4cfd9"/><text x="130.0" y="260" text-anchor="middle" class="fl">+0.5</text><rect x="20" y="280" width="220" height="30" rx="6" fill="#f4f7fa" stroke="#c4cfd9"/><text x="130.0" y="300" text-anchor="middle" class="fl">+0.9</text><rect x="20" y="320" width="220" height="30" rx="6" fill="#f4f7fa" stroke="#c4cfd9"/><text x="130.0" y="340" text-anchor="middle" class="fl">+1.4</text><text x="390.0" y="24" text-anchor="middle" class="fs b">r⁰ = μ + √분산 × ε</text><rect x="280" y="40" width="220" height="30" rx="6" fill="#f4f7fa" stroke="#c4cfd9"/><text x="390.0" y="60" text-anchor="middle" class="fl">-3.6</text><rect x="280" y="80" width="220" height="30" rx="6" fill="#f4f7fa" stroke="#c4cfd9"/><text x="390.0" y="100" text-anchor="middle" class="fl">-3.0</text><rect x="280" y="120" width="220" height="30" rx="6" fill="#f4f7fa" stroke="#c4cfd9"/><text x="390.0" y="140" text-anchor="middle" class="fl">-2.6</text><rect x="280" y="160" width="220" height="30" rx="6" fill="#f4f7fa" stroke="#c4cfd9"/><text x="390.0" y="180" text-anchor="middle" class="fl">-2.2</text><rect x="280" y="200" width="220" height="30" rx="6" fill="#f4f7fa" stroke="#c4cfd9"/><text x="390.0" y="220" text-anchor="middle" class="fl">-1.9</text><rect x="280" y="240" width="220" height="30" rx="6" fill="#f4f7fa" stroke="#c4cfd9"/><text x="390.0" y="260" text-anchor="middle" class="fl">-1.5</text><rect x="280" y="280" width="220" height="30" rx="6" fill="#f4f7fa" stroke="#c4cfd9"/><text x="390.0" y="300" text-anchor="middle" class="fl">-1.1</text><rect x="280" y="320" width="220" height="30" rx="6" fill="#f4f7fa" stroke="#c4cfd9"/><text x="390.0" y="340" text-anchor="middle" class="fl">-0.6</text><text x="600.0" y="24" text-anchor="middle" class="fs b">flow 4단계 (그림에선 생략)</text><rect x="540" y="40" width="120" height="30" rx="6" fill="#f4f7fa" stroke="#c4cfd9"/><text x="600.0" y="60" text-anchor="middle" class="fl">…</text><rect x="540" y="80" width="120" height="30" rx="6" fill="#f4f7fa" stroke="#c4cfd9"/><text x="600.0" y="100" text-anchor="middle" class="fl">…</text><rect x="540" y="120" width="120" height="30" rx="6" fill="#f4f7fa" stroke="#c4cfd9"/><text x="600.0" y="140" text-anchor="middle" class="fl">…</text><rect x="540" y="160" width="120" height="30" rx="6" fill="#f4f7fa" stroke="#c4cfd9"/><text x="600.0" y="180" text-anchor="middle" class="fl">…</text><rect x="540" y="200" width="120" height="30" rx="6" fill="#f4f7fa" stroke="#c4cfd9"/><text x="600.0" y="220" text-anchor="middle" class="fl">…</text><rect x="540" y="240" width="120" height="30" rx="6" fill="#f4f7fa" stroke="#c4cfd9"/><text x="600.0" y="260" text-anchor="middle" class="fl">…</text><rect x="540" y="280" width="120" height="30" rx="6" fill="#f4f7fa" stroke="#c4cfd9"/><text x="600.0" y="300" text-anchor="middle" class="fl">…</text><rect x="540" y="320" width="120" height="30" rx="6" fill="#f4f7fa" stroke="#c4cfd9"/><text x="600.0" y="340" text-anchor="middle" class="fl">…</text><text x="800.0" y="24" text-anchor="middle" class="fs b">sigmoid → 확률</text><rect x="700" y="40" width="200" height="30" rx="6" fill="#f4f7fa" stroke="#c4cfd9"/><text x="800.0" y="60" text-anchor="middle" class="fl">0.027</text><rect x="700" y="80" width="200" height="30" rx="6" fill="#f4f7fa" stroke="#c4cfd9"/><text x="800.0" y="100" text-anchor="middle" class="fl">0.047</text><rect x="700" y="120" width="200" height="30" rx="6" fill="#f4f7fa" stroke="#c4cfd9"/><text x="800.0" y="140" text-anchor="middle" class="fl">0.069</text><rect x="700" y="160" width="200" height="30" rx="6" fill="#f4f7fa" stroke="#c4cfd9"/><text x="800.0" y="180" text-anchor="middle" class="fl">0.100</text><rect x="700" y="200" width="200" height="30" rx="6" fill="#f4f7fa" stroke="#c4cfd9"/><text x="800.0" y="220" text-anchor="middle" class="fl">0.130</text><rect x="700" y="240" width="200" height="30" rx="6" fill="#f4f7fa" stroke="#c4cfd9"/><text x="800.0" y="260" text-anchor="middle" class="fl">0.182</text><rect x="700" y="280" width="200" height="30" rx="6" fill="#f4f7fa" stroke="#c4cfd9"/><text x="800.0" y="300" text-anchor="middle" class="fl">0.250</text><rect x="700" y="320" width="200" height="30" rx="6" fill="#f4f7fa" stroke="#c4cfd9"/><text x="800.0" y="340" text-anchor="middle" class="fl">0.354</text><line x1="240" y1="55" x2="277" y2="55" stroke="#7d8fa1"/><line x1="500" y1="55" x2="537" y2="55" stroke="#7d8fa1"/><line x1="660" y1="55" x2="697" y2="55" stroke="#7d8fa1"/><line x1="900" y1="55" x2="935" y2="200" stroke="#1f7a6b" stroke-opacity=".5"/><line x1="240" y1="95" x2="277" y2="95" stroke="#7d8fa1"/><line x1="500" y1="95" x2="537" y2="95" stroke="#7d8fa1"/><line x1="660" y1="95" x2="697" y2="95" stroke="#7d8fa1"/><line x1="900" y1="95" x2="935" y2="200" stroke="#1f7a6b" stroke-opacity=".5"/><line x1="240" y1="135" x2="277" y2="135" stroke="#7d8fa1"/><line x1="500" y1="135" x2="537" y2="135" stroke="#7d8fa1"/><line x1="660" y1="135" x2="697" y2="135" stroke="#7d8fa1"/><line x1="900" y1="135" x2="935" y2="200" stroke="#1f7a6b" stroke-opacity=".5"/><line x1="240" y1="175" x2="277" y2="175" stroke="#7d8fa1"/><line x1="500" y1="175" x2="537" y2="175" stroke="#7d8fa1"/><line x1="660" y1="175" x2="697" y2="175" stroke="#7d8fa1"/><line x1="900" y1="175" x2="935" y2="200" stroke="#1f7a6b" stroke-opacity=".5"/><line x1="240" y1="215" x2="277" y2="215" stroke="#7d8fa1"/><line x1="500" y1="215" x2="537" y2="215" stroke="#7d8fa1"/><line x1="660" y1="215" x2="697" y2="215" stroke="#7d8fa1"/><line x1="900" y1="215" x2="935" y2="200" stroke="#1f7a6b" stroke-opacity=".5"/><line x1="240" y1="255" x2="277" y2="255" stroke="#7d8fa1"/><line x1="500" y1="255" x2="537" y2="255" stroke="#7d8fa1"/><line x1="660" y1="255" x2="697" y2="255" stroke="#7d8fa1"/><line x1="900" y1="255" x2="935" y2="200" stroke="#1f7a6b" stroke-opacity=".5"/><line x1="240" y1="295" x2="277" y2="295" stroke="#7d8fa1"/><line x1="500" y1="295" x2="537" y2="295" stroke="#7d8fa1"/><line x1="660" y1="295" x2="697" y2="295" stroke="#7d8fa1"/><line x1="900" y1="295" x2="935" y2="200" stroke="#1f7a6b" stroke-opacity=".5"/><line x1="240" y1="335" x2="277" y2="335" stroke="#7d8fa1"/><line x1="500" y1="335" x2="537" y2="335" stroke="#7d8fa1"/><line x1="660" y1="335" x2="697" y2="335" stroke="#7d8fa1"/><line x1="900" y1="335" x2="935" y2="200" stroke="#1f7a6b" stroke-opacity=".5"/><rect x="935" y="170" width="95" height="60" rx="8" fill="#1f7a6b"/><text x="982" y="195" text-anchor="middle" class="fs" fill="#fff">8개 평균</text><text x="982" y="217" text-anchor="middle" class="fl" fill="#fff">q = 0.145</text><text x="20" y="378" class="fs">한 시정촌(μ = −2, 분산 1, 설명용)에서 ε을 8개 뽑아 각각 확률로 바꾼 뒤 평균. 한 개만 썼다면 0.027 ~ 0.354 중 무엇이 나올지 운에 달림</text><text x="20" y="400" class="fs" fill="#5d6b7a">원본은 맨 위 한 줄만 (ε 1개) 쓰고 그 값이 결과. 우리는 8줄 평균(학습 중), 마지막에는 256줄 평균</text></svg></div>
+  <div class="tw"><table>
+    <tr><th>비유</th><th>원본 (1개)</th><th>우리 (8개 · 256개)</th></tr>
+    <tr><td>주사위로 평균 눈 알아내기</td><td>한 번 던진 눈을 답으로 씀 (1이 나올 수도 6이 나올 수도)</td><td>8번 던진 평균을 씀 (3.5 근처), 마지막엔 256번 평균 (거의 정확히 3.5)</td></tr>
+  </table></div>
+
+  <div class="cols">
+    <figure><svg viewBox="0 0 560 230" class="fig" role="img" aria-label="뽑는 개수에 따른 추정값의 흔들림"><text x="56" y="44" text-anchor="end" class="fs b">1개</text><line x1="60" y1="40" x2="530" y2="40" stroke="#e1e7ee"/><circle cx="136.1" cy="40" r="4" fill="#a0612a" fill-opacity=".45"/><circle cx="248.5" cy="40" r="4" fill="#a0612a" fill-opacity=".45"/><circle cx="89.7" cy="40" r="4" fill="#a0612a" fill-opacity=".45"/><circle cx="217.1" cy="40" r="4" fill="#a0612a" fill-opacity=".45"/><circle cx="115.6" cy="40" r="4" fill="#a0612a" fill-opacity=".45"/><circle cx="115.4" cy="40" r="4" fill="#a0612a" fill-opacity=".45"/><circle cx="339.0" cy="40" r="4" fill="#a0612a" fill-opacity=".45"/><circle cx="140.3" cy="40" r="4" fill="#a0612a" fill-opacity=".45"/><circle cx="127.4" cy="40" r="4" fill="#a0612a" fill-opacity=".45"/><circle cx="188.8" cy="40" r="4" fill="#a0612a" fill-opacity=".45"/><circle cx="233.1" cy="40" r="4" fill="#a0612a" fill-opacity=".45"/><circle cx="128.2" cy="40" r="4" fill="#a0612a" fill-opacity=".45"/><circle cx="175.1" cy="40" r="4" fill="#a0612a" fill-opacity=".45"/><circle cx="88.6" cy="40" r="4" fill="#a0612a" fill-opacity=".45"/><circle cx="110.4" cy="40" r="4" fill="#a0612a" fill-opacity=".45"/><circle cx="107.2" cy="40" r="4" fill="#a0612a" fill-opacity=".45"/><circle cx="80.3" cy="40" r="4" fill="#a0612a" fill-opacity=".45"/><circle cx="77.1" cy="40" r="4" fill="#a0612a" fill-opacity=".45"/><circle cx="75.2" cy="40" r="4" fill="#a0612a" fill-opacity=".45"/><circle cx="116.6" cy="40" r="4" fill="#a0612a" fill-opacity=".45"/><circle cx="120.1" cy="40" r="4" fill="#a0612a" fill-opacity=".45"/><circle cx="112.6" cy="40" r="4" fill="#a0612a" fill-opacity=".45"/><circle cx="134.4" cy="40" r="4" fill="#a0612a" fill-opacity=".45"/><circle cx="80.2" cy="40" r="4" fill="#a0612a" fill-opacity=".45"/><circle cx="125.3" cy="40" r="4" fill="#a0612a" fill-opacity=".45"/><circle cx="146.1" cy="40" r="4" fill="#a0612a" fill-opacity=".45"/><circle cx="190.9" cy="40" r="4" fill="#a0612a" fill-opacity=".45"/><circle cx="92.2" cy="40" r="4" fill="#a0612a" fill-opacity=".45"/><circle cx="108.9" cy="40" r="4" fill="#a0612a" fill-opacity=".45"/><circle cx="70.4" cy="40" r="4" fill="#a0612a" fill-opacity=".45"/><circle cx="104.4" cy="40" r="4" fill="#a0612a" fill-opacity=".45"/><circle cx="68.7" cy="40" r="4" fill="#a0612a" fill-opacity=".45"/><circle cx="78.6" cy="40" r="4" fill="#a0612a" fill-opacity=".45"/><circle cx="230.0" cy="40" r="4" fill="#a0612a" fill-opacity=".45"/><circle cx="68.7" cy="40" r="4" fill="#a0612a" fill-opacity=".45"/><circle cx="195.8" cy="40" r="4" fill="#a0612a" fill-opacity=".45"/><circle cx="152.9" cy="40" r="4" fill="#a0612a" fill-opacity=".45"/><circle cx="112.9" cy="40" r="4" fill="#a0612a" fill-opacity=".45"/><circle cx="163.7" cy="40" r="4" fill="#a0612a" fill-opacity=".45"/><circle cx="169.6" cy="40" r="4" fill="#a0612a" fill-opacity=".45"/><circle cx="223.3" cy="40" r="4" fill="#a0612a" fill-opacity=".45"/><circle cx="117.0" cy="40" r="4" fill="#a0612a" fill-opacity=".45"/><circle cx="100.9" cy="40" r="4" fill="#a0612a" fill-opacity=".45"/><circle cx="100.4" cy="40" r="4" fill="#a0612a" fill-opacity=".45"/><circle cx="88.2" cy="40" r="4" fill="#a0612a" fill-opacity=".45"/><circle cx="127.3" cy="40" r="4" fill="#a0612a" fill-opacity=".45"/><circle cx="94.1" cy="40" r="4" fill="#a0612a" fill-opacity=".45"/><circle cx="226.1" cy="40" r="4" fill="#a0612a" fill-opacity=".45"/><circle cx="72.0" cy="40" r="4" fill="#a0612a" fill-opacity=".45"/><circle cx="85.5" cy="40" r="4" fill="#a0612a" fill-opacity=".45"/><circle cx="89.1" cy="40" r="4" fill="#a0612a" fill-opacity=".45"/><circle cx="69.6" cy="40" r="4" fill="#a0612a" fill-opacity=".45"/><circle cx="339.4" cy="40" r="4" fill="#a0612a" fill-opacity=".45"/><circle cx="67.1" cy="40" r="4" fill="#a0612a" fill-opacity=".45"/><circle cx="114.4" cy="40" r="4" fill="#a0612a" fill-opacity=".45"/><circle cx="103.5" cy="40" r="4" fill="#a0612a" fill-opacity=".45"/><circle cx="303.7" cy="40" r="4" fill="#a0612a" fill-opacity=".45"/><circle cx="70.7" cy="40" r="4" fill="#a0612a" fill-opacity=".45"/><circle cx="226.4" cy="40" r="4" fill="#a0612a" fill-opacity=".45"/><circle cx="95.9" cy="40" r="4" fill="#a0612a" fill-opacity=".45"/><text x="349" y="44" class="ft">1개 (원본): 0.01 ~ 0.48</text><text x="56" y="104" text-anchor="end" class="fs b">8개</text><line x1="60" y1="100" x2="530" y2="100" stroke="#e1e7ee"/><circle cx="145.1" cy="100" r="4" fill="#1f7a6b" fill-opacity=".45"/><circle cx="178.0" cy="100" r="4" fill="#1f7a6b" fill-opacity=".45"/><circle cx="133.2" cy="100" r="4" fill="#1f7a6b" fill-opacity=".45"/><circle cx="137.8" cy="100" r="4" fill="#1f7a6b" fill-opacity=".45"/><circle cx="191.6" cy="100" r="4" fill="#1f7a6b" fill-opacity=".45"/><circle cx="120.4" cy="100" r="4" fill="#1f7a6b" fill-opacity=".45"/><circle cx="151.7" cy="100" r="4" fill="#1f7a6b" fill-opacity=".45"/><circle cx="128.4" cy="100" r="4" fill="#1f7a6b" fill-opacity=".45"/><circle cx="122.8" cy="100" r="4" fill="#1f7a6b" fill-opacity=".45"/><circle cx="139.2" cy="100" r="4" fill="#1f7a6b" fill-opacity=".45"/><circle cx="120.6" cy="100" r="4" fill="#1f7a6b" fill-opacity=".45"/><circle cx="146.4" cy="100" r="4" fill="#1f7a6b" fill-opacity=".45"/><circle cx="150.1" cy="100" r="4" fill="#1f7a6b" fill-opacity=".45"/><circle cx="133.5" cy="100" r="4" fill="#1f7a6b" fill-opacity=".45"/><circle cx="142.0" cy="100" r="4" fill="#1f7a6b" fill-opacity=".45"/><circle cx="191.4" cy="100" r="4" fill="#1f7a6b" fill-opacity=".45"/><circle cx="120.2" cy="100" r="4" fill="#1f7a6b" fill-opacity=".45"/><circle cx="133.6" cy="100" r="4" fill="#1f7a6b" fill-opacity=".45"/><circle cx="191.1" cy="100" r="4" fill="#1f7a6b" fill-opacity=".45"/><circle cx="131.0" cy="100" r="4" fill="#1f7a6b" fill-opacity=".45"/><circle cx="145.2" cy="100" r="4" fill="#1f7a6b" fill-opacity=".45"/><circle cx="161.5" cy="100" r="4" fill="#1f7a6b" fill-opacity=".45"/><circle cx="152.3" cy="100" r="4" fill="#1f7a6b" fill-opacity=".45"/><circle cx="182.3" cy="100" r="4" fill="#1f7a6b" fill-opacity=".45"/><circle cx="148.3" cy="100" r="4" fill="#1f7a6b" fill-opacity=".45"/><circle cx="155.9" cy="100" r="4" fill="#1f7a6b" fill-opacity=".45"/><circle cx="116.7" cy="100" r="4" fill="#1f7a6b" fill-opacity=".45"/><circle cx="134.0" cy="100" r="4" fill="#1f7a6b" fill-opacity=".45"/><circle cx="163.9" cy="100" r="4" fill="#1f7a6b" fill-opacity=".45"/><circle cx="138.4" cy="100" r="4" fill="#1f7a6b" fill-opacity=".45"/><circle cx="159.5" cy="100" r="4" fill="#1f7a6b" fill-opacity=".45"/><circle cx="181.4" cy="100" r="4" fill="#1f7a6b" fill-opacity=".45"/><circle cx="132.7" cy="100" r="4" fill="#1f7a6b" fill-opacity=".45"/><circle cx="128.6" cy="100" r="4" fill="#1f7a6b" fill-opacity=".45"/><circle cx="150.5" cy="100" r="4" fill="#1f7a6b" fill-opacity=".45"/><circle cx="142.8" cy="100" r="4" fill="#1f7a6b" fill-opacity=".45"/><circle cx="144.6" cy="100" r="4" fill="#1f7a6b" fill-opacity=".45"/><circle cx="165.4" cy="100" r="4" fill="#1f7a6b" fill-opacity=".45"/><circle cx="142.3" cy="100" r="4" fill="#1f7a6b" fill-opacity=".45"/><circle cx="134.0" cy="100" r="4" fill="#1f7a6b" fill-opacity=".45"/><circle cx="198.6" cy="100" r="4" fill="#1f7a6b" fill-opacity=".45"/><circle cx="116.1" cy="100" r="4" fill="#1f7a6b" fill-opacity=".45"/><circle cx="135.8" cy="100" r="4" fill="#1f7a6b" fill-opacity=".45"/><circle cx="200.5" cy="100" r="4" fill="#1f7a6b" fill-opacity=".45"/><circle cx="174.7" cy="100" r="4" fill="#1f7a6b" fill-opacity=".45"/><circle cx="146.4" cy="100" r="4" fill="#1f7a6b" fill-opacity=".45"/><circle cx="188.1" cy="100" r="4" fill="#1f7a6b" fill-opacity=".45"/><circle cx="149.2" cy="100" r="4" fill="#1f7a6b" fill-opacity=".45"/><circle cx="150.6" cy="100" r="4" fill="#1f7a6b" fill-opacity=".45"/><circle cx="100.9" cy="100" r="4" fill="#1f7a6b" fill-opacity=".45"/><circle cx="176.7" cy="100" r="4" fill="#1f7a6b" fill-opacity=".45"/><circle cx="139.8" cy="100" r="4" fill="#1f7a6b" fill-opacity=".45"/><circle cx="128.9" cy="100" r="4" fill="#1f7a6b" fill-opacity=".45"/><circle cx="117.7" cy="100" r="4" fill="#1f7a6b" fill-opacity=".45"/><circle cx="156.4" cy="100" r="4" fill="#1f7a6b" fill-opacity=".45"/><circle cx="134.8" cy="100" r="4" fill="#1f7a6b" fill-opacity=".45"/><circle cx="130.4" cy="100" r="4" fill="#1f7a6b" fill-opacity=".45"/><circle cx="113.9" cy="100" r="4" fill="#1f7a6b" fill-opacity=".45"/><circle cx="137.6" cy="100" r="4" fill="#1f7a6b" fill-opacity=".45"/><circle cx="146.9" cy="100" r="4" fill="#1f7a6b" fill-opacity=".45"/><text x="211" y="104" class="ft">8개 (우리 학습 중): 0.07 ~ 0.24</text><text x="56" y="164" text-anchor="end" class="fs b">256개</text><line x1="60" y1="160" x2="530" y2="160" stroke="#e1e7ee"/><circle cx="149.1" cy="160" r="4" fill="#1f7a6b" fill-opacity=".45"/><circle cx="157.9" cy="160" r="4" fill="#1f7a6b" fill-opacity=".45"/><circle cx="148.0" cy="160" r="4" fill="#1f7a6b" fill-opacity=".45"/><circle cx="156.5" cy="160" r="4" fill="#1f7a6b" fill-opacity=".45"/><circle cx="150.1" cy="160" r="4" fill="#1f7a6b" fill-opacity=".45"/><circle cx="153.1" cy="160" r="4" fill="#1f7a6b" fill-opacity=".45"/><circle cx="159.7" cy="160" r="4" fill="#1f7a6b" fill-opacity=".45"/><circle cx="150.0" cy="160" r="4" fill="#1f7a6b" fill-opacity=".45"/><circle cx="146.1" cy="160" r="4" fill="#1f7a6b" fill-opacity=".45"/><circle cx="146.8" cy="160" r="4" fill="#1f7a6b" fill-opacity=".45"/><circle cx="155.5" cy="160" r="4" fill="#1f7a6b" fill-opacity=".45"/><circle cx="153.8" cy="160" r="4" fill="#1f7a6b" fill-opacity=".45"/><circle cx="152.6" cy="160" r="4" fill="#1f7a6b" fill-opacity=".45"/><circle cx="157.6" cy="160" r="4" fill="#1f7a6b" fill-opacity=".45"/><circle cx="157.0" cy="160" r="4" fill="#1f7a6b" fill-opacity=".45"/><circle cx="148.7" cy="160" r="4" fill="#1f7a6b" fill-opacity=".45"/><circle cx="149.7" cy="160" r="4" fill="#1f7a6b" fill-opacity=".45"/><circle cx="152.4" cy="160" r="4" fill="#1f7a6b" fill-opacity=".45"/><circle cx="151.1" cy="160" r="4" fill="#1f7a6b" fill-opacity=".45"/><circle cx="156.3" cy="160" r="4" fill="#1f7a6b" fill-opacity=".45"/><circle cx="149.8" cy="160" r="4" fill="#1f7a6b" fill-opacity=".45"/><circle cx="157.9" cy="160" r="4" fill="#1f7a6b" fill-opacity=".45"/><circle cx="148.3" cy="160" r="4" fill="#1f7a6b" fill-opacity=".45"/><circle cx="150.1" cy="160" r="4" fill="#1f7a6b" fill-opacity=".45"/><circle cx="152.9" cy="160" r="4" fill="#1f7a6b" fill-opacity=".45"/><circle cx="155.3" cy="160" r="4" fill="#1f7a6b" fill-opacity=".45"/><circle cx="146.9" cy="160" r="4" fill="#1f7a6b" fill-opacity=".45"/><circle cx="155.2" cy="160" r="4" fill="#1f7a6b" fill-opacity=".45"/><circle cx="153.1" cy="160" r="4" fill="#1f7a6b" fill-opacity=".45"/><circle cx="157.1" cy="160" r="4" fill="#1f7a6b" fill-opacity=".45"/><circle cx="144.6" cy="160" r="4" fill="#1f7a6b" fill-opacity=".45"/><circle cx="151.9" cy="160" r="4" fill="#1f7a6b" fill-opacity=".45"/><circle cx="150.1" cy="160" r="4" fill="#1f7a6b" fill-opacity=".45"/><circle cx="156.8" cy="160" r="4" fill="#1f7a6b" fill-opacity=".45"/><circle cx="156.7" cy="160" r="4" fill="#1f7a6b" fill-opacity=".45"/><circle cx="150.1" cy="160" r="4" fill="#1f7a6b" fill-opacity=".45"/><circle cx="138.3" cy="160" r="4" fill="#1f7a6b" fill-opacity=".45"/><circle cx="152.2" cy="160" r="4" fill="#1f7a6b" fill-opacity=".45"/><circle cx="151.8" cy="160" r="4" fill="#1f7a6b" fill-opacity=".45"/><circle cx="150.2" cy="160" r="4" fill="#1f7a6b" fill-opacity=".45"/><circle cx="148.7" cy="160" r="4" fill="#1f7a6b" fill-opacity=".45"/><circle cx="154.8" cy="160" r="4" fill="#1f7a6b" fill-opacity=".45"/><circle cx="152.0" cy="160" r="4" fill="#1f7a6b" fill-opacity=".45"/><circle cx="147.4" cy="160" r="4" fill="#1f7a6b" fill-opacity=".45"/><circle cx="144.6" cy="160" r="4" fill="#1f7a6b" fill-opacity=".45"/><circle cx="149.1" cy="160" r="4" fill="#1f7a6b" fill-opacity=".45"/><circle cx="146.5" cy="160" r="4" fill="#1f7a6b" fill-opacity=".45"/><circle cx="150.6" cy="160" r="4" fill="#1f7a6b" fill-opacity=".45"/><circle cx="140.4" cy="160" r="4" fill="#1f7a6b" fill-opacity=".45"/><circle cx="152.5" cy="160" r="4" fill="#1f7a6b" fill-opacity=".45"/><circle cx="150.0" cy="160" r="4" fill="#1f7a6b" fill-opacity=".45"/><circle cx="146.5" cy="160" r="4" fill="#1f7a6b" fill-opacity=".45"/><circle cx="152.2" cy="160" r="4" fill="#1f7a6b" fill-opacity=".45"/><circle cx="156.7" cy="160" r="4" fill="#1f7a6b" fill-opacity=".45"/><circle cx="143.7" cy="160" r="4" fill="#1f7a6b" fill-opacity=".45"/><circle cx="147.0" cy="160" r="4" fill="#1f7a6b" fill-opacity=".45"/><circle cx="148.2" cy="160" r="4" fill="#1f7a6b" fill-opacity=".45"/><circle cx="154.0" cy="160" r="4" fill="#1f7a6b" fill-opacity=".45"/><circle cx="148.7" cy="160" r="4" fill="#1f7a6b" fill-opacity=".45"/><circle cx="146.8" cy="160" r="4" fill="#1f7a6b" fill-opacity=".45"/><text x="170" y="164" class="ft">256개 (우리 마지막): 0.13 ~ 0.17</text><text x="60.0" y="205" text-anchor="middle" class="ft">0.0</text><text x="177.5" y="205" text-anchor="middle" class="ft">0.2</text><text x="295.0" y="205" text-anchor="middle" class="ft">0.4</text><text x="412.49999999999994" y="205" text-anchor="middle" class="ft">0.6</text><text x="530.0" y="205" text-anchor="middle" class="ft">0.8</text><line x1="151.6" y1="25" x2="151.6" y2="190" stroke="#1f4f7a" stroke-dasharray="4 3"/><text x="156" y="22" class="ft" fill="#1f4f7a">참값 0.156</text><text x="60" y="224" class="ft">같은 시정촌(μ = −2, 분산 1)의 사후확률을 60번 따로 추정한 값. 점 하나 = 한 번 추정</text></svg></figure>
+    <div class="txt">
+      <p><span class="lb">사후확률의 정의가 평균</span>논문 식 6에서 사후확률은 q = E[sigmoid(r)], 즉 "r을 무수히 뽑았을 때 sigmoid(r)의 평균"입니다. 이 평균을 정확히 계산할 수 없어서 몇 개를 뽑아 평균으로 어림합니다. 원본은 1개, 우리는 8개(마지막 256개)로 어림합니다.</p>
+      <p><span class="lb">개수가 많을수록 덜 흔들림</span>그림처럼 1개로는 넓게 흩어지고, 개수가 늘수록 참값(0.156) 근처에 모입니다. 같은 시정촌을 2,000번 따로 추정하면 범위가 1개 0.01 ~ 0.76, 8개 0.05 ~ 0.38, 256개 0.13 ~ 0.19이고, 표준편차는 1개 0.123, 8개 0.044, 256개 0.008입니다. 흔들림은 개수의 제곱근에 반비례해 줄어듭니다.</p>
+      <p><span class="lb">왜 학습 중 8개, 마지막 256개</span>학습 중에는 매 epoch(3000번)마다 계산해야 해서 8개로 계산량과 정확도를 맞췄습니다. 학습 중의 흔들림은 수천 번의 갱신에서 평균되어 괜찮습니다. 마지막 결과는 한 번만 계산하므로 256개로 넉넉히 뽑아 값이 거의 고정되게 했습니다.</p>
+      <p><span class="lb">우리 자료에서 특히 필요한 이유</span>시정촌 단위는 지진마다 40~80곳뿐이라 값 하나의 흔들림이 AUC를 크게 바꿉니다. 칸 단위는 시정촌 값이 칸 최댓값이라, 1개만 뽑으면 운 좋게 높게 뽑힌 칸 하나가 최댓값을 차지합니다. 실제로 공식 코드 방식(1개)으로 돌린 칸 실험은 시정촌 값이 거의 1에 몰렸습니다 (중앙값 산사태 0.87 · 액상화 0.98).</p>
+    </div>
+  </div>
+</section>
+
+
+<section id="eqs">
+  <h2>출발점과 flow 식 풀어 보기: 왜 a 하나, 왜 c, 왜 δ, flow는 어떻게 미나</h2>
+
+  <h3>점수(로짓)로 다 계산하고, 맨 끝에 확률로 바꿈</h3>
+  <div class="cols">
+    <div class="txt">
+      <p><span class="lb">모델 안의 값은 "재해 점수"</span>μ, r⁰, flow를 지난 r은 모두 로짓(점수)입니다. −3, 0, +5처럼 음수도 되고 얼마든지 커지거나 작아질 수 있어 더하고 빼기 편합니다. flow는 이 점수에 더하기 빼기를 하는 단계입니다.</p>
+      <p><span class="lb">sigmoid = 점수를 확률로 바꾸는 표</span>점수 계산이 다 끝나면 맨 끝에 sigmoid로 0 ~ 1 확률로 바꿉니다. 점수가 아무리 커져도 확률은 0 ~ 1 안에 있습니다.</p>
+      <p><span class="lb">왜 확률로 먼저 바꾸고 밀면 안 되나</span>확률 0.06에서 0.9를 깎으면 −0.84라는 말이 안 되는 확률이 됩니다. 점수에서 깎으면 −2.35 − 0.9 = −3.25이고 sigmoid(−3.25) = 0.037로 항상 0 ~ 1 안에 남습니다.</p>
+      <p><span class="lb">"출발 확률"이란</span>코드가 따로 계산하는 값이 아니라, "flow가 아무것도 안 하고 무작위 값도 0이면 확률이 얼마일까"를 읽어 본 값 sigmoid(μ)입니다. μ = −2.75라고 하면 감이 안 와서 "6% 근처에서 출발"이라고 말하는 것입니다.</p>
+    </div>
+    <div class="tw"><table>
+      <tr><th>점수 (로짓)</th><th>sigmoid로 바꾼 확률</th></tr>
+      <tr><td>−5</td><td>0.007</td></tr>
+      <tr><td>−2.6</td><td>0.069</td></tr>
+      <tr><td>0</td><td>0.5 (반반, 정보 없음)</td></tr>
+      <tr><td>+2.6</td><td>0.931</td></tr>
+      <tr><td>+5</td><td>0.993</td></tr>
+    </table></div>
+  </div>
+  <div class="tw"><table>
+    <tr><th>한 칸의 계산 순서 (a = 30, c = −3, δ = 0, 설명용)</th><th>계산</th><th>값</th><th>점수인가 확률인가</th></tr>
+    <tr><td>① 출발점</td><td>μ = 6·tanh((30 × 0.001 − 3 + 0)/6)</td><td>−2.75</td><td>점수</td></tr>
+    <tr><td>② 뽑기</td><td>r⁰ = μ + √분산 × ε (ε = 0.4, 분산 1)</td><td>−2.35</td><td>점수</td></tr>
+    <tr><td>③ flow 4번</td><td>아래 표처럼 조금씩 밀기</td><td>−2.60</td><td>점수</td></tr>
+    <tr><td>④ <b>sigmoid</b> (여기서 한 번만)</td><td>sigmoid(−2.60)</td><td><b>0.069</b></td><td><b>확률</b></td></tr>
+    <tr><td>⑤ 평균</td><td>② ~ ④를 8번(마지막엔 256번) 해서 평균</td><td>최종 q</td><td>확률</td></tr>
+  </table></div>
+
+  <h3>왜 α 앞에 곱하는 수가 하나(a)뿐인가</h3>
+  <div class="cols">
+    <div class="code o"><div class="ch">원본 model.py</div><pre><code>a1 = w_aLS * aLS          # 사전확률 식과 같이 쓰는 w_a
+mu = w_mu_LS * a1         # μ = w_μ × w_a × α
+# 사전확률 식: logit p = w_0 + w_a·α + …  (같은 w_a)</code></pre></div>
+    <div class="code u"><div class="ch">우리 model.py</div><pre><code>self.mu = nn.Linear(1, 1)  # a·α + c (기울기 a, 절편 c)
+mu = 6 * tanh((self.mu(α) + mu_local) / 6)
+# 사전확률 식의 w_a는 그 식에서 따로 학습</code></pre></div>
+  </div>
+  <p>두 수를 곱한 것도 결국 숫자 하나입니다. w_μ = 5, w_a = 6이면 α 앞에는 30이 곱해지고, a = 30 하나로 쓴 것과 똑같습니다. 원본이 둘로 나눈 것은 w_a를 사전확률 식 logit p = w_0 + <b>w_a</b>·α + …와 같이 써서 출발점을 사전확률 식에 묶어 두었기 때문입니다. 논문은 출발점을 "부모 입력의 함수 μ = φ(부모; W_μ)"라고만 하고 사전확률 식과 묶으라는 말은 없어서, 우리는 출발점에 자기 기울기 a를 따로 주었습니다.</p>
+
+  <h3>왜 c를 더하나: 직선의 기울기와 절편</h3>
+  <div class="cols">
+    <div class="txt">
+      <p><span class="lb">μ = a·α + c 는 직선 y = ax + b</span>a는 기울기, c는 절편(α = 0일 때의 높이)입니다.</p>
+      <p><span class="lb">c가 없으면 직선이 원점을 지남</span>α = 0이면 μ = 0, 확률 0.5입니다. 그런데 칸 대부분의 α가 0 근처(산사태 중앙값 0.0007, 액상화 중앙값 0)라, 기울기 a를 어떻게 정해도 대부분 μ ≈ 0, 확률 0.5에 모입니다. USGS가 0.1%라고 하는 칸도 0.5%라고 하는 칸도 모델 안에서는 다 50% 근처에서 출발합니다.</p>
+      <p><span class="lb">c가 있으면 직선 전체를 내림</span>기울기는 그대로라 α가 큰 칸이 더 높은 순서는 그대로이고, 전체 높이만 알맞게 내려갑니다. 알맞은 c는 학습이 찾습니다.</p>
+      <p><span class="lb">c는 누가 같이 쓰나</span>한 지진, 한 재해 안의 모든 칸이 c 하나를 같이 씁니다. 산사태(c_LS)와 액상화(c_LQ)는 따로이고, 지진마다 모델을 따로 학습하니 지진끼리도 따로입니다. 칸마다 다른 것은 δ입니다.</p>
+      <p><span class="lb">flow가 있는데 왜 필요한가</span>우리 flow는 점수를 최대 약 4까지만 옮길 수 있어서 0.5에서 출발하면 바닥이 1.8%입니다. 또 피해 없는 칸을 낮추느라 flow가 거의 모든 칸을 최대로 밀면 칸들이 바닥에 붙어 서로 구분할 여유가 없어집니다. c가 전체 높이를 잡고 flow는 칸마다 다듬는 쪽으로 역할이 나뉩니다. 다만 c가 꼭 필요한지는 c만 뺀 실험으로 아직 확인하지 않았습니다.</p>
+    </div>
+    <div class="tw"><table>
+      <tr><th>α (USGS)</th><th>c 없음: μ = 30α</th><th>확률</th><th>c 있음: μ = 30α − 3</th><th>확률</th></tr>
+      <tr><td>0</td><td>0</td><td>0.50</td><td>−3.00</td><td>0.047</td></tr>
+      <tr><td>0.001</td><td>0.03</td><td>0.51</td><td>−2.97</td><td>0.049</td></tr>
+      <tr><td>0.005</td><td>0.15</td><td>0.54</td><td>−2.85</td><td>0.055</td></tr>
+      <tr><td>0.05</td><td>1.50</td><td>0.82</td><td>−1.50</td><td>0.18</td></tr>
+    </table></div>
+  </div>
+
+  <h3>실제로 학습된 a, c 값 (시정촌 모델, BD 없음, seed 0·1)</h3>
+  <p class="note"><b>정정</b>: 위의 a = 30, c = −3은 설명용 숫자였고, 실제로 학습된 값은 그렇지 않았습니다. 시정촌 모델(<code>run_muni_unc</code>, <code>raw/muni_usgs_pixel.csv</code>, BD 없음)을 seed 0·1로 다시 돌려 a, c, δ를 기록해 본 결과입니다. 칸 모델의 값은 기록해 두지 않아 아직 모릅니다.</p>
+  <div class="tw"><table>
+    <tr><th>지진</th><th>seed</th><th>a (산사태)</th><th>c (산사태)</th><th>δ 중앙값 (산사태)</th><th>a (액상화)</th><th>c (액상화)</th><th>δ 중앙값 (액상화)</th></tr>
+    <tr><td>2016 구마모토</td><td>0</td><td>1.12</td><td>−0.05</td><td>−1.00</td><td>0.89</td><td>0.71</td><td>0.09</td></tr>
+    <tr><td></td><td>1</td><td>0.41</td><td>0.11</td><td>−1.13</td><td>−0.27</td><td>0.84</td><td>0.31</td></tr>
+    <tr><td>2018 오사카</td><td>0</td><td>−0.75</td><td>−0.69</td><td>−0.37</td><td>−0.90</td><td>−0.42</td><td>−0.56</td></tr>
+    <tr><td></td><td>1</td><td>−0.43</td><td>0.64</td><td>0.41</td><td>5.81</td><td>0.55</td><td>−2.08</td></tr>
+    <tr><td>2018 훗카이도</td><td>0</td><td>−0.52</td><td>−0.72</td><td>−0.34</td><td>0.98</td><td>1.02</td><td>0.07</td></tr>
+    <tr><td></td><td>1</td><td>−1.44</td><td>−0.61</td><td>−0.45</td><td>1.77</td><td>2.98</td><td>2.30</td></tr>
+    <tr><td>2021 후쿠시마</td><td>0</td><td>−0.45</td><td>−0.61</td><td>−0.46</td><td>0.32</td><td>−0.45</td><td>−0.66</td></tr>
+    <tr><td></td><td>1</td><td>−0.62</td><td>0.51</td><td>0.55</td><td>−0.79</td><td>−0.46</td><td>−0.49</td></tr>
+    <tr><td>2024 노토반도</td><td>0</td><td>−0.36</td><td>−0.64</td><td>−0.43</td><td>1.23</td><td>−0.59</td><td>0.00</td></tr>
+    <tr><td></td><td>1</td><td>−0.93</td><td>0.71</td><td>0.34</td><td>−0.42</td><td>−0.76</td><td>−0.12</td></tr>
+  </table></div>
+  <div class="note"><ul>
+    <li><b>c는 부호가 정해져 있지 않음</b>: "더한다"는 학습이 찾은 수를 더한다는 뜻이고, 음수면 출발점을 내리고 양수면 올립니다. 처음 값은 −1 ~ 1 사이 무작위이고, 실제로도 대부분 −0.8 ~ +1 근처에 머물렀습니다 (훗카이도 액상화 seed 1만 2.98).</li>
+    <li><b>c를 같이 쓰는 범위</b>: 한 지진의 한 재해 안 모든 시정촌(칸). 지진마다, 산사태와 액상화마다 따로입니다.</li>
+    <li><b>a도 작고 음수도 나옴</b>: α가 0.001 근처라 a·α는 a가 몇이든 거의 0입니다. 그래서 실제 출발점은 사실상 c + δ로 정해지고, USGS 사전확률은 출발점보다 사전확률 항 logit p = w_0 + w_a·α 쪽으로 들어갑니다.</li>
+    <li><b>출발점이 USGS 수준까지 내려가지 않음</b>: 산사태 c + δ 중앙값은 대부분 약 −1.05(출발 확률 0.26)이고, seed 1의 오사카·후쿠시마·노토반도는 약 +1.05(0.74)입니다. 위에서 "c가 출발점을 알맞게 내려 준다"고 한 설명은 실제 학습에서는 확인되지 않았습니다. c가 정말 필요한지는 c만 뺀 실험으로 봐야 합니다.</li>
+  </ul></div>
+
+  <h3>USGS 확률은 어떻게 퍼져 있나 (실제 값)</h3>
+  <figure><svg viewBox="0 0 900 300" class="fig" role="img" aria-label="칸 단위 (250 m 칸, 물·999 제외) · 구간별 칸 비율"><text x="50" y="20" class="fl">칸 단위 (250 m 칸, 물·999 제외) · 구간별 칸 비율</text><rect x="600" y="10" width="12" height="12" fill="#b5651d"/><text x="617" y="21" class="fs">산사태 (105만 칸)</text><rect x="750" y="10" width="12" height="12" fill="#2d62b3"/><text x="767" y="21" class="fs">액상화 (86만 칸)</text><line x1="50" y1="240.0" x2="880" y2="240.0" stroke="#e1e7ee"/><text x="44" y="244.0" text-anchor="end" class="ft">0%</text><line x1="50" y1="173.33333333333334" x2="880" y2="173.33333333333334" stroke="#e1e7ee"/><text x="44" y="177.33333333333334" text-anchor="end" class="ft">20%</text><line x1="50" y1="106.66666666666667" x2="880" y2="106.66666666666667" stroke="#e1e7ee"/><text x="44" y="110.66666666666667" text-anchor="end" class="ft">40%</text><line x1="50" y1="40.0" x2="880" y2="40.0" stroke="#e1e7ee"/><text x="44" y="44.0" text-anchor="end" class="ft">60%</text><rect x="62.5" y="178.0" width="35.4" height="62.0" fill="#b5651d"/><text x="80.1" y="174.0" text-anchor="middle" class="ft" style="fill:#1b2430">18.6</text><rect x="99.8" y="66.7" width="35.4" height="173.3" fill="#2d62b3"/><text x="117.5" y="62.7" text-anchor="middle" class="ft" style="fill:#1b2430">52</text><text x="101.9" y="258" text-anchor="middle" class="ft">0 ~ 0.0001</text><rect x="166.2" y="89.0" width="35.4" height="151.0" fill="#b5651d"/><text x="183.9" y="85.0" text-anchor="middle" class="ft" style="fill:#1b2430">45.3</text><rect x="203.5" y="180.0" width="35.4" height="60.0" fill="#2d62b3"/><text x="221.2" y="176.0" text-anchor="middle" class="ft" style="fill:#1b2430">18</text><text x="205.6" y="258" text-anchor="middle" class="ft">0.0001 ~ 0.001</text><rect x="269.9" y="138.3" width="35.4" height="101.7" fill="#b5651d"/><text x="287.6" y="134.3" text-anchor="middle" class="ft" style="fill:#1b2430">30.5</text><rect x="307.3" y="199.7" width="35.4" height="40.3" fill="#2d62b3"/><text x="325.0" y="195.7" text-anchor="middle" class="ft" style="fill:#1b2430">12.1</text><text x="309.4" y="258" text-anchor="middle" class="ft">0.001 ~ 0.01</text><rect x="373.7" y="226.3" width="35.4" height="13.7" fill="#b5651d"/><text x="391.4" y="222.3" text-anchor="middle" class="ft" style="fill:#1b2430">4.1</text><rect x="411.1" y="218.7" width="35.4" height="21.3" fill="#2d62b3"/><text x="428.7" y="214.7" text-anchor="middle" class="ft" style="fill:#1b2430">6.4</text><text x="413.1" y="258" text-anchor="middle" class="ft">0.01 ~ 0.05</text><rect x="477.4" y="236.3" width="35.4" height="3.7" fill="#b5651d"/><text x="495.1" y="232.3" text-anchor="middle" class="ft" style="fill:#1b2430">1.1</text><rect x="514.8" y="230.7" width="35.4" height="9.3" fill="#2d62b3"/><text x="532.5" y="226.7" text-anchor="middle" class="ft" style="fill:#1b2430">2.8</text><text x="516.9" y="258" text-anchor="middle" class="ft">0.05 ~ 0.1</text><rect x="581.2" y="238.7" width="35.4" height="1.3" fill="#b5651d"/><text x="598.9" y="234.7" text-anchor="middle" class="ft" style="fill:#1b2430">0.4</text><rect x="618.6" y="228.3" width="35.4" height="11.7" fill="#2d62b3"/><text x="636.2" y="224.3" text-anchor="middle" class="ft" style="fill:#1b2430">3.5</text><text x="620.6" y="258" text-anchor="middle" class="ft">0.1 ~ 0.2</text><rect x="685.0" y="240.0" width="35.4" height="0.0" fill="#b5651d"/><text x="702.6" y="236.0" text-anchor="middle" class="ft" style="fill:#1b2430">0</text><rect x="722.3" y="231.3" width="35.4" height="8.7" fill="#2d62b3"/><text x="740.0" y="227.3" text-anchor="middle" class="ft" style="fill:#1b2430">2.6</text><text x="724.4" y="258" text-anchor="middle" class="ft">0.2 ~ 0.3</text><rect x="788.7" y="240.0" width="35.4" height="0.0" fill="#b5651d"/><text x="806.4" y="236.0" text-anchor="middle" class="ft" style="fill:#1b2430">0</text><rect x="826.1" y="231.0" width="35.4" height="9.0" fill="#2d62b3"/><text x="843.7" y="227.0" text-anchor="middle" class="ft" style="fill:#1b2430">2.7</text><text x="828.1" y="258" text-anchor="middle" class="ft">0.3 이상</text><text x="450.0" y="288" text-anchor="middle" class="ft">USGS 확률 구간 (0.01까지는 10배씩, 그 뒤는 일정 간격)</text></svg></figure>
+  <figure><svg viewBox="0 0 900 300" class="fig" role="img" aria-label="시정촌 단위 (264곳) · 구간별 시정촌 비율"><text x="50" y="20" class="fl">시정촌 단위 (264곳) · 구간별 시정촌 비율</text><rect x="600" y="10" width="12" height="12" fill="#b5651d"/><text x="617" y="21" class="fs">산사태 (시정촌 평균)</text><rect x="750" y="10" width="12" height="12" fill="#2d62b3"/><text x="767" y="21" class="fs">액상화 (시정촌 최댓값)</text><line x1="50" y1="240.0" x2="880" y2="240.0" stroke="#e1e7ee"/><text x="44" y="244.0" text-anchor="end" class="ft">0%</text><line x1="50" y1="173.33333333333334" x2="880" y2="173.33333333333334" stroke="#e1e7ee"/><text x="44" y="177.33333333333334" text-anchor="end" class="ft">20%</text><line x1="50" y1="106.66666666666667" x2="880" y2="106.66666666666667" stroke="#e1e7ee"/><text x="44" y="110.66666666666667" text-anchor="end" class="ft">40%</text><line x1="50" y1="40.0" x2="880" y2="40.0" stroke="#e1e7ee"/><text x="44" y="44.0" text-anchor="end" class="ft">60%</text><rect x="62.5" y="221.0" width="35.4" height="19.0" fill="#b5651d"/><text x="80.1" y="217.0" text-anchor="middle" class="ft" style="fill:#1b2430">5.7</text><rect x="99.8" y="226.0" width="35.4" height="14.0" fill="#2d62b3"/><text x="117.5" y="222.0" text-anchor="middle" class="ft" style="fill:#1b2430">4.2</text><text x="101.9" y="258" text-anchor="middle" class="ft">0 ~ 0.0001</text><rect x="166.2" y="81.0" width="35.4" height="159.0" fill="#b5651d"/><text x="183.9" y="77.0" text-anchor="middle" class="ft" style="fill:#1b2430">47.7</text><rect x="203.5" y="211.0" width="35.4" height="29.0" fill="#2d62b3"/><text x="221.2" y="207.0" text-anchor="middle" class="ft" style="fill:#1b2430">8.7</text><text x="205.6" y="258" text-anchor="middle" class="ft">0.0001 ~ 0.001</text><rect x="269.9" y="112.3" width="35.4" height="127.7" fill="#b5651d"/><text x="287.6" y="108.3" text-anchor="middle" class="ft" style="fill:#1b2430">38.3</text><rect x="307.3" y="219.7" width="35.4" height="20.3" fill="#2d62b3"/><text x="325.0" y="215.7" text-anchor="middle" class="ft" style="fill:#1b2430">6.1</text><text x="309.4" y="258" text-anchor="middle" class="ft">0.001 ~ 0.01</text><rect x="373.7" y="216.0" width="35.4" height="24.0" fill="#b5651d"/><text x="391.4" y="212.0" text-anchor="middle" class="ft" style="fill:#1b2430">7.2</text><rect x="411.1" y="226.0" width="35.4" height="14.0" fill="#2d62b3"/><text x="428.7" y="222.0" text-anchor="middle" class="ft" style="fill:#1b2430">4.2</text><text x="413.1" y="258" text-anchor="middle" class="ft">0.01 ~ 0.05</text><rect x="477.4" y="236.3" width="35.4" height="3.7" fill="#b5651d"/><text x="495.1" y="232.3" text-anchor="middle" class="ft" style="fill:#1b2430">1.1</text><rect x="514.8" y="202.0" width="35.4" height="38.0" fill="#2d62b3"/><text x="532.5" y="198.0" text-anchor="middle" class="ft" style="fill:#1b2430">11.4</text><text x="516.9" y="258" text-anchor="middle" class="ft">0.05 ~ 0.1</text><rect x="581.2" y="240.0" width="35.4" height="0.0" fill="#b5651d"/><text x="598.9" y="236.0" text-anchor="middle" class="ft" style="fill:#1b2430">0</text><rect x="618.6" y="195.7" width="35.4" height="44.3" fill="#2d62b3"/><text x="636.2" y="191.7" text-anchor="middle" class="ft" style="fill:#1b2430">13.3</text><text x="620.6" y="258" text-anchor="middle" class="ft">0.1 ~ 0.2</text><rect x="685.0" y="240.0" width="35.4" height="0.0" fill="#b5651d"/><text x="702.6" y="236.0" text-anchor="middle" class="ft" style="fill:#1b2430">0</text><rect x="722.3" y="192.0" width="35.4" height="48.0" fill="#2d62b3"/><text x="740.0" y="188.0" text-anchor="middle" class="ft" style="fill:#1b2430">14.4</text><text x="724.4" y="258" text-anchor="middle" class="ft">0.2 ~ 0.3</text><rect x="788.7" y="240.0" width="35.4" height="0.0" fill="#b5651d"/><text x="806.4" y="236.0" text-anchor="middle" class="ft" style="fill:#1b2430">0</text><rect x="826.1" y="113.7" width="35.4" height="126.3" fill="#2d62b3"/><text x="843.7" y="109.7" text-anchor="middle" class="ft" style="fill:#1b2430">37.9</text><text x="828.1" y="258" text-anchor="middle" class="ft">0.3 이상</text><text x="450.0" y="288" text-anchor="middle" class="ft">USGS 확률 구간 (0.01까지는 10배씩, 그 뒤는 일정 간격)</text></svg></figure>
+  <div class="tw"><table>
+    <tr><th></th><th>중앙값</th><th>상위 10%</th><th>상위 1%</th><th>가장 큰 값</th><th>0.01 미만</th></tr>
+    <tr><td>칸 산사태</td><td>0.0007</td><td>0.005</td><td>0.067</td><td>0.217</td><td>94%</td></tr>
+    <tr><td>칸 액상화</td><td>0 (절반이 정확히 0)</td><td>0.074</td><td>0.379</td><td>0.459</td><td>82%</td></tr>
+    <tr><td>시정촌 산사태 (평균)</td><td>0.0009</td><td>0.007</td><td></td><td>0.076</td><td>92%</td></tr>
+    <tr><td>시정촌 액상화 (최댓값)</td><td>0.23</td><td>0.42</td><td></td><td>0.459</td><td>19%</td></tr>
+  </table></div>
+  <div class="note"><ul>
+    <li><b>산사태</b>: 칸 64%가 0.001(0.1%) 아래이고, 0.1을 넘는 칸은 0.4%뿐입니다. 시정촌 평균으로 모아도 거의 같습니다.</li>
+    <li><b>액상화</b>: 칸 절반이 정확히 0(USGS 모델이 액상화 가능성을 0으로 본 곳)이고, 대신 해안 매립지·강가처럼 0.2 ~ 0.46인 칸이 5% 정도 있습니다. 시정촌 값은 그 안의 가장 높은 칸이라 0.3 이상이 38%입니다.</li>
+    <li><b>USGS 값의 원래 범위</b>: USGS Ground Failure의 "확률"은 엄밀히는 그 칸 면적 중 산사태·액상화가 일어날 것으로 예상되는 비율에 가까운 값입니다. 모델 식 때문에 1까지 가지 않고, 제가 알기로 산사태 모델(Nowicki Jessee 2018)은 최대 약 0.26, 액상화 모델(Zhu 2017)은 최대 약 0.49입니다 (원 논문 식에서 계산한 값으로, 따로 확인하지는 않았습니다). 우리 자료의 최댓값(산사태 0.217, 액상화 0.459)도 이 범위 안에 있습니다.</li>
+    <li>이렇게 대부분 0 근처라, 아래처럼 확률을 점수 자리에 그대로 넣으면 출발점이 거의 0(확률 50%)이 됩니다.</li>
+  </ul></div>
+
+  <h3>USGS 값에 더하는데 왜 USGS 근처가 안 되나: 확률을 점수 자리에 그대로 넣기 때문</h3>
+  <div class="cols">
+    <div class="txt">
+      <p><span class="lb">확률과 점수는 다른 눈금</span>USGS α = 0.001은 확률 눈금의 숫자(0.1%)입니다. 출발점 μ = a·α + c는 점수(로짓) 눈금이고 나중에 sigmoid로 확률로 바꿉니다. 점수 눈금에서 0.001은 사실상 0이라 sigmoid(0.001) = 0.50입니다. 확률 0.001을 점수 자리에 그대로 넣으면 "0.1%"가 아니라 "50%"라는 뜻이 됩니다.</p>
+      <p><span class="lb">USGS 근처가 되려면</span>확률을 점수로 바꾸는 logit(α) = log(α / (1 − α))를 넣어야 합니다 (sigmoid를 거꾸로 하는 식). logit(0.001) = −6.9이고 sigmoid(−6.9) = 0.001로 되돌아옵니다. α 대신 logit(α)를 넣으면 a = 1, c = 0일 때 출발점이 바로 USGS 확률이 됩니다.</p>
+      <p><span class="lb">지금은</span>원본 공식 코드와 우리 코드 모두 α를 그대로 넣습니다 (사전확률 식 logit p = w_0 + w_a·α도 같음). 그래서 "c가 출발점을 내려 줘야 한다"는 얘기가 나왔고, 실제 학습된 c는 −0.8 ~ 1이라 출발 확률이 31% ~ 73%에 머물렀습니다.</p>
+      <p><span class="lb">해 볼 만한 아이디어</span>출발점 입력을 logit(α)로 바꾸면 처음부터 USGS 근처에서 출발합니다. 논문 식에서 벗어나는 변경이라 <b>하지 않기로 함 (10.21 결정: 원문처럼 α를 그대로 넣는 지금 방식 유지)</b>.</p>
+    </div>
+    <div class="tw"><table>
+      <tr><th>USGS 확률 α</th><th>점수 자리에 그대로 (a = 1, c = 0)</th><th>확률로 바꾸면</th><th>logit(α)로 넣으면</th><th>확률로 바꾸면</th></tr>
+      <tr><td>0.001 (0.1%)</td><td>0.001</td><td>50%</td><td>−6.9</td><td>0.1%</td></tr>
+      <tr><td>0.01 (1%)</td><td>0.01</td><td>50%</td><td>−4.6</td><td>1%</td></tr>
+      <tr><td>0.1 (10%)</td><td>0.1</td><td>52%</td><td>−2.2</td><td>10%</td></tr>
+    </table></div>
+  </div>
+
+  <h3>"모두 같이 씀"의 범위: 한 지진의 한 재해 안에서 하나</h3>
+  <p>"모두 같이 씀"은 시정촌마다 하나씩이 아니라, <b>한 지진 안의 모든 시정촌(칸)이 값 하나를 같이 쓴다</b>는 뜻입니다. 지진마다 모델을 처음부터 따로 학습하므로(<code>pooled=False</code>, 논문·공식 코드도 같음) 지진이 바뀌면 모든 값이 달라집니다.</p>
+  <div class="cols">
+    <div class="tw"><table>
+      <tr><th colspan="3">시정촌 단위 (예: 2016 구마모토, 시정촌 40곳)</th></tr>
+      <tr><th>값</th><th>몇 개</th><th>설명</th></tr>
+      <tr><td>c_LS</td><td>1개</td><td>40곳이 모두 같은 값</td></tr>
+      <tr><td>c_LQ</td><td>1개</td><td>40곳이 같이 씀 (산사태와 다른 값)</td></tr>
+      <tr><td>a, w_0, w_a, w_x</td><td>재해마다 1개씩</td><td>40곳이 같이 씀</td></tr>
+      <tr><td>δ, flow 칸별 보정</td><td>40개씩</td><td>시정촌마다 하나씩</td></tr>
+    </table></div>
+    <div class="tw"><table>
+      <tr><th colspan="3">칸 단위 (예: 2016 구마모토, 칸 96,404개)</th></tr>
+      <tr><th>값</th><th>몇 개</th><th>설명</th></tr>
+      <tr><td>c_LS</td><td>1개</td><td>칸 96,404개가 모두 같은 값</td></tr>
+      <tr><td>c_LQ</td><td>1개</td><td>칸 96,404개가 같이 씀</td></tr>
+      <tr><td>a, w_0, w_a, w_x</td><td>재해마다 1개씩</td><td>칸 96,404개가 같이 씀</td></tr>
+      <tr><td>δ, flow 칸별 보정</td><td>96,404개씩</td><td>칸마다 하나씩</td></tr>
+    </table></div>
+  </div>
+  <p>칸 단위에서는 학습할 때 시정촌을 전혀 쓰지 않습니다. 같이 쓰는 범위가 "그 지진의 모든 칸"이고, 시정촌은 학습이 끝난 뒤 점수를 모을 때(칸 최댓값)만 씁니다. 2018 오사카로 넘어가면 c_LS 등을 처음부터 다시 학습하므로 구마모토의 c_LS와 오사카의 c_LS는 서로 다른 값입니다 (위 실제 값 표 참고).</p>
+
+  <div class="cols">
+    <div class="txt">
+      <p><span class="lb">c_LS, c_LQ는 지진마다 하나씩</span>지진이 5개라 c_LS 5개, c_LQ 5개입니다 (seed를 바꾸면 또 새로 학습). 한 지진 안의 모든 시정촌(시정촌 단위) 또는 모든 칸(칸 단위)이 같은 c를 쓰고, 시정촌·칸마다 다른 것은 δ입니다. 예: 구마모토 시정촌 40곳은 모두 c_LS = −0.05, 오사카 시정촌들은 모두 −0.69를 같이 씁니다.</p>
+    </div>
+    <div class="tw"><table>
+      <tr><th>지진 (시정촌 모델, seed 0)</th><th>c_LS</th><th>c_LQ</th></tr>
+      <tr><td>2016 구마모토</td><td>−0.05</td><td>0.71</td></tr>
+      <tr><td>2018 오사카</td><td>−0.69</td><td>−0.42</td></tr>
+      <tr><td>2018 훗카이도</td><td>−0.72</td><td>1.02</td></tr>
+      <tr><td>2021 후쿠시마</td><td>−0.61</td><td>−0.45</td></tr>
+      <tr><td>2024 노토반도</td><td>−0.64</td><td>−0.59</td></tr>
+    </table></div>
+  </div>
+  <p><span class="lb">"최댓값"을 쓰는 곳</span>시정촌 단위는 <b>입력</b>이 최댓값입니다 (액상화 α = 시정촌 안 USGS 최댓값 <code>LQ_prior_최대</code>, 산사태는 평균 <code>LS_prior_평균</code>). 칸 단위는 입력이 칸 자기 값(면적 평균)이고, 최댓값은 학습이 끝난 뒤 <b>시정촌 점수를 모을 때</b> 씁니다. 그래서 칸 단위에서도 액상화 α는 절반이 0이라 c가 출발점에 똑같이 의미가 있고, c는 액상화를 위해 따로 넣은 것이 아니라 출발점 식 <code>nn.Linear(1, 1)</code>에 절편이 있어 두 재해에 똑같이 들어간 것입니다.</p>
+
+  <h3>왜 δ(self.mu_local)도 넣었나: 칸마다 자기 DPM을 출발점에 반영</h3>
+  <div class="cols">
+    <div class="txt">
+      <p><span class="lb">δ가 없으면 같은 α는 같은 출발점</span>공통 부분 a·α + c는 USGS 값 α만 봅니다. α가 같은 두 칸은 한 칸에 위성 피해 신호(DPM)가 크고 다른 칸에 없어도 출발점이 같습니다. 우리가 구하는 것은 "DPM을 보고 난 뒤"의 사후확률이라, 칸마다 자기 DPM에 따라 출발점이 달라져야 합니다.</p>
+      <p><span class="lb">δ = 칸마다 하나씩 있는 보정값</span>코드의 <code>self.mu_local</code>이고 모두 0에서 시작합니다. 학습 중 손실의 관측식이 "이 칸의 DPM을 설명하려면 재해 확률이 더 높아야 한다"고 하면 올라가고, 반대면 내려갑니다. 자료가 근거를 줄 때만 움직입니다.</p>
+      <p><span class="lb">flow가 있는데 왜 또</span>flow는 칸마다 밀 수 있지만 최대 약 4까지입니다. δ는 출발점 자체를 6·tanh 천장 안(−6 ~ 6)에서 옮겨 큰 이동을 맡고, flow는 세밀한 모양을 다듬습니다. flow 쪽에도 같은 이유로 칸별 보정값 <code>flow_local</code>이 있습니다.</p>
+      <p><span class="lb">원본은</span>원본 출발점 μ = w_μ·w_a·α에는 칸별 보정이 없습니다. 대신 flow의 u, w, b를 만드는 <code>Linear(N, K·N)</code> 층의 가중치가 위치마다 따로 있어, flow 쪽에서는 사실상 칸별로 따로 움직입니다.</p>
+      <p><span class="lb">주의</span>논문은 μ를 "부모 입력의 함수"라고만 해서 칸별 δ는 우리가 더한 것입니다 (c와 함께 "우리 판단"). δ는 DPM만 보고 학습하고 정답 라벨은 쓰지 않습니다. 칸마다 값이 하나씩이라 자료를 지나치게 따라갈 위험은 있고, 손실의 사전확률 항이 δ를 USGS 쪽으로 붙잡습니다. δ만 뺀 실험은 아직 없습니다.</p>
+    </div>
+    <div class="tw"><table>
+      <tr><th>α = 0.001로 같은 두 칸</th><th>DPM</th><th>δ</th><th>μ = 6·tanh((30 × 0.001 − 3 + δ)/6)</th><th>출발 확률</th></tr>
+      <tr><td>δ 없을 때 (둘 다)</td><td></td><td>0</td><td>−2.75</td><td>0.060</td></tr>
+      <tr><td>칸 A</td><td>큼 (피해 신호)</td><td>+2.0</td><td>−0.96</td><td>0.28</td></tr>
+      <tr><td>칸 B</td><td>거의 0</td><td>−0.5</td><td>−3.13</td><td>0.042</td></tr>
+      <tr><td colspan="5" class="muted" style="font-size:13px">a = 30, c = −3, δ 값은 설명용</td></tr>
+    </table></div>
+  </div>
+
+  <h3>8개 뽑으면 r⁰를 평균내나: 아니요, 확률을 평균냄</h3>
+  <div class="cols">
+    <div class="txt">
+      <p><span class="lb">8개를 각각 끝까지 계산</span>ε을 8개 뽑아 r⁰도 8개가 생기고, 8개가 <b>각자</b> flow 4번을 지나고 <b>각자</b> sigmoid로 확률이 됩니다. 마지막에 그 8개 확률을 평균낸 것이 q입니다. r⁰를 먼저 평균내지 않습니다.</p>
+      <p><span class="lb">왜 순서가 중요한가</span>sigmoid는 곧은 직선이 아니라 휘어 있어서, "평균을 내고 확률로 바꾼 값"과 "확률로 바꾸고 평균낸 값"이 다릅니다. 오른쪽 예에서 r⁰ 평균 −2.06을 확률로 바꾸면 0.113이지만, 8개를 각각 확률로 바꿔 평균내면 0.145입니다. 논문 식 6의 사후확률 q = E[sigmoid(r)]는 뒤쪽(확률의 평균)입니다.</p>
+      <p><span class="lb">학습 중에도 같음</span>손실의 각 항(관측식, 사전확률 항, log q)도 8개마다 따로 계산한 뒤 평균냅니다. 마지막 결과는 같은 방식으로 256개입니다.</p>
+    </div>
+    <div class="tw"><table>
+      <tr><th>뽑기</th><th>r⁰ (μ = −2, 분산 1)</th><th>sigmoid (flow는 생략)</th></tr>
+      <tr><td>1</td><td>-3.6</td><td>0.027</td></tr><tr><td>2</td><td>-3.0</td><td>0.047</td></tr><tr><td>3</td><td>-2.6</td><td>0.069</td></tr><tr><td>4</td><td>-2.2</td><td>0.100</td></tr><tr><td>5</td><td>-1.9</td><td>0.130</td></tr><tr><td>6</td><td>-1.5</td><td>0.182</td></tr><tr><td>7</td><td>-1.1</td><td>0.250</td></tr><tr><td>8</td><td>-0.6</td><td>0.354</td></tr>
+      <tr><td><b>평균</b></td><td>평균 −2.06을 sigmoid로 바꾸면 0.113 (✗ 이렇게 안 함)</td><td><b>0.145 (✓ 이게 q)</b></td></tr>
+    </table></div>
+  </div>
+
+  <h3>flow는 어떻게 미나: 식과 실제 계산</h3>
+  <p class="note" style="font-size:16px;text-align:center"><b>r<sub>k</sub> = r<sub>k−1</sub> + u<sub>k</sub> · tanh(w<sub>k</sub> · r<sub>k−1</sub> + b<sub>k</sub>)</b> &nbsp; (k = 1, 2, 3, 4)</p>
+  <p>u<sub>k</sub>는 미는 크기와 방향(−0.99 ~ 0.99), w<sub>k</sub>와 b<sub>k</sub>는 지금 값 r에 따라 tanh가 얼마가 될지 정합니다. 그래서 <b>현재 위치에 따라 밀리는 양이 달라집니다</b>. u, w, b는 칸마다, 그리고 4번 모두 다르며, 공통 층이 α로 만든 값에 칸별 보정값을 더해 정합니다.</p>
+  <div class="tw"><table>
+    <tr><th>k</th><th>u</th><th>w</th><th>b</th><th>w·r + b</th><th>tanh</th><th>밀린 양 u·tanh</th><th>새 r</th></tr>
+    <tr><td>출발</td><td></td><td></td><td></td><td></td><td></td><td></td><td>−2.350</td></tr>
+    <tr><td>1</td><td>−0.4</td><td>0.5</td><td>0.9</td><td>−0.275</td><td>−0.268</td><td>+0.107</td><td>−2.243</td></tr>
+    <tr><td>2</td><td>−0.6</td><td>−0.3</td><td>0.2</td><td>0.873</td><td>0.703</td><td>−0.422</td><td>−2.664</td></tr>
+    <tr><td>3</td><td>0.2</td><td>0.8</td><td>0.5</td><td>−1.631</td><td>−0.926</td><td>−0.185</td><td>−2.850</td></tr>
+    <tr><td>4</td><td>−0.5</td><td>0.4</td><td>0.6</td><td>−0.540</td><td>−0.493</td><td>+0.246</td><td>−2.603</td></tr>
+    <tr><td>sigmoid</td><td colspan="6">sigmoid(−2.603)</td><td><b>0.069</b></td></tr>
+  </table></div>
+  <div class="cols">
+    <div class="tw"><table>
+      <tr><th>같은 u, w, b로 출발값만 바꾸면</th><th>4번 민 뒤</th><th>움직인 양</th></tr>
+      <tr><td>−3.35</td><td>−3.41</td><td>−0.06</td></tr>
+      <tr><td>−2.35</td><td>−2.60</td><td>−0.25</td></tr>
+      <tr><td>−1.35</td><td>−1.84</td><td>−0.49</td></tr>
+    </table></div>
+    <div class="txt">
+      <p><span class="lb">왜 flow를 쓰나</span>출발값마다 밀리는 양이 달라서, 뽑은 8개(마지막 256개)가 똑같이 평행 이동하지 않고 분포 모양이 휘어지듯 바뀝니다. 정규분포(종 모양) 하나로는 표현하기 어려운 모양도 만들 수 있습니다.</p>
+      <p class="muted" style="font-size:13px">u, w, b와 a = 30, c = −3은 설명용 숫자입니다. 실제 값은 칸·지진·재해마다 학습으로 정해집니다.</p>
+    </div>
+  </div>
+</section>
+
+<section id="flowstep">
+  <h2>flow는 한 번에 얼마나 미나, 왜 원본만 sigmoid를 먼저 씌우나</h2>
+
+  <h3>1. flow 한 번은 "조금 밀기" 한 번</h3>
+  <p>flow는 출발점에서 뽑은 값 r을 정해진 횟수만큼 조금씩 밀어서 옮기는 단계입니다. 원본은 8번, 우리는 4번 밉니다. 한 번 미는 식은 원본과 우리가 같습니다.</p>
+  <p class="note" style="font-size:16px;text-align:center"><b>r 새 값 = r + u × tanh(w × r + b)</b></p>
+  <div class="cols">
+    <figure><svg viewBox="0 0 420 230" class="fig" role="img" aria-label="tanh 그래프"><line x1="40.0" y1="20" x2="40.0" y2="200" stroke="#eef2f6"/><text x="40.0" y="215" text-anchor="middle" class="ft">-4</text><line x1="125.0" y1="20" x2="125.0" y2="200" stroke="#eef2f6"/><text x="125.0" y="215" text-anchor="middle" class="ft">-2</text><line x1="210.0" y1="20" x2="210.0" y2="200" stroke="#eef2f6"/><text x="210.0" y="215" text-anchor="middle" class="ft">0</text><line x1="295.0" y1="20" x2="295.0" y2="200" stroke="#eef2f6"/><text x="295.0" y="215" text-anchor="middle" class="ft">2</text><line x1="380.0" y1="20" x2="380.0" y2="200" stroke="#eef2f6"/><text x="380.0" y="215" text-anchor="middle" class="ft">4</text><line x1="40" y1="190" x2="380" y2="190" stroke="#a0612a" stroke-dasharray="5 4"/><text x="34" y="194" text-anchor="end" class="ft">-1</text><line x1="40" y1="110" x2="380" y2="110" stroke="#eef2f6" stroke-dasharray=""/><text x="34" y="114" text-anchor="end" class="ft">0</text><line x1="40" y1="30" x2="380" y2="30" stroke="#a0612a" stroke-dasharray="5 4"/><text x="34" y="34" text-anchor="end" class="ft">1</text><polyline points="40.0,189.9 42.1,189.9 44.2,189.9 46.4,189.9 48.5,189.9 50.6,189.9 52.7,189.9 54.9,189.9 57.0,189.9 59.1,189.9 61.2,189.9 63.4,189.8 65.5,189.8 67.6,189.8 69.8,189.8 71.9,189.8 74.0,189.7 76.1,189.7 78.2,189.7 80.4,189.6 82.5,189.6 84.6,189.6 86.8,189.5 88.9,189.5 91.0,189.4 93.1,189.3 95.2,189.3 97.4,189.2 99.5,189.1 101.6,189.0 103.8,188.9 105.9,188.8 108.0,188.7 110.1,188.6 112.3,188.4 114.4,188.2 116.5,188.1 118.6,187.9 120.8,187.6 122.9,187.4 125.0,187.1 127.1,186.8 129.2,186.5 131.4,186.1 133.5,185.7 135.6,185.3 137.8,184.8 139.9,184.3 142.0,183.7 144.1,183.1 146.2,182.4 148.4,181.7 150.5,180.8 152.6,179.9 154.8,178.9 156.9,177.9 159.0,176.7 161.1,175.4 163.2,174.0 165.4,172.5 167.5,170.9 169.6,169.2 171.8,167.3 173.9,165.3 176.0,163.1 178.1,160.8 180.2,158.3 182.4,155.7 184.5,153.0 186.6,150.0 188.8,147.0 190.9,143.8 193.0,140.4 195.1,136.9 197.2,133.3 199.4,129.6 201.5,125.8 203.6,121.9 205.8,118.0 207.9,114.0 210.0,110.0 212.1,106.0 214.2,102.0 216.4,98.1 218.5,94.2 220.6,90.4 222.8,86.7 224.9,83.1 227.0,79.6 229.1,76.2 231.2,73.0 233.4,70.0 235.5,67.0 237.6,64.3 239.8,61.7 241.9,59.2 244.0,56.9 246.1,54.7 248.3,52.7 250.4,50.8 252.5,49.1 254.6,47.5 256.8,46.0 258.9,44.6 261.0,43.3 263.1,42.1 265.2,41.1 267.4,40.1 269.5,39.2 271.6,38.3 273.8,37.6 275.9,36.9 278.0,36.3 280.1,35.7 282.2,35.2 284.4,34.7 286.5,34.3 288.6,33.9 290.8,33.5 292.9,33.2 295.0,32.9 297.1,32.6 299.2,32.4 301.4,32.1 303.5,31.9 305.6,31.8 307.8,31.6 309.9,31.4 312.0,31.3 314.1,31.2 316.2,31.1 318.4,31.0 320.5,30.9 322.6,30.8 324.8,30.7 326.9,30.7 329.0,30.6 331.1,30.5 333.2,30.5 335.4,30.4 337.5,30.4 339.6,30.4 341.8,30.3 343.9,30.3 346.0,30.3 348.1,30.2 350.2,30.2 352.4,30.2 354.5,30.2 356.6,30.2 358.8,30.1 360.9,30.1 363.0,30.1 365.1,30.1 367.2,30.1 369.4,30.1 371.5,30.1 373.6,30.1 375.8,30.1 377.9,30.1 380.0,30.1" fill="none" stroke="#1f4f7a" stroke-width="2.5"/><text x="261.0" y="22" class="fs" fill="#a0612a">아무리 커도 1을 못 넘음</text><text x="184.5" y="182" class="fs" fill="#a0612a">아무리 작아도 −1 아래로 못 감</text></svg></figure>
+    <div class="txt">
+      <p><span class="lb">밀리는 양 = u × tanh(…)</span>더해지는 부분은 u와 tanh(…)의 곱입니다. w, b는 tanh 안에 들어가서 "어느 쪽으로, 얼마나 세게" 밀지를 정하고, u는 그 결과에 곱해지는 크기입니다. u, w, b는 학습으로 칸(시정촌)마다 다르게 정해집니다.</p>
+      <p><span class="lb">tanh는 −1과 1 사이</span>그림처럼 tanh는 안에 무엇이 들어가도 −1과 1 사이 값만 내보냅니다 (tanh(1) = 0.76, tanh(3) = 0.995, tanh(100) = 1.00).</p>
+      <p><span class="lb">u도 묶여 있음</span>원본은 u를 Hardtanh로 −1 ~ 1에 자르고, 우리는 0.99 × tanh(…)로 −0.99 ~ 0.99에 묶습니다.</p>
+      <p><span class="lb">그래서 한 번에 최대</span>원본: |u| ≤ 1 이고 |tanh| ≤ 1 이니 한 번에 최대 1 × 1 = <b>1</b>. 우리: |u| ≤ 0.99 이니 한 번에 최대 0.99 × 1 = <b>0.99</b>.</p>
+    </div>
+  </div>
+  <div class="cols">
+    <div class="code o"><div class="ch">원본 model.py · flow.py</div><pre><code>amor_u = Sequential(Linear(N, K*N),
+                    Hardtanh(-1, 1))   # u: -1 ~ 1로 자름
+...
+f_z = z + u * tanh(w @ z + b)          # 한 번 밀기
+log_det = log(abs(1 + (w*(1-tanh²)) @ u))</code></pre></div>
+    <div class="code u"><div class="ch">우리 disasternet/model.py</div><pre><code>uwb = 0.99 * tanh(amor(h) + flow_local)  # u, w, b: -0.99 ~ 0.99
+...
+t = tanh(w * r + b)
+log_det = log(1 + u * w * (1 - t**2))
+r = r + u * t                            # 한 번 밀기</code></pre></div>
+  </div>
+  <div class="tw"><table>
+    <tr><th>실제로 밀어 보기 (설명용 숫자)</th><th>u</th><th>w × r + b</th><th>tanh(…)</th><th>밀린 양 u × tanh</th></tr>
+    <tr><td>보통 경우</td><td>−0.5</td><td>0.4</td><td>0.38</td><td>−0.19</td></tr>
+    <tr><td>세게 미는 경우</td><td>−0.9</td><td>2</td><td>0.96</td><td>−0.87</td></tr>
+    <tr><td>원본에서 가장 세게</td><td>−1</td><td>아주 큼</td><td>1.00</td><td><b>−1</b></td></tr>
+    <tr><td>우리에서 가장 세게</td><td>−0.99</td><td>아주 큼</td><td>1.00</td><td><b>−0.99</b></td></tr>
+  </table></div>
+  <p><span class="lb">8번이면 왜 −7.5, 4번이면 왜 −4</span>가장 세게 아래로만 8번 밀면 8 × 1 = 8만큼 내려갑니다. 원본은 0.5 근처에서 출발하니 (아래 2번) 0.5 − 8 = <b>−7.5</b>. 우리는 c가 없다면 0 근처에서 출발하고 4번 × 0.99 = 3.96이니 0 − 3.96 ≈ <b>−4</b>. 실제 학습에서는 매번 최대로 밀지는 않으니 이건 식이 허용하는 끝값입니다.</p>
+  <p><span class="lb">왜 1이 아니라 0.99로 묶었나</span>flow는 "되돌릴 수 있어야" 손실에 들어가는 log det(= log(1 + u × w × (1 − t²)))를 계산할 수 있습니다. u = 1, w = −1, t = 0이면 괄호 안이 0이 되고 log 0은 −∞라 학습이 깨집니다. 원본은 abs()를 씌워 숫자가 깨지지는 않게 했지만, 그 지점에서는 서로 다른 두 값이 같은 값으로 밀려 되돌릴 수 없습니다. 우리는 u, w를 0.99 안쪽에 두어 괄호 안이 항상 0보다 크게 했습니다. 최대 미는 양 1과 0.99의 차이는 결과에 거의 영향이 없습니다.</p>
+
+  <h3>2. 원본은 flow 전에 sigmoid를 한 번 더 씌움, 우리는 논문 식대로 마지막에 한 번만</h3>
+  <div class="cols">
+    <div class="code o"><div class="ch">원본 model.py (순서대로)</div><pre><code>z = randn * std + mu      # 출발점 뽑기
+z = sigmoid(z)            # ① flow 전에 sigmoid
+for k in range(8):
+    z = flow(z)           # 8번 밀기
+z = sigmoid(z)            # ② 끝에 또 sigmoid</code></pre></div>
+    <div class="code u"><div class="ch">논문 식 2–6 · 우리 model.py</div><pre><code>r = mu + std * randn      # 출발점 뽑기 (r⁰ ~ N(μ, σ²))
+for k in range(4):
+    r = r + u * tanh(w*r + b)   # 4번 밀기
+q = mean(sigmoid(r))      # 끝에 sigmoid 한 번</code></pre></div>
+  </div>
+  <div class="cols">
+    <div class="txt">
+      <p><span class="lb">논문 식</span>r⁰ ~ N(μ, σ²) 에서 뽑고, flow로 r<sup>K</sup>까지 민 뒤, q = sigmoid(r<sup>K</sup>)로 확률을 만듭니다. sigmoid는 맨 끝에 한 번만 있습니다. 우리는 이 식을 그대로 따랐고, 원본 코드의 ① 은 논문 식에 없는 단계입니다.</p>
+      <p><span class="lb">① 이 있으면 출발점이 0 ~ 1에 갇힘</span>sigmoid는 무엇을 넣어도 0 ~ 1을 내보내니, μ가 얼마든 flow에 들어가는 값은 0 ~ 1입니다. flow가 아무것도 안 하면 끝의 sigmoid ② 를 지나 확률이 sigmoid(0) ~ sigmoid(1) = <b>0.50 ~ 0.73</b>이 됩니다. 즉 원본은 <b>모든 칸이 0.5 이상에서 출발</b>하고, 낮은 확률은 전부 flow가 밀어 내려서 만들어야 합니다.</p>
+      <p><span class="lb">손실 계산도 앞뒤가 안 맞게 됨</span>손실에는 "뽑은 출발값이 얼마나 그럴듯한가"를 재는 log q(r⁰) 항이 있고, 이 항은 출발값이 정규분포 N(μ, σ²)를 따른다고 보고 계산합니다. 원본은 sigmoid ① 을 거친 0 ~ 1 값을 넣어 이 항을 계산합니다 (<code>log_normal_dist(z0, mu, …)</code>의 z0가 sigmoid 뒤 값). 정규분포에서 뽑은 값과 sigmoid를 거친 값은 분포가 달라 이 항이 정확하지 않습니다. 우리는 sigmoid가 끝에만 있어 flow에 들어가는 값이 정말 정규분포에서 뽑은 값이고, 손실 식이 논문대로 맞습니다.</p>
+      <p><span class="lb">우리는 출발점이 곧 로짓</span>μ가 그대로 로짓이라 μ = −5면 확률 0.007, μ = 0이면 0.5, μ = 5면 0.993에서 출발합니다. 출발점부터 낮은 곳, 높은 곳에 놓을 수 있고 flow는 칸마다 ±4 안에서 다듬습니다.</p>
+    </div>
+    <div class="tw"><table>
+      <tr><th>μ (출발점)</th><th>원본: flow가 아무것도 안 할 때 확률</th><th>우리: flow가 아무것도 안 할 때 확률</th></tr>
+      <tr><td>−5</td><td>sigmoid(sigmoid(−5)) = sigmoid(0.007) = <b>0.502</b></td><td>sigmoid(−5) = <b>0.007</b></td></tr>
+      <tr><td>0</td><td>sigmoid(sigmoid(0)) = sigmoid(0.5) = <b>0.622</b></td><td>sigmoid(0) = <b>0.500</b></td></tr>
+      <tr><td>+5</td><td>sigmoid(sigmoid(5)) = sigmoid(0.993) = <b>0.730</b></td><td>sigmoid(5) = <b>0.993</b></td></tr>
+    </table></div>
+  </div>
+
+  <h3>3. 합쳐 보면: 출발점과 flow로 갈 수 있는 범위</h3>
+  <div class="flowbox"><svg viewBox="0 0 800 300" class="fig" role="img" aria-label="출발점과 flow로 갈 수 있는 범위"><line x1="89.0909090909091" y1="20" x2="89.0909090909091" y2="215" stroke="#eef2f6"/><text x="89.0909090909091" y="232" text-anchor="middle" class="ft">-10</text><text x="89.0909090909091" y="248" text-anchor="middle" class="ft">0.0000</text><line x1="147.27272727272725" y1="20" x2="147.27272727272725" y2="215" stroke="#eef2f6"/><text x="147.27272727272725" y="232" text-anchor="middle" class="ft">-8</text><text x="147.27272727272725" y="248" text-anchor="middle" class="ft">0.0003</text><line x1="205.45454545454544" y1="20" x2="205.45454545454544" y2="215" stroke="#eef2f6"/><text x="205.45454545454544" y="232" text-anchor="middle" class="ft">-6</text><text x="205.45454545454544" y="248" text-anchor="middle" class="ft">0.0025</text><line x1="263.6363636363636" y1="20" x2="263.6363636363636" y2="215" stroke="#eef2f6"/><text x="263.6363636363636" y="232" text-anchor="middle" class="ft">-4</text><text x="263.6363636363636" y="248" text-anchor="middle" class="ft">0.018</text><line x1="321.8181818181818" y1="20" x2="321.8181818181818" y2="215" stroke="#eef2f6"/><text x="321.8181818181818" y="232" text-anchor="middle" class="ft">-2</text><text x="321.8181818181818" y="248" text-anchor="middle" class="ft">0.119</text><line x1="380.0" y1="20" x2="380.0" y2="215" stroke="#eef2f6"/><text x="380.0" y="232" text-anchor="middle" class="ft">0</text><text x="380.0" y="248" text-anchor="middle" class="ft">0.500</text><line x1="438.1818181818182" y1="20" x2="438.1818181818182" y2="215" stroke="#eef2f6"/><text x="438.1818181818182" y="232" text-anchor="middle" class="ft">2</text><text x="438.1818181818182" y="248" text-anchor="middle" class="ft">0.881</text><line x1="496.3636363636363" y1="20" x2="496.3636363636363" y2="215" stroke="#eef2f6"/><text x="496.3636363636363" y="232" text-anchor="middle" class="ft">4</text><text x="496.3636363636363" y="248" text-anchor="middle" class="ft">0.982</text><line x1="554.5454545454545" y1="20" x2="554.5454545454545" y2="215" stroke="#eef2f6"/><text x="554.5454545454545" y="232" text-anchor="middle" class="ft">6</text><text x="554.5454545454545" y="248" text-anchor="middle" class="ft">0.9975</text><line x1="612.7272727272727" y1="20" x2="612.7272727272727" y2="215" stroke="#eef2f6"/><text x="612.7272727272727" y="232" text-anchor="middle" class="ft">8</text><text x="612.7272727272727" y="248" text-anchor="middle" class="ft">0.9997</text><line x1="670.909090909091" y1="20" x2="670.909090909091" y2="215" stroke="#eef2f6"/><text x="670.909090909091" y="232" text-anchor="middle" class="ft">10</text><text x="670.909090909091" y="248" text-anchor="middle" class="ft">1.0000</text><line x1="179.27272727272725" y1="20" x2="179.27272727272725" y2="215" stroke="#b03a2e" stroke-dasharray="5 4"/><text x="185.27272727272725" y="16" class="fs" fill="#b03a2e">−6.9 = 확률 0.001 (USGS 산사태 확률 대부분)</text><text x="58" y="44" text-anchor="end" class="fs b" fill="#a0612a"></text><rect x="147.27272727272725" y="31" width="494.5454545454545" height="18" rx="9" fill="#a0612a" fill-opacity=".18"/><rect x="380.0" y="31" width="29.090909090909065" height="18" rx="4" fill="#a0612a"/><text x="649.8181818181818" y="45" class="fs b" fill="#a0612a">원본 공식 코드</text><text x="65.8181818181818" y="68" class="ft">출발 0 ~ 1 (sigmoid를 미리 씌움), 8번 × 최대 1</text><text x="58" y="106" text-anchor="end" class="fs b" fill="#7d8fa1"></text><rect x="264.8" y="93" width="230.40000000000003" height="18" rx="9" fill="#7d8fa1" fill-opacity=".18"/><rect x="377.0909090909091" y="93" width="5.818181818181756" height="18" rx="4" fill="#7d8fa1"/><text x="503.20000000000005" y="107" class="fs b" fill="#7d8fa1">우리, c가 없다면</text><text x="65.8181818181818" y="130" class="ft">출발 0 근처 (α가 작아 μ ≈ 0), 4번 × 최대 0.99</text><text x="58" y="168" text-anchor="end" class="fs b" fill="#1f7a6b"></text><rect x="90.25454545454544" y="155" width="579.4909090909091" height="18" rx="9" fill="#1f7a6b" fill-opacity=".18"/><rect x="205.45454545454544" y="155" width="349.09090909090907" height="18" rx="4" fill="#1f7a6b"/><text x="677.7454545454545" y="169" class="fs b" fill="#1f7a6b">우리 (c 있음)</text><text x="65.8181818181818" y="192" class="ft">출발 −6 ~ 6 (c와 δ로 옮김), 4번 × 최대 0.99</text><text x="60" y="270" class="ft">가로: flow를 다 지난 값 (로짓). 아래 숫자는 그 값에 sigmoid를 씌운 확률</text><text x="60" y="288" class="ft">진한 칸 = 출발점이 놓일 수 있는 곳 · 옅은 띠 = flow로 끝까지 밀었을 때 갈 수 있는 곳 (식이 허용하는 이론상 한계)</text></svg></div>
+  <div class="tw"><table>
+    <tr><th></th><th>출발점 (로짓)</th><th>flow로 옮길 수 있는 최대</th><th>갈 수 있는 범위</th><th>확률 0.001 (−6.9)까지</th></tr>
+    <tr><td>원본 공식 코드</td><td>0 ~ 1 (sigmoid ① 때문)</td><td>8 × 1 = 8</td><td>−8 ~ 9 (확률 0.0003 ~ 0.9999)</td><td>flow가 거의 끝까지 밀어야 겨우 닿음</td></tr>
+    <tr><td>우리, c가 없다면</td><td>0 근처 (α가 작아 μ ≈ 0)</td><td>4 × 0.99 = 3.96</td><td>−4 ~ 4 (확률 0.018 ~ 0.98)</td><td>못 닿음</td></tr>
+    <tr><td><b>우리 (c 있음)</b></td><td><b>−6 ~ 6 (c와 δ로 옮김, 6·tanh 천장)</b></td><td>3.96</td><td>−10 ~ 10</td><td><b>출발점만으로 닿음, flow는 다듬기만</b></td></tr>
+  </table></div>
+  <p><span class="lb">그래서 c가 왜 필요했나</span>우리는 논문 식대로 sigmoid를 끝에 한 번만 쓰고 flow도 4번이라, 출발점 μ가 제자리에 있어야 합니다. 그런데 USGS α가 0.001 근처로 작아 a × α만으로는 μ ≈ 0, 확률 0.5에서 출발합니다. c는 모든 칸이 같이 쓰는 값이라 학습 초반에 출발점 전체를 알맞은 높이로 빨리 내려 줍니다. 칸마다 있는 δ도 출발점을 옮길 수 있지만 0에서 시작해 칸 수십만 개가 각자 배워야 해서 느립니다.</p>
+  <p><span class="lb">원본은 c 없이 어떻게 했나</span>원본은 ① 때문에 μ를 어떻게 잡아도 출발점이 0 ~ 1(확률 0.50 ~ 0.73)이라 μ에 무엇을 더해도 크게 달라지지 않습니다. 대신 flow 8번으로 최대 8만큼 밀어 내리는 방식입니다. 실제 결과를 보면 원본 방식은 칸들이 높은 쪽에 몰려 있습니다.</p>
+  <div class="tw"><table>
+    <tr><th>칸 단위 실제 결과 (seed 0, 264개 시정촌, 괄호 = 하위 10% ~ 상위 10%)</th><th>원본 학습 방식 (orig_cells.py)</th><th>우리 ⑤</th></tr>
+    <tr><td>산사태: 시정촌 안 칸 평균의 중앙값</td><td>0.44 (0.08 ~ 0.58)</td><td><b>0.16</b> (0.04 ~ 0.40)</td></tr>
+    <tr><td>액상화: 시정촌 안 칸 평균의 중앙값</td><td>0.27 (0.07 ~ 0.58)</td><td><b>0.11</b> (0.03 ~ 0.30)</td></tr>
+    <tr><td>산사태 시정촌 점수 (칸 최댓값)</td><td>0.87 (0.65 ~ 0.98)</td><td>0.78 (0.40 ~ 0.90)</td></tr>
+    <tr><td>액상화 시정촌 점수 (칸 최댓값)</td><td>0.98 (0.77 ~ 0.99)</td><td>0.87 (0.74 ~ 1.00)</td></tr>
+    <tr><td>전체 AUC</td><td>0.670</td><td><b>0.797</b></td></tr>
+  </table></div>
+  <p class="note">주의: 우리 칸들도 USGS 수준(0.001)까지 내려가지는 않았습니다. 정확한 효과는 "0.5에 갇히지 않고 낮게 깔린다"까지입니다. 또 원본과 우리는 c 말고도 sigmoid ①, flow 구조, 뽑는 개수, 최적화가 함께 달라서 위 차이를 c 하나의 효과로 볼 수는 없습니다. c만 뺀 실험은 아직 없습니다. 범위 표의 숫자는 식이 허용하는 끝값이고, 학습된 u, w, b를 재 본 값이 아닙니다.</p>
+</section>
+<section>
+  <h2>우리 모델의 식 세 개: 어떤 숫자가 어디에 들어가나</h2>
+  <p>μ 식(a, c, δ)은 세 식 중 하나일 뿐입니다. w_a와 w_x는 나머지 두 식에 들어가고, 원본에도 같은 자리에 있습니다.</p>
+  <div class="tw"><table>
+    <tr><th>식</th><th>무엇을 정하나</th><th>들어가는 숫자</th><th>코드</th></tr>
+    <tr><td><b>1. 재해 발생 식</b> (사전)</td><td>사전확률 α만 봤을 때 재해가 날 확률<br>logit p(재해) = w_0 + <b>w_a</b> × α</td><td>w_0, <b>w_a</b> (양수로 묶음), w_e</td><td><code>log_p_z</code>: <code>s = self.w_0[k] + w_a[k] * a[k]</code></td></tr>
+    <tr><td><b>2. 관측 식</b></td><td>재해가 나면 DPM이 얼마나 커지나<br>log DPM의 평균 = w_0x + <b>w_x</b> × q</td><td>w_0x, <b>w_x</b> (양수로 묶음), w_ex</td><td><code>log_p_x</code>: <code>m = self.w_0x + Σ w_x[k] * q[k]</code></td></tr>
+    <tr><td><b>3. 출발점 식</b> (변분분포)</td><td>사후확률을 뽑을 정규분포의 중심<br>μ = 6·tanh((a × α + c + δ) / 6)</td><td><b>a, c, δ</b></td><td><code>FlowNode.forward</code>: <code>mu = 6*tanh((self.mu(h) + self.mu_local)/6)</code></td></tr>
+  </table></div>
+
+  <div class="expl">
+    <p class="eh">2번 관측 식 풀어 보기</p>
+    <p>log(DPM + 2) ≈ w_0x + w_x(산사태) × q(산사태) + w_x(액상화) × q(액상화). w_0x는 재해가 없을 때의 기본 DPM 수준, w_x는 재해가 나면 DPM이 얼마나 더 커지는지(양수로 묶음), q는 그 시정촌의 사후확률입니다. 실제 DPM은 이 값 근처에서 조금씩 흩어진다고 보고(흩어진 정도 w_ex), DPM이 양수이고 오른쪽으로 길게 퍼져서 log를 씌웁니다 (원 논문과 같음).</p>
+    <div class="tw"><table>
+      <tr><th>그 시정촌 (w_0x = 0.60, w_x(산사태) = 0.15, 설명용)</th><th>모델이 예상하는 log(DPM + 2)</th><th>DPM + 2로 바꾸면</th></tr>
+      <tr><td>재해 없음 (q = 0)</td><td>0.60</td><td>1.82</td></tr>
+      <tr><td>산사태 확실 (q = 1)</td><td>0.60 + 0.15 = 0.75</td><td>2.12</td></tr>
+    </table></div>
+    <p>학습은 실제 DPM과 이 예상값을 비교합니다. 실제 DPM이 크면 "재해 없음"으로는 설명이 안 되니 q를 올려야 잘 맞고, 작으면 q를 내려야 맞습니다. 이것을 모든 시정촌에서 동시에 맞추되 1번 재해 발생 식(사전확률)과 너무 다르지 않게 조절하므로, 사후확률 q는 USGS 사전확률과 위성에서 본 실제 변화(DPM)를 같이 본 결과가 됩니다.</p>
+  </div>
+
+  <div class="expl">
+    <p class="eh">1번 재해 발생 식(사전)은 어디에 쓰이나</p>
+    <p>사전확률 p = sigmoid(s), s = w_0 + w_a × α + log(가능한 땅 비율)은 손실 안의 <b>사전 항 log p(z)</b>에 들어갑니다. 대략 이런 식입니다 (w_e 잡음 항을 빼고 단순하게 쓴 것):</p>
+    <div class="code u"><div class="ch">손실 (대략)</div><pre><code>손실 = −[ log p(DPM | q)                          # 2번 식: DPM을 잘 설명할수록 작아짐
+         + q·log p + (1 − q)·log(1 − p)          # 1번 식: 사후 q가 사전 p와 가까울수록 작아짐
+         − log q(r) ]                             # 사후분포의 퍼짐 (flow의 log det 포함)
+       + triplet
+
+코드: model.py · log_p_z  (s = w_0 + w_a·α + log_frac)
+      model.py · _fit_group  (per_row = −rec + β·kl, kl = log q − log p(z))</code></pre></div>
+    <p>즉 사후확률 q는 두 힘의 줄다리기로 정해집니다. 2번 관측 식은 "DPM이 크면 q를 올려라", 1번 사전 식은 "사전 p에서 너무 멀어지지 마라"입니다.</p>
+    <div class="tw"><table>
+      <tr><th>사전 로짓 s</th><th>사전 p</th><th>q = 0.1일 때 사전 벌점</th><th>q = 0.5</th><th>q = 0.9</th></tr>
+      <tr><td>−2 (soft 없음)</td><td>0.12</td><td>0.33</td><td>1.13</td><td>1.93</td></tr>
+      <tr><td>−6.6 (soft −4.6 더함)</td><td>0.0014</td><td>0.66</td><td>3.30</td><td>5.94</td></tr>
+    </table></div>
+    <p>사전 벌점 = −[q·log p + (1 − q)·log(1 − p)]. soft로 −4.6을 더하면 q를 0.9로 올릴 때 벌점이 1.93에서 5.94로 3배가 됩니다. 그래서 불가능한 재해는 DPM이 아주 강하게 말하지 않는 한 q가 낮게 머뭅니다.</p>
+  </div>
+  <div class="expl">
+    <p class="eh">soft: 비탈 칸 액상화 · 평지 칸 산사태 · 중간 칸 둘 다 로짓 −4.6</p>
+    <p>1번 식에 log(가능한 땅 비율)을 더합니다. 산사태는 비탈(경사 10° 이상), 액상화는 평지(경사 5° 미만)에서 가능하다고 봅니다. 칸은 경사가 하나라 비율이 1(가능) 아니면 0(불가능)이고, 0은 log를 쓸 수 없어 0.01로 둡니다. log(1) = 0(아무것도 안 더함), log(0.01) = −4.6.</p>
+    <div class="tw"><table>
+      <tr><th>칸</th><th>산사태 (비탈이면 가능)</th><th>액상화 (평지면 가능)</th></tr>
+      <tr><td>비탈 칸 (10° 이상)</td><td>가능, +0</td><td>불가능, −4.6</td></tr>
+      <tr><td>평지 칸 (5° 미만)</td><td>불가능, −4.6</td><td>가능, +0</td></tr>
+      <tr><td>중간 칸 (5~10°)</td><td>비탈 아님, −4.6</td><td>평지 아님, −4.6</td></tr>
+    </table></div>
+    <p>로짓에 −4.6을 더하면 오즈가 100분의 1이 됩니다 (예: 로짓 −2, 확률 12%가 −6.6, 확률 0.14%로). 0으로 끄는 것이 아니라 아주 작게 만들어서 "soft"입니다. 시정촌 단위는 같은 식에 실제 비율을 씁니다 (熊本市: 비탈 0.20이라 산사태 log 0.20 = −1.60, 평지 0.66이라 액상화 log 0.66 = −0.42). ⑤ 끄기 지도는 다릅니다: 사후확률을 아예 0으로 고정하고, 중간 칸은 둘 다 켭니다. 코드: <code>run_cells_max.py</code> · <code>to_rows</code>(비율), <code>model.py</code> · <code>log_p_z</code>(로짓에 더함).</p>
+  </div>
+  <p>학습은 1·2번 식(모델이 생각하는 세상)과 3번 식으로 만든 사후확률이 잘 맞도록 모든 숫자를 함께 조정합니다 (ELBO = 2번으로 DPM을 잘 설명하면서 1번 사전과 너무 멀어지지 않게). ⑤ 부호 제약은 1·2번 식의 w_a, w_x에 걸려 있고, ① μ 보정은 3번 식의 이야기입니다. 원본은 3번 식에서 w_a를 다시 쓰고(μ = w_μ × w_a × α), 우리는 3번 식에 전용 숫자 a를 둔다는 점만 다릅니다.</p>
+</section>
+<section>
+  <h2>계산 흐름과 8가지 차이의 위치</h2>
+  <div class="flowbox"><svg viewBox="0 0 1080 250" class="fig" role="img" aria-label="DisasterNet 계산 흐름과 8가지 차이의 위치"><rect x="20" y="70" width="130" height="56" rx="8" fill="#f4f7fa" stroke="#9fb1c2"/><text x="85.0" y="103" text-anchor="middle" class="fl">USGS 사전확률 α</text><line x1="150" y1="98" x2="166" y2="98" stroke="#7d8fa1" stroke-width="1.5" marker-end="url(#ar)"/><rect x="170" y="70" width="130" height="56" rx="8" fill="#f4f7fa" stroke="#9fb1c2"/><text x="235.0" y="103" text-anchor="middle" class="fl">중심 μ</text><line x1="300" y1="98" x2="301" y2="98" stroke="#7d8fa1" stroke-width="1.5" marker-end="url(#ar)"/><text x="235.0" y="58" text-anchor="middle" class="mk">①</text><rect x="305" y="70" width="130" height="56" rx="8" fill="#f4f7fa" stroke="#9fb1c2"/><text x="370.0" y="103" text-anchor="middle" class="fl">r⁰ ~ N(μ, 분산)</text><line x1="435" y1="98" x2="466" y2="98" stroke="#7d8fa1" stroke-width="1.5" marker-end="url(#ar)"/><text x="370.0" y="58" text-anchor="middle" class="mk">③</text><rect x="470" y="70" width="130" height="56" rx="8" fill="#f4f7fa" stroke="#9fb1c2"/><text x="535.0" y="103" text-anchor="middle" class="fl">planar flow × K</text><line x1="600" y1="98" x2="636" y2="98" stroke="#7d8fa1" stroke-width="1.5" marker-end="url(#ar)"/><text x="535.0" y="58" text-anchor="middle" class="mk">②④</text><rect x="640" y="70" width="130" height="56" rx="8" fill="#f4f7fa" stroke="#9fb1c2"/><text x="705.0" y="103" text-anchor="middle" class="fl">sigmoid → q</text><line x1="770" y1="98" x2="786" y2="98" stroke="#7d8fa1" stroke-width="1.5" marker-end="url(#ar)"/><text x="705.0" y="58" text-anchor="middle" class="mk">③</text><rect x="790" y="70" width="130" height="56" rx="8" fill="#f4f7fa" stroke="#9fb1c2"/><text x="855.0" y="103" text-anchor="middle" class="fl">DPM 설명 p(x|z)</text><line x1="920" y1="98" x2="946" y2="98" stroke="#7d8fa1" stroke-width="1.5" marker-end="url(#ar)"/><text x="855.0" y="58" text-anchor="middle" class="mk">⑥</text><rect x="950" y="70" width="120" height="56" rx="8" fill="#f4f7fa" stroke="#9fb1c2"/><text x="1010.0" y="103" text-anchor="middle" class="fl">손실 · 최적화</text><text x="1010.0" y="58" text-anchor="middle" class="mk">⑦⑧</text><defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0L10,5L0,10z" fill="#7d8fa1"/></marker></defs><text x="20" y="160" class="fs">⑤ 가중치 부호: α → 재해(w_a), 재해 → DPM(w_x)에 걸린 가중치 (μ와 p(x|z) 안)</text><text x="20" y="182" class="fs">④ 꺼진 칸 0 고정: 원본은 flow 단계마다, 우리는 q에 마지막 한 번</text><text x="20" y="214" class="fs" fill="#5d6b7a">번호 = 아래 8가지 차이. 같은 그래프·같은 변수, 계산 방법만 다름</text></svg></div>
+  <div class="tw"><table>
+    <tr><th>#</th><th>차이</th><th>원본</th><th>우리</th><th>성격</th></tr>
+    <tr><td>①</td><td><a href="#d1" style="color:var(--accent)">출발점 중심 μ</a></td><td>α에 가중치만 곱함</td><td>+ 행마다 보정값 δ, ±6</td><td><span class="tag t-ours">우리 선택</span></td></tr><tr><td>②</td><td><a href="#d2" style="color:var(--accent)">flow: 배치를 한 벡터로 대 행마다, K</a></td><td>배치를 한 벡터로, K = 8</td><td>행마다 따로, K = 4</td><td><span class="tag t-paper">논문 식을 따름</span></td></tr><tr><td>③</td><td><a href="#d3" style="color:var(--accent)">뽑는 개수</a></td><td>위치마다 1개, 마지막 epoch 값</td><td>8개, 마지막 256개 평균</td><td><span class="tag t-paper">논문 식을 따름</span></td></tr><tr><td>④</td><td><a href="#d4" style="color:var(--accent)">꺼진 칸 0 덮기 (정규화는 학습에 없음)</a></td><td>flow 단계마다 0 덮기</td><td>마지막에 한 번 0 곱하기 (결과 같음)</td><td><span class="tag t-paper">논문 식을 따름</span></td></tr><tr><td>⑤</td><td><a href="#d5" style="color:var(--accent)">가중치 부호</a></td><td>제약 없음</td><td>w_a, w_x 양수</td><td><span class="tag t-ours">우리 선택</span></td></tr><tr><td>⑥</td><td><a href="#d6" style="color:var(--accent)">관측식</a></td><td>log DPM</td><td>log(DPM_배경차 + 2)</td><td><span class="tag t-data">자료 때문에</span></td></tr><tr><td>⑦</td><td><a href="#d7" style="color:var(--accent)">손실</a></td><td>β·|평균 log p| + KL + triplet</td><td>ELBO + triplet</td><td><span class="tag t-paper">논문 식을 따름</span></td></tr><tr><td>⑧</td><td><a href="#d8" style="color:var(--accent)">최적화</a></td><td>RMSprop, lr 1e-5, 30 epoch, 8,109씩</td><td>Adam, lr 0.01, 3000 epoch, 전체</td><td><span class="tag t-ours">우리 선택</span></td></tr>
+  </table></div>
+  <p class="muted" style="font-size:14px">성격: <span class="tag t-data">자료 때문에</span> 우리 자료로는 원본처럼 할 수 없음 · <span class="tag t-paper">논문 식을 따름</span> 공식 코드에만 있는 처리를 빼고 논문 식대로 · <span class="tag t-ours">우리 선택</span> 행이 적은 시정촌에 맞추려고 넣은 것</p>
+</section>
+
+<section>
+  <h2>8가지 차이</h2>
+  <article class="item" id="d1">
+  <header class="ih"><span class="num">①</span><h3>출발점 중심 μ</h3><span class="tag t-ours">우리 선택</span></header>
+  <div class="cols">
+    <div class="cc"><div class="code o"><div class="ch">원 DisasterNet (공식 코드)</div><pre><code>z_LS_mu = self.w_mu_LS*a_LS_1      # a_LS_1 = w_aLS * α
+# 모든 위치가 w_mu_LS, w_aLS를 공유</code></pre></div><p class="file">method/model/model.py</p></div>
+    <div class="cc"><div class="code u"><div class="ch">우리 (pilotA-minji)</div><pre><code>mu = 6.0 * torch.tanh((self.mu(h) + self.mu_local) / 6.0)
+# self.mu(h): Linear(α) = a·α + c. a, c는 모든 행이 공유
+# self.mu_local: δ. 행(시정촌·칸)마다 하나씩
+# h: 이 노드의 입력. 산사태·액상화 노드에서는 그 행의 USGS 사전확률 α</code></pre></div><p class="file">disasternet/model.py · FlowNode.forward</p></div>
+  </div>
+  <div class="expl">
+  <p class="eh">식 풀이: 기호와 Linear(α)</p>
+  <div class="tw"><table>
+    <tr><th>기호</th><th>읽는 법</th><th>뜻</th></tr>
+    <tr><td><b>α</b></td><td>알파</td><td>USGS 사전확률 (그 시정촌·칸의 USGS 산사태·액상화 확률). 원본 코드의 <code>a_LS</code>, <code>a_LF</code></td></tr>
+    <tr><td><b>h</b></td><td></td><td>우리 코드에서 노드에 들어가는 입력의 이름. 산사태·액상화 노드에서는 α 그 자체 (<code>posteriors</code>가 <code>self.flow["LS"](a_ls.unsqueeze(1), ...)</code>로 α를 넣음). BD 노드에서만 [산사태 q, 액상화 q, α_BD] 세 개인데 우리는 BD를 뺐으므로 h = α</td></tr>
+    <tr><td><b>Linear(α)</b></td><td>선형 함수</td><td><b>a × α + c</b>. α에 숫자 a를 곱하고 c를 더함. a, c는 학습으로 정해지고 모든 시정촌이 같이 씀. 코드의 <code>self.mu(h)</code> (<code>nn.Linear(1, 1)</code>)</td></tr>
+    <tr><td><b>δ</b></td><td>델타</td><td>시정촌(칸)마다 하나씩 따로 학습하는 보정값. 코드의 <code>mu_local</code>. 원본에는 없음</td></tr>
+    <tr><td><b>6·tanh(·/6)</b></td><td></td><td>값을 −6 ~ +6 안으로 묶는 장치. 중간값은 거의 그대로(2 → 1.93), 큰 값만 멈춤(10 → 5.6, 100 → 6.0)</td></tr>
+  </table></div>
+  <div class="cols">
+    <div><p class="lb">원본에서 같은 부분</p><p>원본은 μ = w_μ × (w_a × α)입니다 (b_μ를 더하는 식은 <code>DisasterNet.py</code> 앞부분의 학습 전 시험 계산에만 있고, 최종 결과를 만드는 학습 코드에는 없음). 즉 원본도 <b>α에 숫자를 곱하고(더하는) 선형 함수</b>이고, 모든 위치가 같은 w_μ·w_a를 씁니다. 우리 Linear(α) = a × α + c와 같은 역할이고, 차이는 우리가 <b>+ δ</b>와 ±6 묶기를 더한 것뿐입니다. (원본 <code>model.py</code>에 있는 <code>self.mu = Linear(N, N)</code>은 만들어만 두고 쓰지 않습니다.)</p></div>
+    <div><p class="lb">숫자로 보면 (a = 30, c = −3이라고 할 때, 설명용)</p><p>α = 0.01 → 30 × 0.01 − 3 = −2.7 · α = 0.05 → −1.5. 사전확률이 높을수록 출발점이 높아집니다. 天草市와 あさぎり町은 α가 0.00065 대 0.00059라 이 부분이 거의 같고, 원본이면 같은 자리에서 출발합니다. 우리는 DPM이 큰 あさぎり町의 δ가 더 크게 학습되어 출발점이 위로 올라갑니다.</p></div>
+  </div>
+
+  <p class="eh" style="margin-top:4px">공유하는 것과 행마다 다른 것</p>
+  <div class="tw"><table>
+    <tr><th>부분</th><th>원본</th><th>우리</th></tr>
+    <tr><td>μ의 기본 부분 (α에 곱하는 수, 더하는 수)</td><td>모든 위치가 공유</td><td>모든 행이 공유 (a, c)</td></tr>
+    <tr><td>μ의 보정값 δ</td><td>없음</td><td>행마다 따로</td></tr>
+    <tr><td>사전확률 가중치 w_a, 재해에서 DPM으로 가는 가중치 w_x 등</td><td>공유</td><td>공유</td></tr>
+    <tr><td>flow를 만드는 가중치</td><td>공유 (배치 전체를 묶어서)</td><td>공유 (자기 α에서 만드는 부분) + 행별 보정</td></tr>
+  </table></div>
+  <p>즉 μ = (모두 공유하는 기본값 a × α + c) + (그 시정촌만의 보정 δ)입니다. 공유 부분은 "USGS 사전확률이 높으면 출발점도 높다"는 공통 규칙을 정하고, δ는 그 규칙에서 시정촌마다 얼마나 벗어날지를 정합니다. 공유 부분만 있으면 사전확률이 같은 시정촌은 출발점도 같아서, 天草市·あさぎり町처럼 사전확률은 같고 DPM이 다른 경우를 출발점에 반영하기 어렵습니다. 원본은 화소가 수십만 개이고 flow가 위치별로 휘어 주니 공유 가중치만으로 충분하다고 본 것으로 보이고, 시정촌은 지진마다 40~80곳뿐이라 δ를 넣었습니다. δ를 빼고 공유 부분만 쓰는 실험은 따로 하지 않아서 δ의 기여는 아직 모릅니다.</p>
+
+  <p class="eh" style="margin-top:4px">원본은 곱하기만 하는데 우리는 왜 더하나</p>
+  <p>원본의 학습 코드(<code>model.py</code>, 최종 결과를 만드는 쪽)는 μ = w_μ × w_a × α로 <b>곱하기만</b> 합니다. <code>DisasterNet.py</code> 앞부분의 학습 전 시험 계산에는 <code>q_LS_mu = w_mu_LS*PLS_1 + b_mu_LS</code>처럼 더하는 수 b_μ가 있지만, 그 계산 결과는 최종 결과에 쓰이지 않습니다. 그래서 c를 더하는 것은 우리 선택입니다. 논문은 μ를 부모 입력의 함수 φ(·; W_μ)로 적고 형태를 정하지 않아서, 우리는 가장 기본적인 선형 함수(곱하고 더하기)로 했습니다.</p>
+  <p>더하는 수가 없으면 문제가 생깁니다. 곱하기만 하면 α가 0에 가까운 곳은 μ도 0에 가까워지고, sigmoid(0) = 0.5라 출발점 확률이 0.5가 됩니다. USGS 산사태 사전확률은 대부분 0.001 안팎이라(天草市 0.00065), 곱하기만 하면 거의 모든 시정촌이 "반반" 근처에서 출발합니다. c가 있으면 전체 출발점을 낮은 쪽(예: c = −3이면 sigmoid(−3) ≈ 0.05)으로 옮길 수 있습니다. δ는 여기에 시정촌마다 더하는 보정입니다.</p>
+
+  <p class="eh" style="margin-top:4px">원본은 α에 수 두 개(w_μ, w_a)를 곱하는데 우리는 왜 하나(a)만 곱하나</p>
+  <div class="tw"><table>
+    <tr><th>이름</th><th>원래 하는 일</th><th>원본 μ에서</th><th>우리</th></tr>
+    <tr><td><b>w_a</b></td><td>사전확률 α가 재해 발생에 주는 영향의 크기. 베이지안 네트워크의 재해 노드 식 logit p(재해) = w_a × α + w_0 + … 에 들어가는 가중치 (논문 식 1·9)</td><td>μ 계산에도 다시 씀: w_a × α</td><td>사전확률 항(<code>log_p_z</code>)에만 씀. 원본과 같은 자리</td></tr>
+    <tr><td><b>w_μ</b></td><td>출발점 중심 μ를 정하는 데만 쓰는 수</td><td>w_μ × (w_a × α)</td><td>없음. 대신 a 하나</td></tr>
+    <tr><td><b>a</b> (우리)</td><td>μ에서 α에 곱하는 수 (<code>self.mu.weight</code>)</td><td>원본의 w_μ × w_a에 해당</td><td>μ에만 씀</td></tr>
+  </table></div>
+  <p>w_μ와 w_a는 둘 다 학습으로 정해지는 숫자라, μ에서 두 수를 곱한 w_μ × w_a는 결국 <b>숫자 하나</b>와 같습니다 (w_μ가 어떤 값이든 될 수 있으니 곱도 어떤 값이든 됨). 그래서 우리는 그 곱을 a 하나로 씁니다. 예를 들어 원본이 w_μ = 10, w_a = 3을 배우면 α에 30을 곱하고, 우리는 a = 30을 배우면 같은 μ가 나옵니다.</p>
+  <p>작은 차이 하나: 원본은 w_a를 사전확률 항과 μ가 같이 쓰기 때문에, 사전확률 항을 맞추려고 w_a가 바뀌면 μ도 같이 움직입니다 (w_μ가 따라 바뀌어야 상쇄). 우리는 μ의 a와 사전확률 항의 w_a를 따로 두어 서로 묶이지 않습니다. 이 차이만 따로 비교한 실험은 없습니다.</p>
+
+  <p class="eh" style="margin-top:4px">δ도 양수로 묶나</p>
+  <p>아니요. δ는 플러스도 마이너스도 될 수 있습니다. 0에서 시작해(<code>torch.zeros</code>) 시정촌마다 자기 DPM에 맞춰 위로든 아래로든 움직입니다. DPM이 사전확률로 예상한 것보다 크면 플러스(출발점을 올림), 작으면 마이너스(내림)가 됩니다. 방향이 정해진 물리 관계가 아니라 "기본값에서 얼마나 벗어나나"를 나타내는 보정이라 부호를 정할 이유가 없습니다. 대신 μ 전체를 6·tanh로 −6 ~ +6 안에 묶어 δ가 너무 커지지 않게 했습니다.</p>
+</div>
+  <div class="cols fx">
+    <figure><svg viewBox="0 0 520 200" class="fig"><text x="8" y="74" class="fs b">원본</text><line x1="40" y1="70" x2="480" y2="70" stroke="#c4cfd9"/><circle cx="150" cy="70" r="8" fill="#a0612a"/><text x="150" y="56" text-anchor="middle" class="fs">둘 다 같은 자리</text><text x="8" y="154" class="fs b">우리</text><line x1="40" y1="150" x2="480" y2="150" stroke="#c4cfd9"/><circle cx="150" cy="150" r="8" fill="#1f7a6b"/><text x="150" y="136" text-anchor="middle" class="fs">天草市</text><circle cx="337" cy="150" r="8" fill="#1f7a6b"/><text x="337" y="136" text-anchor="middle" class="fs">あさぎり町</text><path d="M160.0,150 Q243.5,128 325.0,150" fill="none" stroke="#1f7a6b" stroke-dasharray="4 3" marker-end="url(#ar2)"/><text x="243.5" y="122" text-anchor="middle" class="fs" fill="#1f7a6b">δ로 이동</text><defs><marker id="ar2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0L10,5L0,10z" fill="#1f7a6b"/></marker></defs><text x="40" y="190" class="fs" fill="#5d6b7a">출발점 중심 μ (로짓). 위치는 설명용, 두 시정촌의 α·DPM은 실제 값</text></svg></figure>
+    <div class="txt"><p><span class="lb">실제 예시</span>2016 구마모토의 <b>天草市</b>와 <b>あさぎり町</b>은 USGS 산사태 사전확률이 0.00065 대 0.00059로 거의 같지만, DPM은 0.125 대 0.319로 2.5배 차이입니다. 원본 식이면 두 곳이 같은 μ에서 출발합니다. 우리 ③ DNU(시정촌, seed 5개 평균)는 δ로 따로 움직여 산사태 사후확률이 <b>0.137 대 0.442</b>로 갈립니다.</p><p><span class="lb">왜 바꿨나</span>시정촌마다 자기 DPM 쪽으로 출발점을 옮길 수 있게 (위치마다 따로 추론하는 변분추론에 더 가깝게). ±6은 δ가 한없이 커지는 것을 막으려고 (sigmoid(6) ≈ 0.998이라 확률 범위는 거의 다 씀). δ만 뺀 실험은 따로 안 했습니다.</p></div>
+  </div>
+</article><article class="item" id="d2">
+  <header class="ih"><span class="num">②</span><h3>flow: 배치를 한 벡터로 대 행마다, K</h3><span class="tag t-paper">논문 식을 따름</span></header>
+  <div class="cols">
+    <div class="cc"><div class="code o"><div class="ch">원 DisasterNet (공식 코드)</div><pre><code>self.amor_u = nn.Sequential(
+    nn.Linear(self.batch_size, self.num_flows * self.batch_size), ...)
+u_LS = self.amor_u(a_LS_1).view(-1, num_flows, batch_size, 1)
+# 배치 안 모든 위치의 α 벡터가 한꺼번에 들어감</code></pre></div><p class="file">method/model/model.py</p></div>
+    <div class="cc"><div class="code u"><div class="ch">우리 (pilotA-minji)</div><pre><code>uwb = (0.99 * torch.tanh(self.amor(h) + self.flow_local)).view(N, 3, self.K)
+u, w, b = uwb[:, 0, k:k+1], uwb[:, 1, k:k+1], uwb[:, 2, k:k+1]
+r = r + u * torch.tanh(w * r + b)          # 식 3: 행마다 독립</code></pre></div><p class="file">disasternet/model.py · FlowNode.forward</p></div>
+  </div>
+  <div class="expl">
+  <p class="eh">flow 한 단계가 실제로 하는 일</p>
+  <figure style="border:0;padding:0"><svg viewBox="0 0 1040 360" class="fig" role="img" aria-label="planar flow 한 단계: 원본은 배치 전체를 한 벡터로, 우리는 칸마다 따로">
+<text x="10" y="22" class="fs b" fill="#a0612a">원본: 배치 전체가 벡터 하나 (칸 3개로 줄여 그림)</text>
+<rect x="20" y="40" width="70" height="34" rx="6" fill="#f3e6d8" stroke="#a0612a"/><text x="55" y="62" text-anchor="middle" class="fs">칸1 −2</text>
+<rect x="20" y="86" width="70" height="34" rx="6" fill="#f3e6d8" stroke="#a0612a"/><text x="55" y="108" text-anchor="middle" class="fs">칸2 −1</text>
+<rect x="20" y="132" width="70" height="34" rx="6" fill="#f3e6d8" stroke="#a0612a"/><text x="55" y="154" text-anchor="middle" class="fs">칸3 0.5</text>
+<line x1="90" y1="57" x2="190" y2="103" stroke="#a0612a"/><line x1="90" y1="103" x2="190" y2="103" stroke="#a0612a"/><line x1="90" y1="149" x2="190" y2="103" stroke="#a0612a"/>
+<circle cx="215" cy="103" r="26" fill="#a0612a"/><text x="215" y="100" text-anchor="middle" class="fs" fill="#fff">합 하나</text><text x="215" y="115" text-anchor="middle" class="ft" fill="#fff">w·r + b</text>
+<text x="215" y="148" text-anchor="middle" class="ft">0.5×(−2) + 0.3×(−1) + 0.2×0.5</text><text x="215" y="162" text-anchor="middle" class="ft">= −1.2, tanh = −0.83</text>
+<line x1="241" y1="103" x2="330" y2="57" stroke="#a0612a"/><line x1="241" y1="103" x2="330" y2="103" stroke="#a0612a"/><line x1="241" y1="103" x2="330" y2="149" stroke="#a0612a"/>
+<rect x="330" y="40" width="120" height="34" rx="6" fill="#fff" stroke="#a0612a"/><text x="390" y="62" text-anchor="middle" class="fs">칸1 −2.33</text>
+<rect x="330" y="86" width="120" height="34" rx="6" fill="#fff" stroke="#a0612a"/><text x="390" y="108" text-anchor="middle" class="fs">칸2 −1.33</text>
+<rect x="330" y="132" width="120" height="34" rx="6" fill="#fff" stroke="#a0612a"/><text x="390" y="154" text-anchor="middle" class="fs">칸3 0.17</text>
+<text x="20" y="196" class="fs">모든 칸에 같은 값(0.4 × −0.83 = −0.33)이 더해짐.</text>
+<text x="20" y="214" class="fs">각 칸의 변화량이 배치 전체의 합에 달림.</text>
+<text x="20" y="236" class="fs">칸3만 0.5에서 3.0으로 바뀌면 합이 −0.7이 되어</text>
+<text x="20" y="254" class="fs">칸1 결과가 −2.33에서 <tspan font-weight="700">−2.24</tspan>로 바뀜 (칸1 자기 값은 그대로 −2).</text>
+<text x="20" y="276" class="fs">log det도 배치 전체에 하나.</text>
+<line x1="520" y1="10" x2="520" y2="290" stroke="#e1e7ee"/>
+<text x="540" y="22" class="fs b" fill="#1f7a6b">우리: 칸마다 자기 숫자 하나로</text>
+<rect x="550" y="40" width="70" height="34" rx="6" fill="#dcefeb" stroke="#1f7a6b"/><text x="585" y="62" text-anchor="middle" class="fs">칸1 −2</text>
+<rect x="550" y="86" width="70" height="34" rx="6" fill="#dcefeb" stroke="#1f7a6b"/><text x="585" y="108" text-anchor="middle" class="fs">칸2 −1</text>
+<rect x="550" y="132" width="70" height="34" rx="6" fill="#dcefeb" stroke="#1f7a6b"/><text x="585" y="154" text-anchor="middle" class="fs">칸3 0.5</text>
+<rect x="650" y="40" width="200" height="34" rx="6" fill="#fff" stroke="#1f7a6b"/><text x="750" y="62" text-anchor="middle" class="ft">−2 + 0.4·tanh(0.5×(−2)) = −2.30</text>
+<rect x="650" y="86" width="200" height="34" rx="6" fill="#fff" stroke="#1f7a6b"/><text x="750" y="108" text-anchor="middle" class="ft">칸2 자기 u, w, b로 계산</text>
+<rect x="650" y="132" width="200" height="34" rx="6" fill="#fff" stroke="#1f7a6b"/><text x="750" y="154" text-anchor="middle" class="ft">칸3 자기 u, w, b로 계산</text>
+<line x1="620" y1="57" x2="650" y2="57" stroke="#1f7a6b"/><line x1="620" y1="103" x2="650" y2="103" stroke="#1f7a6b"/><line x1="620" y1="149" x2="650" y2="149" stroke="#1f7a6b"/>
+<text x="540" y="196" class="fs">칸끼리 섞이지 않음.</text><text x="540" y="214" class="fs">칸3이 3.0으로 바뀌어도 칸1은 그대로 −2.30.</text>
+<text x="540" y="236" class="fs">u, w, b = 자기 α에서 만든 값(모두 공유하는</text><text x="540" y="254" class="fs">가중치로 계산) + 칸별 보정.</text>
+<text x="540" y="276" class="fs">log det도 칸마다 하나.</text>
+<text x="10" y="318" class="fs" fill="#5d6b7a">한 단계 식은 둘 다 planar flow: r을 r + u·tanh(w·r + b)로 바꿈. 원본은 r, u, w가 길이 N인 벡터라 w·r이 N개 칸의 합이고,</text>
+<text x="10" y="338" class="fs" fill="#5d6b7a">우리는 r, u, w, b가 칸마다 숫자 하나. 숫자(u = 0.4, w = 0.5·0.3·0.2, b = 0)는 설명용. 원본 K = 8단계, 우리 K = 4단계 반복</text>
+</svg></figure>
+  <div class="tw"><table>
+    <tr><th></th><th>원본</th><th>우리</th></tr>
+    <tr><td>한 단계 식</td><td colspan="2">r을 r + u·tanh(w·r + b)로 바꿈 (planar flow, 논문 식 3)</td></tr>
+    <tr><td>r, u, w의 크기</td><td>배치 크기 N(8,109)짜리 벡터. w·r은 N개 칸 값의 가중합 하나</td><td>칸마다 숫자 하나. w·r은 그 칸 값 하나에 w를 곱한 것</td></tr>
+    <tr><td>칸끼리</td><td>섞임: 한 칸의 변화량이 배치 안 모든 칸 값에 달림</td><td>안 섞임: 자기 값만 씀</td></tr>
+    <tr><td>u, w, b를 만드는 법</td><td>배치 α 벡터 전체를 Linear(N, K·N)에 넣음 (가중치 10.5억 개)</td><td>자기 α를 작은 Linear에 넣은 값(모두 공유) + 칸별 보정(<code>flow_local</code>)</td></tr>
+    <tr><td>log det</td><td>배치 전체에 하나</td><td>칸마다 하나</td></tr>
+    <tr><td>단계 수 K</td><td>8</td><td>4</td></tr>
+  </table></div>
+  <p>원본 코드의 <code>Planar.forward</code>는 <code>prod = torch.bmm(w, z) + b</code>로 w(1×N)와 z(N×1)를 곱해 숫자 하나를 만든 뒤 모든 칸에 <code>u * tanh(prod)</code>를 더합니다. 논문 식은 위치마다의 flow로 읽히고, 우리는 그 해석을 따라 칸마다 따로 계산합니다.</p>
+</div>
+  <div class="cols fx">
+    <figure><svg viewBox="0 0 520 230" class="fig"><text x="10" y="20" class="fs b" fill="#a0612a">원본: 배치 전체 → 하나의 Linear</text><rect x="30" y="34" width="20" height="16" rx="3" fill="#f3e6d8" stroke="#a0612a"/><rect x="58" y="34" width="20" height="16" rx="3" fill="#f3e6d8" stroke="#a0612a"/><rect x="86" y="34" width="20" height="16" rx="3" fill="#f3e6d8" stroke="#a0612a"/><rect x="114" y="34" width="20" height="16" rx="3" fill="#f3e6d8" stroke="#a0612a"/><rect x="142" y="34" width="20" height="16" rx="3" fill="#f3e6d8" stroke="#a0612a"/><rect x="170" y="34" width="20" height="16" rx="3" fill="#f3e6d8" stroke="#a0612a"/><rect x="198" y="34" width="20" height="16" rx="3" fill="#f3e6d8" stroke="#a0612a"/><rect x="226" y="34" width="20" height="16" rx="3" fill="#f3e6d8" stroke="#a0612a"/><rect x="60" y="78" width="160" height="26" rx="6" fill="#a0612a"/><text x="140" y="96" text-anchor="middle" class="fs" fill="#fff">Linear(N, K·N)</text><line x1="40" y1="50" x2="140" y2="78" stroke="#a0612a" stroke-opacity=".45"/><line x1="140" y1="104" x2="40" y2="128" stroke="#a0612a" stroke-opacity=".45"/><rect x="30" y="128" width="20" height="16" rx="3" fill="#fff" stroke="#a0612a"/><line x1="68" y1="50" x2="140" y2="78" stroke="#a0612a" stroke-opacity=".45"/><line x1="140" y1="104" x2="68" y2="128" stroke="#a0612a" stroke-opacity=".45"/><rect x="58" y="128" width="20" height="16" rx="3" fill="#fff" stroke="#a0612a"/><line x1="96" y1="50" x2="140" y2="78" stroke="#a0612a" stroke-opacity=".45"/><line x1="140" y1="104" x2="96" y2="128" stroke="#a0612a" stroke-opacity=".45"/><rect x="86" y="128" width="20" height="16" rx="3" fill="#fff" stroke="#a0612a"/><line x1="124" y1="50" x2="140" y2="78" stroke="#a0612a" stroke-opacity=".45"/><line x1="140" y1="104" x2="124" y2="128" stroke="#a0612a" stroke-opacity=".45"/><rect x="114" y="128" width="20" height="16" rx="3" fill="#fff" stroke="#a0612a"/><line x1="152" y1="50" x2="140" y2="78" stroke="#a0612a" stroke-opacity=".45"/><line x1="140" y1="104" x2="152" y2="128" stroke="#a0612a" stroke-opacity=".45"/><rect x="142" y="128" width="20" height="16" rx="3" fill="#fff" stroke="#a0612a"/><line x1="180" y1="50" x2="140" y2="78" stroke="#a0612a" stroke-opacity=".45"/><line x1="140" y1="104" x2="180" y2="128" stroke="#a0612a" stroke-opacity=".45"/><rect x="170" y="128" width="20" height="16" rx="3" fill="#fff" stroke="#a0612a"/><line x1="208" y1="50" x2="140" y2="78" stroke="#a0612a" stroke-opacity=".45"/><line x1="140" y1="104" x2="208" y2="128" stroke="#a0612a" stroke-opacity=".45"/><rect x="198" y="128" width="20" height="16" rx="3" fill="#fff" stroke="#a0612a"/><line x1="236" y1="50" x2="140" y2="78" stroke="#a0612a" stroke-opacity=".45"/><line x1="140" y1="104" x2="236" y2="128" stroke="#a0612a" stroke-opacity=".45"/><rect x="226" y="128" width="20" height="16" rx="3" fill="#fff" stroke="#a0612a"/><text x="30" y="166" class="fs">칸 하나의 u·w가 배치 안 모든 칸의 α에 좌우</text><text x="30" y="184" class="fs">N = 8,109, K = 8이면 가중치 10.5억 개</text><text x="290" y="20" class="fs b" fill="#1f7a6b">우리: 칸마다 따로</text><rect x="300" y="34" width="22" height="16" rx="3" fill="#dcefeb" stroke="#1f7a6b"/><line x1="311" y1="50" x2="311" y2="128" stroke="#1f7a6b" stroke-opacity=".6" marker-end="url(#ar3)"/><rect x="300" y="128" width="22" height="16" rx="3" fill="#fff" stroke="#1f7a6b"/><rect x="334" y="34" width="22" height="16" rx="3" fill="#dcefeb" stroke="#1f7a6b"/><line x1="345" y1="50" x2="345" y2="128" stroke="#1f7a6b" stroke-opacity=".6" marker-end="url(#ar3)"/><rect x="334" y="128" width="22" height="16" rx="3" fill="#fff" stroke="#1f7a6b"/><rect x="368" y="34" width="22" height="16" rx="3" fill="#dcefeb" stroke="#1f7a6b"/><line x1="379" y1="50" x2="379" y2="128" stroke="#1f7a6b" stroke-opacity=".6" marker-end="url(#ar3)"/><rect x="368" y="128" width="22" height="16" rx="3" fill="#fff" stroke="#1f7a6b"/><rect x="402" y="34" width="22" height="16" rx="3" fill="#dcefeb" stroke="#1f7a6b"/><line x1="413" y1="50" x2="413" y2="128" stroke="#1f7a6b" stroke-opacity=".6" marker-end="url(#ar3)"/><rect x="402" y="128" width="22" height="16" rx="3" fill="#fff" stroke="#1f7a6b"/><rect x="436" y="34" width="22" height="16" rx="3" fill="#dcefeb" stroke="#1f7a6b"/><line x1="447" y1="50" x2="447" y2="128" stroke="#1f7a6b" stroke-opacity=".6" marker-end="url(#ar3)"/><rect x="436" y="128" width="22" height="16" rx="3" fill="#fff" stroke="#1f7a6b"/><rect x="470" y="34" width="22" height="16" rx="3" fill="#dcefeb" stroke="#1f7a6b"/><line x1="481" y1="50" x2="481" y2="128" stroke="#1f7a6b" stroke-opacity=".6" marker-end="url(#ar3)"/><rect x="470" y="128" width="22" height="16" rx="3" fill="#fff" stroke="#1f7a6b"/><rect x="296" y="80" width="208" height="22" rx="6" fill="#fff" stroke="#1f7a6b"/><text x="400" y="95" text-anchor="middle" class="fs" fill="#1f7a6b">자기 α + 자기 보정 → u, w, b</text><text x="300" y="166" class="fs">다른 칸 값과 섞이지 않음</text><text x="300" y="184" class="fs">K = 4 (논문 지진별 3·4·8 중)</text><defs><marker id="ar3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0L10,5L0,10z" fill="#1f7a6b"/></marker></defs></svg></figure>
+    <div class="txt"><p><span class="lb">실제 예시</span>원본 실행값(배치 8,109, K = 8)이면 u·w 가중치만 <b>10.5억 개</b>입니다. 이 클라우드(메모리 15 GB)에서 만들어 보니 메모리가 부족해 멈췄습니다. 또 배치를 섞을 때마다 같은 칸이라도 옆에 어떤 칸이 오느냐에 따라 변환이 달라집니다.</p><p><span class="lb">왜 바꿨나</span>논문 식(식 3·4)은 위치마다의 planar flow입니다. 배치를 한 벡터로 묶는 것은 공식 코드의 구현 방식이라 논문 식을 따랐습니다. K = 4는 논문이 지진별로 쓴 3·4·8 중 하나를 고른 것으로, 따로 기록된 이유는 없습니다.</p></div>
+  </div>
+</article><article class="item" id="d3">
+  <header class="ih"><span class="num">③</span><h3>뽑는 개수</h3><span class="tag t-paper">논문 식을 따름</span></header>
+  <div class="cols">
+    <div class="cc"><div class="code o"><div class="ch">원 DisasterNet (공식 코드)</div><pre><code>eps_LS = torch.randn_like(std_LS)       # 위치마다 1개
+z_LS = eps_LS * std_LS + z_LS_mu
+...
+test_PLS[IND[i]] = new_q_LS_K           # 마지막 epoch에 뽑힌 값이 결과</code></pre></div><p class="file">method/model/model.py · method/optimization/exp.py</p></div>
+    <div class="cc"><div class="code u"><div class="ch">우리 (pilotA-minji)</div><pre><code>n = torch.randn(N, n_samples)            # 학습 8개, 끝나고 256개
+r = mu + std * n
+q = torch.sigmoid(r).mean(1)             # 평균 = q 추정</code></pre></div><p class="file">disasternet/model.py · FlowNode.forward, posteriors</p></div>
+  </div>
+  
+  <div class="cols fx">
+    <figure><svg viewBox="0 0 520 190" class="fig"><text x="4" y="64" class="fs b">원본</text><line x1="40" y1="60" x2="480" y2="60" stroke="#c4cfd9"/><text x="40.0" y="78" text-anchor="middle" class="ft">0.0</text><text x="150.0" y="78" text-anchor="middle" class="ft">0.1</text><text x="260.0" y="78" text-anchor="middle" class="ft">0.2</text><text x="369.99999999999994" y="78" text-anchor="middle" class="ft">0.3</text><text x="480.0" y="78" text-anchor="middle" class="ft">0.4</text><text x="4" y="144" class="fs b">우리</text><line x1="40" y1="140" x2="480" y2="140" stroke="#c4cfd9"/><text x="40.0" y="158" text-anchor="middle" class="ft">0.0</text><text x="150.0" y="158" text-anchor="middle" class="ft">0.1</text><text x="260.0" y="158" text-anchor="middle" class="ft">0.2</text><text x="369.99999999999994" y="158" text-anchor="middle" class="ft">0.3</text><text x="480.0" y="158" text-anchor="middle" class="ft">0.4</text><circle cx="315" cy="60" r="8" fill="#a0612a"/><text x="315" y="44" text-anchor="middle" class="fs" fill="#a0612a">1개 뽑음 → q = 0.25</text><circle cx="69.3" cy="140" r="6" fill="#1f7a6b" fill-opacity=".75"/><circle cx="92.2" cy="140" r="6" fill="#1f7a6b" fill-opacity=".75"/><circle cx="116.1" cy="140" r="6" fill="#1f7a6b" fill-opacity=".75"/><circle cx="149.7" cy="140" r="6" fill="#1f7a6b" fill-opacity=".75"/><circle cx="183.1" cy="140" r="6" fill="#1f7a6b" fill-opacity=".75"/><circle cx="240.7" cy="140" r="6" fill="#1f7a6b" fill-opacity=".75"/><circle cx="314.7" cy="140" r="6" fill="#1f7a6b" fill-opacity=".75"/><circle cx="429.8" cy="140" r="6" fill="#1f7a6b" fill-opacity=".75"/><line x1="199.4" y1="112" x2="199.4" y2="150" stroke="#1f7a6b" stroke-width="3"/><text x="199.4" y="106" text-anchor="middle" class="fs" fill="#1f7a6b">8개 평균 q = 0.14</text><text x="40" y="185" class="fs" fill="#5d6b7a">μ = −2, 분산 1일 때 (설명용). 원본은 뽑을 때마다 0.03~0.35 중 아무 값</text></svg></figure>
+    <div class="txt"><p><span class="lb">실제 예시</span>같은 시정촌, 같은 μ·분산이라도 원본은 한 번 뽑은 값이 결과라 0.03~0.35 중 어디든 나올 수 있습니다. 우리는 8개(마지막 256개) 평균이라 거의 고정됩니다. 칸 단위에서 공식 코드 방식은 시정촌 값(칸 최댓값)이 거의 1에 몰렸습니다 (중앙값 산사태 0.87 · 액상화 0.98).</p><p><span class="lb">왜 바꿨나</span>q = E[sigmoid(r)]의 몬테카를로 추정이라 목적함수는 같고 추정 정확도만 다릅니다. 시정촌은 값 하나가 AUC를 크게 흔들고, 칸 단위는 최댓값을 써서 운 좋게 높게 뽑힌 칸 하나가 시정촌 값을 차지할 수 있어 평균을 냈습니다.</p></div>
+  </div>
+</article><article class="item" id="d4">
+  <header class="ih"><span class="num">④</span><h3>꺼진 칸 0 덮기 (정규화는 학습에 없음)</h3><span class="tag t-paper">논문 식을 따름</span></header>
+  <div class="cols">
+    <div class="cc"><div class="code o"><div class="ch">원 DisasterNet (공식 코드)</div><pre><code>for k in range(args.num_flows):
+    q_LSk, ldj = flow_k(q_LS[k], u_LS[:, k], w_LS[:, k], b_LS[:, k])
+    q_LSk[q_LS_var == 999] = 0
+    q_LSk[(LOCAL == 0)|(LOCAL == 2)|(LOCAL == 4)] = 0
+# 학습 코드(model.py): flow 단계마다 꺼진 칸을 0으로 덮음
+# 아래 정규화는 DisasterNet.py 앞부분의 학습 전 시험 계산에만 있음
+#   q_LSk[q_LSk != 0] = (q_LSk - min) / (max - min)</code></pre></div><p class="file">method/model/model.py (학습) · 정규화는 method/DisasterNet.py 246·255행 (학습 전 시험 계산)</p></div>
+    <div class="cc"><div class="code u"><div class="ch">우리 (pilotA-minji)</div><pre><code># flow는 행끼리 섞이지 않으므로 끝난 뒤 한 번만 0을 곱하면 같음
+q_ls = torch.sigmoid(r_ls).mean(1) * keep[&quot;LS&quot;]   # keep = 꺼지지 않은 행
+# 최솟값–최댓값 정규화 없음</code></pre></div><p class="file">disasternet/model.py · posteriors</p></div>
+  </div>
+  
+  <div class="cols fx">
+    <figure><svg viewBox="0 0 520 200" class="fig"><text x="10" y="22" class="fs b">배치 값</text><rect x="10" y="128" width="30" height="22" fill="#7d8fa1" fill-opacity="0.45"/><text x="25" y="122" text-anchor="middle" class="ft">0.20</text><rect x="56" y="95" width="30" height="55" fill="#7d8fa1" fill-opacity="0.9"/><text x="71" y="89" text-anchor="middle" class="ft">0.50</text><rect x="102" y="51" width="30" height="99" fill="#7d8fa1" fill-opacity="0.45"/><text x="117" y="45" text-anchor="middle" class="ft">0.90</text><text x="180" y="22" class="fs b">정규화 후</text><rect x="180" y="150" width="30" height="0" fill="#a0612a" fill-opacity="0.45"/><text x="195" y="144" text-anchor="middle" class="ft">0.00</text><rect x="226" y="103" width="30" height="47" fill="#a0612a" fill-opacity="0.9"/><text x="241" y="97" text-anchor="middle" class="ft">0.43</text><rect x="272" y="40" width="30" height="110" fill="#a0612a" fill-opacity="0.45"/><text x="287" y="34" text-anchor="middle" class="ft">1.00</text><text x="350" y="22" class="fs b">이웃 0.9→0.6이면</text><rect x="350" y="150" width="30" height="0" fill="#a0612a" fill-opacity="0.45"/><text x="365" y="144" text-anchor="middle" class="ft">0.00</text><rect x="396" y="68" width="30" height="82" fill="#a0612a" fill-opacity="0.9"/><text x="411" y="62" text-anchor="middle" class="ft">0.75</text><rect x="442" y="40" width="30" height="110" fill="#a0612a" fill-opacity="0.45"/><text x="457" y="34" text-anchor="middle" class="ft">1.00</text><line x1="10" y1="150" x2="510" y2="150" stroke="#c4cfd9"/><text x="10" y="178" class="fs">가운데 칸(진한 막대)은 자기 값 0.5 그대로인데 결과가 0.43 → 0.75</text><text x="10" y="196" class="fs" fill="#5d6b7a">원본 DisasterNet.py 앞부분의 학습 전 시험 계산에만 있음 (최종 결과를 만드는 학습에는 없음)</text></svg></figure>
+    <div class="txt"><p><span class="lb">실제 예시</span><b>0 덮기</b>: 원본은 flow 8단계마다 꺼진 칸을 0으로 덮고, 우리는 4단계를 다 지난 뒤 q에 0을 한 번 곱합니다. flow가 칸끼리 섞이지 않는 우리 방식에서는 결과가 같습니다. <b>정규화</b>(그림): 학습 전 시험 계산에서만 쓰이고 최종 결과에는 영향이 없습니다. 만약 쓰였다면, 배치 값이 [0.2, 0.5, 0.9]일 때 정규화 후 가운데 칸은 0.43이 됩니다. 같은 배치의 0.9가 0.6으로 바뀌기만 해도 가운데 칸은 0.75가 됩니다. 자기 값은 그대로인데 이웃 때문에 결과가 바뀝니다.</p><p><span class="lb">왜 바꿨나</span>0 덮기는 결과가 같은 방식(마지막에 한 번 곱하기)으로 바꾼 것뿐입니다. 정규화는 원본의 학습 코드에도 없고 논문 식에도 없어서 우리도 쓰지 않습니다. 이 항목은 사실상 차이가 없습니다.</p></div>
+  </div>
+</article><article class="item" id="d5">
+  <header class="ih"><span class="num">⑤</span><h3>가중치 부호</h3><span class="tag t-ours">우리 선택</span></header>
+  <div class="cols">
+    <div class="cc"><div class="code o"><div class="ch">원 DisasterNet (공식 코드)</div><pre><code>p = nn.Parameter(torch.rand(1))     # w_aLS, w_LSx 등
+# 학습 중 음수가 되어도 제약 없음</code></pre></div><p class="file">method/model/model.py</p></div>
+    <div class="cc"><div class="code u"><div class="ch">우리 (pilotA-minji)</div><pre><code>@property
+def w_a(self):
+    return {k: F.softplus(v) for k, v in self.w_a_raw.items()}   # 항상 &gt; 0
+@property
+def w_x(self):
+    return {k: F.softplus(v) for k, v in self.w_x_raw.items()}</code></pre></div><p class="file">disasternet/model.py · DisasterNet</p></div>
+  </div>
+  <div class="expl">
+  <p class="eh">"양수로 묶는다" = 그 숫자는 항상 플러스여야 한다는 규칙</p>
+  <p>시정촌 4곳이 있고, 진짜로 산사태가 난 곳은 A, B라고 할 때 (설명용 숫자):</p>
+  <div class="tw"><table>
+    <tr><th>시정촌</th><th>DPM</th><th>실제</th><th>답 1: 재해 나면 DPM이 커진다 (w_x 플러스)</th><th>답 2: 재해 나면 DPM이 작아진다 (w_x 마이너스)</th></tr>
+    <tr><td>A</td><td>0.30 (큼)</td><td>산사태 O</td><td>재해 O</td><td>재해 X</td></tr>
+    <tr><td>B</td><td>0.30 (큼)</td><td>산사태 O</td><td>재해 O</td><td>재해 X</td></tr>
+    <tr><td>C</td><td>0.05 (작음)</td><td>산사태 X</td><td>재해 X</td><td>재해 O</td></tr>
+    <tr><td>D</td><td>0.05 (작음)</td><td>산사태 X</td><td>재해 X</td><td>재해 O</td></tr>
+    <tr><td colspan="3"><b>DPM 설명</b></td><td>잘 맞음 · 정답</td><td>똑같이 잘 맞음 · 완전히 거꾸로 (AUC 0.5 아래)</td></tr>
+  </table></div>
+  <p>DPM 숫자만 보면 두 답 모두 "큰 곳과 작은 곳이 갈린다"는 것을 똑같이 설명합니다. 그래서 모델이 어느 쪽으로 학습될지 정해지지 않습니다. "w_x는 항상 플러스"라고 정하면 답 2는 불가능해지고 답 1로만 갑니다. 얼마나 큰지(크기)는 모델이 배우고, 방향만 정해 주는 것입니다.</p>
+  <p class="eh" style="margin-top:4px">w_a는 왜 플러스여야 하나</p>
+  <p>w_a는 "USGS 사전확률이 높을수록 재해가 더 잘 난다"의 강도입니다. 마이너스가 되면 "USGS가 위험하다고 한 곳일수록 재해가 덜 난다"가 되어, USGS 확률을 사전확률로 쓰는 의미가 거꾸로 됩니다. 시정촌이 적으면 위 표처럼 이런 거꾸로 된 답도 DPM을 비슷하게 설명할 수 있어서 함께 막았습니다.</p>
+  <p class="eh" style="margin-top:4px">원본 DisasterNet에서는 학습된 w_a, w_x가 양수였나</p>
+  <p>보장은 없습니다. 원본 코드에는 제한이 없고, 논문에 학습된 값이 나와 있지도 않습니다. 다만 (1) 시작값이 0~1 사이 난수라 모두 플러스에서 출발하고 (실행 스크립트의 미리 정한 값도 w_aLS = 0.4105, w_LSx = 0.2258처럼 모두 플러스), (2) 학습이 짧고(30 epoch, lr 1e-5) 조금씩만 움직이며, (3) 화소가 수십만 개라 USGS 확률과 DPM이 같이 큰 곳이 많아 거꾸로 된 답이 대부분의 화소에서 맞지 않으므로, 플러스로 남았을 가능성이 큽니다.</p>
+</div>
+  <div class="cols fx">
+    <figure><svg viewBox="0 0 520 190" class="fig"><line x1="50" y1="150" x2="460" y2="150" stroke="#c4cfd9"/><line x1="50" y1="150" x2="50" y2="20" stroke="#c4cfd9"/><text x="460" y="168" text-anchor="end" class="ft">USGS 사전확률 α →</text><text x="56" y="22" class="ft">재해 확률</text><polyline points="50,136 70,132 90,128 110,123 130,118 150,112 170,105 190,97 210,90 230,83 250,75 270,68 290,62 310,57 330,52 350,48 370,44 390,41 410,39 430,37 450,36" fill="none" stroke="#1f7a6b" stroke-width="3"/><text x="446" y="27.691104781308" text-anchor="end" class="fs" fill="#1f7a6b">w_a &gt; 0 (우리: 항상 이쪽)</text><polyline points="50,44 70,48 90,52 110,57 130,62 150,68 170,75 190,83 210,90 230,97 250,105 270,112 290,118 310,123 330,128 350,132 370,136 390,139 410,141 430,143 450,144" fill="none" stroke="#a0612a" stroke-width="2" stroke-dasharray="6 4"/><text x="58" y="34.30435064265413" class="fs" fill="#a0612a">w_a &lt; 0 (행이 적으면 원본이 빠질 수 있는 해)</text><text x="50" y="186" class="fs" fill="#5d6b7a">w_x(재해 → DPM)도 같음: 음수면 "재해가 나면 DPM이 작아짐"</text></svg></figure>
+    <div class="txt"><p><span class="lb">실제 예시</span>모델에는 "USGS 사전확률이 높으면 재해가 더 잘 난다"(w_a)와 "재해가 나면 DPM이 커진다"(w_x)는 가중치가 있고, 둘 다 물리적으로 양수여야 합니다. 그런데 행이 적으면 거꾸로 된 해로도 DPM을 똑같이 잘 설명할 수 있습니다: w_x를 음수로 두고 <b>DPM이 작은 시정촌을 "재해 남"으로</b> 보는 해입니다. 이렇게 되면 사후확률 순서가 뒤집혀 AUC가 0.5보다 낮아집니다. 그래서 softplus(log(1 + e^x), 항상 양수)로 방향만 고정하고 크기는 학습하게 했습니다.</p><p><span class="lb">왜 바꿨나</span>원본은 화소가 수십만 개라 데이터가 방향을 잡아 줍니다: 재해 난 곳은 대부분 DPM이 크고 USGS 확률도 높아서, 뒤집힌 해는 수많은 화소에서 맞지 않아 자연스럽게 걸러집니다. 또 원본은 학습을 30 epoch만 하고 가중치가 0~1 난수(모두 양수)에서 시작해, 부호가 뒤집힐 만큼 멀리 움직이지 않습니다. 우리는 지진마다 시정촌 40~80곳으로 3000 epoch 학습하므로, 몇 곳만으로도 뒤집힌 해가 똑같이 잘 맞을 수 있고 학습이 길어 실제로 그쪽으로 갈 수 있습니다. 합성 데이터에서 제약 없이 두면 부호가 뒤집힌 해에 빠지는 것을 확인했습니다 (model.py 주석). 그래서 방향만 고정하고 크기는 학습합니다.</p></div>
+  </div>
+</article><article class="item" id="d6">
+  <header class="ih"><span class="num">⑥</span><h3>관측식</h3><span class="tag t-data">자료 때문에</span></header>
+  <div class="cols">
+    <div class="cc"><div class="code o"><div class="ch">원 DisasterNet (공식 코드)</div><pre><code>log_p_xz = (- torch.log(x) ... )     # x = ARIA DPM (양수)</code></pre></div><p class="file">method/model/model.py</p></div>
+    <div class="cc"><div class="code u"><div class="ch">우리 (pilotA-minji)</div><pre><code>x = rows.y + obs_offset               # obs_offset = 2
+log_x = torch.log(x)                 # DPM_배경차 + 2</code></pre></div><p class="file">disasternet/model.py · prepare_inputs</p></div>
+  </div>
+  
+  <div class="cols fx">
+    <figure><svg viewBox="0 0 520 190" class="fig"><line x1="40" y1="90" x2="480" y2="90" stroke="#c4cfd9"/><line x1="56" y1="86" x2="56" y2="94" stroke="#9fb1c2"/><text x="56" y="110" text-anchor="middle" class="ft">-0.2</text><line x1="87" y1="86" x2="87" y2="94" stroke="#9fb1c2"/><text x="87" y="110" text-anchor="middle" class="ft">0</text><line x1="166" y1="86" x2="166" y2="94" stroke="#9fb1c2"/><text x="166" y="110" text-anchor="middle" class="ft">0.5</text><line x1="244" y1="86" x2="244" y2="94" stroke="#9fb1c2"/><text x="244" y="110" text-anchor="middle" class="ft">1</text><line x1="323" y1="86" x2="323" y2="94" stroke="#9fb1c2"/><text x="323" y="110" text-anchor="middle" class="ft">1.5</text><line x1="401" y1="86" x2="401" y2="94" stroke="#9fb1c2"/><text x="401" y="110" text-anchor="middle" class="ft">2</text><line x1="480" y1="86" x2="480" y2="94" stroke="#9fb1c2"/><text x="480" y="110" text-anchor="middle" class="ft">2.5</text><rect x="66" y="60" width="75" height="18" fill="#a0612a" fill-opacity=".35"/><text x="103" y="52" text-anchor="middle" class="fs" fill="#a0612a">DPM_배경차 −0.133 ~ 0.343</text><rect x="40" y="60" width="47" height="18" fill="none" stroke="#b33" stroke-dasharray="3 3"/><text x="64" y="138" text-anchor="middle" class="fs" fill="#b33">log 불가</text><rect x="381" y="60" width="75" height="18" fill="#1f7a6b" fill-opacity=".45"/><text x="417" y="52" text-anchor="middle" class="fs" fill="#1f7a6b">+2 → 1.867 ~ 2.343</text><path d="M145.04285714285714,69 Q260.7857142857143,30 374.5285714285714,66" fill="none" stroke="#1f7a6b" stroke-dasharray="4 3"/><text x="40" y="168" class="fs">264곳 중 92곳이 음수 (가장 작은 값: 双葉町 −0.133)</text></svg></figure>
+    <div class="txt"><p><span class="lb">실제 예시</span>우리 DPM은 "시정촌(칸) 평균 − 프레임 중앙값"이라 264곳 중 <b>92곳이 음수</b>입니다 (가장 작은 값: 2021 후쿠시마 双葉町 −0.133). log(−0.133)은 계산이 안 되므로 모두 2를 더해 log(1.867) = 0.62처럼 씁니다.</p><p><span class="lb">왜 바꿨나</span>음수가 생기는 이유는 시정촌이라서가 아니라 배경을 빼기 때문입니다 (칸 단위에도 음수가 있음). DPM_배경차 = (그 시정촌·칸의 상관도 차이 평균) − (그 위성 영상 프레임 전체의 중앙값)이라, 프레임 평균보다 덜 변한 곳은 음수가 됩니다. 계절·날씨처럼 지진과 상관없이 영상 전체가 변한 부분을 빼려는 것입니다. 원 논문은 NASA ARIA가 만든 DPM(0 이상)을 쓰지만 우리 지진에는 없어 직접 만들었습니다. 음수에는 log를 쓸 수 없어 모두 2를 더했고, 모든 값에 같은 수를 더하므로 크기 순서는 그대로입니다.</p></div>
+  </div>
+</article><article class="item" id="d7">
+  <header class="ih"><span class="num">⑦</span><h3>손실</h3><span class="tag t-paper">논문 식을 따름</span></header>
+  <div class="cols">
+    <div class="cc"><div class="code o"><div class="ch">원 DisasterNet (공식 코드)</div><pre><code>if args.anneal == &quot;std&quot;:            # 실행 기본값
+    kl = log_q_z0 - beta * logp_zk - log_det_jacobians
+    loss = beta * torch.abs(torch.mean(log_p_xz)) + kl + penalty_LS + penalty_LF
+elif args.anneal == &quot;off&quot;:
+    loss = - torch.mean(log_p_xz) + kl + ...      # 이쪽은 일반 ELBO</code></pre></div><p class="file">method/optimization/exp.py</p></div>
+    <div class="cc"><div class="code u"><div class="ch">우리 (pilotA-minji)</div><pre><code>per_row = -rec + beta * kl            # rec = log p(x|z), kl = log q − log p(z)
+loss = per_row.sum() + lam_triplet * trip</code></pre></div><p class="file">disasternet/model.py · _fit_group</p></div>
+  </div>
+  
+  <div class="cols fx">
+    <figure><svg viewBox="0 0 520 215" class="fig"><line x1="60" y1="170" x2="470" y2="170" stroke="#c4cfd9"/><line x1="260.0" y1="20" x2="260.0" y2="175" stroke="#c4cfd9" stroke-dasharray="3 3"/><text x="60.0" y="188" text-anchor="middle" class="ft">-3</text><text x="126.66666666666666" y="188" text-anchor="middle" class="ft">-2</text><text x="193.33333333333331" y="188" text-anchor="middle" class="ft">-1</text><text x="260.0" y="188" text-anchor="middle" class="ft">0</text><text x="326.66666666666663" y="188" text-anchor="middle" class="ft">1</text><text x="393.33333333333337" y="188" text-anchor="middle" class="ft">2</text><text x="460.0" y="188" text-anchor="middle" class="ft">3</text><text x="60" y="210" class="ft">가로축: log p(x|z) (클수록 DPM을 잘 설명) · 세로축: 손실</text><polyline points="60,50 67,54 73,58 80,62 87,66 93,70 100,74 107,78 113,82 120,86 127,90 133,94 140,98 147,102 153,106 160,110 167,114 173,118 180,122 187,126 193,130 200,134 207,138 213,142 220,146 227,150 233,154 240,158 247,162 253,166 260,170 267,166 273,162 280,158 287,154 293,150 300,146 307,142 313,138 320,134 327,130 333,126 340,122 347,118 353,114 360,110 367,106 373,102 380,98 387,94 393,90 400,86 407,82 413,78 420,74 427,70 433,66 440,62 447,58 453,54 460,50" fill="none" stroke="#a0612a" stroke-width="3"/><text x="406.6666666666667" y="74.0" text-anchor="middle" class="fs" fill="#a0612a">원본 |log p|</text><polyline points="60,20 67,22 73,25 80,28 87,30 93,32 100,35 107,38 113,40 120,43 127,45 133,48 140,50 147,52 153,55 160,58 167,60 173,63 180,65 187,68 193,70 200,72 207,75 213,78 220,80 227,82 233,85 240,88 247,90 253,92 260,95 267,98 273,100 280,102 287,105 293,108 300,110 307,112 313,115 320,118 327,120 333,122 340,125 347,128 353,130 360,132 367,135 373,138 380,140 387,142 393,145 400,148 407,150 413,152 420,155 427,158 433,160 440,162 447,165 453,168 460,170" fill="none" stroke="#1f7a6b" stroke-width="3"/><text x="64.0" y="10.0" class="fs" fill="#1f7a6b">우리 −log p</text><rect x="260.0" y="20" width="200.0" height="150" fill="#a0612a" fill-opacity=".06"/><text x="360.0" y="36" text-anchor="middle" class="fs" fill="#a0612a">이 구간에서 원본은 설명을 나쁘게 하는 쪽으로 학습</text></svg></figure>
+    <div class="txt"><p><span class="lb">실제 예시</span>절댓값 때문에 log p(x|z)가 양수가 되면(DPM을 잘 설명할수록 커짐) 손실을 줄이려고 오히려 설명을 나쁘게 만드는 쪽으로 학습됩니다. 칸 단위 학습 로그에서 −ELBO/칸이 −5 안팎까지 내려가는데, 이는 log p가 양수 영역이라는 뜻입니다.</p><p><span class="lb">왜 바꿨나</span>논문의 목적함수(식 8·11·12)는 ELBO이고 절댓값은 공식 코드의 기본 옵션(std)에만 있습니다. 같은 코드의 다른 옵션(off·kl)도 절댓값 없는 ELBO를 씁니다. 논문 식을 따랐고, β warm-up과 triplet은 원본과 같습니다.</p></div>
+  </div>
+</article><article class="item" id="d8">
+  <header class="ih"><span class="num">⑧</span><h3>최적화</h3><span class="tag t-ours">우리 선택</span></header>
+  <div class="cols">
+    <div class="cc"><div class="code o"><div class="ch">원 DisasterNet (공식 코드)</div><pre><code>args.batch_size = 8109
+parser.add_argument(&#x27;-lr&#x27;, ..., default=0.00001)
+parser.add_argument(&#x27;-e&#x27;, &#x27;--epochs&#x27;, ..., default=30)
+opt = optim.RMSprop(model.parameters(), lr=args.learning_rate, momentum=0.9)</code></pre></div><p class="file">method/DisasterNet.py</p></div>
+    <div class="cc"><div class="code u"><div class="ch">우리 (pilotA-minji)</div><pre><code>opt = torch.optim.Adam(model.parameters(), lr=lr)   # lr = 0.01
+for epoch in range(epochs):                        # epochs = 3000
+    ...                                            # 매번 지진의 모든 행</code></pre></div><p class="file">disasternet/model.py · _fit_group</p></div>
+  </div>
+  
+  <div class="cols fx">
+    <figure><svg viewBox="0 0 520 200" class="fig"><text x="10" y="30" class="fs">원본 · 화소 (배치 수백 개 × 30 epoch)</text><rect x="10" y="38" width="300" height="18" fill="#a0612a" fill-opacity="0.4"/><text x="316" y="52" class="fs b">수천 번</text><text x="10" y="82" class="fs">원본 설정을 시정촌에 (배치 1개 × 30)</text><rect x="10" y="90" width="3" height="18" fill="#a0612a" fill-opacity="0.85"/><text x="19" y="104" class="fs b">30번</text><text x="10" y="134" class="fs">우리 · 시정촌 (전체 배치 × 3000)</text><rect x="10" y="142" width="300" height="18" fill="#1f7a6b" fill-opacity="0.85"/><text x="316" y="156" class="fs b">3,000번</text><text x="10" y="192" class="fs" fill="#5d6b7a">가중치 갱신 횟수. 30번 × lr 1e-5면 처음 난수 값에서 거의 안 움직임</text></svg></figure>
+    <div class="txt"><p><span class="lb">실제 예시</span>원본은 화소가 수십만 개라 epoch마다 배치가 수십~수백 번 돌아, 30 epoch에 갱신이 수천 번입니다. 시정촌은 지진마다 39~81줄로 배치가 1개라 <b>30 epoch = 갱신 30번</b>입니다. 원본 이식판을 epoch만 3000으로 늘려도 0.542로 낮았습니다.</p><p><span class="lb">왜 바꿨나</span>모델 구조와 식은 그대로 두고 학습시키는 방법만 바꾼 설정입니다. 행이 적어 전체 배치로 바꾸고, 갱신 횟수(3000번)를 원본 화소 학습과 비슷하게 맞췄습니다. lr은 Adam 기본값입니다. 원본 설정에서 epoch만 늘린 판도 0.542로 낮아 이 변경을 뒷받침합니다.</p></div>
+  </div>
+</article>
+</section>
+
+
+<section id="map">
+  <h2>원본 변수와 우리 변수: 무엇이 같은가</h2>
+  <p class="muted">같은 줄이 같은 역할입니다. 원본은 산사태(LS) 기준으로 적었고, 액상화는 LS 자리에 LF(원본), LQ(우리)가 들어갑니다.</p>
+  <div class="tw"><table>
+    <tr><th>역할</th><th>원본 코드 (model.py, exp.py)</th><th>우리 코드 (model.py)</th><th>같은가</th></tr>
+    <tr><td>USGS 사전확률 α</td><td><code>a_LS</code></td><td><code>h</code> (= <code>a["LS"]</code>)</td><td>같음</td></tr>
+    <tr><td>μ에서 α에 곱하는 수</td><td><code>w_mu_LS * w_aLS</code></td><td><code>self.mu.weight</code> (a)</td><td>같은 역할 (원본은 두 수의 곱, 우리는 한 수)</td></tr>
+    <tr><td>μ에서 더하는 수</td><td>없음 (학습 전 시험 계산에만 <code>b_mu_LS</code>)</td><td><code>self.mu.bias</code> (c)</td><td>우리만</td></tr>
+    <tr><td>행마다의 μ 보정</td><td>없음</td><td><code>mu_local</code> (δ)</td><td>우리만</td></tr>
+    <tr><td>r⁰ 분산 (USGS 불확실도)</td><td><code>qvar_LS</code></td><td><code>r0_var["LS"]</code> (<code>var_rows</code>)</td><td>같음</td></tr>
+    <tr><td>표준정규 난수 ε</td><td><code>eps_LS</code> (위치마다 1개)</td><td><code>n</code> (행마다 8개, 마지막 256개)</td><td>같은 역할, 개수만 다름</td></tr>
+    <tr><td>출발점 r⁰</td><td><code>z_LS</code> = <code>eps*std + z_LS_mu</code></td><td><code>r</code> = <code>mu + std*n</code></td><td>같음</td></tr>
+    <tr><td>flow 변환 u, w, b</td><td><code>amor_u/w/b</code>(배치 α 벡터 전체)</td><td><code>amor</code>(자기 α) + <code>flow_local</code></td><td>같은 planar flow, 만드는 방법이 다름</td></tr>
+    <tr><td>flow의 log det</td><td><code>log_det_j_LS</code></td><td><code>log_det</code> (<code>log_q</code>에 누적)</td><td>같음</td></tr>
+    <tr><td>사후확률 q</td><td><code>q_LS_K</code> (한 번 뽑은 값)</td><td><code>q["LS"]</code> (평균)</td><td>같은 역할</td></tr>
+    <tr><td>끄기 (불가능한 재해)</td><td><code>qvar==0·999</code>, <code>local</code> 번호로 0</td><td><code>off</code>로 <code>keep</code> = 0</td><td>같은 규칙</td></tr>
+    <tr><td>사전확률 쪽 가중치</td><td><code>w_aLS</code>, <code>w_0LS</code>, <code>w_eLS</code></td><td><code>w_a["LS"]</code>, <code>w_0["LS"]</code>, <code>w_e["LS"]</code></td><td>같음 (우리는 w_a 양수)</td></tr>
+    <tr><td>재해가 DPM을 만드는 가중치</td><td><code>w_LSx</code>, <code>w_0x</code>, <code>w_ex</code></td><td><code>w_x["LS"]</code>, <code>w_0x</code>, <code>w_ex</code></td><td>같음 (우리는 w_x 양수)</td></tr>
+    <tr><td>DPM 설명 log p(x|z)</td><td><code>log_p_xz</code></td><td><code>log_p_x</code></td><td>같은 식</td></tr>
+    <tr><td>사전 log p(z)</td><td><code>logp_zk</code></td><td><code>log_p_z</code></td><td>같은 식</td></tr>
+    <tr><td>triplet 벌점</td><td><code>TripletMarginLoss(q_LS_K, aLS, aLF)</code></td><td><code>triplet_penalty</code> (같은 함수)</td><td>같음</td></tr>
+    <tr><td>β warm-up</td><td><code>beta = min(0.01 + …, 1)</code></td><td><code>beta = min(0.01 + epoch/epochs, 1)</code></td><td>같음</td></tr>
+  </table></div>
+</section>
+
+<section>
+  <h2>정리: 원 논문과 실질적으로 다른 것</h2>
+  <div class="tw"><table>
+    <tr><th>구분</th><th>항목</th><th>괜찮은가</th></tr>
+    <tr><td>사실상 차이 없음</td><td>④ 0 덮기 (단계마다 대 마지막 한 번, 결과 같음)</td><td>문제없음</td></tr>
+    <tr><td>논문 식을 따름</td><td>② flow 계산 방식 · ③ 뽑는 개수 · ⑦ 손실</td><td>문제없음 (공식 코드가 논문 식과 달랐던 부분)</td></tr>
+    <tr><td>자료 때문</td><td>⑥ 관측식 +2 (우리 DPM은 배경을 빼서 음수가 있음)</td><td>문제없음</td></tr>
+    <tr><td>학습 설정</td><td>⑧ Adam, lr 0.01, 3000 epoch</td><td>문제없음 (원본 설정은 시정촌에서 갱신 30번뿐)</td></tr>
+    <tr><td><b>우리 판단</b></td><td><b>① μ에 더하는 수 c와 시정촌별 보정 δ · ⑤ 가중치 양수 제약</b></td><td>둘 다 "행이 적어서" 넣음. 발표 때 밝힐 것. 하나씩 뺀 실험은 아직 없음</td></tr>
+  </table></div>
+</section>
+<section id="res">
+  <h2>8가지를 모두 원본대로 되돌리면</h2>
+  <div class="res">
+    <div class="rc"><span class="muted">시정촌 단위 · 전체 AUC (BD 있음, seed 5개, <code>orig_port.py</code>)</span><span class="big"><span class="win">0.606</span> <span class="vs">우리 대 원본 0.572</span></span><span class="muted" style="font-size:14px">원본 설정에서 epoch만 3000으로 늘려도 0.542</span></div>
+    <div class="rc"><span class="muted">칸 단위 · 전체 AUC (끄기 지도 + U, 면적 평균, seed 0, <code>orig_cells.py</code>)</span><span class="big"><span class="win">0.797</span> <span class="vs">우리 대 원본 0.670</span></span><span class="muted" style="font-size:14px">원본은 배치 1,000 (8,109는 메모리 부족). 산사태는 같고(0.753 대 0.754) 액상화 차이(0.812 대 0.643)</span></div>
+  </div>
+  <p class="note">8가지를 한꺼번에 되돌린 비교라, 각 항목이 성능에 얼마나 기여하는지는 모릅니다. 시정촌·칸 모두 우리 방식이 높아 학습 방식은 지금대로 갑니다. 단위(시정촌·칸), DPM(ARIA 대신 직접 만듦), 평가(시정촌 정답) 같은 자료 차이는 위 8가지와 별개로 남습니다.</p>
+</section>
+</main>
