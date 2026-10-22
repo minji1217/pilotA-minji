@@ -824,6 +824,49 @@ body{background:#fff}
     <li><b>우려했던 경우(비탈 비율은 작은데 산사태가 난 시정촌)는 있지만, 최댓값이 구해 주지 못했습니다.</b> 荒尾市(비탈 11%) · 合志市(0.5%)는 최댓값으로도 29곳 중 28 · 29위, 평균으로도 27 · 29위. 枚方市(오사카, 4%)만 최댓값 3위 · 평균 5위로 조금 나음. 이 시정촌들은 가장 높은 칸조차 다른 시정촌의 가장 높은 칸보다 낮았습니다 (荒尾市 0.83, 合志市 0.76 대 0.84~0.89). 다만 정답이 시정촌 단위라 <b>실제 산사태가 난 칸이 어디인지, 그 칸의 확률이 얼마였는지는 알 수 없습니다</b> (산사태 위치 자료 없음)</li>
     <li>산사태 전체 AUC는 구마모토(29곳)가 가장 크게 반영되어, 구마모토에서 이기는 평균이 전체로도 높게 나옵니다. 산사태 평가가 49곳(피해 없음 9곳)뿐이라 이 결론은 약합니다</li>
   </ul></div>
+
+  <h3 id="topk">상위 1 · 5 · 10 % 칸 평균으로 모으기 (10.22, 학습 그대로 채점만)</h3>
+  <p>시정촌 안 칸들의 사후확률을 높은 순서로 줄 세워 위에서 1 · 5 · 10 %만 평균합니다. 최댓값(칸 1개)처럼 잡음 칸 하나에 휘둘리지 않고, 평균(칸 전부)처럼 일부에만 있는 비탈이 묻히지도 않게 하려는 중간 방법입니다. 칸 결과를 PC에서 <code>cell_extract.py</code>로 줄여 받아 채점했습니다 (⑤는 seed 0~3, 나머지는 seed 0~2 평균).</p>
+  <div class="tw"><table>
+    <tr><th rowspan="2">실험</th><th colspan="5"><span class="tag t-ls">산사태</span> AUC (49곳)</th><th colspan="2"><span class="tag t-lq">액상화</span> AUC (151곳)</th><th rowspan="2" class="num">전체<br>산사태 상위 10% + 액상화 최댓값</th><th rowspan="2" class="num">전체<br>둘 다 최댓값</th></tr>
+    <tr><th class="num">최댓값</th><th class="num">평균</th><th class="num">상위 1%</th><th class="num">상위 5%</th><th class="num">상위 10%</th><th class="num">최댓값</th><th class="num">상위 5%</th></tr>
+    <tr><td>⑤ 끄기 지도+U</td><td class="num">0.792</td><td class="num">0.804</td><td class="num">0.822</td><td class="num"><b>0.856</b></td><td class="num"><b>0.860</b></td><td class="num"><b>0.817</b></td><td class="num">0.739</td><td class="num"><b>0.828</b></td><td class="num">0.811</td></tr>
+    <tr><td>② soft+U</td><td class="num">0.761</td><td class="num">0.806</td><td class="num">0.818</td><td class="num"><b>0.853</b></td><td class="num"><b>0.856</b></td><td class="num"><b>0.794</b></td><td class="num">0.730</td><td class="num"><b>0.809</b></td><td class="num">0.786</td></tr>
+    <tr><td>③ 끄기만</td><td class="num">0.780</td><td class="num">0.781</td><td class="num">0.758</td><td class="num">0.783</td><td class="num">0.796</td><td class="num"><b>0.814</b></td><td class="num">0.765</td><td class="num">0.810</td><td class="num">0.806</td></tr>
+    <tr><td>④ 분산만</td><td class="num">0.778</td><td class="num">0.806</td><td class="num">0.848</td><td class="num"><b>0.862</b></td><td class="num"><b>0.873</b></td><td class="num"><b>0.723</b></td><td class="num">0.724</td><td class="num">0.760</td><td class="num">0.737</td></tr>
+    <tr><td>① baseline</td><td class="num">0.678</td><td class="num">0.644</td><td class="num">0.626</td><td class="num">0.669</td><td class="num">0.684</td><td class="num"><b>0.666</b></td><td class="num">0.638</td><td class="num">0.670</td><td class="num">0.669</td></tr>
+    <tr><td class="muted">USGS · pilotA A2</td><td class="num" colspan="5">산사태 0.729 · 0.879</td><td class="num" colspan="2">액상화 0.895 · 0.819</td><td class="num" colspan="2">전체 0.854 · 0.834</td></tr>
+  </table></div>
+  <div class="tw"><table>
+    <tr><th>산사태 지진별 (⑤)</th><th class="num">최댓값</th><th class="num">평균</th><th class="num">상위 5%</th><th class="num">상위 10%</th><th class="num">USGS</th></tr>
+    <tr><td>구마모토 (29)</td><td class="num">0.81</td><td class="num">0.87</td><td class="num">0.88</td><td class="num">0.89</td><td class="num">0.64</td></tr>
+    <tr><td>오사카 (7)</td><td class="num">1.00</td><td class="num">1.00</td><td class="num">1.00</td><td class="num">1.00</td><td class="num">1.00</td></tr>
+    <tr><td>훗카이도 (13)</td><td class="num">0.65</td><td class="num">0.55</td><td class="num">0.73</td><td class="num">0.72</td><td class="num">0.78</td></tr>
+  </table></div>
+  <div class="anal"><b>읽는 법</b><ul>
+    <li><b>산사태는 상위 5 · 10 %가 최댓값 · 평균보다 모두 높습니다</b> (⑤ 0.792 · 0.804에서 0.856 · 0.860, ② · ④도 0.85~0.87). 구마모토에서는 평균만큼 좋고(0.88~0.89), 평균이 크게 틀리던 훗카이도에서도 최댓값보다 낫습니다(0.72~0.73). 두 방식의 좋은 점을 함께 얻은 셈입니다. USGS 산사태(0.729)보다 높고 pilotA(0.879)에 가깝습니다</li>
+    <li><b>액상화는 여전히 최댓값이 가장 좋습니다</b> (⑤ 0.817 대 상위 5% 0.739). 액상화는 시정촌 안 좁은 곳(강가 · 매립지)에서 나므로 가장 높은 칸 하나가 중요한 것으로 보입니다</li>
+    <li>산사태 상위 10% + 액상화 최댓값으로 모으면 ⑤ 전체 0.828로, 지금까지 가장 높습니다 (둘 다 최댓값 0.811, 섞기 0.821). 그래도 USGS 0.854보다는 낮습니다</li>
+    <li>③ · ①은 상위 %로 해도 거의 그대로입니다</li>
+    <li><b>주의</b>: 결과를 보고 고른 방법이라 참고용입니다. 쓰려면 비율(5%든 10%든)을 미리 정하고 seed를 더 늘려 확인해야 합니다. 산사태는 49곳(피해 없음 9곳)뿐이라 몇 곳의 순서로 크게 바뀝니다</li>
+  </ul></div>
+
+  <h3 id="cellcheck">산사태 시정촌 안을 들여다보기: 비탈 칸의 확률이 낮았나 (⑤, seed 0~3 평균)</h3>
+  <div class="tw"><table>
+    <tr><th>구마모토</th><th class="num">비탈 칸 (10° 이상)</th><th class="num">비탈 칸 USGS 평균</th><th class="num">비탈 칸 DPM 평균</th><th class="num">비탈 칸 사후확률 상위 5%</th><th class="num">최댓값</th><th class="num">최댓값 칸의 경사 · DPM</th></tr>
+    <tr><td>荒尾市 (피해 있음)</td><td class="num">96 / 838</td><td class="num">0.002</td><td class="num">0.17</td><td class="num">0.81</td><td class="num">0.83</td><td class="num">12.8° · 0.41</td></tr>
+    <tr><td>合志市 (피해 있음)</td><td class="num">4 / 793</td><td class="num">0.003</td><td class="num">0.20</td><td class="num">0.60</td><td class="num">0.77</td><td class="num">5.3° · 0.34</td></tr>
+    <tr><td>玉東町 (피해 없음)</td><td class="num">183 / 362</td><td class="num">0.004</td><td class="num">0.13</td><td class="num">0.80</td><td class="num">0.84</td><td class="num">17.3° · 0.46</td></tr>
+    <tr><td>菊陽町 (피해 없음)</td><td class="num">10 / 541</td><td class="num">0.031</td><td class="num">0.15</td><td class="num">0.70</td><td class="num">0.84</td><td class="num">5.6° · 0.36</td></tr>
+    <tr><td>氷川町 (피해 없음)</td><td class="num">73 / 463</td><td class="num">0.022</td><td class="num">0.19</td><td class="num">0.87</td><td class="num">0.89</td><td class="num">14.4° · 0.49</td></tr>
+  </table></div>
+  <div class="anal"><b>읽는 법</b><ul>
+    <li><b>荒尾市의 비탈 칸은 확률이 낮지 않았습니다.</b> 가장 높은 칸이 경사 12.8° 비탈 칸이고 DPM 0.41(강한 변화)이라 0.83이 나왔습니다. 비탈 칸 상위 5%도 0.81입니다</li>
+    <li><b>문제는 "피해 없음" 시정촌의 비탈 칸도 똑같이 높다는 것</b>입니다. 玉東町(비탈 17.3°, DPM 0.46) · 氷川町(14.4°, 0.49)도 DPM이 강하게 나와 0.84 · 0.89입니다. 구마모토는 지진 피해가 넓게 퍼져 DPM이 어디서나 크게 나오므로, DPM만으로는 산사태가 난 비탈과 안 난 비탈을 구별하기 어렵습니다</li>
+    <li>비탈 칸의 USGS 사전확률은 0.002~0.03으로 아주 작아서, 칸 사후확률은 거의 DPM이 정합니다</li>
+    <li>그래서 비탈 칸을 모두 올리는 것으로는 해결되지 않습니다. 산사태와 다른 변화(건물 피해, 농지 변화 등)를 구별할 정보가 더 필요합니다 (예: 더 잘게 나눈 DPM, 산사태 위치 자료로 칸 단위 검증)</li>
+    <li>菊陽町 · 合志市는 최댓값 칸이 비탈이 아닌 5° 근처 칸이었습니다. 비탈이 아닌 곳의 강한 DPM이 시정촌 값을 정한 경우로, 최댓값이 잡음에 약한 예입니다</li>
+  </ul></div>
 </section>
 
 <section id="seed1">
