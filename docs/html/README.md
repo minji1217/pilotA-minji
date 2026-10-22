@@ -11,3 +11,4 @@
 | 5_USGS값_집계방법.html | USGS 값 집계 방법 | https://claude.ai/artifact/JNUz7v8CVNRhT4RZWHgkXa |
 | 6_연구일지.html | 연구일지 | https://claude.ai/artifact/A8WpZAke9d6uzdkfahqosh |
 | 7_시정촌대칸단위.html | 시정촌 대 칸 단위 | https://claude.ai/artifact/MsKYzezGMxP9ebdCX8soz6 |
+| 8_칸단위_부록_시정촌으로모으기.html | 칸 확률을 시정촌으로 모으는 방법: 최댓값 · 평균 · 상위 10% | https://claude.ai/artifact/WhLVRkNgEAsrNiCJKiRjaP |

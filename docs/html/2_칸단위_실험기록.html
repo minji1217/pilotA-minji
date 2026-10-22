@@ -764,122 +764,14 @@ body{background:#fff}
 
 
 <section id="agg">
-  <h2><span class="n">2.9</span>시정촌으로 모으는 방법: 칸 최댓값 대 칸 평균</h2>
-  <p class="callout warn" style="display:block">이 절의 ② · ③ · ④는 <b>고치기 전 soft</b>(5~10° 칸도 둘 다 낮춤) 결과입니다. 고친 결과는 <a href="#mid">2.11</a>을 보세요. ⑤ · ①은 soft를 쓰지 않아 그대로입니다.</p>
-  <p>같은 학습 결과(면적 평균 5개 실험, seed 0)에서 시정촌 값을 칸 사후확률의 <b>최댓값</b>(교수님 지시, 지금 방식) 대신 <b>평균</b>으로 모아 다시 채점했습니다. 새로 학습하지 않고 저장된 결과로 계산했습니다.</p>
+  <h2><span class="n">2.9</span>시정촌으로 모으는 방법: 최댓값 · 평균 · 상위 10% → <a href="https://claude.ai/artifact/WhLVRkNgEAsrNiCJKiRjaP" style="color:var(--accent)">부록으로 옮김</a></h2>
+  <p>칸 확률을 시정촌 하나로 모으는 방법(학습은 그대로, 채점만 다름) 비교는 내용이 많아 <a href="https://claude.ai/artifact/WhLVRkNgEAsrNiCJKiRjaP" style="color:var(--accent)"><b>칸 단위 부록: 시정촌으로 모으기</b></a>로 옮겼습니다 (최댓값 대 평균, 섞기, 상위 1 · 5 · 10 %, 왜 산사태에서 상위 10%가 나은지, 산사태 시정촌 칸 들여다보기, seed 안정성).</p>
   <div class="tw"><table>
-    <tr><th>실험</th><th class="num">최댓값 (전체 / 산사태 / 액상화)</th><th class="num">평균 (전체 / 산사태 / 액상화)</th><th class="num">전체 차이</th><th class="num">산사태 차이</th><th class="num">액상화 차이</th></tr>
-    <tr><td>① baseline</td><td class="num">0.617 / 0.663 / 0.602</td><td class="num">0.563 / 0.689 / 0.521</td><td class="num down">-0.054</td><td class="num up">+0.026</td><td class="num down">-0.081</td></tr><tr><td>② soft + U</td><td class="num">0.793 / 0.760 / 0.804</td><td class="num">0.743 / 0.799 / 0.724</td><td class="num down">-0.050</td><td class="num up">+0.039</td><td class="num down">-0.080</td></tr><tr><td>③ 끄기만</td><td class="num">0.775 / 0.752 / 0.783</td><td class="num">0.760 / 0.799 / 0.748</td><td class="num down">-0.015</td><td class="num up">+0.047</td><td class="num down">-0.035</td></tr><tr><td>④ 분산만</td><td class="num">0.619 / 0.812 / 0.556</td><td class="num">0.587 / 0.806 / 0.516</td><td class="num down">-0.032</td><td class="num down">-0.006</td><td class="num down">-0.040</td></tr><tr><td>⑤ 끄기 지도 + U</td><td class="num">0.797 / 0.753 / 0.812</td><td class="num">0.758 / 0.806 / 0.742</td><td class="num down">-0.039</td><td class="num up">+0.053</td><td class="num down">-0.070</td></tr>
+    <tr><th>⑤ 끄기 지도 + U</th><th class="num">최댓값</th><th class="num">평균</th><th class="num">상위 10%</th></tr>
+    <tr><td><span class="tag t-ls">산사태</span> AUC</td><td class="num">0.792</td><td class="num">0.804</td><td class="num"><b>0.860</b></td></tr>
+    <tr><td><span class="tag t-lq">액상화</span> AUC</td><td class="num"><b>0.817</b></td><td class="num">0.740</td><td class="num">0.735</td></tr>
   </table></div>
-  <div class="pc" data-custom="1"><div class="lg"><span><i style="background:var(--muted);opacity:.35"></i>위 막대 (연한) = 최댓값 (지금)</span><span><i style="background:var(--muted)"></i>아래 막대 (진한) = 평균</span></div><div class="cols"><div class="col"><h4><i style="background:var(--all)"></i>전체</h4><div class="row"><div class="nm">① baseline</div><div class="bb"><div class="b"><span class="tr"><span class="f" style="width:23.4%;background:var(--all);opacity:.35"></span></span><em>0.617</em></div><div class="b B"><span class="tr"><span class="f" style="width:12.6%;background:var(--all)"></span></span><em>0.563</em></div></div></div><div class="row"><div class="nm">② soft + U</div><div class="bb"><div class="b"><span class="tr"><span class="f" style="width:58.6%;background:var(--all);opacity:.35"></span></span><em>0.793</em></div><div class="b B"><span class="tr"><span class="f" style="width:48.6%;background:var(--all)"></span></span><em>0.743</em></div></div></div><div class="row"><div class="nm">③ 끄기만</div><div class="bb"><div class="b"><span class="tr"><span class="f" style="width:55.0%;background:var(--all);opacity:.35"></span></span><em>0.775</em></div><div class="b B"><span class="tr"><span class="f" style="width:52.0%;background:var(--all)"></span></span><em>0.760</em></div></div></div><div class="row"><div class="nm">④ 분산만</div><div class="bb"><div class="b"><span class="tr"><span class="f" style="width:23.8%;background:var(--all);opacity:.35"></span></span><em>0.619</em></div><div class="b B"><span class="tr"><span class="f" style="width:17.4%;background:var(--all)"></span></span><em>0.587</em></div></div></div><div class="row"><div class="nm">⑤ 끄기 지도 + U</div><div class="bb"><div class="b"><span class="tr"><span class="f" style="width:59.4%;background:var(--all);opacity:.35"></span></span><em>0.797</em></div><div class="b B"><span class="tr"><span class="f" style="width:51.6%;background:var(--all)"></span></span><em>0.758</em></div></div></div><div class="ax"><div></div><div><span>0.5</span><span>0.75</span><span>1.0</span></div></div></div><div class="col"><h4><i style="background:var(--ls)"></i>산사태</h4><div class="row"><div class="nm">① baseline</div><div class="bb"><div class="b"><span class="tr"><span class="f" style="width:32.6%;background:var(--ls);opacity:.35"></span></span><em>0.663</em></div><div class="b B"><span class="tr"><span class="f" style="width:37.8%;background:var(--ls)"></span></span><em>0.689</em></div></div></div><div class="row"><div class="nm">② soft + U</div><div class="bb"><div class="b"><span class="tr"><span class="f" style="width:52.0%;background:var(--ls);opacity:.35"></span></span><em>0.760</em></div><div class="b B"><span class="tr"><span class="f" style="width:59.8%;background:var(--ls)"></span></span><em>0.799</em></div></div></div><div class="row"><div class="nm">③ 끄기만</div><div class="bb"><div class="b"><span class="tr"><span class="f" style="width:50.4%;background:var(--ls);opacity:.35"></span></span><em>0.752</em></div><div class="b B"><span class="tr"><span class="f" style="width:59.8%;background:var(--ls)"></span></span><em>0.799</em></div></div></div><div class="row"><div class="nm">④ 분산만</div><div class="bb"><div class="b"><span class="tr"><span class="f" style="width:62.4%;background:var(--ls);opacity:.35"></span></span><em>0.812</em></div><div class="b B"><span class="tr"><span class="f" style="width:61.2%;background:var(--ls)"></span></span><em>0.806</em></div></div></div><div class="row"><div class="nm">⑤ 끄기 지도 + U</div><div class="bb"><div class="b"><span class="tr"><span class="f" style="width:50.6%;background:var(--ls);opacity:.35"></span></span><em>0.753</em></div><div class="b B"><span class="tr"><span class="f" style="width:61.2%;background:var(--ls)"></span></span><em>0.806</em></div></div></div><div class="ax"><div></div><div><span>0.5</span><span>0.75</span><span>1.0</span></div></div></div><div class="col"><h4><i style="background:var(--lq)"></i>액상화</h4><div class="row"><div class="nm">① baseline</div><div class="bb"><div class="b"><span class="tr"><span class="f" style="width:20.4%;background:var(--lq);opacity:.35"></span></span><em>0.602</em></div><div class="b B"><span class="tr"><span class="f" style="width:4.2%;background:var(--lq)"></span></span><em>0.521</em></div></div></div><div class="row"><div class="nm">② soft + U</div><div class="bb"><div class="b"><span class="tr"><span class="f" style="width:60.8%;background:var(--lq);opacity:.35"></span></span><em>0.804</em></div><div class="b B"><span class="tr"><span class="f" style="width:44.8%;background:var(--lq)"></span></span><em>0.724</em></div></div></div><div class="row"><div class="nm">③ 끄기만</div><div class="bb"><div class="b"><span class="tr"><span class="f" style="width:56.6%;background:var(--lq);opacity:.35"></span></span><em>0.783</em></div><div class="b B"><span class="tr"><span class="f" style="width:49.6%;background:var(--lq)"></span></span><em>0.748</em></div></div></div><div class="row"><div class="nm">④ 분산만</div><div class="bb"><div class="b"><span class="tr"><span class="f" style="width:11.2%;background:var(--lq);opacity:.35"></span></span><em>0.556</em></div><div class="b B"><span class="tr"><span class="f" style="width:3.2%;background:var(--lq)"></span></span><em>0.516</em></div></div></div><div class="row"><div class="nm">⑤ 끄기 지도 + U</div><div class="bb"><div class="b"><span class="tr"><span class="f" style="width:62.4%;background:var(--lq);opacity:.35"></span></span><em>0.812</em></div><div class="b B"><span class="tr"><span class="f" style="width:48.4%;background:var(--lq)"></span></span><em>0.742</em></div></div></div><div class="ax"><div></div><div><span>0.5</span><span>0.75</span><span>1.0</span></div></div></div></div></div>
-  <div class="anal"><b>결과 분석</b><ul>
-    <li><b>전체는 다섯 실험 모두 최댓값이 높습니다</b> (예: ⑤ 0.797 대 0.758). 지금 방식(최댓값)이 낫습니다</li>
-    <li><b>산사태는 평균이 더 높습니다</b> (④ 빼고 0.75~0.76 → 0.80 안팎). ⑤에서 산사태 구마모토는 평균일 때 0.872로 pilotA(0.846)보다 높습니다. 산사태는 시정촌의 넓은 산지에 퍼져 일어나서 칸 평균이 더 맞는 것으로 보입니다</li>
-    <li><b>액상화는 최댓값이 훨씬 높습니다</b> (⑤ 0.812 대 0.742). 특히 노토 액상화가 0.907 → 0.725로 떨어집니다. 액상화는 해안·매립지 같은 좁은 곳에서 일어나 칸 하나가 높으면 그 시정촌에 피해가 있다고 보는 최댓값이 맞는 것으로 보입니다</li>
-  </ul></div>
-  <p class="lb" style="margin-top:6px">두 seed 평균으로 다시 보면</p>
-  <div class="tw"><table>
-    <tr><th>실험 (seed 0 · 1 평균)</th><th class="num">최댓값 (전체 / 산사태 / 액상화)</th><th class="num">평균 (전체 / 산사태 / 액상화)</th><th class="num">전체 차이</th><th class="num">산사태 차이</th><th class="num">액상화 차이</th></tr>
-    <tr><td>⑤ 끄기 지도 + U</td><td class="num">0.809 / 0.741 / 0.831</td><td class="num">0.758 / 0.803 / 0.743</td><td class="num down">−0.051</td><td class="num up">+0.061</td><td class="num down">−0.088</td></tr><tr><td>② soft + U</td><td class="num">0.799 / 0.745 / 0.816</td><td class="num">0.744 / 0.799 / 0.727</td><td class="num down">−0.055</td><td class="num up">+0.053</td><td class="num down">−0.090</td></tr><tr><td>③ 끄기만</td><td class="num">0.801 / 0.783 / 0.807</td><td class="num">0.766 / 0.780 / 0.761</td><td class="num down">−0.035</td><td class="num down">−0.003</td><td class="num down">−0.046</td></tr><tr><td>④ 분산만</td><td class="num">0.682 / 0.779 / 0.650</td><td class="num">0.657 / 0.806 / 0.609</td><td class="num down">−0.025</td><td class="num up">+0.027</td><td class="num down">−0.041</td></tr><tr><td>① baseline</td><td class="num">0.648 / 0.653 / 0.647</td><td class="num">0.585 / 0.641 / 0.567</td><td class="num down">−0.063</td><td class="num down">−0.013</td><td class="num down">−0.080</td></tr>
-  </table></div>
-  <p class="note">두 seed 평균에서도 같습니다: 전체·액상화는 최댓값이 높고, 산사태는 평균이 높습니다 (④ 빼고). seed 0만 볼 때의 결론이 그대로입니다.</p>
-  <h3>섞어서: 산사태는 칸 평균, 액상화는 칸 최댓값</h3>
-  <div class="tw"><table>
-    <tr><th>실험</th><th class="num">최댓값만 (전체 / 산사태 / 액상화)</th><th class="num">산사태 평균 + 액상화 최댓값</th><th class="num">전체 차이</th></tr>
-    <tr><td>① baseline</td><td class="num">0.617 / 0.663 / 0.602</td><td class="num">0.624 / 0.689 / 0.602</td><td class="num up">+0.007</td></tr><tr><td>② soft + U</td><td class="num">0.793 / 0.760 / 0.804</td><td class="num">0.803 / 0.799 / 0.804</td><td class="num up">+0.010</td></tr><tr><td>③ 끄기만</td><td class="num">0.775 / 0.752 / 0.783</td><td class="num">0.787 / 0.799 / 0.783</td><td class="num up">+0.012</td></tr><tr><td>④ 분산만</td><td class="num">0.619 / 0.812 / 0.556</td><td class="num">0.617 / 0.806 / 0.556</td><td class="num ">-0.002</td></tr><tr><td>⑤ 끄기 지도 + U</td><td class="num">0.797 / 0.753 / 0.812</td><td class="num">0.810 / 0.806 / 0.812</td><td class="num up">+0.013</td></tr>
-  </table></div>
-  <div class="pc" data-custom="1"><div class="lg"><span><i style="background:var(--muted);opacity:.35"></i>위 막대 (연한) = 최댓값만 (지금)</span><span><i style="background:var(--muted)"></i>아래 막대 (진한) = 산사태 평균 + 액상화 최댓값</span></div><div class="cols"><div class="col"><h4><i style="background:var(--all)"></i>전체</h4><div class="row"><div class="nm">① baseline</div><div class="bb"><div class="b"><span class="tr"><span class="f" style="width:23.4%;background:var(--all);opacity:.35"></span></span><em>0.617</em></div><div class="b B"><span class="tr"><span class="f" style="width:24.8%;background:var(--all)"></span></span><em>0.624</em></div></div></div><div class="row"><div class="nm">② soft + U</div><div class="bb"><div class="b"><span class="tr"><span class="f" style="width:58.6%;background:var(--all);opacity:.35"></span></span><em>0.793</em></div><div class="b B"><span class="tr"><span class="f" style="width:60.6%;background:var(--all)"></span></span><em>0.803</em></div></div></div><div class="row"><div class="nm">③ 끄기만</div><div class="bb"><div class="b"><span class="tr"><span class="f" style="width:55.0%;background:var(--all);opacity:.35"></span></span><em>0.775</em></div><div class="b B"><span class="tr"><span class="f" style="width:57.4%;background:var(--all)"></span></span><em>0.787</em></div></div></div><div class="row"><div class="nm">④ 분산만</div><div class="bb"><div class="b"><span class="tr"><span class="f" style="width:23.8%;background:var(--all);opacity:.35"></span></span><em>0.619</em></div><div class="b B"><span class="tr"><span class="f" style="width:23.4%;background:var(--all)"></span></span><em>0.617</em></div></div></div><div class="row"><div class="nm">⑤ 끄기 지도 + U</div><div class="bb"><div class="b"><span class="tr"><span class="f" style="width:59.4%;background:var(--all);opacity:.35"></span></span><em>0.797</em></div><div class="b B"><span class="tr"><span class="f" style="width:62.0%;background:var(--all)"></span></span><em>0.810</em></div></div></div><div class="ax"><div></div><div><span>0.5</span><span>0.75</span><span>1.0</span></div></div></div><div class="col"><h4><i style="background:var(--ls)"></i>산사태</h4><div class="row"><div class="nm">① baseline</div><div class="bb"><div class="b"><span class="tr"><span class="f" style="width:32.6%;background:var(--ls);opacity:.35"></span></span><em>0.663</em></div><div class="b B"><span class="tr"><span class="f" style="width:37.8%;background:var(--ls)"></span></span><em>0.689</em></div></div></div><div class="row"><div class="nm">② soft + U</div><div class="bb"><div class="b"><span class="tr"><span class="f" style="width:52.0%;background:var(--ls);opacity:.35"></span></span><em>0.760</em></div><div class="b B"><span class="tr"><span class="f" style="width:59.8%;background:var(--ls)"></span></span><em>0.799</em></div></div></div><div class="row"><div class="nm">③ 끄기만</div><div class="bb"><div class="b"><span class="tr"><span class="f" style="width:50.4%;background:var(--ls);opacity:.35"></span></span><em>0.752</em></div><div class="b B"><span class="tr"><span class="f" style="width:59.8%;background:var(--ls)"></span></span><em>0.799</em></div></div></div><div class="row"><div class="nm">④ 분산만</div><div class="bb"><div class="b"><span class="tr"><span class="f" style="width:62.4%;background:var(--ls);opacity:.35"></span></span><em>0.812</em></div><div class="b B"><span class="tr"><span class="f" style="width:61.2%;background:var(--ls)"></span></span><em>0.806</em></div></div></div><div class="row"><div class="nm">⑤ 끄기 지도 + U</div><div class="bb"><div class="b"><span class="tr"><span class="f" style="width:50.6%;background:var(--ls);opacity:.35"></span></span><em>0.753</em></div><div class="b B"><span class="tr"><span class="f" style="width:61.2%;background:var(--ls)"></span></span><em>0.806</em></div></div></div><div class="ax"><div></div><div><span>0.5</span><span>0.75</span><span>1.0</span></div></div></div><div class="col"><h4><i style="background:var(--lq)"></i>액상화</h4><div class="row"><div class="nm">① baseline</div><div class="bb"><div class="b"><span class="tr"><span class="f" style="width:20.4%;background:var(--lq);opacity:.35"></span></span><em>0.602</em></div><div class="b B"><span class="tr"><span class="f" style="width:20.4%;background:var(--lq)"></span></span><em>0.602</em></div></div></div><div class="row"><div class="nm">② soft + U</div><div class="bb"><div class="b"><span class="tr"><span class="f" style="width:60.8%;background:var(--lq);opacity:.35"></span></span><em>0.804</em></div><div class="b B"><span class="tr"><span class="f" style="width:60.8%;background:var(--lq)"></span></span><em>0.804</em></div></div></div><div class="row"><div class="nm">③ 끄기만</div><div class="bb"><div class="b"><span class="tr"><span class="f" style="width:56.6%;background:var(--lq);opacity:.35"></span></span><em>0.783</em></div><div class="b B"><span class="tr"><span class="f" style="width:56.6%;background:var(--lq)"></span></span><em>0.783</em></div></div></div><div class="row"><div class="nm">④ 분산만</div><div class="bb"><div class="b"><span class="tr"><span class="f" style="width:11.2%;background:var(--lq);opacity:.35"></span></span><em>0.556</em></div><div class="b B"><span class="tr"><span class="f" style="width:11.2%;background:var(--lq)"></span></span><em>0.556</em></div></div></div><div class="row"><div class="nm">⑤ 끄기 지도 + U</div><div class="bb"><div class="b"><span class="tr"><span class="f" style="width:62.4%;background:var(--lq);opacity:.35"></span></span><em>0.812</em></div><div class="b B"><span class="tr"><span class="f" style="width:62.4%;background:var(--lq)"></span></span><em>0.812</em></div></div></div><div class="ax"><div></div><div><span>0.5</span><span>0.75</span><span>1.0</span></div></div></div></div></div>
-  <div class="anal"><b>결과 분석</b><ul>
-    <li>④를 빼고 전체가 +0.007 ~ +0.013 오릅니다. 가장 높은 것은 <b>⑤ 0.810</b> (산사태 0.806, 액상화 0.812)</li>
-    <li>액상화는 그대로이고 산사태만 바뀝니다. 산사태 구마모토 0.769 → 0.872 (pilotA 0.846보다 높음), 홋카이도는 조금 내림 (0.583 → 0.556)</li>
-    <li><b>주의</b>: 결과(seed 0)를 보고 고른 조합이라, 이 숫자를 성능으로 내세우면 안 됩니다. seed 1 결과에서도 같은 방향으로 오르면 그때 방법으로 쓸 수 있습니다</li>
-    <li>여전히 USGS 기준선(0.854)·pilotA(0.855)보다 낮습니다</li>
-  </ul></div>
-<p class="lb" style="margin-top:6px">두 seed 평균으로 다시 보면</p>
-  <div class="tw"><table>
-    <tr><th>실험 (seed 0 · 1 평균)</th><th class="num">최댓값만</th><th class="num">산사태 평균 + 액상화 최댓값</th><th class="num">전체 차이</th><th class="num">섞기 seed 0 · seed 1</th></tr>
-    <tr><td>⑤ 끄기 지도 + U</td><td class="num">0.809 / 0.741 / 0.831</td><td class="num">0.824 / 0.803 / 0.831</td><td class="num up">+0.015</td><td class="num">0.810 · 0.838</td></tr><tr><td>② soft + U</td><td class="num">0.799 / 0.745 / 0.816</td><td class="num">0.812 / 0.799 / 0.816</td><td class="num up">+0.013</td><td class="num">0.803 · 0.822</td></tr><tr><td>③ 끄기만</td><td class="num">0.801 / 0.783 / 0.807</td><td class="num">0.800 / 0.780 / 0.807</td><td class="num down">−0.001</td><td class="num">0.787 · 0.814</td></tr><tr><td>④ 분산만</td><td class="num">0.682 / 0.779 / 0.650</td><td class="num">0.688 / 0.806 / 0.650</td><td class="num up">+0.007</td><td class="num">0.617 · 0.759</td></tr><tr><td>① baseline</td><td class="num">0.648 / 0.653 / 0.647</td><td class="num">0.645 / 0.641 / 0.647</td><td class="num down">−0.003</td><td class="num">0.624 · 0.667</td></tr>
-  </table></div>
-  <p class="note">seed 1에서도 ⑤ · ②는 섞기로 올라(⑤ 0.821 → 0.838, ② 0.805 → 0.822) 두 seed 평균 ⑤ 0.824 · ② 0.812입니다. ③은 seed 1에서 오히려 내려(0.827 → 0.814) 평균으로는 거의 같습니다. 그래서 "섞기가 항상 낫다"고까지는 말하기 어렵습니다.</p>
-  
-  <h3 id="whymean">왜 산사태는 최댓값보다 평균이 높게 나왔나 (⑤, seed 0 · 1 · 2 평균 확률로 확인)</h3>
-  <p>최댓값을 쓴 이유는 "비탈 비율이 작은 시정촌이라도 비탈이 있으면 산사태 확률이 묻히지 않게" 하려는 것이었습니다. 그런데 실제로는 산사태에서 평균이 더 높습니다. 지진별로 보면:</p>
-  <div class="tw"><table>
-    <tr><th>산사태 (⑤)</th><th class="num">최댓값 AUC</th><th class="num">평균 AUC</th><th class="num">참고: 칸 수만으로</th><th class="num">참고: 비탈 비율만으로</th></tr>
-    <tr><td>구마모토 (29곳, 피해 없음 3)</td><td class="num">0.82</td><td class="num"><b>0.87</b></td><td class="num">1.00</td><td class="num">0.79</td></tr>
-    <tr><td>오사카 (7곳, 피해 없음 2)</td><td class="num">1.00</td><td class="num">1.00</td><td class="num">1.00</td><td class="num">1.00</td></tr>
-    <tr><td>훗카이도 (13곳, 피해 없음 4)</td><td class="num"><b>0.67</b></td><td class="num">0.53</td><td class="num">0.25</td><td class="num">0.53</td></tr>
-  </table></div>
-  <div class="tw"><table>
-    <tr><th>구마모토 산사태 "피해 없음" 3곳</th><th class="num">칸 수</th><th class="num">비탈 비율</th><th class="num">칸 최댓값</th><th class="num">칸 평균</th></tr>
-    <tr><td>玉東町</td><td class="num">362</td><td class="num">0.51</td><td class="num">0.84</td><td class="num">0.24</td></tr>
-    <tr><td>菊陽町</td><td class="num">541</td><td class="num">0.02</td><td class="num">0.84</td><td class="num">0.05</td></tr>
-    <tr><td>氷川町</td><td class="num">463</td><td class="num">0.15</td><td class="num">0.89</td><td class="num">0.15</td></tr>
-    <tr><td class="muted">"피해 있음" 26곳 중앙값</td><td class="num">2,118</td><td class="num">0.49</td><td class="num">0.88</td><td class="num">0.28</td></tr>
-  </table></div>
-  <div class="anal"><b>읽는 법</b><ul>
-    <li><b>최댓값은 거의 모든 시정촌에서 높습니다.</b> 시정촌마다 칸이 수백~수천 개라, 비탈이 거의 없는 菊陽町(비탈 2%)도 칸 하나쯤은 높게 나와 최댓값 0.84가 됩니다. "피해 있음" 중앙값 0.88과 거의 같아 구별이 안 됩니다. 평균은 0.05로 확실히 낮습니다</li>
-    <li><b>정답 자체가 시정촌 크기와 얽혀 있습니다.</b> 구마모토 · 오사카는 칸 수만으로 AUC 1.00. 시정촌이 넓을수록 산사태가 한 건이라도 생길 가능성이 커서, "피해 없음"은 작은 시정촌뿐입니다. 평균은 비탈 비율(ρ 0.66~0.99)을 따라가고, 이것이 구마모토에서는 정답과 잘 맞습니다</li>
-    <li><b>훗카이도는 반대로 최댓값이 낫습니다.</b> "피해 없음" 4곳 중 夕張市(비탈 91%) · 日高町(78%)은 산이 많지만 진앙에서 멀어 산사태가 없었습니다. 평균은 비탈 비율을 따라 이 두 곳을 높게 매겨 틀립니다</li>
-    <li><b>우려했던 경우(비탈 비율은 작은데 산사태가 난 시정촌)는 있지만, 최댓값이 구해 주지 못했습니다.</b> 荒尾市(비탈 11%) · 合志市(0.5%)는 최댓값으로도 29곳 중 28 · 29위, 평균으로도 27 · 29위. 枚方市(오사카, 4%)만 최댓값 3위 · 평균 5위로 조금 나음. 이 시정촌들은 가장 높은 칸조차 다른 시정촌의 가장 높은 칸보다 낮았습니다 (荒尾市 0.83, 合志市 0.76 대 0.84~0.89). 다만 정답이 시정촌 단위라 <b>실제 산사태가 난 칸이 어디인지, 그 칸의 확률이 얼마였는지는 알 수 없습니다</b> (산사태 위치 자료 없음)</li>
-    <li>산사태 전체 AUC는 구마모토(29곳)가 가장 크게 반영되어, 구마모토에서 이기는 평균이 전체로도 높게 나옵니다. 산사태 평가가 49곳(피해 없음 9곳)뿐이라 이 결론은 약합니다</li>
-  </ul></div>
-
-  <h3 id="topk">상위 1 · 5 · 10 % 칸 평균으로 모으기 (10.22, 학습 그대로 채점만)</h3>
-  <p>시정촌 안 칸들의 사후확률을 높은 순서로 줄 세워 위에서 1 · 5 · 10 %만 평균합니다. 최댓값(칸 1개)처럼 잡음 칸 하나에 휘둘리지 않고, 평균(칸 전부)처럼 일부에만 있는 비탈이 묻히지도 않게 하려는 중간 방법입니다. 칸 결과를 PC에서 <code>cell_extract.py</code>로 줄여 받아 채점했습니다 (⑤는 seed 0~3, 나머지는 seed 0~2 평균).</p>
-  <div class="tw"><table>
-    <tr><th rowspan="2">실험</th><th colspan="5"><span class="tag t-ls">산사태</span> AUC (49곳)</th><th colspan="2"><span class="tag t-lq">액상화</span> AUC (151곳)</th><th rowspan="2" class="num">전체<br>산사태 상위 10% + 액상화 최댓값</th><th rowspan="2" class="num">전체<br>둘 다 최댓값</th></tr>
-    <tr><th class="num">최댓값</th><th class="num">평균</th><th class="num">상위 1%</th><th class="num">상위 5%</th><th class="num">상위 10%</th><th class="num">최댓값</th><th class="num">상위 5%</th></tr>
-    <tr><td>⑤ 끄기 지도+U</td><td class="num">0.792</td><td class="num">0.804</td><td class="num">0.822</td><td class="num"><b>0.856</b></td><td class="num"><b>0.860</b></td><td class="num"><b>0.817</b></td><td class="num">0.739</td><td class="num"><b>0.828</b></td><td class="num">0.811</td></tr>
-    <tr><td>② soft+U</td><td class="num">0.761</td><td class="num">0.806</td><td class="num">0.818</td><td class="num"><b>0.853</b></td><td class="num"><b>0.856</b></td><td class="num"><b>0.794</b></td><td class="num">0.730</td><td class="num"><b>0.809</b></td><td class="num">0.786</td></tr>
-    <tr><td>③ 끄기만</td><td class="num">0.780</td><td class="num">0.781</td><td class="num">0.758</td><td class="num">0.783</td><td class="num">0.796</td><td class="num"><b>0.814</b></td><td class="num">0.765</td><td class="num">0.810</td><td class="num">0.806</td></tr>
-    <tr><td>④ 분산만</td><td class="num">0.778</td><td class="num">0.806</td><td class="num">0.848</td><td class="num"><b>0.862</b></td><td class="num"><b>0.873</b></td><td class="num"><b>0.723</b></td><td class="num">0.724</td><td class="num">0.760</td><td class="num">0.737</td></tr>
-    <tr><td>① baseline</td><td class="num">0.678</td><td class="num">0.644</td><td class="num">0.626</td><td class="num">0.669</td><td class="num">0.684</td><td class="num"><b>0.666</b></td><td class="num">0.638</td><td class="num">0.670</td><td class="num">0.669</td></tr>
-    <tr><td class="muted">USGS · pilotA A2</td><td class="num" colspan="5">산사태 0.729 · 0.879</td><td class="num" colspan="2">액상화 0.895 · 0.819</td><td class="num" colspan="2">전체 0.854 · 0.834</td></tr>
-  </table></div>
-  <div class="tw"><table>
-    <tr><th>산사태 지진별 (⑤)</th><th class="num">최댓값</th><th class="num">평균</th><th class="num">상위 5%</th><th class="num">상위 10%</th><th class="num">USGS</th></tr>
-    <tr><td>구마모토 (29)</td><td class="num">0.81</td><td class="num">0.87</td><td class="num">0.88</td><td class="num">0.89</td><td class="num">0.64</td></tr>
-    <tr><td>오사카 (7)</td><td class="num">1.00</td><td class="num">1.00</td><td class="num">1.00</td><td class="num">1.00</td><td class="num">1.00</td></tr>
-    <tr><td>훗카이도 (13)</td><td class="num">0.65</td><td class="num">0.55</td><td class="num">0.73</td><td class="num">0.72</td><td class="num">0.78</td></tr>
-  </table></div>
-  <div class="anal"><b>읽는 법</b><ul>
-    <li><b>산사태는 상위 5 · 10 %가 최댓값 · 평균보다 모두 높습니다</b> (⑤ 0.792 · 0.804에서 0.856 · 0.860, ② · ④도 0.85~0.87). 구마모토에서는 평균만큼 좋고(0.88~0.89), 평균이 크게 틀리던 훗카이도에서도 최댓값보다 낫습니다(0.72~0.73). 두 방식의 좋은 점을 함께 얻은 셈입니다. USGS 산사태(0.729)보다 높고 pilotA(0.879)에 가깝습니다</li>
-    <li><b>액상화는 여전히 최댓값이 가장 좋습니다</b> (⑤ 0.817 대 상위 5% 0.739). 액상화는 시정촌 안 좁은 곳(강가 · 매립지)에서 나므로 가장 높은 칸 하나가 중요한 것으로 보입니다</li>
-    <li>산사태 상위 10% + 액상화 최댓값으로 모으면 ⑤ 전체 0.828로, 지금까지 가장 높습니다 (둘 다 최댓값 0.811, 섞기 0.821). 그래도 USGS 0.854보다는 낮습니다</li>
-    <li>③ · ①은 상위 %로 해도 거의 그대로입니다</li>
-    <li><b>주의</b>: 결과를 보고 고른 방법이라 참고용입니다. 쓰려면 비율(5%든 10%든)을 미리 정하고 seed를 더 늘려 확인해야 합니다. 산사태는 49곳(피해 없음 9곳)뿐이라 몇 곳의 순서로 크게 바뀝니다</li>
-  </ul></div>
-
-  <h3 id="topk-check">상위 10%가 우연이 아닌지 확인 (산사태 AUC, seed별)</h3>
-  <div class="tw"><table>
-    <tr><th>실험</th><th class="num">최댓값</th><th class="num">평균</th><th class="num">상위 10%</th><th class="num">순위 상관 (최댓값 · 평균 · 상위 10%)</th></tr>
-    <tr><td>⑤ (seed 0 · 1 · 2 · 3)</td><td class="num">0.75 · 0.73 · 0.85 · 0.84</td><td class="num">0.81 · 0.80 · 0.81 · 0.81</td><td class="num"><b>0.83 · 0.84 · 0.89 · 0.89</b></td><td class="num">0.82 · 0.97 · 0.77</td></tr>
-    <tr><td>② (seed 0 · 1 · 2)</td><td class="num">0.74 · 0.71 · 0.83</td><td class="num">0.81 · 0.80 · 0.81</td><td class="num"><b>0.81 · 0.86 · 0.89</b></td><td class="num">0.71 · 0.97 · 0.75</td></tr>
-    <tr><td>④ (seed 0 · 1 · 2)</td><td class="num">0.79 · 0.73 · 0.81</td><td class="num">0.81 · 0.80 · 0.81</td><td class="num"><b>0.88 · 0.85 · 0.89</b></td><td class="num">0.53 · 0.97 · 0.70</td></tr>
-  </table></div>
-  <ul>
-    <li>⑤ · ② · ④에서 <b>seed마다 상위 10%가 최댓값 · 평균 이상</b>입니다 (② seed 0만 평균과 같음). 한 seed의 우연은 아닙니다</li>
-    <li>상위 5%와 10%가 거의 같아(0.85~0.87) 비율을 조금 바꿔도 결과가 크게 안 변합니다</li>
-    <li>다만 시정촌 순서의 seed 안정성(순위 상관 0.70~0.77)은 평균(0.97)보다 낮고 최댓값과 비슷합니다</li>
-    <li><b>남은 확인</b>: 10%를 지금 정해 두고, 아직 안 본 seed 4(와 ② ③ ④ ①의 seed 3)에서도 이기는지 봅니다. 산사태 평가는 49곳(피해 없음 9곳)뿐이라 다른 지진 자료가 있으면 더 좋습니다</li>
-  </ul>
-  <h3 id="cellcheck">산사태 시정촌 안을 들여다보기: 비탈 칸의 확률이 낮았나 (⑤, seed 0~3 평균)</h3>
-  <div class="tw"><table>
-    <tr><th>구마모토</th><th class="num">비탈 칸 (10° 이상)</th><th class="num">비탈 칸 USGS 평균</th><th class="num">비탈 칸 DPM 평균</th><th class="num">비탈 칸 사후확률 상위 5%</th><th class="num">최댓값</th><th class="num">최댓값 칸의 경사 · DPM</th></tr>
-    <tr><td>荒尾市 (피해 있음)</td><td class="num">96 / 838</td><td class="num">0.002</td><td class="num">0.17</td><td class="num">0.81</td><td class="num">0.83</td><td class="num">12.8° · 0.41</td></tr>
-    <tr><td>合志市 (피해 있음)</td><td class="num">4 / 793</td><td class="num">0.003</td><td class="num">0.20</td><td class="num">0.60</td><td class="num">0.77</td><td class="num">5.3° · 0.34</td></tr>
-    <tr><td>玉東町 (피해 없음)</td><td class="num">183 / 362</td><td class="num">0.004</td><td class="num">0.13</td><td class="num">0.80</td><td class="num">0.84</td><td class="num">17.3° · 0.46</td></tr>
-    <tr><td>菊陽町 (피해 없음)</td><td class="num">10 / 541</td><td class="num">0.031</td><td class="num">0.15</td><td class="num">0.70</td><td class="num">0.84</td><td class="num">5.6° · 0.36</td></tr>
-    <tr><td>氷川町 (피해 없음)</td><td class="num">73 / 463</td><td class="num">0.022</td><td class="num">0.19</td><td class="num">0.87</td><td class="num">0.89</td><td class="num">14.4° · 0.49</td></tr>
-  </table></div>
-  <div class="anal"><b>읽는 법</b><ul>
-    <li><b>荒尾市의 비탈 칸은 확률이 낮지 않았습니다.</b> 가장 높은 칸이 경사 12.8° 비탈 칸이고 DPM 0.41(강한 변화)이라 0.83이 나왔습니다. 비탈 칸 상위 5%도 0.81입니다</li>
-    <li><b>문제는 "피해 없음" 시정촌의 비탈 칸도 똑같이 높다는 것</b>입니다. 玉東町(비탈 17.3°, DPM 0.46) · 氷川町(14.4°, 0.49)도 DPM이 강하게 나와 0.84 · 0.89입니다. 구마모토는 지진 피해가 넓게 퍼져 DPM이 어디서나 크게 나오므로, DPM만으로는 산사태가 난 비탈과 안 난 비탈을 구별하기 어렵습니다</li>
-    <li>비탈 칸의 USGS 사전확률은 0.002~0.03으로 아주 작아서, 칸 사후확률은 거의 DPM이 정합니다</li>
-    <li>그래서 비탈 칸을 모두 올리는 것으로는 해결되지 않습니다. 산사태와 다른 변화(건물 피해, 농지 변화 등)를 구별할 정보가 더 필요합니다 (예: 더 잘게 나눈 DPM, 산사태 위치 자료로 칸 단위 검증)</li>
-    <li>菊陽町 · 合志市는 최댓값 칸이 비탈이 아닌 5° 근처 칸이었습니다. 비탈이 아닌 곳의 강한 DPM이 시정촌 값을 정한 경우로, 최댓값이 잡음에 약한 예입니다</li>
-  </ul></div>
+  <p class="meta">산사태 상위 10% + 액상화 최댓값이면 ⑤ 전체 0.828 (둘 다 최댓값 0.811). 결과를 보고 고른 방법이라 참고용이며, 아직 안 본 seed 3 · 4로 확인할 예정.</p>
 </section>
 
 <section id="seed1">
@@ -1018,17 +910,7 @@ body{background:#fff}
   </ul></div>
 
   
-  <h3 id="mid-hyb">섞기 (산사태 칸 평균 + 액상화 칸 최댓값), seed 0 · 1 · 2</h3>
-  <div class="tw"><table>
-    <tr><th>실험</th><th class="num">기본 3개 평균</th><th class="num">섞기 seed 0 · 1 · 2</th><th class="num">섞기 3개 평균</th><th class="num">차이</th><th class="num">산사태 (기본 · 섞기)</th></tr>
-    <tr><td>⑤ 끄기 지도 + U</td><td class="num">0.815</td><td class="num">0.810 · 0.838 · 0.816</td><td class="num"><b>0.821</b></td><td class="num up">+0.006</td><td class="num">0.778 · 0.804</td></tr>
-    <tr><td>③ 끄기만 (고친 뒤)</td><td class="num">0.806</td><td class="num">0.812 · 0.824 · 0.782</td><td class="num"><b>0.806</b></td><td class="num">0.000</td><td class="num">0.780 · 0.781</td></tr>
-    <tr><td>② soft + U (고친 뒤)</td><td class="num">0.786</td><td class="num">0.801 · 0.810 · 0.779</td><td class="num"><b>0.797</b></td><td class="num up">+0.011</td><td class="num">0.761 · 0.806</td></tr>
-    <tr><td>④ 분산만 (고친 뒤)</td><td class="num">0.737</td><td class="num">0.646 · 0.787 · 0.798</td><td class="num"><b>0.744</b></td><td class="num up">+0.007</td><td class="num">0.778 · 0.806</td></tr>
-    <tr><td>① baseline</td><td class="num">0.669</td><td class="num">0.624 · 0.667 · 0.691</td><td class="num"><b>0.661</b></td><td class="num down">−0.008</td><td class="num">0.678 · 0.644</td></tr>
-  </table></div>
-  <p class="meta">학습은 그대로, 시정촌으로 모으는 방법만 바꿔 다시 채점. 액상화는 둘 다 칸 최댓값이라 같음. 결과를 보고 고른 조합이라 참고용.</p>
-
+  <p class="meta">섞기(산사태 칸 평균) 표는 <a href="https://claude.ai/artifact/WhLVRkNgEAsrNiCJKiRjaP#detail" style="color:var(--accent)">부록</a>으로 옮김.</p>
   <h3 id="evseed">지진별 seed 흔들림 (seed 0 · 1 · 2, 칸 최댓값)</h3>
   <figure><div class="tw"><svg viewBox="0 0 910 356" width="910" role="img" aria-label="지진별 seed마다의 AUC" style="max-width:100%;height:auto;min-width:720px">
 <text x="225.0" y="18" text-anchor="middle" font-size="13" font-weight="700" fill="#1d2430">⑤ 끄기 지도+U</text>
@@ -1340,37 +1222,7 @@ body{background:#fff}
     <li>전체 AUC는 지진들을 가중평균한 값이라, 지진 하나하나보다 훨씬 덜 흔들립니다 (지진별 폭 0.1~0.4, 전체 폭 0.01~0.16)</li>
   </ul></div>
 
-  <h3 id="muniswing">시정촌마다 사후확률이 seed에 따라 얼마나 바뀌나 (시정촌 단위 대 칸 단위, seed 0 · 1 · 2)</h3>
-  <div class="tw"><table>
-    <tr><th>단위</th><th>실험</th><th>재해</th><th class="num">시정촌별 확률 폭 평균<br>(가장 큰 seed − 가장 작은 seed)</th><th class="num">폭 0.3 이상인 시정촌</th><th class="num">seed끼리 순위 상관<br>(지진 안, 1이면 순서 똑같음)</th></tr>
-    <tr><td>시정촌</td><td>DN</td><td><span class="tag t-ls">산사태</span></td><td class="num">0.44</td><td class="num">45%</td><td class="num"><b style="color:var(--warn)">0.05</b></td></tr><tr><td>시정촌</td><td>DN</td><td><span class="tag t-lq">액상화</span></td><td class="num">0.36</td><td class="num">40%</td><td class="num"><b style="color:inherit">0.78</b></td></tr><tr><td>시정촌</td><td>SOFTU</td><td><span class="tag t-ls">산사태</span></td><td class="num">0.42</td><td class="num">60%</td><td class="num"><b style="color:var(--warn)">0.56</b></td></tr><tr><td>시정촌</td><td>SOFTU</td><td><span class="tag t-lq">액상화</span></td><td class="num">0.37</td><td class="num">52%</td><td class="num"><b style="color:inherit">0.86</b></td></tr><tr><td>시정촌</td><td>SOFTU 끄기만</td><td><span class="tag t-ls">산사태</span></td><td class="num">0.45</td><td class="num">45%</td><td class="num"><b style="color:var(--warn)">0.35</b></td></tr><tr><td>시정촌</td><td>SOFTU 끄기만</td><td><span class="tag t-lq">액상화</span></td><td class="num">0.40</td><td class="num">42%</td><td class="num"><b style="color:inherit">0.73</b></td></tr><tr><td>시정촌</td><td>SOFTU 분산만</td><td><span class="tag t-ls">산사태</span></td><td class="num">0.42</td><td class="num">58%</td><td class="num"><b style="color:var(--warn)">0.53</b></td></tr><tr><td>시정촌</td><td>SOFTU 분산만</td><td><span class="tag t-lq">액상화</span></td><td class="num">0.36</td><td class="num">48%</td><td class="num"><b style="color:inherit">0.86</b></td></tr><tr><td>칸</td><td>⑤ 끄기 지도+U</td><td><span class="tag t-ls">산사태</span></td><td class="num">0.38</td><td class="num">56%</td><td class="num"><b style="color:inherit">0.82</b></td></tr><tr><td>칸</td><td>⑤ 끄기 지도+U</td><td><span class="tag t-lq">액상화</span></td><td class="num">0.34</td><td class="num">55%</td><td class="num"><b style="color:inherit">0.83</b></td></tr><tr><td>칸</td><td>② soft+U</td><td><span class="tag t-ls">산사태</span></td><td class="num">0.35</td><td class="num">52%</td><td class="num"><b style="color:inherit">0.71</b></td></tr><tr><td>칸</td><td>② soft+U</td><td><span class="tag t-lq">액상화</span></td><td class="num">0.34</td><td class="num">58%</td><td class="num"><b style="color:inherit">0.78</b></td></tr><tr><td>칸</td><td>③ 끄기만</td><td><span class="tag t-ls">산사태</span></td><td class="num">0.85</td><td class="num">100%</td><td class="num"><b style="color:inherit">0.82</b></td></tr><tr><td>칸</td><td>③ 끄기만</td><td><span class="tag t-lq">액상화</span></td><td class="num">0.25</td><td class="num">37%</td><td class="num"><b style="color:inherit">0.88</b></td></tr><tr><td>칸</td><td>④ 분산만</td><td><span class="tag t-ls">산사태</span></td><td class="num">0.33</td><td class="num">48%</td><td class="num"><b style="color:var(--warn)">0.53</b></td></tr><tr><td>칸</td><td>④ 분산만</td><td><span class="tag t-lq">액상화</span></td><td class="num">0.37</td><td class="num">59%</td><td class="num"><b style="color:inherit">0.61</b></td></tr><tr><td>칸</td><td>① baseline</td><td><span class="tag t-ls">산사태</span></td><td class="num">0.90</td><td class="num">100%</td><td class="num"><b style="color:var(--warn)">0.50</b></td></tr><tr><td>칸</td><td>① baseline</td><td><span class="tag t-lq">액상화</span></td><td class="num">0.69</td><td class="num">83%</td><td class="num"><b style="color:inherit">0.78</b></td></tr>
-  </table></div>
-  <p class="meta">정답이 있는 시정촌 전부 (산사태 77 · 액상화 191, AUC에서 빠지는 지진 포함). 칸 단위 값 = 시정촌 안 칸 최댓값. 순위 상관 = 같은 지진 안에서 seed 두 개씩 짝지어 Spearman 상관을 구해 평균. ② ③ ④는 고친 soft.</p>
-  <div class="tw"><table>
-    <tr><th>지진별 시정촌 사후확률 중앙값</th><th class="num">seed 0</th><th class="num">seed 1</th><th class="num">seed 2</th></tr>
-    <tr><td>시정촌 SOFTU · 산사태 · 오사카</td><td class="num">0.14</td><td class="num">0.87</td><td class="num">0.15</td></tr>
-    <tr><td>칸 ① baseline · 산사태 · 구마모토</td><td class="num">0.99</td><td class="num">1.00</td><td class="num">0.06</td></tr>
-    <tr><td>칸 ③ 끄기만 · 산사태 · 오사카</td><td class="num">0.17</td><td class="num">0.99</td><td class="num">0.16</td></tr>
-    <tr><td>칸 ⑤ 끄기 지도+U · 액상화 · 구마모토</td><td class="num">0.84</td><td class="num">0.84</td><td class="num">0.29</td></tr>
-  </table></div>
-  <div class="anal"><b>읽는 법</b><ul>
-    <li><b>확률 값 자체는 칸 단위도 크게 흔들립니다.</b> 시정촌 단위와 마찬가지로 시정촌별 폭 평균이 0.25~0.90이고, 절반 안팎의 시정촌이 seed에 따라 0.3 넘게 바뀝니다. 특히 ① · ③ 산사태는 거의 모든 시정촌이 바뀝니다</li>
-    <li>흔들림의 대부분은 <b>한 지진의 시정촌이 통째로 올라가거나 내려가는 것</b>입니다 (위 중앙값 표: 구마모토 산사태가 seed 0 · 1에서는 거의 1, seed 2에서는 0.06). 지진마다 함께 쓰는 a · c · w_x가 seed에 따라 다른 곳에 자리 잡기 때문이고, 칸 최댓값은 칸이 많아 1에 붙기 쉬워 더 크게 움직입니다</li>
-    <li><b>그러나 시정촌끼리의 순서는 칸 단위가 더 안정적입니다.</b> 산사태 순위 상관이 시정촌 0.05~0.56인데 칸은 ⑤ · ③ 0.82, ② 0.71. 액상화도 칸 ⑤ · ③ 0.83~0.88로 시정촌(0.73~0.86)과 같거나 높습니다. AUC는 순서만 보므로, 확률이 통째로 움직여도 AUC는 덜 흔들립니다</li>
-    <li>끄기가 없는 칸 ④ · ①은 순위 상관도 0.50~0.78로 낮아 순서까지 흔들립니다. ④ 액상화 0.61이 노토 AUC 0.35 ~ 0.77의 원인입니다</li>
-    <li>그래서 칸 단위든 시정촌 단위든 <b>확률 값(예: 0.8이면 위험)을 그대로 쓰기는 어렵고</b>, 순서(어느 시정촌이 더 위험한가)로 보는 것이 맞습니다</li>
-  </ul></div>
-  <p class="lb" style="margin-top:6px">위 표는 칸 단위를 <b>산사태 · 액상화 둘 다 칸 최댓값</b>으로 모은 것입니다. 산사태를 <b>칸 평균</b>(섞기)으로 모으면:</p>
-  <div class="tw"><table>
-    <tr><th>칸 단위 산사태 (77곳)</th><th class="num">칸 최댓값: 폭 평균 · 순위 상관</th><th class="num">칸 평균: 폭 평균 · 순위 상관</th></tr>
-    <tr><td>⑤ 끄기 지도+U</td><td class="num">0.38 · 0.82</td><td class="num">0.24 · <b>0.97</b></td></tr>
-    <tr><td>② soft+U</td><td class="num">0.35 · 0.71</td><td class="num">0.29 · <b>0.97</b></td></tr>
-    <tr><td>③ 끄기만</td><td class="num">0.85 · 0.82</td><td class="num">0.70 · 0.89</td></tr>
-    <tr><td>④ 분산만</td><td class="num">0.33 · 0.53</td><td class="num">0.30 · <b>0.97</b></td></tr>
-    <tr><td>① baseline</td><td class="num">0.90 · 0.50</td><td class="num">0.83 · 0.55</td></tr>
-  </table></div>
-  <p class="note"><b>주의: 확률 값의 폭은 칸 평균으로 해도 여전히 큽니다</b> (폭 평균 0.24~0.83, ⑤ · ② · ④도 시정촌 3곳 중 1곳 이상이 0.3 넘게 바뀜. 시정촌 단위는 0.42~0.45). 시정촌 단위의 "확률 값이 seed마다 크게 흔들리는" 문제는 칸 단위에도 남아 있습니다. 좋아지는 것은 <b>순서</b>입니다: 칸 평균으로 모으면 산사태 순서가 seed와 거의 상관없어집니다 (⑤ · ② · ④ 순위 상관 0.97). 최댓값은 칸 하나의 값에 좌우되지만 평균은 많은 칸을 합쳐 seed 영향이 상쇄되기 때문입니다. 섞기에서 산사태 AUC가 오르는 것(0.76~0.78 → 0.80)도 이 안정성 덕분으로 보입니다. 시정촌 단위 산사태 순위 상관은 0.05~0.56.</p>
-
+  <p class="meta">시정촌마다 사후확률이 seed에 따라 얼마나 바뀌는지(확률 값과 순서)는 <a href="https://claude.ai/artifact/WhLVRkNgEAsrNiCJKiRjaP#stab" style="color:var(--accent)">부록 6절</a>로 옮김.</p>
 </section>
 
 
