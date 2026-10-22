@@ -851,6 +851,19 @@ body{background:#fff}
     <li><b>주의</b>: 결과를 보고 고른 방법이라 참고용입니다. 쓰려면 비율(5%든 10%든)을 미리 정하고 seed를 더 늘려 확인해야 합니다. 산사태는 49곳(피해 없음 9곳)뿐이라 몇 곳의 순서로 크게 바뀝니다</li>
   </ul></div>
 
+  <h3 id="topk-check">상위 10%가 우연이 아닌지 확인 (산사태 AUC, seed별)</h3>
+  <div class="tw"><table>
+    <tr><th>실험</th><th class="num">최댓값</th><th class="num">평균</th><th class="num">상위 10%</th><th class="num">순위 상관 (최댓값 · 평균 · 상위 10%)</th></tr>
+    <tr><td>⑤ (seed 0 · 1 · 2 · 3)</td><td class="num">0.75 · 0.73 · 0.85 · 0.84</td><td class="num">0.81 · 0.80 · 0.81 · 0.81</td><td class="num"><b>0.83 · 0.84 · 0.89 · 0.89</b></td><td class="num">0.82 · 0.97 · 0.77</td></tr>
+    <tr><td>② (seed 0 · 1 · 2)</td><td class="num">0.74 · 0.71 · 0.83</td><td class="num">0.81 · 0.80 · 0.81</td><td class="num"><b>0.81 · 0.86 · 0.89</b></td><td class="num">0.71 · 0.97 · 0.75</td></tr>
+    <tr><td>④ (seed 0 · 1 · 2)</td><td class="num">0.79 · 0.73 · 0.81</td><td class="num">0.81 · 0.80 · 0.81</td><td class="num"><b>0.88 · 0.85 · 0.89</b></td><td class="num">0.53 · 0.97 · 0.70</td></tr>
+  </table></div>
+  <ul>
+    <li>⑤ · ② · ④에서 <b>seed마다 상위 10%가 최댓값 · 평균 이상</b>입니다 (② seed 0만 평균과 같음). 한 seed의 우연은 아닙니다</li>
+    <li>상위 5%와 10%가 거의 같아(0.85~0.87) 비율을 조금 바꿔도 결과가 크게 안 변합니다</li>
+    <li>다만 시정촌 순서의 seed 안정성(순위 상관 0.70~0.77)은 평균(0.97)보다 낮고 최댓값과 비슷합니다</li>
+    <li><b>남은 확인</b>: 10%를 지금 정해 두고, 아직 안 본 seed 4(와 ② ③ ④ ①의 seed 3)에서도 이기는지 봅니다. 산사태 평가는 49곳(피해 없음 9곳)뿐이라 다른 지진 자료가 있으면 더 좋습니다</li>
+  </ul>
   <h3 id="cellcheck">산사태 시정촌 안을 들여다보기: 비탈 칸의 확률이 낮았나 (⑤, seed 0~3 평균)</h3>
   <div class="tw"><table>
     <tr><th>구마모토</th><th class="num">비탈 칸 (10° 이상)</th><th class="num">비탈 칸 USGS 평균</th><th class="num">비탈 칸 DPM 평균</th><th class="num">비탈 칸 사후확률 상위 5%</th><th class="num">최댓값</th><th class="num">최댓값 칸의 경사 · DPM</th></tr>
