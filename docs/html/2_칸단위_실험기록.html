@@ -154,7 +154,7 @@ body{background:#fff}
 <header style="display:flex;flex-direction:column;gap:14px">
   <div class="eyebrow">실험 기록 · 2026-10-19</div>
   <h1>DisasterNet 칸 단위 실험: 시정촌 = 칸 사후확률 최댓값</h1>
-  <p class="lede">교수님 지시대로 250 m 칸 단위로 학습하고, 시정촌 사후확률을 시정촌 안 칸들의 최댓값으로 정해 AUC를 구합니다. 칸의 USGS 사전확률·불확실도는 <b>칸과 겹친 USGS 칸들의 면적 평균</b>을 씁니다. <b>최신 (10.22, 2.11)</b>: soft의 5~10° 칸 부작용을 고쳐 ② · ③ · ④를 다시 돌렸고, seed 0 · 1 평균은 ⑤ 0.809 · ③ 0.820 · ② 0.786 · ④ 0.705 · ① 0.648입니다. seed 2까지 3개 평균은 ⑤ 0.815 · ③ 0.806 · ② 0.786 · ① 0.669 (④ seed 2와 seed 3 · 4는 도는 중). 아래 2 · 2.9 · 2.10 · 3절의 ② · ③ · ④는 <b>고치기 전 soft</b> 결과로, 기록으로 남겨 둡니다.</p>
+  <p class="lede">교수님 지시대로 250 m 칸 단위로 학습하고, 시정촌 사후확률을 시정촌 안 칸들의 최댓값으로 정해 AUC를 구합니다. 칸의 USGS 사전확률·불확실도는 <b>칸과 겹친 USGS 칸들의 면적 평균</b>을 씁니다. <b>최신 (10.22, 2.11)</b>: soft의 5~10° 칸 부작용을 고쳐 ② · ③ · ④를 다시 돌렸고, seed 0 · 1 평균은 ⑤ 0.809 · ③ 0.820 · ② 0.786 · ④ 0.705 · ① 0.648입니다. seed 2까지 3개 평균은 ⑤ 0.815 · ③ 0.806 · ② 0.786 · ④ 0.737 · ① 0.669 (seed 3 · 4는 도는 중). 아래 2 · 2.9 · 2.10 · 3절의 ② · ③ · ④는 <b>고치기 전 soft</b> 결과로, 기록으로 남겨 둡니다.</p>
   <p class="meta">시정촌 단위 실험은 <a href="https://claude.ai/artifact/TcF9dowvBuwwu66vdqEaT6" style="color:var(--accent)">DisasterNet 실험 기록</a>에 있습니다.</p>
   <p class="meta">크기는 모두 <b>세로(남북) × 가로(동서)</b>. 일본 표준 칸(지역메시)과 USGS 칸은 위경도 각도로 정해져 있어서, 가로 길이가 위도에 따라 달라집니다 (남쪽 구마모토가 길고 북쪽 홋카이도가 짧음). "250 m 칸" · "100 m 칸"은 이름이고 실제로는 약 230 × 260~290 m, 약 92 × 100~118 m입니다.</p>
 </header>
@@ -907,16 +907,18 @@ body{background:#fff}
     <li>액상화는 ③ · ④에서 오르고(+0.026 · +0.037), 산사태는 셋 다 조금 내립니다(−0.004 ~ −0.019). 중간 칸이 산사태 후보로 다시 들어오면서 산사태 시정촌 최댓값이 조금 흐려진 것으로 보입니다.</li>
     <li>결론("칸 단위에서는 끄기가 핵심, 끄기가 없는 ④ · ①은 낮고 흔들림이 큼")은 그대로입니다.</li>
   </ul></div>
-  <h3>seed 2까지 (10.22 오전 9시 기준)</h3>
+  <h3>seed 2까지 (10.22 오전 10시 반, 다섯 실험 모두)</h3>
   <div class="tw"><table>
     <tr><th>실험 (전체 AUC, 칸 최댓값)</th><th class="num">seed 0</th><th class="num">seed 1</th><th class="num">seed 2</th><th class="num">0 · 1 평균</th><th class="num">0 · 1 · 2 평균</th><th class="num">3개 평균 산사태 / 액상화</th></tr>
-    <tr><td>⑤ 끄기 지도 + U</td><td class="num">0.797</td><td class="num">0.821</td><td class="num">0.827</td><td class="num">0.809</td><td class="num"><b>0.815</b></td><td class="num">0.778 / 0.827</td></tr><tr><td>② soft + U (고친 뒤)</td><td class="num">0.782</td><td class="num">0.790</td><td class="num">0.785</td><td class="num">0.786</td><td class="num"><b>0.786</b></td><td class="num">0.761 / 0.794</td></tr><tr><td>③ 끄기만 (고친 뒤)</td><td class="num">0.800</td><td class="num">0.839</td><td class="num">0.778</td><td class="num">0.820</td><td class="num"><b>0.806</b></td><td class="num">0.780 / 0.814</td></tr><tr><td>④ 분산만 (고친 뒤)</td><td class="num">0.640</td><td class="num">0.770</td><td class="num">도는 중</td><td class="num">0.705</td><td class="num"><b>–</b></td><td class="num">–</td></tr><tr><td>① baseline</td><td class="num">0.617</td><td class="num">0.679</td><td class="num">0.710</td><td class="num">0.648</td><td class="num"><b>0.669</b></td><td class="num">0.678 / 0.666</td></tr>
+    <tr><td>⑤ 끄기 지도 + U</td><td class="num">0.797</td><td class="num">0.821</td><td class="num">0.827</td><td class="num">0.809</td><td class="num"><b>0.815</b></td><td class="num">0.778 / 0.827</td></tr><tr><td>② soft + U (고친 뒤)</td><td class="num">0.782</td><td class="num">0.790</td><td class="num">0.785</td><td class="num">0.786</td><td class="num"><b>0.786</b></td><td class="num">0.761 / 0.794</td></tr><tr><td>③ 끄기만 (고친 뒤)</td><td class="num">0.800</td><td class="num">0.839</td><td class="num">0.778</td><td class="num">0.820</td><td class="num"><b>0.806</b></td><td class="num">0.780 / 0.814</td></tr><tr><td>④ 분산만 (고친 뒤)</td><td class="num">0.640</td><td class="num">0.770</td><td class="num">0.800</td><td class="num">0.705</td><td class="num"><b>0.737</b></td><td class="num">0.778 / 0.723</td></tr><tr><td>① baseline</td><td class="num">0.617</td><td class="num">0.679</td><td class="num">0.710</td><td class="num">0.648</td><td class="num"><b>0.669</b></td><td class="num">0.678 / 0.666</td></tr>
     <tr><td class="muted">USGS 기준선</td><td class="num" colspan="6">0.854</td></tr>
   </table></div>
   <div class="anal"><b>읽는 법</b><ul>
-    <li>seed 3개 평균은 ⑤ 0.815 · ③ 0.806 · ② 0.786 · ① 0.669로, ⑤가 계속 가장 높고 끄기가 있는 실험이 0.79~0.82에 모입니다.</li>
+    <li>seed 3개 평균은 ⑤ 0.815 · ③ 0.806 · ② 0.786 · ④ 0.737 · ① 0.669로, ⑤가 계속 가장 높고 끄기가 있는 ⑤ · ③ · ②가 0.79~0.82에 모입니다. 끄기가 없는 ④ · ①은 낮습니다.</li>
+    <li>④는 seed마다 0.640 · 0.770 · 0.800으로 가장 크게 흔들립니다 (폭 0.16). ①도 0.617 ~ 0.710 (폭 0.09). 끄기가 있는 ②(0.008) · ⑤(0.030) · ③(0.061)보다 훨씬 큽니다.</li>
+    <li>섞기(산사태 칸 평균) 3개 평균: ⑤ 0.821 · ③ 0.806 · ② 0.797 · ④ 0.744 · ① 0.661.</li>
     <li>seed 2에서 ⑤ 산사태가 0.851로 크게 올라(seed 0 · 1은 0.753 · 0.730) 산사태가 seed에 따라 많이 흔들립니다. 산사태 시정촌은 49곳뿐이라 몇 곳만 바뀌어도 AUC가 크게 움직입니다.</li>
-    <li>④ seed 2와 seed 3 · 4는 돌리는 중입니다 (10.23 새벽 예상). 끝나면 5개 평균으로 바꿉니다.</li>
+    <li>seed 3 · 4는 돌리는 중입니다 (10.23 새벽 1~2시 예상). 끝나면 5개 평균으로 바꿉니다.</li>
   </ul></div>
 </section>
 
