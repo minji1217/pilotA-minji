@@ -801,7 +801,30 @@ body{background:#fff}
     <tr><td>⑤ 끄기 지도 + U</td><td class="num">0.809 / 0.741 / 0.831</td><td class="num">0.824 / 0.803 / 0.831</td><td class="num up">+0.015</td><td class="num">0.810 · 0.838</td></tr><tr><td>② soft + U</td><td class="num">0.799 / 0.745 / 0.816</td><td class="num">0.812 / 0.799 / 0.816</td><td class="num up">+0.013</td><td class="num">0.803 · 0.822</td></tr><tr><td>③ 끄기만</td><td class="num">0.801 / 0.783 / 0.807</td><td class="num">0.800 / 0.780 / 0.807</td><td class="num down">−0.001</td><td class="num">0.787 · 0.814</td></tr><tr><td>④ 분산만</td><td class="num">0.682 / 0.779 / 0.650</td><td class="num">0.688 / 0.806 / 0.650</td><td class="num up">+0.007</td><td class="num">0.617 · 0.759</td></tr><tr><td>① baseline</td><td class="num">0.648 / 0.653 / 0.647</td><td class="num">0.645 / 0.641 / 0.647</td><td class="num down">−0.003</td><td class="num">0.624 · 0.667</td></tr>
   </table></div>
   <p class="note">seed 1에서도 ⑤ · ②는 섞기로 올라(⑤ 0.821 → 0.838, ② 0.805 → 0.822) 두 seed 평균 ⑤ 0.824 · ② 0.812입니다. ③은 seed 1에서 오히려 내려(0.827 → 0.814) 평균으로는 거의 같습니다. 그래서 "섞기가 항상 낫다"고까지는 말하기 어렵습니다.</p>
-  </section>
+  
+  <h3 id="whymean">왜 산사태는 최댓값보다 평균이 높게 나왔나 (⑤, seed 0 · 1 · 2 평균 확률로 확인)</h3>
+  <p>최댓값을 쓴 이유는 "비탈 비율이 작은 시정촌이라도 비탈이 있으면 산사태 확률이 묻히지 않게" 하려는 것이었습니다. 그런데 실제로는 산사태에서 평균이 더 높습니다. 지진별로 보면:</p>
+  <div class="tw"><table>
+    <tr><th>산사태 (⑤)</th><th class="num">최댓값 AUC</th><th class="num">평균 AUC</th><th class="num">참고: 칸 수만으로</th><th class="num">참고: 비탈 비율만으로</th></tr>
+    <tr><td>구마모토 (29곳, 피해 없음 3)</td><td class="num">0.82</td><td class="num"><b>0.87</b></td><td class="num">1.00</td><td class="num">0.79</td></tr>
+    <tr><td>오사카 (7곳, 피해 없음 2)</td><td class="num">1.00</td><td class="num">1.00</td><td class="num">1.00</td><td class="num">1.00</td></tr>
+    <tr><td>훗카이도 (13곳, 피해 없음 4)</td><td class="num"><b>0.67</b></td><td class="num">0.53</td><td class="num">0.25</td><td class="num">0.53</td></tr>
+  </table></div>
+  <div class="tw"><table>
+    <tr><th>구마모토 산사태 "피해 없음" 3곳</th><th class="num">칸 수</th><th class="num">비탈 비율</th><th class="num">칸 최댓값</th><th class="num">칸 평균</th></tr>
+    <tr><td>玉東町</td><td class="num">362</td><td class="num">0.51</td><td class="num">0.84</td><td class="num">0.24</td></tr>
+    <tr><td>菊陽町</td><td class="num">541</td><td class="num">0.02</td><td class="num">0.84</td><td class="num">0.05</td></tr>
+    <tr><td>氷川町</td><td class="num">463</td><td class="num">0.15</td><td class="num">0.89</td><td class="num">0.15</td></tr>
+    <tr><td class="muted">"피해 있음" 26곳 중앙값</td><td class="num">2,118</td><td class="num">0.49</td><td class="num">0.88</td><td class="num">0.28</td></tr>
+  </table></div>
+  <div class="anal"><b>읽는 법</b><ul>
+    <li><b>최댓값은 거의 모든 시정촌에서 높습니다.</b> 시정촌마다 칸이 수백~수천 개라, 비탈이 거의 없는 菊陽町(비탈 2%)도 칸 하나쯤은 높게 나와 최댓값 0.84가 됩니다. "피해 있음" 중앙값 0.88과 거의 같아 구별이 안 됩니다. 평균은 0.05로 확실히 낮습니다</li>
+    <li><b>정답 자체가 시정촌 크기와 얽혀 있습니다.</b> 구마모토 · 오사카는 칸 수만으로 AUC 1.00. 시정촌이 넓을수록 산사태가 한 건이라도 생길 가능성이 커서, "피해 없음"은 작은 시정촌뿐입니다. 평균은 비탈 비율(ρ 0.66~0.99)을 따라가고, 이것이 구마모토에서는 정답과 잘 맞습니다</li>
+    <li><b>훗카이도는 반대로 최댓값이 낫습니다.</b> "피해 없음" 4곳 중 夕張市(비탈 91%) · 日高町(78%)은 산이 많지만 진앙에서 멀어 산사태가 없었습니다. 평균은 비탈 비율을 따라 이 두 곳을 높게 매겨 틀립니다</li>
+    <li><b>우려했던 경우(비탈 비율은 작은데 산사태가 난 시정촌)는 있지만, 최댓값이 구해 주지 못했습니다.</b> 荒尾市(비탈 11%) · 合志市(0.5%)는 최댓값으로도 29곳 중 28 · 29위, 평균으로도 27 · 29위. 枚方市(오사카, 4%)만 최댓값 3위 · 평균 5위로 조금 나음. 칸 단위 모델이 그 시정촌의 비탈 칸에 다른 시정촌보다 높은 값을 주지 못하면 최댓값도 소용이 없습니다</li>
+    <li>산사태 전체 AUC는 구마모토(29곳)가 가장 크게 반영되어, 구마모토에서 이기는 평균이 전체로도 높게 나옵니다. 산사태 평가가 49곳(피해 없음 9곳)뿐이라 이 결론은 약합니다</li>
+  </ul></div>
+</section>
 
 <section id="seed1">
   <h2><span class="n">2.10</span>seed 1 결과: 5개 실험 모두 (⑤ ② ③ ④ ①)</h2>
