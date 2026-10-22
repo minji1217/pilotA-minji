@@ -420,13 +420,13 @@ body{background:#fff}
       <div class="tw"><table>
         <tr><th>실험</th><th class="num">시정촌 평균</th><th class="num">seed 차이</th><th class="num">칸 평균</th><th class="num">seed 차이</th></tr>
         <tr><td>① DN</td><td class="num">0.642</td><td class="num">0.009</td><td class="num">0.648</td><td class="num">0.062</td></tr>
-        <tr><td>② SOFTU</td><td class="num">0.751</td><td class="num">0.026</td><td class="num"><b>0.799</b></td><td class="num">0.012</td></tr>
-        <tr><td>③ 끄기만</td><td class="num">0.743</td><td class="num">0.020</td><td class="num"><b>0.801</b></td><td class="num">0.052</td></tr>
-        <tr><td>④ 분산만</td><td class="num"><b>0.756</b></td><td class="num">0.020</td><td class="num">0.682</td><td class="num">0.126</td></tr>
+        <tr><td>② SOFTU</td><td class="num">0.752</td><td class="num">0.004</td><td class="num"><b>0.799</b></td><td class="num">0.012</td></tr>
+        <tr><td>③ 끄기만</td><td class="num">0.744</td><td class="num">0.022</td><td class="num"><b>0.801</b></td><td class="num">0.052</td></tr>
+        <tr><td>④ 분산만</td><td class="num"><b>0.775</b></td><td class="num">0.003</td><td class="num">0.682</td><td class="num">0.126</td></tr>
         <tr><td>⑤ LOCAL 끄기 + U</td><td class="num">없음</td><td class="num"></td><td class="num"><b>0.809</b></td><td class="num">0.024</td></tr>
       </table></div>
       <ul>
-        <li>끄기를 쓰는 ② · ③은 칸 단위가 약 0.05 높음 (주로 액상화). 끄기가 없는 ④는 칸 단위가 0.07 낮음</li>
+        <li>끄기를 쓰는 ② · ③은 칸 단위가 약 0.05 높음 (주로 액상화). 끄기가 없는 ④는 칸 단위가 0.09 낮음 (10.22 고침: 시정촌 U 실험을 바꾼 불확실도 <code>px_*</code>로 다시 채점)</li>
         <li>seed 번호와 쓰는 법은 같지만 줄 수(시정촌 40~81, 칸 4.5만~32만)가 달라 뽑히는 난수는 다름. 그래서 seed끼리 짝짓지 않고 평균끼리 비교</li>
         <li>자세히: 시정촌 대 칸 단위 페이지 4절</li>
       </ul>
@@ -459,7 +459,7 @@ body{background:#fff}
       <li>seed 3개 평균에서도 ⑤가 가장 높고, 끄기가 있는 실험이 0.79~0.82에 모임. 결론 그대로</li>
       <li>산사태는 시정촌 49곳뿐이라 seed에 따라 크게 흔들림 (⑤ 산사태 seed 0 · 1 · 2 = 0.753 · 0.730 · 0.851)</li>
       <li>④는 seed마다 0.640 · 0.770 · 0.800으로 가장 크게 흔들림. 끄기가 없으면 불안정</li>
-      <li>시정촌 seed 0 · 1 · 2 평균과 비교: ② 0.750 대 0.786, ③ 0.739 대 0.806, ④ 0.754 대 0.737, ① 0.629 대 0.669 (시정촌 대 칸)</li>
+      <li>시정촌 seed 0 · 1 · 2 평균과 비교: ② 0.749 대 0.786, ③ 0.740 대 0.806, ④ 0.767 대 0.737, ① 0.629 대 0.669 (시정촌 대 칸, 시정촌은 바꾼 불확실도 <code>px_*</code>)</li>
     </ul></div></div>
     <div class="row"><b>다음</b><div><ul>
       <li>seed 3 · 4 끝나면(10.23 새벽 예상) 5개 평균으로 정리, 시정촌 5개 평균과 비교</li>
