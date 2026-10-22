@@ -603,7 +603,7 @@ body{background:#fff}
     <tr><td>③ soft + U (끄기만)</td><td class="yes">○</td><td class="yes">○</td><td class="no">✗</td><td>연구실 PC</td><td>✅ 완료 · 아래 결과 · <b>seed 1 완료 (2.10)</b></td></tr>
     <tr><td>④ soft + U (분산만)</td><td class="yes">○</td><td class="no">✗</td><td class="yes">○</td><td>연구실 PC</td><td>✅ 완료 · 아래 결과 · <b>seed 1 완료 (2.10)</b></td></tr>
     <tr><td>⑤ 끄기 지도 + U</td><td class="no">✗ (끄기 지도로 0 고정)</td><td class="yes">○</td><td class="yes">○</td><td>연구실 PC</td><td>✅ 완료 · 아래 결과 · <b>seed 1 완료 (2.10)</b></td></tr>
-    <tr><td>②③④ 다시: 5~10° 칸 고친 soft (<a href="#softmid">★ 5~10° 칸 문제</a>)</td><td class="yes">○ (고침)</td><td>②③과 같음</td><td>②④와 같음</td><td>연구실 PC</td><td>🔄 seed 0 진행 중 (10.21 저녁 시작) · 다음 seed 1</td></tr>
+    <tr><td>②③④ 다시: 5~10° 칸 고친 soft (<a href="#softmid">★ 5~10° 칸 문제</a>)</td><td class="yes">○ (고침)</td><td>②③과 같음</td><td>②④와 같음</td><td>연구실 PC</td><td>✅ seed 0 · 1 완료 (10.22 아침, <a href="#mid">2.11</a>) · seed 2 · 3 · 4 도는 중</td></tr>
   </table></div>
   <p class="meta">seed 1은 10.21 연구실 PC에서 5개 모두 끝남 (2.10). USGS 값 = 칸과 겹친 USGS 칸들의 면적 평균 (<code>raw/local_250m_byevent_usgs_aw.csv.gz</code>, 결과 폴더 끝 <code>_aw</code>). U 끄기는 논문 기준(불확실도 0·999만). 모두 BD 없음, flow K = 4, 3000 epoch, seed 0. 한 실험에 약 77분</p>
 </section>
@@ -891,6 +891,33 @@ body{background:#fff}
   </ul></div>
 </section>
 
+<section id="mid">
+  <h2><span class="n">2.11</span>고친 soft 결과 (5~10° 칸은 낮추지 않음) · seed 2 중간 결과</h2>
+  <p>soft에서 5~10° 칸이 산사태 · 액상화 둘 다 낮아지던 부작용을 고치고(<a href="#softmid">★ 5~10° 칸 문제</a>) ② · ③ · ④를 seed 0 · 1로 다시 돌렸습니다 (10.21 밤 ~ 10.22 아침, 연구실 PC, 결과 폴더 끝 <code>_aw_mid</code>). 이어서 seed 2 · 3 · 4를 돌리는 중입니다.</p>
+  <h3>고치기 전과 후 (seed 0 · 1 평균)</h3>
+  <div class="tw"><table>
+    <tr><th>실험 (seed 0 · 1 평균, 칸 최댓값)</th><th class="num">고치기 전</th><th class="num">고친 뒤</th><th class="num">전체 차이</th><th class="num">산사태 차이</th><th class="num">액상화 차이</th><th class="num">고친 뒤 seed 0 · 1</th><th class="num">고치기 전 seed 0 · 1</th><th class="num">섞기 평균 (전 · 후)</th></tr>
+    <tr><td>② soft + U</td><td class="num">0.799</td><td class="num"><b>0.786</b></td><td class="num down">−0.013</td><td class="num down">−0.019</td><td class="num down">−0.011</td><td class="num">0.782 · 0.790</td><td class="num">0.793 · 0.805</td><td class="num">0.812 · <b>0.806</b></td></tr><tr><td>③ 끄기만</td><td class="num">0.801</td><td class="num"><b>0.820</b></td><td class="num up">+0.019</td><td class="num down">−0.004</td><td class="num up">+0.026</td><td class="num">0.800 · 0.839</td><td class="num">0.775 · 0.827</td><td class="num">0.800 · <b>0.818</b></td></tr><tr><td>④ 분산만</td><td class="num">0.682</td><td class="num"><b>0.705</b></td><td class="num up">+0.023</td><td class="num down">−0.019</td><td class="num up">+0.037</td><td class="num">0.640 · 0.770</td><td class="num">0.619 · 0.745</td><td class="num">0.688 · <b>0.716</b></td></tr>
+  </table></div>
+  <div class="anal"><b>읽는 법</b><ul>
+    <li>고쳐도 크게 달라지지 않았습니다. ③ +0.019 · ④ +0.023은 오르고 ② −0.013은 내렸는데, 모두 seed 흔들림(0.01~0.13) 안입니다.</li>
+    <li>액상화는 ③ · ④에서 오르고(+0.026 · +0.037), 산사태는 셋 다 조금 내립니다(−0.004 ~ −0.019). 중간 칸이 산사태 후보로 다시 들어오면서 산사태 시정촌 최댓값이 조금 흐려진 것으로 보입니다.</li>
+    <li>결론("칸 단위에서는 끄기가 핵심, 끄기가 없는 ④ · ①은 낮고 흔들림이 큼")은 그대로입니다.</li>
+  </ul></div>
+  <h3>seed 2까지 (10.22 오전 9시 기준)</h3>
+  <div class="tw"><table>
+    <tr><th>실험 (전체 AUC, 칸 최댓값)</th><th class="num">seed 0</th><th class="num">seed 1</th><th class="num">seed 2</th><th class="num">0 · 1 평균</th><th class="num">0 · 1 · 2 평균</th><th class="num">3개 평균 산사태 / 액상화</th></tr>
+    <tr><td>⑤ 끄기 지도 + U</td><td class="num">0.797</td><td class="num">0.821</td><td class="num">0.827</td><td class="num">0.809</td><td class="num"><b>0.815</b></td><td class="num">0.778 / 0.827</td></tr><tr><td>② soft + U (고친 뒤)</td><td class="num">0.782</td><td class="num">0.790</td><td class="num">0.785</td><td class="num">0.786</td><td class="num"><b>0.786</b></td><td class="num">0.761 / 0.794</td></tr><tr><td>③ 끄기만 (고친 뒤)</td><td class="num">0.800</td><td class="num">0.839</td><td class="num">0.778</td><td class="num">0.820</td><td class="num"><b>0.806</b></td><td class="num">0.780 / 0.814</td></tr><tr><td>④ 분산만 (고친 뒤)</td><td class="num">0.640</td><td class="num">0.770</td><td class="num">도는 중</td><td class="num">0.705</td><td class="num"><b>–</b></td><td class="num">–</td></tr><tr><td>① baseline</td><td class="num">0.617</td><td class="num">0.679</td><td class="num">0.710</td><td class="num">0.648</td><td class="num"><b>0.669</b></td><td class="num">0.678 / 0.666</td></tr>
+    <tr><td class="muted">USGS 기준선</td><td class="num" colspan="6">0.854</td></tr>
+  </table></div>
+  <div class="anal"><b>읽는 법</b><ul>
+    <li>seed 3개 평균은 ⑤ 0.815 · ③ 0.806 · ② 0.786 · ① 0.669로, ⑤가 계속 가장 높고 끄기가 있는 실험이 0.79~0.82에 모입니다.</li>
+    <li>seed 2에서 ⑤ 산사태가 0.851로 크게 올라(seed 0 · 1은 0.753 · 0.730) 산사태가 seed에 따라 많이 흔들립니다. 산사태 시정촌은 49곳뿐이라 몇 곳만 바뀌어도 AUC가 크게 움직입니다.</li>
+    <li>④ seed 2와 seed 3 · 4는 돌리는 중입니다 (10.23 새벽 예상). 끝나면 5개 평균으로 바꿉니다.</li>
+  </ul></div>
+</section>
+
+
 <section>
   <h2><span class="n">3</span>지진별 (USGS 값 = 겹친 면적 평균)</h2>
   <div class="tw"><table>
@@ -922,7 +949,7 @@ body{background:#fff}
   <ul>
     <li>완료: 면적 평균 5개 실험 (10.20, 연구실 PC)</li>
     <li>완료: seed 1 다섯 개 모두 (10.21, 연구실 PC). 결과는 2.10, 두 seed 평균은 2 · 2.9 · 3에도 덧붙임</li>
-    <li>진행 중: 5~10° 칸을 고친 soft로 ② · ③ · ④ 다시 (seed 0 · 1). 끝나면 지금 결과와 나란히 비교하고, 시정촌 실험과 칸 실험의 seed 0 · seed 1 비교표(시정촌 대 칸 단위 페이지 4절)도 새 결과로 다시 만들기</li>
+    <li>완료 (10.22): 5~10° 칸을 고친 soft로 ② · ③ · ④ 다시 (seed 0 · 1, 2.11). 진행 중: seed 2 · 3 · 4 (10.23 새벽 예상). 끝나면 지금 결과와 나란히 비교하고, 시정촌 실험과 칸 실험의 seed 0 · seed 1 비교표(시정촌 대 칸 단위 페이지 4절)도 새 결과로 다시 만들기</li>
     <li>교수님 확인 (10.20): 칸(픽셀) 단위 실험은 학습도 픽셀 단위로 하는 것이 맞음 → 지금 방식 그대로</li>
     <li>나중에: 칸 단위 soft만 · U만 (효과 나눠 보기), flow K = 8, base 상관도로 잡음 칸 거르기, 시정촌으로 모으는 방법(최댓값 대 평균) 비교, GPU로 돌리기</li>
   </ul>
