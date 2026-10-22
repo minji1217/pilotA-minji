@@ -1260,6 +1260,27 @@ body{background:#fff}
     <li>끄기가 있는 ⑤ · ②는 액상화 노토 · 구마모토(시정촌 104곳)에서 거의 안 흔들려서, 전체 AUC도 안정적입니다. 산사태는 49곳뿐이라 어느 실험이든 흔들림이 큽니다</li>
     <li>전체 AUC는 지진들을 가중평균한 값이라, 지진 하나하나보다 훨씬 덜 흔들립니다 (지진별 폭 0.1~0.4, 전체 폭 0.01~0.16)</li>
   </ul></div>
+
+  <h3 id="muniswing">시정촌마다 사후확률이 seed에 따라 얼마나 바뀌나 (시정촌 단위 대 칸 단위, seed 0 · 1 · 2)</h3>
+  <div class="tw"><table>
+    <tr><th>단위</th><th>실험</th><th>재해</th><th class="num">시정촌별 확률 폭 평균<br>(가장 큰 seed − 가장 작은 seed)</th><th class="num">폭 0.3 이상인 시정촌</th><th class="num">seed끼리 순위 상관<br>(지진 안, 1이면 순서 똑같음)</th></tr>
+    <tr><td>시정촌</td><td>DN</td><td><span class="tag t-ls">산사태</span></td><td class="num">0.44</td><td class="num">45%</td><td class="num"><b style="color:var(--warn)">0.05</b></td></tr><tr><td>시정촌</td><td>DN</td><td><span class="tag t-lq">액상화</span></td><td class="num">0.36</td><td class="num">40%</td><td class="num"><b style="color:inherit">0.78</b></td></tr><tr><td>시정촌</td><td>SOFTU</td><td><span class="tag t-ls">산사태</span></td><td class="num">0.42</td><td class="num">60%</td><td class="num"><b style="color:var(--warn)">0.56</b></td></tr><tr><td>시정촌</td><td>SOFTU</td><td><span class="tag t-lq">액상화</span></td><td class="num">0.37</td><td class="num">52%</td><td class="num"><b style="color:inherit">0.86</b></td></tr><tr><td>시정촌</td><td>SOFTU 끄기만</td><td><span class="tag t-ls">산사태</span></td><td class="num">0.45</td><td class="num">45%</td><td class="num"><b style="color:var(--warn)">0.35</b></td></tr><tr><td>시정촌</td><td>SOFTU 끄기만</td><td><span class="tag t-lq">액상화</span></td><td class="num">0.40</td><td class="num">42%</td><td class="num"><b style="color:inherit">0.73</b></td></tr><tr><td>시정촌</td><td>SOFTU 분산만</td><td><span class="tag t-ls">산사태</span></td><td class="num">0.42</td><td class="num">58%</td><td class="num"><b style="color:var(--warn)">0.53</b></td></tr><tr><td>시정촌</td><td>SOFTU 분산만</td><td><span class="tag t-lq">액상화</span></td><td class="num">0.36</td><td class="num">48%</td><td class="num"><b style="color:inherit">0.86</b></td></tr><tr><td>칸</td><td>⑤ 끄기 지도+U</td><td><span class="tag t-ls">산사태</span></td><td class="num">0.38</td><td class="num">56%</td><td class="num"><b style="color:inherit">0.82</b></td></tr><tr><td>칸</td><td>⑤ 끄기 지도+U</td><td><span class="tag t-lq">액상화</span></td><td class="num">0.34</td><td class="num">55%</td><td class="num"><b style="color:inherit">0.83</b></td></tr><tr><td>칸</td><td>② soft+U</td><td><span class="tag t-ls">산사태</span></td><td class="num">0.35</td><td class="num">52%</td><td class="num"><b style="color:inherit">0.71</b></td></tr><tr><td>칸</td><td>② soft+U</td><td><span class="tag t-lq">액상화</span></td><td class="num">0.34</td><td class="num">58%</td><td class="num"><b style="color:inherit">0.78</b></td></tr><tr><td>칸</td><td>③ 끄기만</td><td><span class="tag t-ls">산사태</span></td><td class="num">0.85</td><td class="num">100%</td><td class="num"><b style="color:inherit">0.82</b></td></tr><tr><td>칸</td><td>③ 끄기만</td><td><span class="tag t-lq">액상화</span></td><td class="num">0.25</td><td class="num">37%</td><td class="num"><b style="color:inherit">0.88</b></td></tr><tr><td>칸</td><td>④ 분산만</td><td><span class="tag t-ls">산사태</span></td><td class="num">0.33</td><td class="num">48%</td><td class="num"><b style="color:var(--warn)">0.53</b></td></tr><tr><td>칸</td><td>④ 분산만</td><td><span class="tag t-lq">액상화</span></td><td class="num">0.37</td><td class="num">59%</td><td class="num"><b style="color:inherit">0.61</b></td></tr><tr><td>칸</td><td>① baseline</td><td><span class="tag t-ls">산사태</span></td><td class="num">0.90</td><td class="num">100%</td><td class="num"><b style="color:var(--warn)">0.50</b></td></tr><tr><td>칸</td><td>① baseline</td><td><span class="tag t-lq">액상화</span></td><td class="num">0.69</td><td class="num">83%</td><td class="num"><b style="color:inherit">0.78</b></td></tr>
+  </table></div>
+  <p class="meta">정답이 있는 시정촌 전부 (산사태 77 · 액상화 191, AUC에서 빠지는 지진 포함). 칸 단위 값 = 시정촌 안 칸 최댓값. 순위 상관 = 같은 지진 안에서 seed 두 개씩 짝지어 Spearman 상관을 구해 평균. ② ③ ④는 고친 soft.</p>
+  <div class="tw"><table>
+    <tr><th>지진별 시정촌 사후확률 중앙값</th><th class="num">seed 0</th><th class="num">seed 1</th><th class="num">seed 2</th></tr>
+    <tr><td>시정촌 SOFTU · 산사태 · 오사카</td><td class="num">0.14</td><td class="num">0.87</td><td class="num">0.15</td></tr>
+    <tr><td>칸 ① baseline · 산사태 · 구마모토</td><td class="num">0.99</td><td class="num">1.00</td><td class="num">0.06</td></tr>
+    <tr><td>칸 ③ 끄기만 · 산사태 · 오사카</td><td class="num">0.17</td><td class="num">0.99</td><td class="num">0.16</td></tr>
+    <tr><td>칸 ⑤ 끄기 지도+U · 액상화 · 구마모토</td><td class="num">0.84</td><td class="num">0.84</td><td class="num">0.29</td></tr>
+  </table></div>
+  <div class="anal"><b>읽는 법</b><ul>
+    <li><b>확률 값 자체는 칸 단위도 크게 흔들립니다.</b> 시정촌 단위와 마찬가지로 시정촌별 폭 평균이 0.25~0.90이고, 절반 안팎의 시정촌이 seed에 따라 0.3 넘게 바뀝니다. 특히 ① · ③ 산사태는 거의 모든 시정촌이 바뀝니다</li>
+    <li>흔들림의 대부분은 <b>한 지진의 시정촌이 통째로 올라가거나 내려가는 것</b>입니다 (위 중앙값 표: 구마모토 산사태가 seed 0 · 1에서는 거의 1, seed 2에서는 0.06). 지진마다 함께 쓰는 a · c · w_x가 seed에 따라 다른 곳에 자리 잡기 때문이고, 칸 최댓값은 칸이 많아 1에 붙기 쉬워 더 크게 움직입니다</li>
+    <li><b>그러나 시정촌끼리의 순서는 칸 단위가 더 안정적입니다.</b> 산사태 순위 상관이 시정촌 0.05~0.56인데 칸은 ⑤ · ③ 0.82, ② 0.71. 액상화도 칸 ⑤ · ③ 0.83~0.88로 시정촌(0.73~0.86)과 같거나 높습니다. AUC는 순서만 보므로, 확률이 통째로 움직여도 AUC는 덜 흔들립니다</li>
+    <li>끄기가 없는 칸 ④ · ①은 순위 상관도 0.50~0.78로 낮아 순서까지 흔들립니다. ④ 액상화 0.61이 노토 AUC 0.35 ~ 0.77의 원인입니다</li>
+    <li>그래서 칸 단위든 시정촌 단위든 <b>확률 값(예: 0.8이면 위험)을 그대로 쓰기는 어렵고</b>, 순서(어느 시정촌이 더 위험한가)로 보는 것이 맞습니다</li>
+  </ul></div>
 </section>
 
 
