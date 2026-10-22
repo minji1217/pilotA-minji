@@ -413,6 +413,22 @@ body{background:#fff}
     <li><b>한계</b>: 合志市처럼 비탈이 10%보다 훨씬 적으면(0.5%) 상위 10%에 평지 칸이 대부분 섞여 0.09로 묻힙니다. 이런 곳은 최댓값(0.77)이 더 낫지만, 최댓값은 다른 곳에서 잡음에 약합니다. 그래서 "아주 작은 비탈을 잡는 방법"이 아니라 "<b>비탈이 시정촌의 10% 이상일 때 평지에 묻히지 않게 하는 방법</b>"입니다</li>
     <li>비율을 1%로 하면 작은 비탈에 가까워지지만 최댓값처럼 잡음에 약해지고(산사태 0.822), 5% · 10%가 가장 좋았습니다 (0.856 · 0.860)</li>
   </ul>
+
+  <h3 id="steephigh">비탈 칸은 실제로 높게 나오나? (⑤, 13개 시정촌의 칸, seed 0~3)</h3>
+  <div class="tw"><table>
+    <tr><th>지진</th><th>경사</th><th class="num">칸 사후확률 평균</th><th class="num">상위 10% 지점</th><th class="num">0.5 이상인 칸</th></tr>
+    <tr><td rowspan="3">구마모토</td><td>평지 (5° 미만)</td><td class="num">0.000</td><td class="num">0.000</td><td class="num">0%</td></tr>
+    <tr><td>중간 (5~10°)</td><td class="num">0.29</td><td class="num">0.75</td><td class="num">20%</td></tr>
+    <tr><td>비탈 (10° 이상)</td><td class="num">0.36</td><td class="num"><b>0.78</b></td><td class="num"><b>28%</b></td></tr>
+    <tr><td rowspan="3">훗카이도</td><td>평지</td><td class="num">0.000</td><td class="num">0.000</td><td class="num">0%</td></tr>
+    <tr><td>중간</td><td class="num">0.30</td><td class="num">0.83</td><td class="num">22%</td></tr>
+    <tr><td>비탈</td><td class="num">0.33</td><td class="num"><b>0.83</b></td><td class="num"><b>25%</b></td></tr>
+  </table></div>
+  <ul>
+    <li><b>비탈 칸은 높게 나옵니다.</b> 비탈 칸의 4분의 1 정도가 0.5 이상이고, 위쪽 10%는 0.78~0.83입니다. ⑤는 끄기 지도로 평지 칸의 산사태를 0으로 고정하므로, 시정촌의 상위 10%는 사실상 그 시정촌의 비탈 · 중간 칸 중 높은 것들입니다</li>
+    <li>그래서 상위 10%는 "비탈 칸 중 높게 나온 것들이 얼마나 높은가"를 재는 셈이고, 비탈이 10% 이상인 시정촌에서는 평지에 묻히지 않습니다</li>
+    <li>남은 문제는 <b>피해 없는 시정촌의 비탈 칸도 똑같이 높게 나온다</b>는 것입니다 (玉東町 · 氷川町). 비탈 칸 확률은 거의 DPM이 정하는데, 구마모토처럼 피해가 넓은 지진에서는 DPM이 어디서나 크게 나오기 때문입니다</li>
+  </ul>
 </section>
 
 <section id="curve">
