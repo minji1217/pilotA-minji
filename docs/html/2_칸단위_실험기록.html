@@ -933,10 +933,22 @@ body{background:#fff}
   <div class="anal"><b>읽는 법</b><ul>
     <li>seed 3개 평균은 ⑤ 0.815 · ③ 0.806 · ② 0.786 · ④ 0.737 · ① 0.669로, ⑤가 계속 가장 높고 끄기가 있는 ⑤ · ③ · ②가 0.79~0.82에 모입니다. 끄기가 없는 ④ · ①은 낮습니다.</li>
     <li>④는 seed마다 0.640 · 0.770 · 0.800으로 가장 크게 흔들립니다 (폭 0.16). ①도 0.617 ~ 0.710 (폭 0.09). 끄기가 있는 ②(0.008) · ⑤(0.030) · ③(0.061)보다 훨씬 큽니다.</li>
-    <li>섞기(산사태 칸 평균) 3개 평균: ⑤ 0.821 · ③ 0.806 · ② 0.797 · ④ 0.744 · ① 0.661.</li>
+    <li>섞기(산사태 칸 평균) 3개 평균: ⑤ 0.821 · ③ 0.806 · ② 0.797 · ④ 0.744 · ① 0.661. 아래 표</li>
     <li>seed 2에서 ⑤ 산사태가 0.851로 크게 올라(seed 0 · 1은 0.753 · 0.730) 산사태가 seed에 따라 많이 흔들립니다. 산사태 시정촌은 49곳뿐이라 몇 곳만 바뀌어도 AUC가 크게 움직입니다.</li>
     <li>seed 3 · 4는 돌리는 중입니다 (10.23 새벽 1~2시 예상). 끝나면 5개 평균으로 바꿉니다.</li>
   </ul></div>
+
+  
+  <h3 id="mid-hyb">섞기 (산사태 칸 평균 + 액상화 칸 최댓값), seed 0 · 1 · 2</h3>
+  <div class="tw"><table>
+    <tr><th>실험</th><th class="num">기본 3개 평균</th><th class="num">섞기 seed 0 · 1 · 2</th><th class="num">섞기 3개 평균</th><th class="num">차이</th><th class="num">산사태 (기본 · 섞기)</th></tr>
+    <tr><td>⑤ 끄기 지도 + U</td><td class="num">0.815</td><td class="num">0.810 · 0.838 · 0.816</td><td class="num"><b>0.821</b></td><td class="num up">+0.006</td><td class="num">0.778 · 0.804</td></tr>
+    <tr><td>③ 끄기만 (고친 뒤)</td><td class="num">0.806</td><td class="num">0.812 · 0.824 · 0.782</td><td class="num"><b>0.806</b></td><td class="num">0.000</td><td class="num">0.780 · 0.781</td></tr>
+    <tr><td>② soft + U (고친 뒤)</td><td class="num">0.786</td><td class="num">0.801 · 0.810 · 0.779</td><td class="num"><b>0.797</b></td><td class="num up">+0.011</td><td class="num">0.761 · 0.806</td></tr>
+    <tr><td>④ 분산만 (고친 뒤)</td><td class="num">0.737</td><td class="num">0.646 · 0.787 · 0.798</td><td class="num"><b>0.744</b></td><td class="num up">+0.007</td><td class="num">0.778 · 0.806</td></tr>
+    <tr><td>① baseline</td><td class="num">0.669</td><td class="num">0.624 · 0.667 · 0.691</td><td class="num"><b>0.661</b></td><td class="num down">−0.008</td><td class="num">0.678 · 0.644</td></tr>
+  </table></div>
+  <p class="meta">학습은 그대로, 시정촌으로 모으는 방법만 바꿔 다시 채점. 액상화는 둘 다 칸 최댓값이라 같음. 결과를 보고 고른 조합이라 참고용.</p>
 
   <h3 id="evseed">지진별 seed 흔들림 (seed 0 · 1 · 2, 칸 최댓값)</h3>
   <figure><div class="tw"><svg viewBox="0 0 910 356" width="910" role="img" aria-label="지진별 seed마다의 AUC" style="max-width:100%;height:auto;min-width:720px">
