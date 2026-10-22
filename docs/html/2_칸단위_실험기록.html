@@ -615,10 +615,27 @@ body{background:#fff}
     <li>추가 실험: 시정촌 단위에서 했던 soft + U(SOFTU · 끄기만 · 분산만)를 칸 단위에도 그대로 돌려 비교</li>
     <li>칸: 250 m (1/4 메시), 264개 시정촌 안 약 102만 칸. 칸마다 자기 DPM(<code>dpm_250m_v8</code>, DPM_배경차)과 자기 USGS 산사태·액상화 확률</li>
     <li>물 칸은 뺌. USGS가 계산 안 한 칸(999)은 확률 0</li>
-    <li>칸 단위 soft: 칸의 경사가 10° 이상이면 비탈 비율 1, 5° 미만이면 평지 비율 1, 아니면 0. 비율 0인 재해는 사전확률 로짓에 log 0.01 = −4.6을 더함 (0이면 log 0 = −∞라 1%로 바닥을 둠. 사전확률이 약 1/100이 됨)</li>
+    <li>칸 단위 soft (10.21 고침, <code>--soft-mid</code>): 5° 미만 평지 칸은 산사태, 10° 이상 비탈 칸은 액상화 사전확률 로짓에 log 0.01 = −4.6을 더함 (사전확률 약 1/100). 5~10° 중간 칸은 그대로. 고치기 전에는 중간 칸도 둘 다 −4.6 (<a href="#softmid">★ 5~10° 칸 문제</a>)</li>
     <li>칸 단위 U: 불확실도 0·999 칸은 그 재해를 0으로 고정, 분산 = 그 칸의 USGS 불확실도</li>
-    <li>평가: 시정촌 단위와 같음. 공통 263곳, 지진별 AUC를 시정촌 수로 가중평균 (<code>compare_latest.py</code>)</li>
+    <li>평가: 시정촌 단위와 같음 (<code>compare_latest.py</code>). 지진 × 재해마다 AUC를 따로 구하고 시정촌 수로 가중평균. <a href="#evalset">평가 대상 아래 표</a></li>
     <li>코드 <code>disasternet/run_cells_max.py</code>, 결과 폴더 <code>outputs/disasternet/cells_max</code></li>
+  </ul>
+
+  <h3 id="evalset">평가 대상 (몇 곳으로 AUC를 재나)</h3>
+  <div class="tw"><table>
+    <tr><th>지진</th><th class="num"><span class="tag t-ls">산사태</span> 평가 (피해 · 없음)</th><th class="num"><span class="tag t-lq">액상화</span> 평가 (피해 · 없음)</th></tr>
+    <tr><td>2016 구마모토</td><td class="num">29 (26 · 3)</td><td class="num">40 (18 · 22)</td></tr>
+    <tr><td>2018 오사카</td><td class="num">7 (5 · 2)</td><td class="num no">빠짐 (39곳 모두 피해 없음)</td></tr>
+    <tr><td>2018 훗카이도</td><td class="num">13 (9 · 4)</td><td class="num">40 (17 · 23)</td></tr>
+    <tr><td>2021 후쿠시마</td><td class="num no">빠짐 (21곳 모두 피해)</td><td class="num">7 (6 · 1)</td></tr>
+    <tr><td>2024 노토반도</td><td class="num no">빠짐 (7곳 모두 피해)</td><td class="num">64 (33 · 31)</td></tr>
+    <tr><td><b>합계</b></td><td class="num"><b>49</b> (40 · 9)</td><td class="num"><b>151</b> (74 · 77)</td></tr>
+  </table></div>
+  <ul>
+    <li><b>전체 AUC = 200곳</b> (산사태 49 + 액상화 151, 지진 × 재해 × 시정촌). 같은 시정촌이 산사태와 액상화에 둘 다 들어가면 두 번 셉니다</li>
+    <li>정답(피해 여부)이 있는 시정촌만, 그리고 pilotA 지진별 분리 결과에도 있는 곳(공통 263곳)만 씁니다. 후쿠시마 액상화는 정답 8곳 중 1곳이 pilotA 결과에 없어 7곳</li>
+    <li>한 지진에서 정답이 한쪽뿐이면 AUC를 잴 수 없어 그 지진 × 재해는 뺍니다 (위 표의 "빠짐")</li>
+    <li>산사태는 49곳뿐이고 그중 피해 없음이 9곳이라, 몇 곳만 순서가 바뀌어도 AUC가 크게 움직입니다. 특히 오사카 산사태는 7곳 (피해 없음 2곳)</li>
   </ul>
 </section>
 
