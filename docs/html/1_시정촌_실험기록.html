@@ -523,6 +523,22 @@ body{background:#fff}
 </section>
 <section id="su">
   <h2><span class="n">U</span>불확실도 계산 변경 (10.20): 이전 대 새 결과</h2>
+  <h3 id="su-sizes">한눈에: 무엇을 어느 칸에서 계산하나, 칸 크기</h3>
+  <div class="tw"><table>
+    <tr><th></th><th>칸 고르기</th><th>쓰는 값</th><th>물</th></tr>
+    <tr><td>사전확률 (처음부터)</td><td>USGS 칸 중심점이 시정촌 안</td><td>그 USGS 칸의 <b>확률</b></td><td>포함</td></tr>
+    <tr><td>불확실도, 바꾸기 전</td><td><b>우리 250 m 칸(경사 칸) 중심점</b>이 시정촌 안</td><td>그 250 m 칸 중심점이 떨어지는 USGS 칸의 <b>불확실도</b></td><td>제외</td></tr>
+    <tr><td>불확실도, 지금</td><td>USGS 칸 중심점이 시정촌 안 (사전확률과 똑같이)</td><td>그 USGS 칸의 <b>불확실도</b></td><td>포함</td></tr>
+  </table></div>
+  <div class="tw"><table>
+    <tr><th>칸</th><th class="num">남북 (세로)</th><th class="num">동서 (가로)</th><th>비고</th></tr>
+    <tr><td>USGS 산사태 (확률 = 불확실도, 같은 격자)</td><td class="num">약 230 m</td><td class="num">약 170~195 m</td><td>가장 작음</td></tr>
+    <tr><td>USGS 액상화 (확률 = 불확실도, 같은 격자)</td><td class="num">약 460 m</td><td class="num">약 340~390 m</td><td>산사태 칸의 가로 · 세로 2배</td></tr>
+    <tr><td>우리 250 m 칸 (경사 칸, 1/4 메시)</td><td class="num">약 230 m</td><td class="num">약 260~290 m</td><td>칸 단위 실험의 칸</td></tr>
+    <tr><td>DPM 화소</td><td class="num">약 40 m</td><td class="num">약 40 m</td><td>250 m 칸 하나에 약 41개</td></tr>
+  </table></div>
+  <p class="meta">USGS는 재해마다 확률 지도와 불확실도 지도를 같은 격자로 줍니다. 그래서 지금은 시정촌마다 사전확률과 불확실도가 똑같은 USGS 칸 묶음에서 계산됩니다. 가로가 범위인 것은 위도 때문 (경도 간격은 같아도 북쪽 훗카이도로 갈수록 실제 거리가 짧음). 바꾸기 전 방식은 틀렸다기보다 사전확률과 기준이 달랐던 것이고, 사전확률 쪽에 맞췄습니다. 사전확률 표는 USGS 기준선 · pilotA도 함께 쓰는 기준이라 물을 포함한 채 그대로 둡니다.</p>
+
   <p>USGS 불확실도(U)를 시정촌 값으로 만드는 방식을 <b>USGS 사전확률 표와 같은 방식</b>으로 바꾸고, U를 쓰는 실험을 모두 다시 돌렸습니다. 이 페이지의 다른 표·그래프는 모두 새 불확실도 값입니다.</p>
   <div class="tw"><table>
     <tr><th></th><th>이전 불확실도</th><th>새 불확실도 (지금)</th></tr>
