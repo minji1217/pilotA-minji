@@ -350,7 +350,7 @@ body{background:#fff}
     <li><b>soft</b>: 사전확률 로짓에 log(비탈 비율) / log(평지 비율)을 더함</li>
     <li><b>U 끄기</b>: 중심점이 시정촌 안인 USGS 칸 중 불확실도가 0·999가 아닌 칸이 하나도 없으면 그 재해를 0으로 고정 (산사태 5곳, 액상화 11곳)</li>
     <li><b>U 분산</b>: 사후분포 출발점 r⁰의 분산 = 중심점이 시정촌 안인 켜진 USGS 칸들의 불확실도 평균 (사전확률 표와 같은 방식, 물 포함). 시정촌마다 다른 값 (전체 시정촌 평균: 산사태 0.005, 액상화 0.013). 안 쓰면 모든 시정촌 1</li>
-    <li>평가: 공통 263곳, 지진별 AUC를 시정촌 수로 가중평균, seed 5개 평균 (<code>compare_latest.py</code>)</li>
+    <li>평가: 200곳 (산사태 49 + 액상화 151, <a href="#evalset">평가 대상</a>), 지진별 AUC를 시정촌 수로 가중평균, seed 5개 평균 (<code>compare_latest.py</code>). 지진별 seed 흔들림은 <a href="#evseed">6장</a></li>
     <li>BD 있는 기존 결과(<code>input_v5_*_lqmax</code>)는 그대로 보존했습니다</li>
     <li>U를 쓴 실험의 끄기 기준: <b>논문 기준</b> (불확실도 0·999만). 결과 폴더는 <code>px_*</code> (새 불확실도; 확률까지 보고 끈 비교용은 <code>pxo_*</code>)</li>
     <li>이름: <b>끄기만</b> = USGS 불확실도를 끄기에만 씀, <b>분산만</b> = 분산에만 씀. 결과 폴더 이름은 코드 옵션을 따라 <code>_off</code> / <code>_var</code>로 남아 있습니다</li>
@@ -503,6 +503,23 @@ body{background:#fff}
     <tr><td>결과 (전체 / 산사태 / 액상화)</td><td>0.855 / 0.872 / 0.850</td><td>시정촌 최고 0.751, 칸 최고 0.797</td></tr>
   </table></div>
   <p class="meta">코드: pilotA <code>train.py --holdout-event &lt;지진&gt; --lam-gamma 10 --no-lq-labels</code> (A1은 <code>--no-lq-labels</code> 없이), 결과 파일 <code>outputs/holdout_detail_lqnolab_holdout-*.csv</code>. pilotA는 다른 지진의 정답과 피해 통계를 쓰고 DisasterNet은 정답 없이 위성 DPM만 쓰므로, DisasterNet이 pilotA보다 낮은 것은 어느 정도 자연스럽습니다.</p>
+
+  <h3 id="evalset">평가 대상 (몇 곳으로 AUC를 재나)</h3>
+  <div class="tw"><table>
+    <tr><th>지진</th><th class="num"><span class="tag t-ls">산사태</span> 평가 (피해 · 없음)</th><th class="num"><span class="tag t-lq">액상화</span> 평가 (피해 · 없음)</th></tr>
+    <tr><td>2016 구마모토</td><td class="num">29 (26 · 3)</td><td class="num">40 (18 · 22)</td></tr>
+    <tr><td>2018 오사카</td><td class="num">7 (5 · 2)</td><td class="num no">빠짐 (39곳 모두 피해 없음)</td></tr>
+    <tr><td>2018 훗카이도</td><td class="num">13 (9 · 4)</td><td class="num">40 (17 · 23)</td></tr>
+    <tr><td>2021 후쿠시마</td><td class="num no">빠짐 (21곳 모두 피해)</td><td class="num">7 (6 · 1)</td></tr>
+    <tr><td>2024 노토반도</td><td class="num no">빠짐 (7곳 모두 피해)</td><td class="num">64 (33 · 31)</td></tr>
+    <tr><td><b>합계</b></td><td class="num"><b>49</b> (40 · 9)</td><td class="num"><b>151</b> (74 · 77)</td></tr>
+  </table></div>
+  <ul>
+    <li><b>전체 AUC = 200곳</b> (산사태 49 + 액상화 151, 지진 × 재해 × 시정촌). 같은 시정촌이 산사태와 액상화에 둘 다 들어가면 두 번 셉니다</li>
+    <li>정답(피해 여부)이 있는 시정촌 중 pilotA 지진별 분리 결과에도 있는 곳(공통 263곳)만 씁니다. 후쿠시마 액상화는 정답 8곳 중 1곳이 pilotA 결과에 없어 7곳</li>
+    <li>한 지진에서 정답이 한쪽뿐이면 AUC를 잴 수 없어 그 지진 × 재해는 뺍니다 (위 표의 "빠짐")</li>
+    <li>칸 단위 실험도 같은 200곳으로 채점합니다</li>
+  </ul>
 </section>
 <section id="su">
   <h2><span class="n">U</span>불확실도 계산 변경 (10.20): 이전 대 새 결과</h2>
@@ -721,6 +738,388 @@ body{background:#fff}
   
   <p class="meta">괄호는 양성/음성 시정촌 수. 산사태 구마모토에서는 ④가 pilotA(0.846)와 비슷하지만, 액상화는 모든 지진에서 USGS에 크게 못 미칩니다.</p>
   <div class="anal"><b>결과 분석</b><ul><li><b>산사태 구마모토</b>(양성 26곳)는 soft가 크게 올립니다 (① 0.544 → ② 0.818). ④ 0.838은 pilotA(0.846)와 비슷하고 USGS(0.641)보다 높습니다</li><li><b>산사태 오사카</b>는 시정촌이 7곳뿐이라 값이 크게 흔들립니다 (① 0.220 → ④ 0.980). 한 곳만 순서가 바뀌어도 AUC가 크게 달라집니다</li><li><b>산사태 홋카이도</b>는 네 실험 모두 USGS(0.778)보다 낮고, ④가 0.583으로 가장 낮습니다. soft는 조금 올리지만 (① 0.600 → ② 0.650), U 위에서는 오히려 내립니다 (③ 0.633 → ④ 0.583)</li><li><b>액상화 구마모토 · 홋카이도</b>는 soft·U로 오르지만 (구마모토 0.628 → 0.823, 홋카이도 0.590 → 0.675), USGS(0.947 · 0.926)와 차이가 큽니다</li><li><b>액상화 노토</b>(64곳, 액상화 평가의 약 42%)는 soft가 오히려 내립니다 (① 0.703 → ② 0.647). U는 올립니다 (③ 0.739). 그래서 액상화 전체에서 soft와 U가 비슷하게 나옵니다</li><li><b>액상화 후쿠시마</b>는 음성이 1곳뿐이라 AUC가 0.5~0.77 사이에서 흔들려 판단에 쓰기 어렵습니다</li></ul></div>
+
+  <h3 id="evseed">지진별 seed 흔들림 (seed 0 ~ 4)</h3>
+  <figure><div class="tw"><svg viewBox="0 0 910 356" width="910" role="img" aria-label="지진별 seed마다의 AUC" style="max-width:100%;height:auto;min-width:720px">
+<text x="225.0" y="18" text-anchor="middle" font-size="13" font-weight="700" fill="#1d2430">DN</text>
+<text x="160" y="36" text-anchor="middle" font-size="10" fill="#5b6577">0</text>
+<line x1="160" x2="160" y1="42" y2="326" stroke="#eceef2" stroke-dasharray=""/>
+<text x="223.0" y="36" text-anchor="middle" font-size="10" fill="#5b6577">0.5</text>
+<line x1="223.0" x2="223.0" y1="42" y2="326" stroke="#c9ced7" stroke-dasharray="3 3"/>
+<text x="286" y="36" text-anchor="middle" font-size="10" fill="#5b6577">1</text>
+<line x1="286" x2="286" y1="42" y2="326" stroke="#eceef2" stroke-dasharray=""/>
+<text x="375.0" y="18" text-anchor="middle" font-size="13" font-weight="700" fill="#1d2430">SOFT</text>
+<text x="310" y="36" text-anchor="middle" font-size="10" fill="#5b6577">0</text>
+<line x1="310" x2="310" y1="42" y2="326" stroke="#eceef2" stroke-dasharray=""/>
+<text x="373.0" y="36" text-anchor="middle" font-size="10" fill="#5b6577">0.5</text>
+<line x1="373.0" x2="373.0" y1="42" y2="326" stroke="#c9ced7" stroke-dasharray="3 3"/>
+<text x="436" y="36" text-anchor="middle" font-size="10" fill="#5b6577">1</text>
+<line x1="436" x2="436" y1="42" y2="326" stroke="#eceef2" stroke-dasharray=""/>
+<text x="525.0" y="18" text-anchor="middle" font-size="13" font-weight="700" fill="#1d2430">SOFTU</text>
+<text x="460" y="36" text-anchor="middle" font-size="10" fill="#5b6577">0</text>
+<line x1="460" x2="460" y1="42" y2="326" stroke="#eceef2" stroke-dasharray=""/>
+<text x="523.0" y="36" text-anchor="middle" font-size="10" fill="#5b6577">0.5</text>
+<line x1="523.0" x2="523.0" y1="42" y2="326" stroke="#c9ced7" stroke-dasharray="3 3"/>
+<text x="586" y="36" text-anchor="middle" font-size="10" fill="#5b6577">1</text>
+<line x1="586" x2="586" y1="42" y2="326" stroke="#eceef2" stroke-dasharray=""/>
+<text x="675.0" y="18" text-anchor="middle" font-size="13" font-weight="700" fill="#1d2430">SOFTU 끄기만</text>
+<text x="610" y="36" text-anchor="middle" font-size="10" fill="#5b6577">0</text>
+<line x1="610" x2="610" y1="42" y2="326" stroke="#eceef2" stroke-dasharray=""/>
+<text x="673.0" y="36" text-anchor="middle" font-size="10" fill="#5b6577">0.5</text>
+<line x1="673.0" x2="673.0" y1="42" y2="326" stroke="#c9ced7" stroke-dasharray="3 3"/>
+<text x="736" y="36" text-anchor="middle" font-size="10" fill="#5b6577">1</text>
+<line x1="736" x2="736" y1="42" y2="326" stroke="#eceef2" stroke-dasharray=""/>
+<text x="825.0" y="18" text-anchor="middle" font-size="13" font-weight="700" fill="#1d2430">SOFTU 분산만</text>
+<text x="760" y="36" text-anchor="middle" font-size="10" fill="#5b6577">0</text>
+<line x1="760" x2="760" y1="42" y2="326" stroke="#eceef2" stroke-dasharray=""/>
+<text x="823.0" y="36" text-anchor="middle" font-size="10" fill="#5b6577">0.5</text>
+<line x1="823.0" x2="823.0" y1="42" y2="326" stroke="#c9ced7" stroke-dasharray="3 3"/>
+<text x="886" y="36" text-anchor="middle" font-size="10" fill="#5b6577">1</text>
+<line x1="886" x2="886" y1="42" y2="326" stroke="#eceef2" stroke-dasharray=""/>
+<rect x="0" y="46" width="910" height="40" fill="#f8f9fb"/>
+<text x="140" y="63.0" text-anchor="end" font-size="13" font-weight="500" fill="#b5651d">산사태 구마모토</text>
+<text x="140" y="78.0" text-anchor="end" font-size="11" fill="#5b6577">29곳 (피해 26 · 없음 3)</text>
+<path d="M240.76923076923077 53.0 l-4 -6 h8z" fill="#3f8f5a"/>
+<line x1="202.0" x2="247.23076923076923" y1="66.0" y2="66.0" stroke="#b5651d" stroke-width="3" stroke-opacity=".35" stroke-linecap="round"/>
+<circle cx="223.0" cy="66.0" r="3.6" fill="#b5651d" fill-opacity=".85"/>
+<circle cx="244.0" cy="66.0" r="3.6" fill="#b5651d" fill-opacity=".85"/>
+<circle cx="226.2" cy="66.0" r="3.6" fill="#b5651d" fill-opacity=".85"/>
+<circle cx="247.2" cy="66.0" r="3.6" fill="#b5651d" fill-opacity=".85"/>
+<circle cx="202.0" cy="66.0" r="3.6" fill="#b5651d" fill-opacity=".85"/>
+<line x1="228.4923076923077" x2="228.4923076923077" y1="58.0" y2="74.0" stroke="#1d2430" stroke-width="2"/>
+<text x="223.0" y="84.0" text-anchor="middle" font-size="10" fill="#a2461f" font-weight="700">폭 0.36</text>
+<path d="M390.7692307692308 53.0 l-4 -6 h8z" fill="#3f8f5a"/>
+<line x1="406.9230769230769" x2="419.84615384615387" y1="66.0" y2="66.0" stroke="#b5651d" stroke-width="3" stroke-opacity=".35" stroke-linecap="round"/>
+<circle cx="410.2" cy="66.0" r="3.6" fill="#b5651d" fill-opacity=".85"/>
+<circle cx="416.6" cy="66.0" r="3.6" fill="#b5651d" fill-opacity=".85"/>
+<circle cx="419.8" cy="66.0" r="3.6" fill="#b5651d" fill-opacity=".85"/>
+<circle cx="411.8" cy="66.0" r="3.6" fill="#b5651d" fill-opacity=".85"/>
+<circle cx="406.9" cy="66.0" r="3.6" fill="#b5651d" fill-opacity=".85"/>
+<line x1="413.0615384615385" x2="413.0615384615385" y1="58.0" y2="74.0" stroke="#1d2430" stroke-width="2"/>
+<text x="373.0" y="84.0" text-anchor="middle" font-size="10" fill="#5b6577" font-weight="400">폭 0.10</text>
+<path d="M540.7692307692307 53.0 l-4 -6 h8z" fill="#3f8f5a"/>
+<line x1="553.6923076923077" x2="571.4615384615385" y1="66.0" y2="66.0" stroke="#b5651d" stroke-width="3" stroke-opacity=".35" stroke-linecap="round"/>
+<circle cx="568.2" cy="66.0" r="3.6" fill="#b5651d" fill-opacity=".85"/>
+<circle cx="569.8" cy="66.0" r="3.6" fill="#b5651d" fill-opacity=".85"/>
+<circle cx="566.6" cy="66.0" r="3.6" fill="#b5651d" fill-opacity=".85"/>
+<circle cx="553.7" cy="66.0" r="3.6" fill="#b5651d" fill-opacity=".85"/>
+<circle cx="571.5" cy="66.0" r="3.6" fill="#b5651d" fill-opacity=".85"/>
+<line x1="565.9692307692308" x2="565.9692307692308" y1="58.0" y2="74.0" stroke="#1d2430" stroke-width="2"/>
+<text x="523.0" y="84.0" text-anchor="middle" font-size="10" fill="#5b6577" font-weight="400">폭 0.14</text>
+<path d="M690.7692307692307 53.0 l-4 -6 h8z" fill="#3f8f5a"/>
+<line x1="702.0769230769231" x2="724.6923076923077" y1="66.0" y2="66.0" stroke="#b5651d" stroke-width="3" stroke-opacity=".35" stroke-linecap="round"/>
+<circle cx="715.0" cy="66.0" r="3.6" fill="#b5651d" fill-opacity=".85"/>
+<circle cx="702.1" cy="66.0" r="3.6" fill="#b5651d" fill-opacity=".85"/>
+<circle cx="718.2" cy="66.0" r="3.6" fill="#b5651d" fill-opacity=".85"/>
+<circle cx="708.5" cy="66.0" r="3.6" fill="#b5651d" fill-opacity=".85"/>
+<circle cx="724.7" cy="66.0" r="3.6" fill="#b5651d" fill-opacity=".85"/>
+<line x1="713.7076923076924" x2="713.7076923076924" y1="58.0" y2="74.0" stroke="#1d2430" stroke-width="2"/>
+<text x="673.0" y="84.0" text-anchor="middle" font-size="10" fill="#5b6577" font-weight="400">폭 0.18</text>
+<path d="M840.7692307692307 53.0 l-4 -6 h8z" fill="#3f8f5a"/>
+<line x1="853.6923076923077" x2="871.4615384615385" y1="66.0" y2="66.0" stroke="#b5651d" stroke-width="3" stroke-opacity=".35" stroke-linecap="round"/>
+<circle cx="868.2" cy="66.0" r="3.6" fill="#b5651d" fill-opacity=".85"/>
+<circle cx="869.8" cy="66.0" r="3.6" fill="#b5651d" fill-opacity=".85"/>
+<circle cx="865.0" cy="66.0" r="3.6" fill="#b5651d" fill-opacity=".85"/>
+<circle cx="853.7" cy="66.0" r="3.6" fill="#b5651d" fill-opacity=".85"/>
+<circle cx="871.5" cy="66.0" r="3.6" fill="#b5651d" fill-opacity=".85"/>
+<line x1="865.6461538461539" x2="865.6461538461539" y1="58.0" y2="74.0" stroke="#1d2430" stroke-width="2"/>
+<text x="823.0" y="84.0" text-anchor="middle" font-size="10" fill="#5b6577" font-weight="400">폭 0.14</text>
+<text x="140" y="103.0" text-anchor="end" font-size="13" font-weight="500" fill="#b5651d">산사태 오사카</text>
+<text x="140" y="118.0" text-anchor="end" font-size="11" fill="#5b6577">7곳 (피해 5 · 없음 2)</text>
+<path d="M286.0 93.0 l-4 -6 h8z" fill="#3f8f5a"/>
+<line x1="160.0" x2="210.4" y1="106.0" y2="106.0" stroke="#b5651d" stroke-width="3" stroke-opacity=".35" stroke-linecap="round"/>
+<circle cx="185.2" cy="106.0" r="3.6" fill="#b5651d" fill-opacity=".85"/>
+<circle cx="210.4" cy="106.0" r="3.6" fill="#b5651d" fill-opacity=".85"/>
+<circle cx="172.6" cy="106.0" r="3.6" fill="#b5651d" fill-opacity=".85"/>
+<circle cx="210.4" cy="106.0" r="3.6" fill="#b5651d" fill-opacity=".85"/>
+<circle cx="160.0" cy="106.0" r="3.6" fill="#b5651d" fill-opacity=".85"/>
+<line x1="187.72" x2="187.72" y1="98.0" y2="114.0" stroke="#1d2430" stroke-width="2"/>
+<text x="223.0" y="124.0" text-anchor="middle" font-size="10" fill="#a2461f" font-weight="700">폭 0.40</text>
+<path d="M436.0 93.0 l-4 -6 h8z" fill="#3f8f5a"/>
+<line x1="398.2" x2="436.0" y1="106.0" y2="106.0" stroke="#b5651d" stroke-width="3" stroke-opacity=".35" stroke-linecap="round"/>
+<circle cx="436.0" cy="106.0" r="3.6" fill="#b5651d" fill-opacity=".85"/>
+<circle cx="410.8" cy="106.0" r="3.6" fill="#b5651d" fill-opacity=".85"/>
+<circle cx="423.4" cy="106.0" r="3.6" fill="#b5651d" fill-opacity=".85"/>
+<circle cx="410.8" cy="106.0" r="3.6" fill="#b5651d" fill-opacity=".85"/>
+<circle cx="398.2" cy="106.0" r="3.6" fill="#b5651d" fill-opacity=".85"/>
+<line x1="415.84000000000003" x2="415.84000000000003" y1="98.0" y2="114.0" stroke="#1d2430" stroke-width="2"/>
+<text x="373.0" y="124.0" text-anchor="middle" font-size="10" fill="#a2461f" font-weight="700">폭 0.30</text>
+<path d="M586.0 93.0 l-4 -6 h8z" fill="#3f8f5a"/>
+<line x1="573.4" x2="586.0" y1="106.0" y2="106.0" stroke="#b5651d" stroke-width="3" stroke-opacity=".35" stroke-linecap="round"/>
+<circle cx="586.0" cy="106.0" r="3.6" fill="#b5651d" fill-opacity=".85"/>
+<circle cx="586.0" cy="106.0" r="3.6" fill="#b5651d" fill-opacity=".85"/>
+<circle cx="586.0" cy="106.0" r="3.6" fill="#b5651d" fill-opacity=".85"/>
+<circle cx="586.0" cy="106.0" r="3.6" fill="#b5651d" fill-opacity=".85"/>
+<circle cx="573.4" cy="106.0" r="3.6" fill="#b5651d" fill-opacity=".85"/>
+<line x1="583.48" x2="583.48" y1="98.0" y2="114.0" stroke="#1d2430" stroke-width="2"/>
+<text x="523.0" y="124.0" text-anchor="middle" font-size="10" fill="#5b6577" font-weight="400">폭 0.10</text>
+<path d="M736.0 93.0 l-4 -6 h8z" fill="#3f8f5a"/>
+<line x1="685.6" x2="736.0" y1="106.0" y2="106.0" stroke="#b5651d" stroke-width="3" stroke-opacity=".35" stroke-linecap="round"/>
+<circle cx="736.0" cy="106.0" r="3.6" fill="#b5651d" fill-opacity=".85"/>
+<circle cx="736.0" cy="106.0" r="3.6" fill="#b5651d" fill-opacity=".85"/>
+<circle cx="736.0" cy="106.0" r="3.6" fill="#b5651d" fill-opacity=".85"/>
+<circle cx="723.4" cy="106.0" r="3.6" fill="#b5651d" fill-opacity=".85"/>
+<circle cx="685.6" cy="106.0" r="3.6" fill="#b5651d" fill-opacity=".85"/>
+<line x1="723.4" x2="723.4" y1="98.0" y2="114.0" stroke="#1d2430" stroke-width="2"/>
+<text x="673.0" y="124.0" text-anchor="middle" font-size="10" fill="#a2461f" font-weight="700">폭 0.40</text>
+<path d="M886.0 93.0 l-4 -6 h8z" fill="#3f8f5a"/>
+<line x1="873.4" x2="886.0" y1="106.0" y2="106.0" stroke="#b5651d" stroke-width="3" stroke-opacity=".35" stroke-linecap="round"/>
+<circle cx="886.0" cy="106.0" r="3.6" fill="#b5651d" fill-opacity=".85"/>
+<circle cx="886.0" cy="106.0" r="3.6" fill="#b5651d" fill-opacity=".85"/>
+<circle cx="886.0" cy="106.0" r="3.6" fill="#b5651d" fill-opacity=".85"/>
+<circle cx="886.0" cy="106.0" r="3.6" fill="#b5651d" fill-opacity=".85"/>
+<circle cx="873.4" cy="106.0" r="3.6" fill="#b5651d" fill-opacity=".85"/>
+<line x1="883.48" x2="883.48" y1="98.0" y2="114.0" stroke="#1d2430" stroke-width="2"/>
+<text x="823.0" y="124.0" text-anchor="middle" font-size="10" fill="#5b6577" font-weight="400">폭 0.10</text>
+<rect x="0" y="126" width="910" height="40" fill="#f8f9fb"/>
+<text x="140" y="143.0" text-anchor="end" font-size="13" font-weight="500" fill="#b5651d">산사태 훗카이도</text>
+<text x="140" y="158.0" text-anchor="end" font-size="11" fill="#5b6577">13곳 (피해 9 · 없음 4)</text>
+<path d="M258.0 133.0 l-4 -6 h8z" fill="#3f8f5a"/>
+<line x1="223.0" x2="261.5" y1="146.0" y2="146.0" stroke="#b5651d" stroke-width="3" stroke-opacity=".35" stroke-linecap="round"/>
+<circle cx="223.0" cy="146.0" r="3.6" fill="#b5651d" fill-opacity=".85"/>
+<circle cx="261.5" cy="146.0" r="3.6" fill="#b5651d" fill-opacity=".85"/>
+<circle cx="233.5" cy="146.0" r="3.6" fill="#b5651d" fill-opacity=".85"/>
+<circle cx="237.0" cy="146.0" r="3.6" fill="#b5651d" fill-opacity=".85"/>
+<circle cx="223.0" cy="146.0" r="3.6" fill="#b5651d" fill-opacity=".85"/>
+<line x1="235.6" x2="235.6" y1="138.0" y2="154.0" stroke="#1d2430" stroke-width="2"/>
+<text x="223.0" y="164.0" text-anchor="middle" font-size="10" fill="#a2461f" font-weight="700">폭 0.31</text>
+<path d="M408.0 133.0 l-4 -6 h8z" fill="#3f8f5a"/>
+<line x1="380.0" x2="418.5" y1="146.0" y2="146.0" stroke="#b5651d" stroke-width="3" stroke-opacity=".35" stroke-linecap="round"/>
+<circle cx="380.0" cy="146.0" r="3.6" fill="#b5651d" fill-opacity=".85"/>
+<circle cx="418.5" cy="146.0" r="3.6" fill="#b5651d" fill-opacity=".85"/>
+<circle cx="383.5" cy="146.0" r="3.6" fill="#b5651d" fill-opacity=".85"/>
+<circle cx="394.0" cy="146.0" r="3.6" fill="#b5651d" fill-opacity=".85"/>
+<circle cx="383.5" cy="146.0" r="3.6" fill="#b5651d" fill-opacity=".85"/>
+<line x1="391.9" x2="391.9" y1="138.0" y2="154.0" stroke="#1d2430" stroke-width="2"/>
+<text x="373.0" y="164.0" text-anchor="middle" font-size="10" fill="#a2461f" font-weight="700">폭 0.31</text>
+<path d="M558.0 133.0 l-4 -6 h8z" fill="#3f8f5a"/>
+<line x1="519.5" x2="547.5" y1="146.0" y2="146.0" stroke="#b5651d" stroke-width="3" stroke-opacity=".35" stroke-linecap="round"/>
+<circle cx="533.5" cy="146.0" r="3.6" fill="#b5651d" fill-opacity=".85"/>
+<circle cx="530.0" cy="146.0" r="3.6" fill="#b5651d" fill-opacity=".85"/>
+<circle cx="537.0" cy="146.0" r="3.6" fill="#b5651d" fill-opacity=".85"/>
+<circle cx="519.5" cy="146.0" r="3.6" fill="#b5651d" fill-opacity=".85"/>
+<circle cx="547.5" cy="146.0" r="3.6" fill="#b5651d" fill-opacity=".85"/>
+<line x1="533.5" x2="533.5" y1="138.0" y2="154.0" stroke="#1d2430" stroke-width="2"/>
+<text x="523.0" y="164.0" text-anchor="middle" font-size="10" fill="#a2461f" font-weight="700">폭 0.22</text>
+<path d="M708.0 133.0 l-4 -6 h8z" fill="#3f8f5a"/>
+<line x1="662.5" x2="704.5" y1="146.0" y2="146.0" stroke="#b5651d" stroke-width="3" stroke-opacity=".35" stroke-linecap="round"/>
+<circle cx="662.5" cy="146.0" r="3.6" fill="#b5651d" fill-opacity=".85"/>
+<circle cx="704.5" cy="146.0" r="3.6" fill="#b5651d" fill-opacity=".85"/>
+<circle cx="690.5" cy="146.0" r="3.6" fill="#b5651d" fill-opacity=".85"/>
+<circle cx="666.0" cy="146.0" r="3.6" fill="#b5651d" fill-opacity=".85"/>
+<circle cx="694.0" cy="146.0" r="3.6" fill="#b5651d" fill-opacity=".85"/>
+<line x1="683.5" x2="683.5" y1="138.0" y2="154.0" stroke="#1d2430" stroke-width="2"/>
+<text x="673.0" y="164.0" text-anchor="middle" font-size="10" fill="#a2461f" font-weight="700">폭 0.33</text>
+<path d="M858.0 133.0 l-4 -6 h8z" fill="#3f8f5a"/>
+<line x1="819.5" x2="847.5" y1="146.0" y2="146.0" stroke="#b5651d" stroke-width="3" stroke-opacity=".35" stroke-linecap="round"/>
+<circle cx="833.5" cy="146.0" r="3.6" fill="#b5651d" fill-opacity=".85"/>
+<circle cx="833.5" cy="146.0" r="3.6" fill="#b5651d" fill-opacity=".85"/>
+<circle cx="833.5" cy="146.0" r="3.6" fill="#b5651d" fill-opacity=".85"/>
+<circle cx="819.5" cy="146.0" r="3.6" fill="#b5651d" fill-opacity=".85"/>
+<circle cx="847.5" cy="146.0" r="3.6" fill="#b5651d" fill-opacity=".85"/>
+<line x1="833.5" x2="833.5" y1="138.0" y2="154.0" stroke="#1d2430" stroke-width="2"/>
+<text x="823.0" y="164.0" text-anchor="middle" font-size="10" fill="#a2461f" font-weight="700">폭 0.22</text>
+<text x="140" y="183.0" text-anchor="end" font-size="13" font-weight="500" fill="#2d62b3">액상화 구마모토</text>
+<text x="140" y="198.0" text-anchor="end" font-size="11" fill="#5b6577">40곳 (피해 18 · 없음 22)</text>
+<path d="M279.3181818181818 173.0 l-4 -6 h8z" fill="#3f8f5a"/>
+<line x1="236.6818181818182" x2="245.90909090909093" y1="186.0" y2="186.0" stroke="#2d62b3" stroke-width="3" stroke-opacity=".35" stroke-linecap="round"/>
+<circle cx="238.3" cy="186.0" r="3.6" fill="#2d62b3" fill-opacity=".85"/>
+<circle cx="245.9" cy="186.0" r="3.6" fill="#2d62b3" fill-opacity=".85"/>
+<circle cx="236.7" cy="186.0" r="3.6" fill="#2d62b3" fill-opacity=".85"/>
+<circle cx="237.0" cy="186.0" r="3.6" fill="#2d62b3" fill-opacity=".85"/>
+<circle cx="237.6" cy="186.0" r="3.6" fill="#2d62b3" fill-opacity=".85"/>
+<line x1="239.1" x2="239.1" y1="178.0" y2="194.0" stroke="#1d2430" stroke-width="2"/>
+<text x="223.0" y="204.0" text-anchor="middle" font-size="10" fill="#5b6577" font-weight="400">폭 0.07</text>
+<path d="M429.3181818181818 173.0 l-4 -6 h8z" fill="#3f8f5a"/>
+<line x1="394.9545454545455" x2="426.77272727272725" y1="186.0" y2="186.0" stroke="#2d62b3" stroke-width="3" stroke-opacity=".35" stroke-linecap="round"/>
+<circle cx="424.5" cy="186.0" r="3.6" fill="#2d62b3" fill-opacity=".85"/>
+<circle cx="426.8" cy="186.0" r="3.6" fill="#2d62b3" fill-opacity=".85"/>
+<circle cx="415.3" cy="186.0" r="3.6" fill="#2d62b3" fill-opacity=".85"/>
+<circle cx="395.9" cy="186.0" r="3.6" fill="#2d62b3" fill-opacity=".85"/>
+<circle cx="395.0" cy="186.0" r="3.6" fill="#2d62b3" fill-opacity=".85"/>
+<line x1="411.5" x2="411.5" y1="178.0" y2="194.0" stroke="#1d2430" stroke-width="2"/>
+<text x="373.0" y="204.0" text-anchor="middle" font-size="10" fill="#a2461f" font-weight="700">폭 0.25</text>
+<path d="M579.3181818181819 173.0 l-4 -6 h8z" fill="#3f8f5a"/>
+<line x1="553.5454545454545" x2="570.7272727272727" y1="186.0" y2="186.0" stroke="#2d62b3" stroke-width="3" stroke-opacity=".35" stroke-linecap="round"/>
+<circle cx="570.1" cy="186.0" r="3.6" fill="#2d62b3" fill-opacity=".85"/>
+<circle cx="569.8" cy="186.0" r="3.6" fill="#2d62b3" fill-opacity=".85"/>
+<circle cx="570.7" cy="186.0" r="3.6" fill="#2d62b3" fill-opacity=".85"/>
+<circle cx="553.5" cy="186.0" r="3.6" fill="#2d62b3" fill-opacity=".85"/>
+<circle cx="553.9" cy="186.0" r="3.6" fill="#2d62b3" fill-opacity=".85"/>
+<line x1="563.6" x2="563.6" y1="178.0" y2="194.0" stroke="#1d2430" stroke-width="2"/>
+<text x="523.0" y="204.0" text-anchor="middle" font-size="10" fill="#5b6577" font-weight="400">폭 0.14</text>
+<path d="M729.3181818181819 173.0 l-4 -6 h8z" fill="#3f8f5a"/>
+<line x1="693.6818181818182" x2="721.3636363636364" y1="186.0" y2="186.0" stroke="#2d62b3" stroke-width="3" stroke-opacity=".35" stroke-linecap="round"/>
+<circle cx="719.1" cy="186.0" r="3.6" fill="#2d62b3" fill-opacity=".85"/>
+<circle cx="721.4" cy="186.0" r="3.6" fill="#2d62b3" fill-opacity=".85"/>
+<circle cx="713.4" cy="186.0" r="3.6" fill="#2d62b3" fill-opacity=".85"/>
+<circle cx="695.0" cy="186.0" r="3.6" fill="#2d62b3" fill-opacity=".85"/>
+<circle cx="693.7" cy="186.0" r="3.6" fill="#2d62b3" fill-opacity=".85"/>
+<line x1="708.5090909090909" x2="708.5090909090909" y1="178.0" y2="194.0" stroke="#1d2430" stroke-width="2"/>
+<text x="673.0" y="204.0" text-anchor="middle" font-size="10" fill="#a2461f" font-weight="700">폭 0.22</text>
+<path d="M879.3181818181819 173.0 l-4 -6 h8z" fill="#3f8f5a"/>
+<line x1="853.8636363636364" x2="870.7272727272727" y1="186.0" y2="186.0" stroke="#2d62b3" stroke-width="3" stroke-opacity=".35" stroke-linecap="round"/>
+<circle cx="870.1" cy="186.0" r="3.6" fill="#2d62b3" fill-opacity=".85"/>
+<circle cx="870.1" cy="186.0" r="3.6" fill="#2d62b3" fill-opacity=".85"/>
+<circle cx="870.7" cy="186.0" r="3.6" fill="#2d62b3" fill-opacity=".85"/>
+<circle cx="853.9" cy="186.0" r="3.6" fill="#2d62b3" fill-opacity=".85"/>
+<circle cx="853.9" cy="186.0" r="3.6" fill="#2d62b3" fill-opacity=".85"/>
+<line x1="863.7272727272727" x2="863.7272727272727" y1="178.0" y2="194.0" stroke="#1d2430" stroke-width="2"/>
+<text x="823.0" y="204.0" text-anchor="middle" font-size="10" fill="#5b6577" font-weight="400">폭 0.13</text>
+<rect x="0" y="206" width="910" height="40" fill="#f8f9fb"/>
+<text x="140" y="223.0" text-anchor="end" font-size="13" font-weight="500" fill="#2d62b3">액상화 훗카이도</text>
+<text x="140" y="238.0" text-anchor="end" font-size="11" fill="#5b6577">40곳 (피해 17 · 없음 23)</text>
+<path d="M276.6547314578005 213.0 l-4 -6 h8z" fill="#3f8f5a"/>
+<line x1="212.84910485933503" x2="258.28644501278774" y1="226.0" y2="226.0" stroke="#2d62b3" stroke-width="3" stroke-opacity=".35" stroke-linecap="round"/>
+<circle cx="258.3" cy="226.0" r="3.6" fill="#2d62b3" fill-opacity=".85"/>
+<circle cx="219.0" cy="226.0" r="3.6" fill="#2d62b3" fill-opacity=".85"/>
+<circle cx="242.8" cy="226.0" r="3.6" fill="#2d62b3" fill-opacity=".85"/>
+<circle cx="239.0" cy="226.0" r="3.6" fill="#2d62b3" fill-opacity=".85"/>
+<circle cx="212.8" cy="226.0" r="3.6" fill="#2d62b3" fill-opacity=".85"/>
+<line x1="234.37544757033248" x2="234.37544757033248" y1="218.0" y2="234.0" stroke="#1d2430" stroke-width="2"/>
+<text x="223.0" y="244.0" text-anchor="middle" font-size="10" fill="#a2461f" font-weight="700">폭 0.36</text>
+<path d="M426.6547314578005 213.0 l-4 -6 h8z" fill="#3f8f5a"/>
+<line x1="373.8056265984655" x2="410.54219948849106" y1="226.0" y2="226.0" stroke="#2d62b3" stroke-width="3" stroke-opacity=".35" stroke-linecap="round"/>
+<circle cx="410.5" cy="226.0" r="3.6" fill="#2d62b3" fill-opacity=".85"/>
+<circle cx="373.8" cy="226.0" r="3.6" fill="#2d62b3" fill-opacity=".85"/>
+<circle cx="386.1" cy="226.0" r="3.6" fill="#2d62b3" fill-opacity=".85"/>
+<circle cx="392.2" cy="226.0" r="3.6" fill="#2d62b3" fill-opacity=".85"/>
+<circle cx="390.6" cy="226.0" r="3.6" fill="#2d62b3" fill-opacity=".85"/>
+<line x1="390.62710997442457" x2="390.62710997442457" y1="218.0" y2="234.0" stroke="#1d2430" stroke-width="2"/>
+<text x="373.0" y="244.0" text-anchor="middle" font-size="10" fill="#a2461f" font-weight="700">폭 0.29</text>
+<path d="M576.6547314578005 213.0 l-4 -6 h8z" fill="#3f8f5a"/>
+<line x1="530.5728900255755" x2="554.0971867007672" y1="226.0" y2="226.0" stroke="#2d62b3" stroke-width="3" stroke-opacity=".35" stroke-linecap="round"/>
+<circle cx="546.0" cy="226.0" r="3.6" fill="#2d62b3" fill-opacity=".85"/>
+<circle cx="530.6" cy="226.0" r="3.6" fill="#2d62b3" fill-opacity=".85"/>
+<circle cx="543.5" cy="226.0" r="3.6" fill="#2d62b3" fill-opacity=".85"/>
+<circle cx="554.1" cy="226.0" r="3.6" fill="#2d62b3" fill-opacity=".85"/>
+<circle cx="547.3" cy="226.0" r="3.6" fill="#2d62b3" fill-opacity=".85"/>
+<line x1="544.3007672634271" x2="544.3007672634271" y1="218.0" y2="234.0" stroke="#1d2430" stroke-width="2"/>
+<text x="523.0" y="244.0" text-anchor="middle" font-size="10" fill="#5b6577" font-weight="400">폭 0.19</text>
+<path d="M726.6547314578005 213.0 l-4 -6 h8z" fill="#3f8f5a"/>
+<line x1="679.6061381074169" x2="700.8746803069054" y1="226.0" y2="226.0" stroke="#2d62b3" stroke-width="3" stroke-opacity=".35" stroke-linecap="round"/>
+<circle cx="700.9" cy="226.0" r="3.6" fill="#2d62b3" fill-opacity=".85"/>
+<circle cx="679.6" cy="226.0" r="3.6" fill="#2d62b3" fill-opacity=".85"/>
+<circle cx="692.2" cy="226.0" r="3.6" fill="#2d62b3" fill-opacity=".85"/>
+<circle cx="689.9" cy="226.0" r="3.6" fill="#2d62b3" fill-opacity=".85"/>
+<circle cx="699.3" cy="226.0" r="3.6" fill="#2d62b3" fill-opacity=".85"/>
+<line x1="692.36726342711" x2="692.36726342711" y1="218.0" y2="234.0" stroke="#1d2430" stroke-width="2"/>
+<text x="673.0" y="244.0" text-anchor="middle" font-size="10" fill="#5b6577" font-weight="400">폭 0.17</text>
+<path d="M876.6547314578005 213.0 l-4 -6 h8z" fill="#3f8f5a"/>
+<line x1="836.695652173913" x2="855.0639386189258" y1="226.0" y2="226.0" stroke="#2d62b3" stroke-width="3" stroke-opacity=".35" stroke-linecap="round"/>
+<circle cx="836.7" cy="226.0" r="3.6" fill="#2d62b3" fill-opacity=".85"/>
+<circle cx="843.8" cy="226.0" r="3.6" fill="#2d62b3" fill-opacity=".85"/>
+<circle cx="844.1" cy="226.0" r="3.6" fill="#2d62b3" fill-opacity=".85"/>
+<circle cx="855.1" cy="226.0" r="3.6" fill="#2d62b3" fill-opacity=".85"/>
+<circle cx="848.0" cy="226.0" r="3.6" fill="#2d62b3" fill-opacity=".85"/>
+<line x1="845.5253196930946" x2="845.5253196930946" y1="218.0" y2="234.0" stroke="#1d2430" stroke-width="2"/>
+<text x="823.0" y="244.0" text-anchor="middle" font-size="10" fill="#5b6577" font-weight="400">폭 0.15</text>
+<text x="140" y="263.0" text-anchor="end" font-size="13" font-weight="500" fill="#2d62b3">액상화 후쿠시마</text>
+<text x="140" y="278.0" text-anchor="end" font-size="11" fill="#5b6577">7곳 (피해 6 · 없음 1)</text>
+<path d="M223.0 253.0 l-4 -6 h8z" fill="#3f8f5a"/>
+<line x1="223.0" x2="244.0" y1="266.0" y2="266.0" stroke="#2d62b3" stroke-width="3" stroke-opacity=".35" stroke-linecap="round"/>
+<circle cx="244.0" cy="266.0" r="3.6" fill="#2d62b3" fill-opacity=".85"/>
+<circle cx="244.0" cy="266.0" r="3.6" fill="#2d62b3" fill-opacity=".85"/>
+<circle cx="223.0" cy="266.0" r="3.6" fill="#2d62b3" fill-opacity=".85"/>
+<circle cx="223.0" cy="266.0" r="3.6" fill="#2d62b3" fill-opacity=".85"/>
+<circle cx="223.0" cy="266.0" r="3.6" fill="#2d62b3" fill-opacity=".85"/>
+<line x1="231.39999999999998" x2="231.39999999999998" y1="258.0" y2="274.0" stroke="#1d2430" stroke-width="2"/>
+<text x="223.0" y="284.0" text-anchor="middle" font-size="10" fill="#5b6577" font-weight="400">폭 0.17</text>
+<path d="M373.0 253.0 l-4 -6 h8z" fill="#3f8f5a"/>
+<line x1="373.0" x2="415.0" y1="266.0" y2="266.0" stroke="#2d62b3" stroke-width="3" stroke-opacity=".35" stroke-linecap="round"/>
+<circle cx="415.0" cy="266.0" r="3.6" fill="#2d62b3" fill-opacity=".85"/>
+<circle cx="415.0" cy="266.0" r="3.6" fill="#2d62b3" fill-opacity=".85"/>
+<circle cx="373.0" cy="266.0" r="3.6" fill="#2d62b3" fill-opacity=".85"/>
+<circle cx="373.0" cy="266.0" r="3.6" fill="#2d62b3" fill-opacity=".85"/>
+<circle cx="394.0" cy="266.0" r="3.6" fill="#2d62b3" fill-opacity=".85"/>
+<line x1="394.0" x2="394.0" y1="258.0" y2="274.0" stroke="#1d2430" stroke-width="2"/>
+<text x="373.0" y="284.0" text-anchor="middle" font-size="10" fill="#a2461f" font-weight="700">폭 0.33</text>
+<path d="M523.0 253.0 l-4 -6 h8z" fill="#3f8f5a"/>
+<line x1="544.0" x2="565.0" y1="266.0" y2="266.0" stroke="#2d62b3" stroke-width="3" stroke-opacity=".35" stroke-linecap="round"/>
+<circle cx="565.0" cy="266.0" r="3.6" fill="#2d62b3" fill-opacity=".85"/>
+<circle cx="565.0" cy="266.0" r="3.6" fill="#2d62b3" fill-opacity=".85"/>
+<circle cx="565.0" cy="266.0" r="3.6" fill="#2d62b3" fill-opacity=".85"/>
+<circle cx="544.0" cy="266.0" r="3.6" fill="#2d62b3" fill-opacity=".85"/>
+<circle cx="544.0" cy="266.0" r="3.6" fill="#2d62b3" fill-opacity=".85"/>
+<line x1="556.6" x2="556.6" y1="258.0" y2="274.0" stroke="#1d2430" stroke-width="2"/>
+<text x="523.0" y="284.0" text-anchor="middle" font-size="10" fill="#5b6577" font-weight="400">폭 0.17</text>
+<path d="M673.0 253.0 l-4 -6 h8z" fill="#3f8f5a"/>
+<line x1="673.0" x2="715.0" y1="266.0" y2="266.0" stroke="#2d62b3" stroke-width="3" stroke-opacity=".35" stroke-linecap="round"/>
+<circle cx="694.0" cy="266.0" r="3.6" fill="#2d62b3" fill-opacity=".85"/>
+<circle cx="715.0" cy="266.0" r="3.6" fill="#2d62b3" fill-opacity=".85"/>
+<circle cx="673.0" cy="266.0" r="3.6" fill="#2d62b3" fill-opacity=".85"/>
+<circle cx="673.0" cy="266.0" r="3.6" fill="#2d62b3" fill-opacity=".85"/>
+<circle cx="673.0" cy="266.0" r="3.6" fill="#2d62b3" fill-opacity=".85"/>
+<line x1="685.6" x2="685.6" y1="258.0" y2="274.0" stroke="#1d2430" stroke-width="2"/>
+<text x="673.0" y="284.0" text-anchor="middle" font-size="10" fill="#a2461f" font-weight="700">폭 0.33</text>
+<path d="M823.0 253.0 l-4 -6 h8z" fill="#3f8f5a"/>
+<line x1="844.0" x2="865.0" y1="266.0" y2="266.0" stroke="#2d62b3" stroke-width="3" stroke-opacity=".35" stroke-linecap="round"/>
+<circle cx="865.0" cy="266.0" r="3.6" fill="#2d62b3" fill-opacity=".85"/>
+<circle cx="865.0" cy="266.0" r="3.6" fill="#2d62b3" fill-opacity=".85"/>
+<circle cx="865.0" cy="266.0" r="3.6" fill="#2d62b3" fill-opacity=".85"/>
+<circle cx="844.0" cy="266.0" r="3.6" fill="#2d62b3" fill-opacity=".85"/>
+<circle cx="844.0" cy="266.0" r="3.6" fill="#2d62b3" fill-opacity=".85"/>
+<line x1="856.6" x2="856.6" y1="258.0" y2="274.0" stroke="#1d2430" stroke-width="2"/>
+<text x="823.0" y="284.0" text-anchor="middle" font-size="10" fill="#5b6577" font-weight="400">폭 0.17</text>
+<rect x="0" y="286" width="910" height="40" fill="#f8f9fb"/>
+<text x="140" y="303.0" text-anchor="end" font-size="13" font-weight="500" fill="#2d62b3">액상화 노토반도</text>
+<text x="140" y="318.0" text-anchor="end" font-size="11" fill="#5b6577">64곳 (피해 33 · 없음 31)</text>
+<path d="M271.7126099706745 293.0 l-4 -6 h8z" fill="#3f8f5a"/>
+<line x1="244.6158357771261" x2="251.26686217008796" y1="306.0" y2="306.0" stroke="#2d62b3" stroke-width="3" stroke-opacity=".35" stroke-linecap="round"/>
+<circle cx="247.4" cy="306.0" r="3.6" fill="#2d62b3" fill-opacity=".85"/>
+<circle cx="250.8" cy="306.0" r="3.6" fill="#2d62b3" fill-opacity=".85"/>
+<circle cx="244.6" cy="306.0" r="3.6" fill="#2d62b3" fill-opacity=".85"/>
+<circle cx="251.3" cy="306.0" r="3.6" fill="#2d62b3" fill-opacity=".85"/>
+<circle cx="248.6" cy="306.0" r="3.6" fill="#2d62b3" fill-opacity=".85"/>
+<line x1="248.5325513196481" x2="248.5325513196481" y1="298.0" y2="314.0" stroke="#1d2430" stroke-width="2"/>
+<text x="223.0" y="324.0" text-anchor="middle" font-size="10" fill="#5b6577" font-weight="400">폭 0.05</text>
+<path d="M421.7126099706745 293.0 l-4 -6 h8z" fill="#3f8f5a"/>
+<line x1="388.33431085043986" x2="394.24633431085044" y1="306.0" y2="306.0" stroke="#2d62b3" stroke-width="3" stroke-opacity=".35" stroke-linecap="round"/>
+<circle cx="392.9" cy="306.0" r="3.6" fill="#2d62b3" fill-opacity=".85"/>
+<circle cx="390.1" cy="306.0" r="3.6" fill="#2d62b3" fill-opacity=".85"/>
+<circle cx="388.3" cy="306.0" r="3.6" fill="#2d62b3" fill-opacity=".85"/>
+<circle cx="394.2" cy="306.0" r="3.6" fill="#2d62b3" fill-opacity=".85"/>
+<circle cx="392.2" cy="306.0" r="3.6" fill="#2d62b3" fill-opacity=".85"/>
+<line x1="391.53665689149557" x2="391.53665689149557" y1="298.0" y2="314.0" stroke="#1d2430" stroke-width="2"/>
+<text x="373.0" y="324.0" text-anchor="middle" font-size="10" fill="#5b6577" font-weight="400">폭 0.05</text>
+<path d="M571.7126099706745 293.0 l-4 -6 h8z" fill="#3f8f5a"/>
+<line x1="544.0" x2="549.049853372434" y1="306.0" y2="306.0" stroke="#2d62b3" stroke-width="3" stroke-opacity=".35" stroke-linecap="round"/>
+<circle cx="549.0" cy="306.0" r="3.6" fill="#2d62b3" fill-opacity=".85"/>
+<circle cx="548.8" cy="306.0" r="3.6" fill="#2d62b3" fill-opacity=".85"/>
+<circle cx="544.0" cy="306.0" r="3.6" fill="#2d62b3" fill-opacity=".85"/>
+<circle cx="544.4" cy="306.0" r="3.6" fill="#2d62b3" fill-opacity=".85"/>
+<circle cx="546.3" cy="306.0" r="3.6" fill="#2d62b3" fill-opacity=".85"/>
+<line x1="546.5126099706745" x2="546.5126099706745" y1="298.0" y2="314.0" stroke="#1d2430" stroke-width="2"/>
+<text x="523.0" y="324.0" text-anchor="middle" font-size="10" fill="#5b6577" font-weight="400">폭 0.04</text>
+<path d="M721.7126099706745 293.0 l-4 -6 h8z" fill="#3f8f5a"/>
+<line x1="695.6011730205279" x2="700.2815249266862" y1="306.0" y2="306.0" stroke="#2d62b3" stroke-width="3" stroke-opacity=".35" stroke-linecap="round"/>
+<circle cx="700.3" cy="306.0" r="3.6" fill="#2d62b3" fill-opacity=".85"/>
+<circle cx="699.3" cy="306.0" r="3.6" fill="#2d62b3" fill-opacity=".85"/>
+<circle cx="695.6" cy="306.0" r="3.6" fill="#2d62b3" fill-opacity=".85"/>
+<circle cx="698.7" cy="306.0" r="3.6" fill="#2d62b3" fill-opacity=".85"/>
+<circle cx="698.8" cy="306.0" r="3.6" fill="#2d62b3" fill-opacity=".85"/>
+<line x1="698.5325513196481" x2="698.5325513196481" y1="298.0" y2="314.0" stroke="#1d2430" stroke-width="2"/>
+<text x="673.0" y="324.0" text-anchor="middle" font-size="10" fill="#5b6577" font-weight="400">폭 0.04</text>
+<path d="M871.7126099706745 293.0 l-4 -6 h8z" fill="#3f8f5a"/>
+<line x1="845.6011730205279" x2="850.5278592375366" y1="306.0" y2="306.0" stroke="#2d62b3" stroke-width="3" stroke-opacity=".35" stroke-linecap="round"/>
+<circle cx="847.8" cy="306.0" r="3.6" fill="#2d62b3" fill-opacity=".85"/>
+<circle cx="850.5" cy="306.0" r="3.6" fill="#2d62b3" fill-opacity=".85"/>
+<circle cx="845.7" cy="306.0" r="3.6" fill="#2d62b3" fill-opacity=".85"/>
+<circle cx="845.6" cy="306.0" r="3.6" fill="#2d62b3" fill-opacity=".85"/>
+<circle cx="846.8" cy="306.0" r="3.6" fill="#2d62b3" fill-opacity=".85"/>
+<line x1="847.3008797653958" x2="847.3008797653958" y1="298.0" y2="314.0" stroke="#1d2430" stroke-width="2"/>
+<text x="823.0" y="324.0" text-anchor="middle" font-size="10" fill="#5b6577" font-weight="400">폭 0.04</text>
+</svg></div></figure>
+  <p class="meta">점 = seed 하나의 AUC, 옅은 띠 = 가장 낮은 seed부터 가장 높은 seed까지, 검은 세로선 = 평균, 초록 삼각형 = USGS, 점선 = 0.5 (무작위 수준). "폭"이 0.2 이상이면 빨간 글씨.</p>
+  <div class="tw"><table><tr><th>지진 (평가 시정촌 수)</th><th class="num">USGS</th><th class="num">DN</th><th class="num">SOFT</th><th class="num">SOFTU</th><th class="num">SOFTU 끄기만</th><th class="num">SOFTU 분산만</th></tr><tr><td><span class="tag t-ls">산사태</span> 구마모토 (29)</td><td class="num">0.641</td><td class="num">0.544<span class="mini" style="display:block;color:var(--warn);font-weight:700">0.33 ~ 0.69</span></td><td class="num">0.818<span class="mini" style="display:block;">0.77 ~ 0.87</span></td><td class="num">0.841<span class="mini" style="display:block;">0.74 ~ 0.88</span></td><td class="num">0.823<span class="mini" style="display:block;">0.73 ~ 0.91</span></td><td class="num">0.838<span class="mini" style="display:block;">0.74 ~ 0.88</span></td></tr><tr><td><span class="tag t-ls">산사태</span> 오사카 (7)</td><td class="num">1.000</td><td class="num">0.220<span class="mini" style="display:block;color:var(--warn);font-weight:700">0.00 ~ 0.40</span></td><td class="num">0.840<span class="mini" style="display:block;color:var(--warn);font-weight:700">0.70 ~ 1.00</span></td><td class="num">0.980<span class="mini" style="display:block;">0.90 ~ 1.00</span></td><td class="num">0.900<span class="mini" style="display:block;color:var(--warn);font-weight:700">0.60 ~ 1.00</span></td><td class="num">0.980<span class="mini" style="display:block;">0.90 ~ 1.00</span></td></tr><tr><td><span class="tag t-ls">산사태</span> 훗카이도 (13)</td><td class="num">0.778</td><td class="num">0.600<span class="mini" style="display:block;color:var(--warn);font-weight:700">0.50 ~ 0.81</span></td><td class="num">0.650<span class="mini" style="display:block;color:var(--warn);font-weight:700">0.56 ~ 0.86</span></td><td class="num">0.583<span class="mini" style="display:block;color:var(--warn);font-weight:700">0.47 ~ 0.69</span></td><td class="num">0.583<span class="mini" style="display:block;color:var(--warn);font-weight:700">0.42 ~ 0.75</span></td><td class="num">0.583<span class="mini" style="display:block;color:var(--warn);font-weight:700">0.47 ~ 0.69</span></td></tr><tr><td><span class="tag t-lq">액상화</span> 구마모토 (40)</td><td class="num">0.947</td><td class="num">0.628<span class="mini" style="display:block;">0.61 ~ 0.68</span></td><td class="num">0.806<span class="mini" style="display:block;color:var(--warn);font-weight:700">0.67 ~ 0.93</span></td><td class="num">0.822<span class="mini" style="display:block;">0.74 ~ 0.88</span></td><td class="num">0.782<span class="mini" style="display:block;color:var(--warn);font-weight:700">0.66 ~ 0.88</span></td><td class="num">0.823<span class="mini" style="display:block;">0.74 ~ 0.88</span></td></tr><tr><td><span class="tag t-lq">액상화</span> 훗카이도 (40)</td><td class="num">0.926</td><td class="num">0.590<span class="mini" style="display:block;color:var(--warn);font-weight:700">0.42 ~ 0.78</span></td><td class="num">0.640<span class="mini" style="display:block;color:var(--warn);font-weight:700">0.51 ~ 0.80</span></td><td class="num">0.669<span class="mini" style="display:block;">0.56 ~ 0.75</span></td><td class="num">0.654<span class="mini" style="display:block;">0.55 ~ 0.72</span></td><td class="num">0.679<span class="mini" style="display:block;">0.61 ~ 0.75</span></td></tr><tr><td><span class="tag t-lq">액상화</span> 후쿠시마 (7)</td><td class="num">0.500</td><td class="num">0.567<span class="mini" style="display:block;">0.50 ~ 0.67</span></td><td class="num">0.667<span class="mini" style="display:block;color:var(--warn);font-weight:700">0.50 ~ 0.83</span></td><td class="num">0.767<span class="mini" style="display:block;">0.67 ~ 0.83</span></td><td class="num">0.600<span class="mini" style="display:block;color:var(--warn);font-weight:700">0.50 ~ 0.83</span></td><td class="num">0.767<span class="mini" style="display:block;">0.67 ~ 0.83</span></td></tr><tr><td><span class="tag t-lq">액상화</span> 노토반도 (64)</td><td class="num">0.887</td><td class="num">0.703<span class="mini" style="display:block;">0.67 ~ 0.72</span></td><td class="num">0.647<span class="mini" style="display:block;">0.62 ~ 0.67</span></td><td class="num">0.687<span class="mini" style="display:block;">0.67 ~ 0.71</span></td><td class="num">0.703<span class="mini" style="display:block;">0.68 ~ 0.72</span></td><td class="num">0.693<span class="mini" style="display:block;">0.68 ~ 0.72</span></td></tr></table></div>
+  <p class="meta">값은 다섯 seed 평균, 작은 글씨는 가장 낮은 seed ~ 가장 높은 seed. BD 없음, U 끄기는 논문 기준 (폴더 <code>nobd_DN</code> · <code>nobd_SOFT</code> · <code>nobd_SOFTU_paper</code> · <code>nobd_SOFTU_off_paper</code> · <code>nobd_SOFTU_var_paper</code>).</p>
+  <div class="anal"><b>읽는 법</b><ul>
+    <li><b>U 분산이 없는 DN · SOFT · SOFTU 끄기만이 많이 흔들립니다</b>: 산사태 훗카이도 0.31~0.33, 액상화 훗카이도 0.17~0.36, 액상화 후쿠시마 0.17~0.33</li>
+    <li><b>U 분산이 있는 SOFTU · SOFTU 분산만은 덜 흔들립니다</b> (대부분 0.04~0.22). r⁰ 분산을 USGS 불확실도(대개 1보다 작음)로 줄이면 샘플이 덜 퍼져 seed 영향이 줄어든 것으로 보입니다</li>
+    <li><b>액상화 노토반도(64곳)는 모든 실험에서 0.04~0.05로 안정</b>. 칸 단위 ④에서는 노토가 0.35 ~ 0.77로 크게 흔들려 대조적입니다</li>
+    <li>산사태 오사카(7곳)와 액상화 후쿠시마(7곳)는 시정촌이 적어 한 곳만 순서가 바뀌어도 0.1~0.4씩 움직입니다</li>
+    <li>seed가 5개라 칸 단위(3개)보다 폭이 넓게 나오기 쉽습니다. 시정촌도 seed 0 · 1 · 2만 보면 SOFTU · 분산만은 대부분 0.06 이하입니다</li>
+  </ul></div>
 </section>
 
 <section id="sx">
