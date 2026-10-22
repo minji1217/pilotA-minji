@@ -1281,6 +1281,17 @@ body{background:#fff}
     <li>끄기가 없는 칸 ④ · ①은 순위 상관도 0.50~0.78로 낮아 순서까지 흔들립니다. ④ 액상화 0.61이 노토 AUC 0.35 ~ 0.77의 원인입니다</li>
     <li>그래서 칸 단위든 시정촌 단위든 <b>확률 값(예: 0.8이면 위험)을 그대로 쓰기는 어렵고</b>, 순서(어느 시정촌이 더 위험한가)로 보는 것이 맞습니다</li>
   </ul></div>
+  <p class="lb" style="margin-top:6px">위 표는 칸 단위를 <b>산사태 · 액상화 둘 다 칸 최댓값</b>으로 모은 것입니다. 산사태를 <b>칸 평균</b>(섞기)으로 모으면:</p>
+  <div class="tw"><table>
+    <tr><th>칸 단위 산사태 (77곳)</th><th class="num">칸 최댓값: 폭 평균 · 순위 상관</th><th class="num">칸 평균: 폭 평균 · 순위 상관</th></tr>
+    <tr><td>⑤ 끄기 지도+U</td><td class="num">0.38 · 0.82</td><td class="num">0.24 · <b>0.97</b></td></tr>
+    <tr><td>② soft+U</td><td class="num">0.35 · 0.71</td><td class="num">0.29 · <b>0.97</b></td></tr>
+    <tr><td>③ 끄기만</td><td class="num">0.85 · 0.82</td><td class="num">0.70 · 0.89</td></tr>
+    <tr><td>④ 분산만</td><td class="num">0.33 · 0.53</td><td class="num">0.30 · <b>0.97</b></td></tr>
+    <tr><td>① baseline</td><td class="num">0.90 · 0.50</td><td class="num">0.83 · 0.55</td></tr>
+  </table></div>
+  <p class="note">칸 평균으로 모으면 산사태 순서가 seed와 거의 상관없어집니다 (⑤ · ② · ④ 0.97). 최댓값은 칸 하나의 값에 좌우되지만 평균은 많은 칸을 합쳐 seed 영향이 상쇄되기 때문입니다. 섞기에서 산사태 AUC가 오르는 것(0.76~0.78 → 0.80)도 이 안정성 덕분으로 보입니다. 시정촌 단위 산사태 순위 상관은 0.05~0.56.</p>
+
 </section>
 
 
