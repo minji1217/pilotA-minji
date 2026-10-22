@@ -156,8 +156,24 @@ body{background:#fff}
   <h1>칸 확률을 시정촌 하나로 모으는 방법: 최댓값 · 평균 · 상위 10%</h1>
   <p class="lede">칸 단위로 학습한 뒤, 시정촌 안 칸들의 사후확률을 시정촌 값 하나로 모아 채점합니다. 모으는 방법은 학습에 들어가지 않고 채점할 때만 쓰입니다. 이 페이지는 최댓값 · 평균 · 상위 % 평균을 비교하고, 왜 산사태에서 상위 10%가 가장 높게 나왔는지 풀어 씁니다.</p>
   <p class="meta">본문: <a href="https://claude.ai/artifact/Uqmg4X8sLnLZeZX1jYmKpJ" style="color:var(--accent)">칸 단위 실험 기록</a>. 아래 숫자는 ⑤ 끄기 지도 + U, 칸 결과를 <code>cell_extract.py</code>로 줄여 받은 것 (②③④는 고친 soft).</p>
-  <nav class="toc" aria-label="차례"><a href="#sum">한눈에</a><a href="#how">1. 세 가지 방법</a><a href="#part">2. 상위 10%와 비탈 비율</a><a href="#curve">3. 실제 곡선</a><a href="#why">4. 왜 더 나은가</a><a href="#res">5. 결과 표</a><a href="#stab">6. seed 안정성</a><a href="#detail">7. 자세한 기록</a></nav>
+  <nav class="toc" aria-label="차례"><a href="#easy">0. 쉽게</a><a href="#sum">한눈에</a><a href="#how">1. 세 가지 방법</a><a href="#part">2. 상위 10%와 비탈 비율</a><a href="#curve">3. 실제 곡선</a><a href="#why">4. 왜 더 나은가</a><a href="#res">5. 결과 표</a><a href="#stab">6. seed 안정성</a><a href="#detail">7. 자세한 기록</a></nav>
 </header>
+
+
+<section id="easy">
+  <h2><span class="n">0</span>쉽게 한 장으로</h2>
+  <div class="callout"><p><b>비유: "어느 반이 수학을 잘하나?"</b></p><ul>
+    <li><b>최댓값</b> = 반 1등 점수. 천재 한 명만 있어도 높음</li>
+    <li><b>평균</b> = 반 전체 평균. 수학 안 듣는 학생(평지 칸)이 많으면 낮음</li>
+    <li><b>상위 10%</b> = 반 상위 10% 학생의 평균. 잘하는 학생이 어느 정도 모여 있어야 높음</li></ul></div>
+  <p>실제 구마모토 산사태 (⑤). 피해 있는 시정촌이 더 높아야 맞습니다.</p>
+  <div class="grid2"><div class="card"><h3>쌍 1: 최댓값이 틀림</h3>
+      <div class="tw"><table><tr><th></th><th class="num">宇土市<br><span class="tag t-all">피해 있음</span></th><th class="num">氷川町<br><span class="tag" style="background:var(--warn-bg);color:var(--warn)">피해 없음</span></th><th class="num">맞았나</th></tr><tr><td>최댓값</td><td class="num">0.88</td><td class="num"><b>0.89</b></td><td class="num" style="font-size:20px;color:var(--warn);font-weight:700">✗</td></tr><tr><td>평균</td><td class="num"><b>0.25</b></td><td class="num">0.14</td><td class="num" style="font-size:20px;color:var(--all);font-weight:700">✓</td></tr><tr><td>상위 10%</td><td class="num"><b>0.78</b></td><td class="num">0.77</td><td class="num" style="font-size:20px;color:var(--all);font-weight:700">✓</td></tr></table></div>
+      <p class="meta">氷川町은 칸 몇 개만 튀어서 최댓값이 높음 (반에 천재 한 명)</p></div><div class="card"><h3>쌍 2: 평균이 틀림</h3>
+      <div class="tw"><table><tr><th></th><th class="num">熊本市<br><span class="tag t-all">피해 있음</span></th><th class="num">玉東町<br><span class="tag" style="background:var(--warn-bg);color:var(--warn)">피해 없음</span></th><th class="num">맞았나</th></tr><tr><td>최댓값</td><td class="num"><b>0.91</b></td><td class="num">0.84</td><td class="num" style="font-size:20px;color:var(--all);font-weight:700">✓</td></tr><tr><td>평균</td><td class="num">0.14</td><td class="num"><b>0.24</b></td><td class="num" style="font-size:20px;color:var(--warn);font-weight:700">✗</td></tr><tr><td>상위 10%</td><td class="num"><b>0.75</b></td><td class="num">0.71</td><td class="num" style="font-size:20px;color:var(--all);font-weight:700">✓</td></tr></table></div>
+      <p class="meta">熊本市는 땅의 80%가 평지라 평균이 낮음 (수학 안 듣는 학생이 많은 반)</p></div></div>
+  <p class="callout" style="display:block"><b>최댓값은 쌍 1에서, 평균은 쌍 2에서 틀리고, 상위 10%는 둘 다 맞힙니다.</b> 이런 쌍이 많아서 산사태에서 상위 10%의 AUC가 가장 높게 나옵니다 (⑤ 최댓값 0.792 · 평균 0.804 · 상위 10% 0.860). 아래 1~4절은 이것을 자세히 풀어 쓴 것입니다.</p>
+</section>
 
 <section id="sum">
   <h2><span class="n">★</span>한눈에</h2>
