@@ -152,13 +152,12 @@ body{background:#fff}
 
 <main>
 <header style="display:flex;flex-direction:column;gap:14px">
-  <div class="eyebrow">칸 단위 실험 기록 · 부록 · 2026-10-22</div>
+  <div class="eyebrow">칸 단위 실험 기록 · 부록 · seed 0~4 평균 (10.23)</div>
   <h1>칸 확률을 시정촌 하나로 모으는 방법: 최댓값 · 평균 · 상위 10%</h1>
   <p class="lede">칸 단위로 학습한 뒤, 시정촌 안 칸들의 사후확률을 시정촌 값 하나로 모아 채점합니다. 모으는 방법은 학습에 들어가지 않고 채점할 때만 쓰입니다. 이 페이지는 최댓값 · 평균 · 상위 % 평균을 비교하고, 왜 산사태에서 상위 10%가 가장 높게 나왔는지 풀어 씁니다.</p>
-  <p class="meta">본문: <a href="https://claude.ai/artifact/Uqmg4X8sLnLZeZX1jYmKpJ" style="color:var(--accent)">칸 단위 실험 기록</a>. 아래 숫자는 ⑤ 끄기 지도 + U, 칸 결과를 <code>cell_extract.py</code>로 줄여 받은 것 (②③④는 고친 soft).</p>
-  <nav class="toc" aria-label="차례"><a href="#easy">0. 쉽게</a><a href="#sum">한눈에</a><a href="#all5">seed 5개 평균</a><a href="#how">1. 세 가지 방법</a><a href="#part">2. 상위 10%와 비탈 비율</a><a href="#curve">3. 실제 곡선</a><a href="#why">4. 왜 더 나은가</a><a href="#res">5. 결과 표</a><a href="#stab">6. seed 안정성</a><a href="#detail">7. 자세한 기록</a></nav>
+  <p class="meta">본문: <a href="https://claude.ai/artifact/Uqmg4X8sLnLZeZX1jYmKpJ" style="color:var(--accent)">칸 단위 실험 기록</a> (주 결과 = 최대 · 최대). 이 페이지의 숫자는 모두 <b>seed 0~4 다섯 개 평균</b>이고, ② ③ ④는 고친 soft입니다. 칸 결과는 PC에서 <code>cell_extract.py</code>로 줄여 받았습니다.</p>
+  <nav class="toc" aria-label="차례"><a href="#easy">0. 쉽게</a><a href="#all5">★ 한눈에</a><a href="#how">1. 세 가지 방법</a><a href="#part">2. 상위 10%와 비탈 비율</a><a href="#curve">3. 실제 곡선</a><a href="#why">4. 왜 더 나은가</a><a href="#res">5. 결과 표 · 새 seed 확인</a><a href="#stab">6. seed 안정성</a></nav>
 </header>
-
 
 <section id="easy">
   <h2><span class="n">0</span>쉽게 한 장으로</h2>
@@ -166,41 +165,23 @@ body{background:#fff}
     <li><b>최댓값</b> = 반 1등 점수. 천재 한 명만 있어도 높음</li>
     <li><b>평균</b> = 반 전체 평균. 수학 안 듣는 학생(평지 칸)이 많으면 낮음</li>
     <li><b>상위 10%</b> = 반 상위 10% 학생의 평균. 잘하는 학생이 어느 정도 모여 있어야 높음</li></ul></div>
-  <p>실제 구마모토 산사태 (⑤). 피해 있는 시정촌이 더 높아야 맞습니다.</p>
-  <div class="grid2"><div class="card"><h3>쌍 1: 최댓값이 틀림</h3>
-      <div class="tw"><table><tr><th></th><th class="num">宇土市<br><span class="tag t-all">피해 있음</span></th><th class="num">氷川町<br><span class="tag" style="background:var(--warn-bg);color:var(--warn)">피해 없음</span></th><th class="num">맞았나</th></tr><tr><td>최댓값</td><td class="num">0.88</td><td class="num"><b>0.89</b></td><td class="num" style="font-size:20px;color:var(--warn);font-weight:700">✗</td></tr><tr><td>평균</td><td class="num"><b>0.25</b></td><td class="num">0.14</td><td class="num" style="font-size:20px;color:var(--all);font-weight:700">✓</td></tr><tr><td>상위 10%</td><td class="num"><b>0.78</b></td><td class="num">0.77</td><td class="num" style="font-size:20px;color:var(--all);font-weight:700">✓</td></tr></table></div>
-      <p class="meta">氷川町은 칸 몇 개만 튀어서 최댓값이 높음 (반에 천재 한 명)</p></div><div class="card"><h3>쌍 2: 평균이 틀림</h3>
-      <div class="tw"><table><tr><th></th><th class="num">熊本市<br><span class="tag t-all">피해 있음</span></th><th class="num">玉東町<br><span class="tag" style="background:var(--warn-bg);color:var(--warn)">피해 없음</span></th><th class="num">맞았나</th></tr><tr><td>최댓값</td><td class="num"><b>0.91</b></td><td class="num">0.84</td><td class="num" style="font-size:20px;color:var(--all);font-weight:700">✓</td></tr><tr><td>평균</td><td class="num">0.14</td><td class="num"><b>0.24</b></td><td class="num" style="font-size:20px;color:var(--warn);font-weight:700">✗</td></tr><tr><td>상위 10%</td><td class="num"><b>0.75</b></td><td class="num">0.71</td><td class="num" style="font-size:20px;color:var(--all);font-weight:700">✓</td></tr></table></div>
-      <p class="meta">熊本市는 땅의 80%가 평지라 평균이 낮음 (수학 안 듣는 학생이 많은 반)</p></div></div>
-  <p class="callout" style="display:block"><b>최댓값은 쌍 1에서, 평균은 쌍 2에서 틀리고, 상위 10%는 둘 다 맞힙니다.</b> 이런 쌍이 많아서 산사태에서 상위 10%의 AUC가 가장 높게 나옵니다 (⑤ 최댓값 0.792 · 평균 0.804 · 상위 10% 0.860). 아래 1~4절은 이것을 자세히 풀어 쓴 것입니다.</p>
-</section>
-
-<section id="sum">
-  <h2><span class="n">★</span>한눈에</h2>
-  <div class="tw"><table>
-    <tr><th>모으는 법</th><th>쓰는 칸</th><th class="num">산사태 AUC (⑤, seed 5개)</th><th class="num">액상화 AUC (⑤, seed 5개)</th><th>약점</th></tr>
-    <tr><td>최댓값</td><td>가장 높은 칸 1개</td><td class="num">0.790</td><td class="num"><b>0.813</b></td><td>칸이 많으면 어느 시정촌이든 칸 하나는 높게 튀어 다 비슷해짐</td></tr>
-    <tr><td>평균</td><td>칸 전부</td><td class="num">0.805</td><td class="num">0.738</td><td>넓은 평지에 묻혀 비탈이 일부인 시정촌이 낮아짐. 산은 많지만 반응이 약한 곳이 높아짐</td></tr>
-    <tr><td><b>상위 10% 평균</b></td><td>높은 칸 위에서 10%</td><td class="num"><b>0.868</b></td><td class="num">0.729</td><td>비탈이 10%보다 훨씬 적으면 평지 칸이 섞여 묻힘. seed 0~2를 보고 골랐지만 새 seed 3 · 4에서도 확인됨</td></tr>
-  </table></div>
-  <ul>
-    <li><b>산사태는 상위 10%(0.868)가 가장 높고</b>, 액상화는 최댓값(0.813)이 가장 높습니다 (seed 5개 평균). 산사태 상위 10% + 액상화 최댓값이면 ⑤ 전체 0.827 (둘 다 최댓값 0.808). <a href="#confirm34">처음 보는 seed 3 · 4에서도 확인됨</a></li>
-    <li>상위 10%의 장점은 "잡음 칸 하나에 안 휘둘림"(최댓값의 약점 보완)과 "넓은 평지에 안 묻힘"(평균의 약점 보완)을 함께 얻는 것입니다</li>
-    <li>"아주 작은 비탈"(시정촌의 몇 %)을 더 잘 잡는 방법은 아닙니다. 그런 곳은 상위 10%에도 평지 칸이 섞입니다 (2절)</li>
-  </ul>
+  <p>실제 구마모토 산사태 (⑤, seed 0~4 평균 확률). 피해 있는 시정촌이 더 높아야 맞습니다.</p>
+  <div class="grid2"><div class="card"><h3>쌍 1: 최댓값이 틀림</h3><div class="tw"><table><tr><th></th><th class="num">宇土市<br><span class="tag t-all">피해 있음</span></th><th class="num">氷川町<br><span class="tag" style="background:var(--warn-bg);color:var(--warn)">피해 없음</span></th><th class="num">맞았나</th></tr><tr><td>최댓값</td><td class="num">0.88</td><td class="num"><b>0.89</b></td><td class="num" style="font-size:20px;color:var(--warn);font-weight:700">✗</td></tr><tr><td>평균</td><td class="num"><b>0.24</b></td><td class="num">0.14</td><td class="num" style="font-size:20px;color:var(--all);font-weight:700">✓</td></tr><tr><td>상위 10%</td><td class="num"><b>0.78</b></td><td class="num">0.74</td><td class="num" style="font-size:20px;color:var(--all);font-weight:700">✓</td></tr></table></div><p class="meta">氷川町은 칸 몇 개만 튀어서 최댓값이 높음 (반에 천재 한 명)</p></div><div class="card"><h3>쌍 2: 평균이 틀림</h3><div class="tw"><table><tr><th></th><th class="num">熊本市<br><span class="tag t-all">피해 있음</span></th><th class="num">玉東町<br><span class="tag" style="background:var(--warn-bg);color:var(--warn)">피해 없음</span></th><th class="num">맞았나</th></tr><tr><td>최댓값</td><td class="num"><b>0.90</b></td><td class="num">0.84</td><td class="num" style="font-size:20px;color:var(--all);font-weight:700">✓</td></tr><tr><td>평균</td><td class="num">0.14</td><td class="num"><b>0.23</b></td><td class="num" style="font-size:20px;color:var(--warn);font-weight:700">✗</td></tr><tr><td>상위 10%</td><td class="num"><b>0.74</b></td><td class="num">0.69</td><td class="num" style="font-size:20px;color:var(--all);font-weight:700">✓</td></tr></table></div><p class="meta">熊本市는 땅의 80%가 평지라 평균이 낮음 (수학 안 듣는 학생이 많은 반)</p></div></div>
+  <p class="callout" style="display:block"><b>최댓값은 쌍 1에서, 평균은 쌍 2에서 틀리고, 상위 10%는 둘 다 맞힙니다.</b> 이런 쌍이 많아서 산사태에서 상위 10%의 AUC가 가장 높게 나옵니다 (⑤ 최댓값 0.790 · 평균 0.805 · 상위 10% 0.868).</p>
 </section>
 
 <section id="all5">
-  <h2><span class="n">★</span>seed 5개 평균: 모으는 방법별 결과 한눈에 (10.23)</h2>
+  <h2><span class="n">★</span>한눈에: 모으는 방법별 결과 (seed 0~4 평균)</h2>
   <p>학습은 같고 시정촌으로 모으는 방법만 다릅니다. 액상화는 모두 칸 최댓값. 주 결과(칸 단위 실험 기록)는 <b>최대 · 최대</b>입니다.</p>
   <div class="tw"><table>
     <tr><th rowspan="2">실험 (seed 0~4 평균)</th><th colspan="3"><span class="tag t-ls">산사태</span> AUC</th><th rowspan="2" class="num"><span class="tag t-lq">액상화</span> AUC<br>(칸 최댓값)</th><th colspan="3">전체 AUC</th></tr>
     <tr><th class="num">칸 최댓값</th><th class="num">칸 평균</th><th class="num">상위 10%</th><th class="num">최대 · 최대<br>(주 결과)</th><th class="num">섞기<br>(산사태 평균)</th><th class="num">산사태 상위 10%</th></tr>
-    <tr><td>⑤ 끄기 지도 + U</td><td class="num">0.790</td><td class="num">0.805</td><td class="num"><b>0.868</b></td><td class="num">0.813</td><td class="num">0.808</td><td class="num">0.811</td><td class="num"><b>0.827</b></td></tr><tr><td>③ soft + U (끄기만)</td><td class="num">0.786</td><td class="num">0.790</td><td class="num"><b>0.799</b></td><td class="num">0.799</td><td class="num">0.796</td><td class="num">0.797</td><td class="num"><b>0.799</b></td></tr><tr><td>② soft + U</td><td class="num">0.773</td><td class="num">0.808</td><td class="num"><b>0.871</b></td><td class="num">0.789</td><td class="num">0.785</td><td class="num">0.794</td><td class="num"><b>0.809</b></td></tr><tr><td>④ soft + U (분산만)</td><td class="num">0.794</td><td class="num">0.809</td><td class="num"><b>0.880</b></td><td class="num">0.747</td><td class="num">0.758</td><td class="num">0.762</td><td class="num"><b>0.779</b></td></tr><tr><td>① baseline</td><td class="num"><b>0.728</b></td><td class="num">0.671</td><td class="num">0.682</td><td class="num">0.696</td><td class="num"><b>0.704</b></td><td class="num">0.690</td><td class="num">0.693</td></tr>
+    <tr><td>① baseline</td><td class="num"><b>0.728</b></td><td class="num">0.671</td><td class="num">0.682</td><td class="num">0.696</td><td class="num"><b>0.704</b></td><td class="num">0.690</td><td class="num">0.693</td></tr><tr><td>② soft + U</td><td class="num">0.773</td><td class="num">0.808</td><td class="num"><b>0.871</b></td><td class="num">0.789</td><td class="num">0.785</td><td class="num">0.794</td><td class="num"><b>0.809</b></td></tr><tr><td>③ soft + U (끄기만)</td><td class="num">0.786</td><td class="num">0.790</td><td class="num"><b>0.799</b></td><td class="num">0.799</td><td class="num">0.796</td><td class="num">0.797</td><td class="num"><b>0.799</b></td></tr><tr><td>④ soft + U (분산만)</td><td class="num">0.794</td><td class="num">0.809</td><td class="num"><b>0.880</b></td><td class="num">0.747</td><td class="num">0.758</td><td class="num">0.762</td><td class="num"><b>0.779</b></td></tr><tr><td>⑤ 끄기 지도 + U</td><td class="num">0.790</td><td class="num">0.805</td><td class="num"><b>0.868</b></td><td class="num">0.813</td><td class="num">0.808</td><td class="num">0.811</td><td class="num"><b>0.827</b></td></tr>
     <tr><td class="muted">USGS 기준선 · pilotA A2</td><td class="num" colspan="3">0.729 · 0.872</td><td class="num">0.895 · 0.850</td><td class="num" colspan="3">0.854 · 0.855</td></tr>
   </table></div>
   <ul>
-    <li>산사태는 끄기 지도나 soft를 쓴 ⑤ · ② · ④에서 상위 10%가 가장 높고(0.87~0.88), 처음 보는 seed 3 · 4에서도 같습니다 (5절)</li>
+    <li><b>산사태는 끄기 지도나 soft를 쓴 ⑤ · ② · ④에서 상위 10%가 가장 높고</b> (0.87~0.88), 처음 보는 seed 3 · 4에서도 같습니다 (5절). 산사태 상위 10% + 액상화 최댓값이면 ⑤ 전체 0.827 (최대 · 최대 0.808)</li>
+    <li>액상화는 최댓값이 가장 좋습니다 (⑤ 0.813, 상위 5% 0.733)</li>
     <li>섞기(산사태 칸 평균)는 최대 · 최대보다 0.001~0.009 높은 정도이고, ①에서는 내려갑니다</li>
     <li>어느 방법이든 USGS 기준선 0.854보다는 낮습니다. 액상화(0.70~0.81)가 USGS(0.895)보다 낮은 것이 주된 이유입니다</li>
   </ul>
@@ -417,34 +398,29 @@ body{background:#fff}
   <h2><span class="n">2</span>상위 10%는 비탈이 일부인 시정촌을 어떻게 반영하나</h2>
   <p>평균은 대략 <b>(비탈 비율 × 비탈 칸 확률) + (평지 비율 × 평지 칸 확률)</b>입니다. 평지 칸 확률이 0에 가까우므로 비탈 비율이 작을수록 그대로 작아집니다. 상위 10%는 높은 칸부터 10%만 보므로, <b>비탈이 10% 이상이면 상위 10%가 거의 비탈 칸으로 채워져</b> 평지가 얼마나 넓든 상관없어집니다.</p>
   <div class="tw"><table>
-    <tr><th>구마모토 (⑤)</th><th class="num">비탈 비율</th><th class="num">칸 수</th><th class="num">상위 10% = 칸 몇 개</th><th class="num">평균</th><th class="num">상위 10%</th><th class="num">최댓값</th></tr>
-    <tr><td>熊本市 (피해 있음)</td><td class="num">20%</td><td class="num">5,544</td><td class="num">555 (비탈 약 1,100칸 안)</td><td class="num">0.14</td><td class="num"><b>0.75</b></td><td class="num">0.91</td></tr>
-    <tr><td>玉名市 (피해 있음)</td><td class="num">18%</td><td class="num">2,144</td><td class="num">215 (비탈 약 375칸 안)</td><td class="num">0.12</td><td class="num">0.63</td><td class="num">0.87</td></tr>
-    <tr><td>荒尾市 (피해 있음)</td><td class="num">11%</td><td class="num">838</td><td class="num">84 (비탈 96칸 안)</td><td class="num">0.09</td><td class="num">0.59</td><td class="num">0.83</td></tr>
-    <tr><td>合志市 (피해 있음)</td><td class="num">0.5%</td><td class="num">793</td><td class="num">80 (비탈은 4칸뿐, 76칸은 평지)</td><td class="num">0.01</td><td class="num">0.09</td><td class="num">0.77</td></tr>
-    <tr><td>玉東町 (피해 없음)</td><td class="num">51%</td><td class="num">362</td><td class="num">37</td><td class="num">0.24</td><td class="num">0.71</td><td class="num">0.84</td></tr>
+    <tr><th>구마모토 (⑤, seed 0~4 평균)</th><th class="num">비탈 비율</th><th class="num">칸 수</th><th class="num">평균</th><th class="num">상위 10%</th><th class="num">최댓값</th></tr>
+    <tr><td>熊本市 (피해 있음)</td><td class="num">20.2%</td><td class="num">5,544</td><td class="num">0.14</td><td class="num"><b>0.74</b></td><td class="num">0.90</td></tr><tr><td>玉名市 (피해 있음)</td><td class="num">17.5%</td><td class="num">2,144</td><td class="num">0.11</td><td class="num"><b>0.60</b></td><td class="num">0.87</td></tr><tr><td>荒尾市 (피해 있음)</td><td class="num">11.3%</td><td class="num">838</td><td class="num">0.09</td><td class="num"><b>0.56</b></td><td class="num">0.83</td></tr><tr><td>合志市 (피해 있음)</td><td class="num">0.5%</td><td class="num">793</td><td class="num">0.01</td><td class="num"><b>0.08</b></td><td class="num">0.68</td></tr><tr><td>玉東町 (피해 없음)</td><td class="num">50.6%</td><td class="num">362</td><td class="num">0.23</td><td class="num"><b>0.69</b></td><td class="num">0.84</td></tr>
   </table></div>
   <ul>
-    <li>熊本市는 비탈이 20%뿐이라 평균이 0.14로, 비탈이 51%인 피해 없는 玉東町(0.24)보다 낮습니다. 상위 10%로 보면 熊本市 0.75가 玉東町 0.71보다 높아 순서가 맞습니다</li>
-    <li><b>한계</b>: 合志市처럼 비탈이 10%보다 훨씬 적으면(0.5%) 상위 10%에 평지 칸이 대부분 섞여 0.09로 묻힙니다. 이런 곳은 최댓값(0.77)이 더 낫지만, 최댓값은 다른 곳에서 잡음에 약합니다. 그래서 "아주 작은 비탈을 잡는 방법"이 아니라 "<b>비탈이 시정촌의 10% 이상일 때 평지에 묻히지 않게 하는 방법</b>"입니다</li>
-    <li>비율을 1%로 하면 작은 비탈에 가까워지지만 최댓값처럼 잡음에 약해지고(산사태 0.822), 5% · 10%가 가장 좋았습니다 (0.856 · 0.860)</li>
+    <li>熊本市는 비탈이 20%뿐이라 평균이 0.14로, 비탈이 51%인 피해 없는 玉東町(0.23)보다 낮습니다. 상위 10%로 보면 熊本市 0.74가 玉東町 0.69보다 높아 순서가 맞습니다</li>
+    <li><b>한계</b>: 合志市처럼 비탈이 10%보다 훨씬 적으면(0.5%) 상위 10%에 평지 칸이 대부분 섞여 0.08로 묻힙니다. 그래서 "아주 작은 비탈을 잡는 방법"이 아니라 "<b>비탈이 시정촌의 10% 이상일 때 평지에 묻히지 않게 하는 방법</b>"입니다</li>
+    <li>비율을 1%로 하면 최댓값처럼 잡음에 약해지고(⑤ 산사태 0.829), 5% · 10%가 가장 좋았습니다 (0.862 · 0.868)</li>
   </ul>
-
-  <h3 id="steephigh">비탈 칸은 실제로 높게 나오나? (⑤, 13개 시정촌의 칸, seed 0~3)</h3>
+  <h3 id="steephigh">비탈 칸은 실제로 높게 나오나? (⑤, 13개 시정촌의 칸, seed 0~4)</h3>
   <div class="tw"><table>
     <tr><th>지진</th><th>경사</th><th class="num">칸 사후확률 평균</th><th class="num">상위 10% 지점</th><th class="num">0.5 이상인 칸</th></tr>
-    <tr><td rowspan="3">구마모토</td><td>평지 (5° 미만)</td><td class="num">0.000</td><td class="num">0.000</td><td class="num">0%</td></tr>
-    <tr><td>중간 (5~10°)</td><td class="num">0.29</td><td class="num">0.75</td><td class="num">20%</td></tr>
-    <tr><td>비탈 (10° 이상)</td><td class="num">0.36</td><td class="num"><b>0.78</b></td><td class="num"><b>28%</b></td></tr>
-    <tr><td rowspan="3">훗카이도</td><td>평지</td><td class="num">0.000</td><td class="num">0.000</td><td class="num">0%</td></tr>
-    <tr><td>중간</td><td class="num">0.30</td><td class="num">0.83</td><td class="num">22%</td></tr>
-    <tr><td>비탈</td><td class="num">0.33</td><td class="num"><b>0.83</b></td><td class="num"><b>25%</b></td></tr>
+    <tr><td rowspan="3">구마모토</td><td>평지</td><td class="num">0.00</td><td class="num">0.00</td><td class="num">0%</td></tr><tr><td>중간</td><td class="num">0.28</td><td class="num">0.74</td><td class="num">17%</td></tr><tr><td>비탈</td><td class="num">0.35</td><td class="num">0.77</td><td class="num">26%</td></tr>
+    <tr><td rowspan="3">훗카이도</td><td>평지</td><td class="num">0.00</td><td class="num">0.00</td><td class="num">0%</td></tr><tr><td>중간</td><td class="num">0.27</td><td class="num">0.82</td><td class="num">18%</td></tr><tr><td>비탈</td><td class="num">0.29</td><td class="num">0.82</td><td class="num">20%</td></tr>
   </table></div>
   <ul>
-    <li><b>비탈 칸은 높게 나옵니다.</b> 비탈 칸의 4분의 1 정도가 0.5 이상이고, 위쪽 10%는 0.78~0.83입니다. ⑤는 끄기 지도로 평지 칸의 산사태를 0으로 고정하므로, 시정촌의 상위 10%는 사실상 그 시정촌의 비탈 · 중간 칸 중 높은 것들입니다</li>
-    <li>그래서 상위 10%는 "비탈 칸 중 높게 나온 것들이 얼마나 높은가"를 재는 셈이고, 비탈이 10% 이상인 시정촌에서는 평지에 묻히지 않습니다</li>
-    <li>남은 문제는 <b>피해 없는 시정촌의 비탈 칸도 똑같이 높게 나온다</b>는 것입니다 (玉東町 · 氷川町). 비탈 칸 확률은 거의 DPM이 정하는데, 구마모토처럼 피해가 넓은 지진에서는 DPM이 어디서나 크게 나오기 때문입니다</li>
+    <li><b>비탈 칸은 높게 나옵니다.</b> 비탈 칸의 5분의 1~4분의 1이 0.5 이상이고, 위쪽 10%는 0.77~0.83입니다. ⑤는 끄기 지도로 평지 칸의 산사태를 0으로 고정하므로, 시정촌의 상위 10%는 사실상 그 시정촌의 비탈 · 중간 칸 중 높은 것들입니다</li>
+    <li>남은 문제는 <b>피해 없는 시정촌의 비탈 칸도 똑같이 높게 나온다</b>는 것입니다 (아래 표, 玉東町 · 氷川町). 비탈 칸 확률은 거의 DPM이 정하는데, 구마모토처럼 피해가 넓은 지진에서는 DPM이 어디서나 크게 나오기 때문입니다</li>
   </ul>
+  <div class="tw"><table>
+    <tr><th>구마모토 (⑤, seed 0~4)</th><th class="num">비탈 칸 (10° 이상)</th><th class="num">비탈 칸 USGS 평균</th><th class="num">비탈 칸 DPM 평균</th><th class="num">비탈 칸 사후확률 상위 5%</th><th class="num">최댓값</th><th class="num">최댓값 칸의 경사 · DPM</th></tr>
+    <tr><td>荒尾市 (피해 있음)</td><td class="num">96 / 838</td><td class="num">0.002</td><td class="num">0.17</td><td class="num">0.81</td><td class="num">0.83</td><td class="num">13.6° · 0.41</td></tr><tr><td>合志市 (피해 있음)</td><td class="num">4 / 793</td><td class="num">0.003</td><td class="num">0.20</td><td class="num">0.53</td><td class="num">0.68</td><td class="num">5.3° · 0.34</td></tr><tr><td>玉東町 (피해 없음)</td><td class="num">183 / 362</td><td class="num">0.004</td><td class="num">0.13</td><td class="num">0.80</td><td class="num">0.84</td><td class="num">17.3° · 0.46</td></tr><tr><td>菊陽町 (피해 없음)</td><td class="num">10 / 541</td><td class="num">0.031</td><td class="num">0.15</td><td class="num">0.71</td><td class="num">0.84</td><td class="num">5.6° · 0.35</td></tr><tr><td>氷川町 (피해 없음)</td><td class="num">73 / 463</td><td class="num">0.022</td><td class="num">0.19</td><td class="num">0.87</td><td class="num">0.89</td><td class="num">14.4° · 0.49</td></tr>
+  </table></div>
+  <p class="meta">荒尾市의 가장 높은 칸은 비탈(13.6°)이고 DPM 0.41로 강해 0.83이지만, 피해 없는 玉東町 · 氷川町의 비탈 칸도 0.84 · 0.89입니다. 菊陽町 · 合志市는 최댓값 칸이 비탈이 아닌 5° 근처 칸이었습니다. 정답이 시정촌 단위라 실제 산사태가 난 칸이 어디인지는 알 수 없습니다.</p>
 </section>
 
 <section id="curve">
@@ -465,190 +441,190 @@ body{background:#fff}
 <text x="525.0" y="338" text-anchor="middle" font-size="12" font-weight="700" fill="#1d2430">상위 10%</text>
 <text x="680.0" y="338" text-anchor="middle" font-size="12" font-weight="400" fill="#1d2430">평균</text>
 <text x="680.0" y="351" text-anchor="middle" font-size="12" font-weight="400" fill="#1d2430">(칸 전부)</text>
-<polyline points="60.0,57.2 215.0,71.9 370.0,85.6 525.0,101.4 680.0,279.4" fill="none" stroke="#2d62b3" stroke-width="2.4" stroke-opacity="1"/>
-<circle cx="60.0" cy="57.2" r="2.2" fill="#2d62b3"/>
-<circle cx="215.0" cy="71.9" r="2.2" fill="#2d62b3"/>
-<circle cx="370.0" cy="85.6" r="2.2" fill="#2d62b3"/>
-<circle cx="525.0" cy="101.4" r="2.2" fill="#2d62b3"/>
-<circle cx="680.0" cy="279.4" r="2.2" fill="#2d62b3"/>
-<polyline points="60.0,58.0 215.0,66.2 370.0,72.3 525.0,76.3 680.0,199.3" fill="none" stroke="#c9a27e" stroke-width="1.4" stroke-opacity="0.55"/>
-<circle cx="60.0" cy="58.0" r="2.2" fill="#c9a27e"/>
-<circle cx="215.0" cy="66.2" r="2.2" fill="#c9a27e"/>
-<circle cx="370.0" cy="72.3" r="2.2" fill="#c9a27e"/>
-<circle cx="525.0" cy="76.3" r="2.2" fill="#c9a27e"/>
-<circle cx="680.0" cy="199.3" r="2.2" fill="#c9a27e"/>
-<polyline points="60.0,78.0 215.0,84.2 370.0,104.2 525.0,147.9 680.0,293.0" fill="none" stroke="#2d62b3" stroke-width="2.4" stroke-opacity="1"/>
-<circle cx="60.0" cy="78.0" r="2.2" fill="#2d62b3"/>
-<circle cx="215.0" cy="84.2" r="2.2" fill="#2d62b3"/>
-<circle cx="370.0" cy="104.2" r="2.2" fill="#2d62b3"/>
-<circle cx="525.0" cy="147.9" r="2.2" fill="#2d62b3"/>
-<circle cx="680.0" cy="293.0" r="2.2" fill="#2d62b3"/>
-<polyline points="60.0,68.1 215.0,79.3 370.0,102.2 525.0,137.0 680.0,285.7" fill="none" stroke="#2d62b3" stroke-width="2.4" stroke-opacity="1"/>
-<circle cx="60.0" cy="68.1" r="2.2" fill="#2d62b3"/>
-<circle cx="215.0" cy="79.3" r="2.2" fill="#2d62b3"/>
-<circle cx="370.0" cy="102.2" r="2.2" fill="#2d62b3"/>
-<circle cx="525.0" cy="137.0" r="2.2" fill="#2d62b3"/>
-<circle cx="680.0" cy="285.7" r="2.2" fill="#2d62b3"/>
-<polyline points="60.0,62.1 215.0,70.2 370.0,77.3 525.0,81.9 680.0,219.6" fill="none" stroke="#c9a27e" stroke-width="1.4" stroke-opacity="0.55"/>
-<circle cx="60.0" cy="62.1" r="2.2" fill="#c9a27e"/>
-<circle cx="215.0" cy="70.2" r="2.2" fill="#c9a27e"/>
-<circle cx="370.0" cy="77.3" r="2.2" fill="#c9a27e"/>
-<circle cx="525.0" cy="81.9" r="2.2" fill="#c9a27e"/>
-<circle cx="680.0" cy="219.6" r="2.2" fill="#c9a27e"/>
-<polyline points="60.0,48.0 215.0,55.2 370.0,61.5 525.0,66.0 680.0,191.8" fill="none" stroke="#c9a27e" stroke-width="1.4" stroke-opacity="0.55"/>
-<circle cx="60.0" cy="48.0" r="2.2" fill="#c9a27e"/>
-<circle cx="215.0" cy="55.2" r="2.2" fill="#c9a27e"/>
-<circle cx="370.0" cy="61.5" r="2.2" fill="#c9a27e"/>
-<circle cx="525.0" cy="66.0" r="2.2" fill="#c9a27e"/>
-<circle cx="680.0" cy="191.8" r="2.2" fill="#c9a27e"/>
-<polyline points="60.0,63.8 215.0,70.9 370.0,84.1 525.0,93.6 680.0,248.1" fill="none" stroke="#c9a27e" stroke-width="1.4" stroke-opacity="0.55"/>
-<circle cx="60.0" cy="63.8" r="2.2" fill="#c9a27e"/>
-<circle cx="215.0" cy="70.9" r="2.2" fill="#c9a27e"/>
-<circle cx="370.0" cy="84.1" r="2.2" fill="#c9a27e"/>
-<circle cx="525.0" cy="93.6" r="2.2" fill="#c9a27e"/>
-<circle cx="680.0" cy="248.1" r="2.2" fill="#c9a27e"/>
-<polyline points="60.0,65.7 215.0,71.8 370.0,77.5 525.0,81.6 680.0,229.0" fill="none" stroke="#c9a27e" stroke-width="1.4" stroke-opacity="0.55"/>
-<circle cx="60.0" cy="65.7" r="2.2" fill="#c9a27e"/>
-<circle cx="215.0" cy="71.8" r="2.2" fill="#c9a27e"/>
-<circle cx="370.0" cy="77.5" r="2.2" fill="#c9a27e"/>
-<circle cx="525.0" cy="81.6" r="2.2" fill="#c9a27e"/>
-<circle cx="680.0" cy="229.0" r="2.2" fill="#c9a27e"/>
-<polyline points="60.0,59.9 215.0,78.0 370.0,88.9 525.0,100.8 680.0,257.0" fill="none" stroke="#c9a27e" stroke-width="1.4" stroke-opacity="0.55"/>
-<circle cx="60.0" cy="59.9" r="2.2" fill="#c9a27e"/>
-<circle cx="215.0" cy="78.0" r="2.2" fill="#c9a27e"/>
-<circle cx="370.0" cy="88.9" r="2.2" fill="#c9a27e"/>
-<circle cx="525.0" cy="100.8" r="2.2" fill="#c9a27e"/>
-<circle cx="680.0" cy="257.0" r="2.2" fill="#c9a27e"/>
-<polyline points="60.0,41.9 215.0,48.5 370.0,54.4 525.0,58.7 680.0,179.0" fill="none" stroke="#c9a27e" stroke-width="1.4" stroke-opacity="0.55"/>
-<circle cx="60.0" cy="41.9" r="2.2" fill="#c9a27e"/>
-<circle cx="215.0" cy="48.5" r="2.2" fill="#c9a27e"/>
-<circle cx="370.0" cy="54.4" r="2.2" fill="#c9a27e"/>
-<circle cx="525.0" cy="58.7" r="2.2" fill="#c9a27e"/>
-<circle cx="680.0" cy="179.0" r="2.2" fill="#c9a27e"/>
-<polyline points="60.0,67.9 215.0,76.1 370.0,82.7 525.0,88.0 680.0,232.5" fill="none" stroke="#c9a27e" stroke-width="1.4" stroke-opacity="0.55"/>
-<circle cx="60.0" cy="67.9" r="2.2" fill="#c9a27e"/>
-<circle cx="215.0" cy="76.1" r="2.2" fill="#c9a27e"/>
-<circle cx="370.0" cy="82.7" r="2.2" fill="#c9a27e"/>
-<circle cx="525.0" cy="88.0" r="2.2" fill="#c9a27e"/>
-<circle cx="680.0" cy="232.5" r="2.2" fill="#c9a27e"/>
-<polyline points="60.0,96.0 215.0,153.6 370.0,267.1 525.0,293.6 680.0,317.3" fill="none" stroke="#2d62b3" stroke-width="2.4" stroke-opacity="1"/>
-<circle cx="60.0" cy="96.0" r="2.2" fill="#2d62b3"/>
-<circle cx="215.0" cy="153.6" r="2.2" fill="#2d62b3"/>
-<circle cx="370.0" cy="267.1" r="2.2" fill="#2d62b3"/>
-<circle cx="525.0" cy="293.6" r="2.2" fill="#2d62b3"/>
-<circle cx="680.0" cy="317.3" r="2.2" fill="#2d62b3"/>
-<polyline points="60.0,56.7 215.0,64.9 370.0,72.9 525.0,78.4 680.0,196.3" fill="none" stroke="#c9a27e" stroke-width="1.4" stroke-opacity="0.55"/>
-<circle cx="60.0" cy="56.7" r="2.2" fill="#c9a27e"/>
-<circle cx="215.0" cy="64.9" r="2.2" fill="#c9a27e"/>
-<circle cx="370.0" cy="72.9" r="2.2" fill="#c9a27e"/>
-<circle cx="525.0" cy="78.4" r="2.2" fill="#c9a27e"/>
-<circle cx="680.0" cy="196.3" r="2.2" fill="#c9a27e"/>
-<polyline points="60.0,71.0 215.0,78.8 370.0,86.8 525.0,93.5 680.0,240.3" fill="none" stroke="#c9a27e" stroke-width="1.4" stroke-opacity="0.55"/>
-<circle cx="60.0" cy="71.0" r="2.2" fill="#c9a27e"/>
-<circle cx="215.0" cy="78.8" r="2.2" fill="#c9a27e"/>
-<circle cx="370.0" cy="86.8" r="2.2" fill="#c9a27e"/>
-<circle cx="525.0" cy="93.5" r="2.2" fill="#c9a27e"/>
-<circle cx="680.0" cy="240.3" r="2.2" fill="#c9a27e"/>
-<polyline points="60.0,75.6 215.0,80.5 370.0,87.5 525.0,94.5 680.0,238.2" fill="none" stroke="#c9a27e" stroke-width="1.4" stroke-opacity="0.55"/>
-<circle cx="60.0" cy="75.6" r="2.2" fill="#c9a27e"/>
-<circle cx="215.0" cy="80.5" r="2.2" fill="#c9a27e"/>
-<circle cx="370.0" cy="87.5" r="2.2" fill="#c9a27e"/>
-<circle cx="525.0" cy="94.5" r="2.2" fill="#c9a27e"/>
-<circle cx="680.0" cy="238.2" r="2.2" fill="#c9a27e"/>
-<polyline points="60.0,45.0 215.0,50.0 370.0,54.6 525.0,58.2 680.0,206.6" fill="none" stroke="#c9a27e" stroke-width="1.4" stroke-opacity="0.55"/>
-<circle cx="60.0" cy="45.0" r="2.2" fill="#c9a27e"/>
-<circle cx="215.0" cy="50.0" r="2.2" fill="#c9a27e"/>
-<circle cx="370.0" cy="54.6" r="2.2" fill="#c9a27e"/>
-<circle cx="525.0" cy="58.2" r="2.2" fill="#c9a27e"/>
-<circle cx="680.0" cy="206.6" r="2.2" fill="#c9a27e"/>
-<polyline points="60.0,55.4 215.0,60.5 370.0,66.6 525.0,70.2 680.0,136.8" fill="none" stroke="#c9a27e" stroke-width="1.4" stroke-opacity="0.55"/>
-<circle cx="60.0" cy="55.4" r="2.2" fill="#c9a27e"/>
-<circle cx="215.0" cy="60.5" r="2.2" fill="#c9a27e"/>
-<circle cx="370.0" cy="66.6" r="2.2" fill="#c9a27e"/>
-<circle cx="525.0" cy="70.2" r="2.2" fill="#c9a27e"/>
-<circle cx="680.0" cy="136.8" r="2.2" fill="#c9a27e"/>
-<polyline points="60.0,58.7 215.0,63.7 370.0,68.8 525.0,72.2 680.0,152.2" fill="none" stroke="#c9a27e" stroke-width="1.4" stroke-opacity="0.55"/>
-<circle cx="60.0" cy="58.7" r="2.2" fill="#c9a27e"/>
-<circle cx="215.0" cy="63.7" r="2.2" fill="#c9a27e"/>
-<circle cx="370.0" cy="68.8" r="2.2" fill="#c9a27e"/>
-<circle cx="525.0" cy="72.2" r="2.2" fill="#c9a27e"/>
-<circle cx="680.0" cy="152.2" r="2.2" fill="#c9a27e"/>
-<polyline points="60.0,60.9 215.0,66.1 370.0,72.5 525.0,76.0 680.0,158.6" fill="none" stroke="#c9a27e" stroke-width="1.4" stroke-opacity="0.55"/>
-<circle cx="60.0" cy="60.9" r="2.2" fill="#c9a27e"/>
-<circle cx="215.0" cy="66.1" r="2.2" fill="#c9a27e"/>
-<circle cx="370.0" cy="72.5" r="2.2" fill="#c9a27e"/>
-<circle cx="525.0" cy="76.0" r="2.2" fill="#c9a27e"/>
-<circle cx="680.0" cy="158.6" r="2.2" fill="#c9a27e"/>
-<polyline points="60.0,50.4 215.0,62.0 370.0,70.0 525.0,74.5 680.0,163.4" fill="none" stroke="#c9a27e" stroke-width="1.4" stroke-opacity="0.55"/>
-<circle cx="60.0" cy="50.4" r="2.2" fill="#c9a27e"/>
-<circle cx="215.0" cy="62.0" r="2.2" fill="#c9a27e"/>
-<circle cx="370.0" cy="70.0" r="2.2" fill="#c9a27e"/>
-<circle cx="525.0" cy="74.5" r="2.2" fill="#c9a27e"/>
-<circle cx="680.0" cy="163.4" r="2.2" fill="#c9a27e"/>
-<polyline points="60.0,42.6 215.0,47.1 370.0,51.8 525.0,55.0 680.0,140.4" fill="none" stroke="#2d62b3" stroke-width="2.4" stroke-opacity="1"/>
-<circle cx="60.0" cy="42.6" r="2.2" fill="#2d62b3"/>
-<circle cx="215.0" cy="47.1" r="2.2" fill="#2d62b3"/>
-<circle cx="370.0" cy="51.8" r="2.2" fill="#2d62b3"/>
-<circle cx="525.0" cy="55.0" r="2.2" fill="#2d62b3"/>
-<circle cx="680.0" cy="140.4" r="2.2" fill="#2d62b3"/>
-<polyline points="60.0,43.0 215.0,48.7 370.0,54.7 525.0,59.2 680.0,160.9" fill="none" stroke="#c9a27e" stroke-width="1.4" stroke-opacity="0.55"/>
-<circle cx="60.0" cy="43.0" r="2.2" fill="#c9a27e"/>
+<polyline points="60.0,57.9 215.0,72.6 370.0,86.9 525.0,105.8 680.0,280.7" fill="none" stroke="#2d62b3" stroke-width="2.4" stroke-opacity="1"/>
+<circle cx="60.0" cy="57.9" r="2.2" fill="#2d62b3"/>
+<circle cx="215.0" cy="72.6" r="2.2" fill="#2d62b3"/>
+<circle cx="370.0" cy="86.9" r="2.2" fill="#2d62b3"/>
+<circle cx="525.0" cy="105.8" r="2.2" fill="#2d62b3"/>
+<circle cx="680.0" cy="280.7" r="2.2" fill="#2d62b3"/>
+<polyline points="60.0,58.1 215.0,66.5 370.0,72.7 525.0,76.7 680.0,201.3" fill="none" stroke="#c9a27e" stroke-width="1.4" stroke-opacity="0.55"/>
+<circle cx="60.0" cy="58.1" r="2.2" fill="#c9a27e"/>
+<circle cx="215.0" cy="66.5" r="2.2" fill="#c9a27e"/>
+<circle cx="370.0" cy="72.7" r="2.2" fill="#c9a27e"/>
+<circle cx="525.0" cy="76.7" r="2.2" fill="#c9a27e"/>
+<circle cx="680.0" cy="201.3" r="2.2" fill="#c9a27e"/>
+<polyline points="60.0,78.3 215.0,85.1 370.0,110.4 525.0,157.2 680.0,294.1" fill="none" stroke="#2d62b3" stroke-width="2.4" stroke-opacity="1"/>
+<circle cx="60.0" cy="78.3" r="2.2" fill="#2d62b3"/>
+<circle cx="215.0" cy="85.1" r="2.2" fill="#2d62b3"/>
+<circle cx="370.0" cy="110.4" r="2.2" fill="#2d62b3"/>
+<circle cx="525.0" cy="157.2" r="2.2" fill="#2d62b3"/>
+<circle cx="680.0" cy="294.1" r="2.2" fill="#2d62b3"/>
+<polyline points="60.0,68.9 215.0,80.1 370.0,106.1 525.0,146.2 680.0,287.0" fill="none" stroke="#2d62b3" stroke-width="2.4" stroke-opacity="1"/>
+<circle cx="60.0" cy="68.9" r="2.2" fill="#2d62b3"/>
+<circle cx="215.0" cy="80.1" r="2.2" fill="#2d62b3"/>
+<circle cx="370.0" cy="106.1" r="2.2" fill="#2d62b3"/>
+<circle cx="525.0" cy="146.2" r="2.2" fill="#2d62b3"/>
+<circle cx="680.0" cy="287.0" r="2.2" fill="#2d62b3"/>
+<polyline points="60.0,62.4 215.0,70.5 370.0,77.7 525.0,82.4 680.0,222.5" fill="none" stroke="#c9a27e" stroke-width="1.4" stroke-opacity="0.55"/>
+<circle cx="60.0" cy="62.4" r="2.2" fill="#c9a27e"/>
+<circle cx="215.0" cy="70.5" r="2.2" fill="#c9a27e"/>
+<circle cx="370.0" cy="77.7" r="2.2" fill="#c9a27e"/>
+<circle cx="525.0" cy="82.4" r="2.2" fill="#c9a27e"/>
+<circle cx="680.0" cy="222.5" r="2.2" fill="#c9a27e"/>
+<polyline points="60.0,48.3 215.0,55.5 370.0,61.9 525.0,66.5 680.0,194.2" fill="none" stroke="#c9a27e" stroke-width="1.4" stroke-opacity="0.55"/>
+<circle cx="60.0" cy="48.3" r="2.2" fill="#c9a27e"/>
+<circle cx="215.0" cy="55.5" r="2.2" fill="#c9a27e"/>
+<circle cx="370.0" cy="61.9" r="2.2" fill="#c9a27e"/>
+<circle cx="525.0" cy="66.5" r="2.2" fill="#c9a27e"/>
+<circle cx="680.0" cy="194.2" r="2.2" fill="#c9a27e"/>
+<polyline points="60.0,63.9 215.0,71.7 370.0,84.9 525.0,94.7 680.0,250.2" fill="none" stroke="#c9a27e" stroke-width="1.4" stroke-opacity="0.55"/>
+<circle cx="60.0" cy="63.9" r="2.2" fill="#c9a27e"/>
+<circle cx="215.0" cy="71.7" r="2.2" fill="#c9a27e"/>
+<circle cx="370.0" cy="84.9" r="2.2" fill="#c9a27e"/>
+<circle cx="525.0" cy="94.7" r="2.2" fill="#c9a27e"/>
+<circle cx="680.0" cy="250.2" r="2.2" fill="#c9a27e"/>
+<polyline points="60.0,66.2 215.0,72.1 370.0,77.8 525.0,82.2 680.0,231.1" fill="none" stroke="#c9a27e" stroke-width="1.4" stroke-opacity="0.55"/>
+<circle cx="60.0" cy="66.2" r="2.2" fill="#c9a27e"/>
+<circle cx="215.0" cy="72.1" r="2.2" fill="#c9a27e"/>
+<circle cx="370.0" cy="77.8" r="2.2" fill="#c9a27e"/>
+<circle cx="525.0" cy="82.2" r="2.2" fill="#c9a27e"/>
+<circle cx="680.0" cy="231.1" r="2.2" fill="#c9a27e"/>
+<polyline points="60.0,62.5 215.0,78.9 370.0,90.3 525.0,105.0 680.0,259.4" fill="none" stroke="#c9a27e" stroke-width="1.4" stroke-opacity="0.55"/>
+<circle cx="60.0" cy="62.5" r="2.2" fill="#c9a27e"/>
+<circle cx="215.0" cy="78.9" r="2.2" fill="#c9a27e"/>
+<circle cx="370.0" cy="90.3" r="2.2" fill="#c9a27e"/>
+<circle cx="525.0" cy="105.0" r="2.2" fill="#c9a27e"/>
+<circle cx="680.0" cy="259.4" r="2.2" fill="#c9a27e"/>
+<polyline points="60.0,41.6 215.0,48.7 370.0,54.7 525.0,59.2 680.0,182.9" fill="none" stroke="#c9a27e" stroke-width="1.4" stroke-opacity="0.55"/>
+<circle cx="60.0" cy="41.6" r="2.2" fill="#c9a27e"/>
 <circle cx="215.0" cy="48.7" r="2.2" fill="#c9a27e"/>
 <circle cx="370.0" cy="54.7" r="2.2" fill="#c9a27e"/>
 <circle cx="525.0" cy="59.2" r="2.2" fill="#c9a27e"/>
-<circle cx="680.0" cy="160.9" r="2.2" fill="#c9a27e"/>
-<polyline points="60.0,51.4 215.0,58.5 370.0,67.5 525.0,72.9 680.0,195.9" fill="none" stroke="#c9a27e" stroke-width="1.4" stroke-opacity="0.55"/>
-<circle cx="60.0" cy="51.4" r="2.2" fill="#c9a27e"/>
-<circle cx="215.0" cy="58.5" r="2.2" fill="#c9a27e"/>
-<circle cx="370.0" cy="67.5" r="2.2" fill="#c9a27e"/>
-<circle cx="525.0" cy="72.9" r="2.2" fill="#c9a27e"/>
-<circle cx="680.0" cy="195.9" r="2.2" fill="#c9a27e"/>
-<polyline points="60.0,46.6 215.0,50.9 370.0,57.9 525.0,62.9 680.0,226.3" fill="none" stroke="#c9a27e" stroke-width="1.4" stroke-opacity="0.55"/>
-<circle cx="60.0" cy="46.6" r="2.2" fill="#c9a27e"/>
-<circle cx="215.0" cy="50.9" r="2.2" fill="#c9a27e"/>
-<circle cx="370.0" cy="57.9" r="2.2" fill="#c9a27e"/>
-<circle cx="525.0" cy="62.9" r="2.2" fill="#c9a27e"/>
-<circle cx="680.0" cy="226.3" r="2.2" fill="#c9a27e"/>
-<polyline points="60.0,60.2 215.0,68.5 370.0,79.8 525.0,87.4 680.0,237.9" fill="none" stroke="#c9a27e" stroke-width="1.4" stroke-opacity="0.55"/>
-<circle cx="60.0" cy="60.2" r="2.2" fill="#c9a27e"/>
-<circle cx="215.0" cy="68.5" r="2.2" fill="#c9a27e"/>
-<circle cx="370.0" cy="79.8" r="2.2" fill="#c9a27e"/>
-<circle cx="525.0" cy="87.4" r="2.2" fill="#c9a27e"/>
-<circle cx="680.0" cy="237.9" r="2.2" fill="#c9a27e"/>
-<polyline points="60.0,55.1 215.0,65.4 370.0,73.4 525.0,78.4 680.0,199.4" fill="none" stroke="#c9a27e" stroke-width="1.4" stroke-opacity="0.55"/>
-<circle cx="60.0" cy="55.1" r="2.2" fill="#c9a27e"/>
-<circle cx="215.0" cy="65.4" r="2.2" fill="#c9a27e"/>
-<circle cx="370.0" cy="73.4" r="2.2" fill="#c9a27e"/>
-<circle cx="525.0" cy="78.4" r="2.2" fill="#c9a27e"/>
-<circle cx="680.0" cy="199.4" r="2.2" fill="#c9a27e"/>
-<polyline points="60.0,76.0 215.0,82.5 370.0,96.5 525.0,115.0 680.0,251.2" fill="none" stroke="#a2461f" stroke-width="2.6" stroke-opacity="1"/>
-<circle cx="60.0" cy="76.0" r="3.2" fill="#a2461f"/>
-<circle cx="215.0" cy="82.5" r="3.2" fill="#a2461f"/>
-<circle cx="370.0" cy="96.5" r="3.2" fill="#a2461f"/>
-<circle cx="525.0" cy="115.0" r="3.2" fill="#a2461f"/>
-<circle cx="680.0" cy="251.2" r="3.2" fill="#a2461f"/>
-<polyline points="60.0,77.6 215.0,89.7 370.0,125.6 525.0,182.6 680.0,305.7" fill="none" stroke="#a2461f" stroke-width="2.6" stroke-opacity="1"/>
-<circle cx="60.0" cy="77.6" r="3.2" fill="#a2461f"/>
-<circle cx="215.0" cy="89.7" r="3.2" fill="#a2461f"/>
-<circle cx="370.0" cy="125.6" r="3.2" fill="#a2461f"/>
-<circle cx="525.0" cy="182.6" r="3.2" fill="#a2461f"/>
-<circle cx="680.0" cy="305.7" r="3.2" fill="#a2461f"/>
-<polyline points="60.0,60.8 215.0,70.0 370.0,85.6 525.0,97.9 680.0,277.9" fill="none" stroke="#a2461f" stroke-width="2.6" stroke-opacity="1"/>
-<circle cx="60.0" cy="60.8" r="3.2" fill="#a2461f"/>
-<circle cx="215.0" cy="70.0" r="3.2" fill="#a2461f"/>
-<circle cx="370.0" cy="85.6" r="3.2" fill="#a2461f"/>
-<circle cx="525.0" cy="97.9" r="3.2" fill="#a2461f"/>
-<circle cx="680.0" cy="277.9" r="3.2" fill="#a2461f"/>
-<text x="690.0" y="144.380201737" font-size="12" font-weight="700" fill="#2d62b3">西原村 (있음, 비탈 61%)</text>
-<text x="690.0" y="255.15299222099998" font-size="12" font-weight="700" fill="#a2461f">玉東町 (없음, 비탈 51%)</text>
-<text x="690.0" y="281.87905323999996" font-size="12" font-weight="700" fill="#a2461f">氷川町 (없음, 비탈 15%)</text>
-<text x="690.0" y="295.87905323999996" font-size="12" font-weight="700" fill="#2d62b3">熊本市 (있음, 비탈 20%)</text>
-<text x="690.0" y="309.87905323999996" font-size="12" font-weight="700" fill="#2d62b3">玉名市 (있음, 비탈 17%)</text>
-<text x="690.0" y="323.87905323999996" font-size="12" font-weight="700" fill="#2d62b3">荒尾市 (있음, 비탈 11%)</text>
-<text x="690.0" y="337.87905323999996" font-size="12" font-weight="700" fill="#a2461f">菊陽町 (없음, 비탈 2%)</text>
-<text x="690.0" y="351.87905323999996" font-size="12" font-weight="700" fill="#2d62b3">合志市 (있음, 비탈 1%)</text>
+<circle cx="680.0" cy="182.9" r="2.2" fill="#c9a27e"/>
+<polyline points="60.0,68.0 215.0,76.3 370.0,83.2 525.0,88.6 680.0,234.9" fill="none" stroke="#c9a27e" stroke-width="1.4" stroke-opacity="0.55"/>
+<circle cx="60.0" cy="68.0" r="2.2" fill="#c9a27e"/>
+<circle cx="215.0" cy="76.3" r="2.2" fill="#c9a27e"/>
+<circle cx="370.0" cy="83.2" r="2.2" fill="#c9a27e"/>
+<circle cx="525.0" cy="88.6" r="2.2" fill="#c9a27e"/>
+<circle cx="680.0" cy="234.9" r="2.2" fill="#c9a27e"/>
+<polyline points="60.0,122.5 215.0,171.0 370.0,270.9 525.0,295.4 680.0,317.5" fill="none" stroke="#2d62b3" stroke-width="2.4" stroke-opacity="1"/>
+<circle cx="60.0" cy="122.5" r="2.2" fill="#2d62b3"/>
+<circle cx="215.0" cy="171.0" r="2.2" fill="#2d62b3"/>
+<circle cx="370.0" cy="270.9" r="2.2" fill="#2d62b3"/>
+<circle cx="525.0" cy="295.4" r="2.2" fill="#2d62b3"/>
+<circle cx="680.0" cy="317.5" r="2.2" fill="#2d62b3"/>
+<polyline points="60.0,57.5 215.0,65.3 370.0,73.3 525.0,79.1 680.0,199.0" fill="none" stroke="#c9a27e" stroke-width="1.4" stroke-opacity="0.55"/>
+<circle cx="60.0" cy="57.5" r="2.2" fill="#c9a27e"/>
+<circle cx="215.0" cy="65.3" r="2.2" fill="#c9a27e"/>
+<circle cx="370.0" cy="73.3" r="2.2" fill="#c9a27e"/>
+<circle cx="525.0" cy="79.1" r="2.2" fill="#c9a27e"/>
+<circle cx="680.0" cy="199.0" r="2.2" fill="#c9a27e"/>
+<polyline points="60.0,72.5 215.0,79.9 370.0,88.6 525.0,101.5 680.0,244.7" fill="none" stroke="#c9a27e" stroke-width="1.4" stroke-opacity="0.55"/>
+<circle cx="60.0" cy="72.5" r="2.2" fill="#c9a27e"/>
+<circle cx="215.0" cy="79.9" r="2.2" fill="#c9a27e"/>
+<circle cx="370.0" cy="88.6" r="2.2" fill="#c9a27e"/>
+<circle cx="525.0" cy="101.5" r="2.2" fill="#c9a27e"/>
+<circle cx="680.0" cy="244.7" r="2.2" fill="#c9a27e"/>
+<polyline points="60.0,75.8 215.0,80.8 370.0,88.3 525.0,95.5 680.0,241.4" fill="none" stroke="#c9a27e" stroke-width="1.4" stroke-opacity="0.55"/>
+<circle cx="60.0" cy="75.8" r="2.2" fill="#c9a27e"/>
+<circle cx="215.0" cy="80.8" r="2.2" fill="#c9a27e"/>
+<circle cx="370.0" cy="88.3" r="2.2" fill="#c9a27e"/>
+<circle cx="525.0" cy="95.5" r="2.2" fill="#c9a27e"/>
+<circle cx="680.0" cy="241.4" r="2.2" fill="#c9a27e"/>
+<polyline points="60.0,45.9 215.0,50.4 370.0,55.1 525.0,58.8 680.0,208.5" fill="none" stroke="#c9a27e" stroke-width="1.4" stroke-opacity="0.55"/>
+<circle cx="60.0" cy="45.9" r="2.2" fill="#c9a27e"/>
+<circle cx="215.0" cy="50.4" r="2.2" fill="#c9a27e"/>
+<circle cx="370.0" cy="55.1" r="2.2" fill="#c9a27e"/>
+<circle cx="525.0" cy="58.8" r="2.2" fill="#c9a27e"/>
+<circle cx="680.0" cy="208.5" r="2.2" fill="#c9a27e"/>
+<polyline points="60.0,55.5 215.0,60.7 370.0,66.9 525.0,70.6 680.0,140.8" fill="none" stroke="#c9a27e" stroke-width="1.4" stroke-opacity="0.55"/>
+<circle cx="60.0" cy="55.5" r="2.2" fill="#c9a27e"/>
+<circle cx="215.0" cy="60.7" r="2.2" fill="#c9a27e"/>
+<circle cx="370.0" cy="66.9" r="2.2" fill="#c9a27e"/>
+<circle cx="525.0" cy="70.6" r="2.2" fill="#c9a27e"/>
+<circle cx="680.0" cy="140.8" r="2.2" fill="#c9a27e"/>
+<polyline points="60.0,59.2 215.0,64.1 370.0,69.3 525.0,72.6 680.0,155.8" fill="none" stroke="#c9a27e" stroke-width="1.4" stroke-opacity="0.55"/>
+<circle cx="60.0" cy="59.2" r="2.2" fill="#c9a27e"/>
+<circle cx="215.0" cy="64.1" r="2.2" fill="#c9a27e"/>
+<circle cx="370.0" cy="69.3" r="2.2" fill="#c9a27e"/>
+<circle cx="525.0" cy="72.6" r="2.2" fill="#c9a27e"/>
+<circle cx="680.0" cy="155.8" r="2.2" fill="#c9a27e"/>
+<polyline points="60.0,61.2 215.0,66.4 370.0,72.9 525.0,76.6 680.0,163.5" fill="none" stroke="#c9a27e" stroke-width="1.4" stroke-opacity="0.55"/>
+<circle cx="60.0" cy="61.2" r="2.2" fill="#c9a27e"/>
+<circle cx="215.0" cy="66.4" r="2.2" fill="#c9a27e"/>
+<circle cx="370.0" cy="72.9" r="2.2" fill="#c9a27e"/>
+<circle cx="525.0" cy="76.6" r="2.2" fill="#c9a27e"/>
+<circle cx="680.0" cy="163.5" r="2.2" fill="#c9a27e"/>
+<polyline points="60.0,51.6 215.0,62.6 370.0,70.9 525.0,75.6 680.0,169.7" fill="none" stroke="#c9a27e" stroke-width="1.4" stroke-opacity="0.55"/>
+<circle cx="60.0" cy="51.6" r="2.2" fill="#c9a27e"/>
+<circle cx="215.0" cy="62.6" r="2.2" fill="#c9a27e"/>
+<circle cx="370.0" cy="70.9" r="2.2" fill="#c9a27e"/>
+<circle cx="525.0" cy="75.6" r="2.2" fill="#c9a27e"/>
+<circle cx="680.0" cy="169.7" r="2.2" fill="#c9a27e"/>
+<polyline points="60.0,42.5 215.0,47.4 370.0,52.2 525.0,55.4 680.0,142.8" fill="none" stroke="#2d62b3" stroke-width="2.4" stroke-opacity="1"/>
+<circle cx="60.0" cy="42.5" r="2.2" fill="#2d62b3"/>
+<circle cx="215.0" cy="47.4" r="2.2" fill="#2d62b3"/>
+<circle cx="370.0" cy="52.2" r="2.2" fill="#2d62b3"/>
+<circle cx="525.0" cy="55.4" r="2.2" fill="#2d62b3"/>
+<circle cx="680.0" cy="142.8" r="2.2" fill="#2d62b3"/>
+<polyline points="60.0,43.0 215.0,48.8 370.0,55.0 525.0,59.6 680.0,163.2" fill="none" stroke="#c9a27e" stroke-width="1.4" stroke-opacity="0.55"/>
+<circle cx="60.0" cy="43.0" r="2.2" fill="#c9a27e"/>
+<circle cx="215.0" cy="48.8" r="2.2" fill="#c9a27e"/>
+<circle cx="370.0" cy="55.0" r="2.2" fill="#c9a27e"/>
+<circle cx="525.0" cy="59.6" r="2.2" fill="#c9a27e"/>
+<circle cx="680.0" cy="163.2" r="2.2" fill="#c9a27e"/>
+<polyline points="60.0,52.5 215.0,59.2 370.0,68.3 525.0,74.0 680.0,198.8" fill="none" stroke="#c9a27e" stroke-width="1.4" stroke-opacity="0.55"/>
+<circle cx="60.0" cy="52.5" r="2.2" fill="#c9a27e"/>
+<circle cx="215.0" cy="59.2" r="2.2" fill="#c9a27e"/>
+<circle cx="370.0" cy="68.3" r="2.2" fill="#c9a27e"/>
+<circle cx="525.0" cy="74.0" r="2.2" fill="#c9a27e"/>
+<circle cx="680.0" cy="198.8" r="2.2" fill="#c9a27e"/>
+<polyline points="60.0,47.8 215.0,51.7 370.0,58.7 525.0,63.8 680.0,227.6" fill="none" stroke="#c9a27e" stroke-width="1.4" stroke-opacity="0.55"/>
+<circle cx="60.0" cy="47.8" r="2.2" fill="#c9a27e"/>
+<circle cx="215.0" cy="51.7" r="2.2" fill="#c9a27e"/>
+<circle cx="370.0" cy="58.7" r="2.2" fill="#c9a27e"/>
+<circle cx="525.0" cy="63.8" r="2.2" fill="#c9a27e"/>
+<circle cx="680.0" cy="227.6" r="2.2" fill="#c9a27e"/>
+<polyline points="60.0,60.3 215.0,69.2 370.0,81.1 525.0,89.5 680.0,240.7" fill="none" stroke="#c9a27e" stroke-width="1.4" stroke-opacity="0.55"/>
+<circle cx="60.0" cy="60.3" r="2.2" fill="#c9a27e"/>
+<circle cx="215.0" cy="69.2" r="2.2" fill="#c9a27e"/>
+<circle cx="370.0" cy="81.1" r="2.2" fill="#c9a27e"/>
+<circle cx="525.0" cy="89.5" r="2.2" fill="#c9a27e"/>
+<circle cx="680.0" cy="240.7" r="2.2" fill="#c9a27e"/>
+<polyline points="60.0,55.6 215.0,65.8 370.0,73.9 525.0,79.1 680.0,202.9" fill="none" stroke="#c9a27e" stroke-width="1.4" stroke-opacity="0.55"/>
+<circle cx="60.0" cy="55.6" r="2.2" fill="#c9a27e"/>
+<circle cx="215.0" cy="65.8" r="2.2" fill="#c9a27e"/>
+<circle cx="370.0" cy="73.9" r="2.2" fill="#c9a27e"/>
+<circle cx="525.0" cy="79.1" r="2.2" fill="#c9a27e"/>
+<circle cx="680.0" cy="202.9" r="2.2" fill="#c9a27e"/>
+<polyline points="60.0,76.5 215.0,82.8 370.0,97.3 525.0,121.0 680.0,253.4" fill="none" stroke="#a2461f" stroke-width="2.6" stroke-opacity="1"/>
+<circle cx="60.0" cy="76.5" r="3.2" fill="#a2461f"/>
+<circle cx="215.0" cy="82.8" r="3.2" fill="#a2461f"/>
+<circle cx="370.0" cy="97.3" r="3.2" fill="#a2461f"/>
+<circle cx="525.0" cy="121.0" r="3.2" fill="#a2461f"/>
+<circle cx="680.0" cy="253.4" r="3.2" fill="#a2461f"/>
+<polyline points="60.0,76.3 215.0,94.0 370.0,139.2 525.0,191.0 680.0,306.6" fill="none" stroke="#a2461f" stroke-width="2.6" stroke-opacity="1"/>
+<circle cx="60.0" cy="76.3" r="3.2" fill="#a2461f"/>
+<circle cx="215.0" cy="94.0" r="3.2" fill="#a2461f"/>
+<circle cx="370.0" cy="139.2" r="3.2" fill="#a2461f"/>
+<circle cx="525.0" cy="191.0" r="3.2" fill="#a2461f"/>
+<circle cx="680.0" cy="306.6" r="3.2" fill="#a2461f"/>
+<polyline points="60.0,61.9 215.0,70.7 370.0,87.4 525.0,106.5 680.0,279.9" fill="none" stroke="#a2461f" stroke-width="2.6" stroke-opacity="1"/>
+<circle cx="60.0" cy="61.9" r="3.2" fill="#a2461f"/>
+<circle cx="215.0" cy="70.7" r="3.2" fill="#a2461f"/>
+<circle cx="370.0" cy="87.4" r="3.2" fill="#a2461f"/>
+<circle cx="525.0" cy="106.5" r="3.2" fill="#a2461f"/>
+<circle cx="680.0" cy="279.9" r="3.2" fill="#a2461f"/>
+<text x="690.0" y="146.84697926299998" font-size="12" font-weight="700" fill="#2d62b3">西原村 (있음, 비탈 61%)</text>
+<text x="690.0" y="257.362101731" font-size="12" font-weight="700" fill="#a2461f">玉東町 (없음, 비탈 51%)</text>
+<text x="690.0" y="283.941055262" font-size="12" font-weight="700" fill="#a2461f">氷川町 (없음, 비탈 15%)</text>
+<text x="690.0" y="297.941055262" font-size="12" font-weight="700" fill="#2d62b3">熊本市 (있음, 비탈 20%)</text>
+<text x="690.0" y="311.941055262" font-size="12" font-weight="700" fill="#2d62b3">玉名市 (있음, 비탈 17%)</text>
+<text x="690.0" y="325.941055262" font-size="12" font-weight="700" fill="#2d62b3">荒尾市 (있음, 비탈 11%)</text>
+<text x="690.0" y="339.941055262" font-size="12" font-weight="700" fill="#a2461f">菊陽町 (없음, 비탈 2%)</text>
+<text x="690.0" y="353.941055262" font-size="12" font-weight="700" fill="#2d62b3">合志市 (있음, 비탈 1%)</text>
 </svg></div></figure>
-  <p class="meta">선 하나 = 시정촌 하나 (⑤, seed 0~3 평균 확률). <span style="color:#a2461f;font-weight:700">빨간 굵은 선 = 피해 없음</span>, 옅은 갈색 = 피해 있음, <span style="color:#2d62b3;font-weight:700">파란 선</span> = 본문에서 이야기하는 피해 있음 시정촌. 초록 띠가 상위 10%.</p>
+  <p class="meta">선 하나 = 시정촌 하나 (⑤, seed 0~4 평균 확률). <span style="color:#a2461f;font-weight:700">빨간 굵은 선 = 피해 없음</span>, 옅은 갈색 = 피해 있음, <span style="color:#2d62b3;font-weight:700">파란 선</span> = 본문에서 이야기하는 피해 있음 시정촌. 초록 띠가 상위 10%.</p>
   <h3>훗카이도 산사태 (13곳, 피해 없음 4곳)</h3>
   <figure><div class="tw"><svg viewBox="0 0 880 360" width="880" role="img" aria-label="훗카이도 산사태: 시정촌마다 최댓값부터 평균까지" style="max-width:100%;height:auto;min-width:640px">
 <line x1="60" x2="680" y1="320" y2="320" stroke="#eceef2"/><text x="52" y="324" text-anchor="end" font-size="11" fill="#5b6577">0</text>
@@ -664,172 +640,144 @@ body{background:#fff}
 <text x="525.0" y="338" text-anchor="middle" font-size="12" font-weight="700" fill="#1d2430">상위 10%</text>
 <text x="680.0" y="338" text-anchor="middle" font-size="12" font-weight="400" fill="#1d2430">평균</text>
 <text x="680.0" y="351" text-anchor="middle" font-size="12" font-weight="400" fill="#1d2430">(칸 전부)</text>
-<polyline points="60.0,154.7 215.0,181.3 370.0,198.6 525.0,207.3 680.0,281.9" fill="none" stroke="#c9a27e" stroke-width="1.4" stroke-opacity="0.55"/>
-<circle cx="60.0" cy="154.7" r="2.2" fill="#c9a27e"/>
-<circle cx="215.0" cy="181.3" r="2.2" fill="#c9a27e"/>
-<circle cx="370.0" cy="198.6" r="2.2" fill="#c9a27e"/>
-<circle cx="525.0" cy="207.3" r="2.2" fill="#c9a27e"/>
-<circle cx="680.0" cy="281.9" r="2.2" fill="#c9a27e"/>
-<polyline points="60.0,158.4 215.0,178.0 370.0,194.4 525.0,203.8 680.0,270.8" fill="none" stroke="#c9a27e" stroke-width="1.4" stroke-opacity="0.55"/>
-<circle cx="60.0" cy="158.4" r="2.2" fill="#c9a27e"/>
-<circle cx="215.0" cy="178.0" r="2.2" fill="#c9a27e"/>
-<circle cx="370.0" cy="194.4" r="2.2" fill="#c9a27e"/>
-<circle cx="525.0" cy="203.8" r="2.2" fill="#c9a27e"/>
-<circle cx="680.0" cy="270.8" r="2.2" fill="#c9a27e"/>
-<polyline points="60.0,176.1 215.0,193.2 370.0,207.6 525.0,213.6 680.0,285.6" fill="none" stroke="#2d62b3" stroke-width="2.4" stroke-opacity="1"/>
-<circle cx="60.0" cy="176.1" r="2.2" fill="#2d62b3"/>
-<circle cx="215.0" cy="193.2" r="2.2" fill="#2d62b3"/>
-<circle cx="370.0" cy="207.6" r="2.2" fill="#2d62b3"/>
-<circle cx="525.0" cy="213.6" r="2.2" fill="#2d62b3"/>
-<circle cx="680.0" cy="285.6" r="2.2" fill="#2d62b3"/>
-<polyline points="60.0,170.1 215.0,181.9 370.0,195.7 525.0,204.9 680.0,280.0" fill="none" stroke="#c9a27e" stroke-width="1.4" stroke-opacity="0.55"/>
-<circle cx="60.0" cy="170.1" r="2.2" fill="#c9a27e"/>
-<circle cx="215.0" cy="181.9" r="2.2" fill="#c9a27e"/>
-<circle cx="370.0" cy="195.7" r="2.2" fill="#c9a27e"/>
-<circle cx="525.0" cy="204.9" r="2.2" fill="#c9a27e"/>
-<circle cx="680.0" cy="280.0" r="2.2" fill="#c9a27e"/>
-<polyline points="60.0,162.6 215.0,178.0 370.0,192.0 525.0,200.7 680.0,258.2" fill="none" stroke="#c9a27e" stroke-width="1.4" stroke-opacity="0.55"/>
-<circle cx="60.0" cy="162.6" r="2.2" fill="#c9a27e"/>
-<circle cx="215.0" cy="178.0" r="2.2" fill="#c9a27e"/>
-<circle cx="370.0" cy="192.0" r="2.2" fill="#c9a27e"/>
-<circle cx="525.0" cy="200.7" r="2.2" fill="#c9a27e"/>
-<circle cx="680.0" cy="258.2" r="2.2" fill="#c9a27e"/>
-<polyline points="60.0,95.9 215.0,163.2 370.0,180.5 525.0,190.0 680.0,250.3" fill="none" stroke="#2d62b3" stroke-width="2.4" stroke-opacity="1"/>
-<circle cx="60.0" cy="95.9" r="2.2" fill="#2d62b3"/>
-<circle cx="215.0" cy="163.2" r="2.2" fill="#2d62b3"/>
-<circle cx="370.0" cy="180.5" r="2.2" fill="#2d62b3"/>
-<circle cx="525.0" cy="190.0" r="2.2" fill="#2d62b3"/>
-<circle cx="680.0" cy="250.3" r="2.2" fill="#2d62b3"/>
-<polyline points="60.0,155.9 215.0,174.8 370.0,192.5 525.0,201.7 680.0,278.0" fill="none" stroke="#c9a27e" stroke-width="1.4" stroke-opacity="0.55"/>
-<circle cx="60.0" cy="155.9" r="2.2" fill="#c9a27e"/>
-<circle cx="215.0" cy="174.8" r="2.2" fill="#c9a27e"/>
-<circle cx="370.0" cy="192.5" r="2.2" fill="#c9a27e"/>
-<circle cx="525.0" cy="201.7" r="2.2" fill="#c9a27e"/>
-<circle cx="680.0" cy="278.0" r="2.2" fill="#c9a27e"/>
-<polyline points="60.0,148.0 215.0,170.2 370.0,184.3 525.0,192.6 680.0,237.1" fill="none" stroke="#2d62b3" stroke-width="2.4" stroke-opacity="1"/>
-<circle cx="60.0" cy="148.0" r="2.2" fill="#2d62b3"/>
-<circle cx="215.0" cy="170.2" r="2.2" fill="#2d62b3"/>
-<circle cx="370.0" cy="184.3" r="2.2" fill="#2d62b3"/>
-<circle cx="525.0" cy="192.6" r="2.2" fill="#2d62b3"/>
-<circle cx="680.0" cy="237.1" r="2.2" fill="#2d62b3"/>
-<polyline points="60.0,153.3 215.0,175.3 370.0,189.2 525.0,197.1 680.0,233.0" fill="none" stroke="#c9a27e" stroke-width="1.4" stroke-opacity="0.55"/>
-<circle cx="60.0" cy="153.3" r="2.2" fill="#c9a27e"/>
-<circle cx="215.0" cy="175.3" r="2.2" fill="#c9a27e"/>
-<circle cx="370.0" cy="189.2" r="2.2" fill="#c9a27e"/>
-<circle cx="525.0" cy="197.1" r="2.2" fill="#c9a27e"/>
-<circle cx="680.0" cy="233.0" r="2.2" fill="#c9a27e"/>
-<polyline points="60.0,153.8 215.0,173.7 370.0,187.0 525.0,194.7 680.0,227.1" fill="none" stroke="#a2461f" stroke-width="2.6" stroke-opacity="1"/>
-<circle cx="60.0" cy="153.8" r="3.2" fill="#a2461f"/>
-<circle cx="215.0" cy="173.7" r="3.2" fill="#a2461f"/>
-<circle cx="370.0" cy="187.0" r="3.2" fill="#a2461f"/>
-<circle cx="525.0" cy="194.7" r="3.2" fill="#a2461f"/>
-<circle cx="680.0" cy="227.1" r="3.2" fill="#a2461f"/>
-<polyline points="60.0,160.1 215.0,184.8 370.0,203.0 525.0,211.0 680.0,295.5" fill="none" stroke="#a2461f" stroke-width="2.6" stroke-opacity="1"/>
-<circle cx="60.0" cy="160.1" r="3.2" fill="#a2461f"/>
-<circle cx="215.0" cy="184.8" r="3.2" fill="#a2461f"/>
-<circle cx="370.0" cy="203.0" r="3.2" fill="#a2461f"/>
-<circle cx="525.0" cy="211.0" r="3.2" fill="#a2461f"/>
-<circle cx="680.0" cy="295.5" r="3.2" fill="#a2461f"/>
-<polyline points="60.0,177.0 215.0,203.2 370.0,216.7 525.0,222.4 680.0,308.6" fill="none" stroke="#a2461f" stroke-width="2.6" stroke-opacity="1"/>
-<circle cx="60.0" cy="177.0" r="3.2" fill="#a2461f"/>
-<circle cx="215.0" cy="203.2" r="3.2" fill="#a2461f"/>
-<circle cx="370.0" cy="216.7" r="3.2" fill="#a2461f"/>
-<circle cx="525.0" cy="222.4" r="3.2" fill="#a2461f"/>
-<circle cx="680.0" cy="308.6" r="3.2" fill="#a2461f"/>
-<polyline points="60.0,158.7 215.0,178.1 370.0,191.7 525.0,199.5 680.0,237.4" fill="none" stroke="#a2461f" stroke-width="2.6" stroke-opacity="1"/>
-<circle cx="60.0" cy="158.7" r="3.2" fill="#a2461f"/>
-<circle cx="215.0" cy="178.1" r="3.2" fill="#a2461f"/>
-<circle cx="370.0" cy="191.7" r="3.2" fill="#a2461f"/>
-<circle cx="525.0" cy="199.5" r="3.2" fill="#a2461f"/>
-<circle cx="680.0" cy="237.4" r="3.2" fill="#a2461f"/>
-<text x="690.0" y="231.051187457" font-size="12" font-weight="700" fill="#a2461f">夕張市 (없음, 비탈 91%)</text>
-<text x="690.0" y="245.051187457" font-size="12" font-weight="700" fill="#2d62b3">むかわ町 (있음, 비탈 73%)</text>
-<text x="690.0" y="259.05118745699997" font-size="12" font-weight="700" fill="#a2461f">日高町 (없음, 비탈 78%)</text>
-<text x="690.0" y="273.05118745699997" font-size="12" font-weight="700" fill="#2d62b3">厚真町 (있음, 비탈 58%)</text>
-<text x="690.0" y="289.616895677" font-size="12" font-weight="700" fill="#2d62b3">北広島市 (있음, 비탈 10%)</text>
-<text x="690.0" y="303.616895677" font-size="12" font-weight="700" fill="#a2461f">苫小牧市 (없음, 비탈 8%)</text>
-<text x="690.0" y="317.616895677" font-size="12" font-weight="700" fill="#a2461f">長沼町 (없음, 비탈 5%)</text>
+<polyline points="60.0,171.0 215.0,195.5 370.0,210.8 525.0,218.5 680.0,285.6" fill="none" stroke="#c9a27e" stroke-width="1.4" stroke-opacity="0.55"/>
+<circle cx="60.0" cy="171.0" r="2.2" fill="#c9a27e"/>
+<circle cx="215.0" cy="195.5" r="2.2" fill="#c9a27e"/>
+<circle cx="370.0" cy="210.8" r="2.2" fill="#c9a27e"/>
+<circle cx="525.0" cy="218.5" r="2.2" fill="#c9a27e"/>
+<circle cx="680.0" cy="285.6" r="2.2" fill="#c9a27e"/>
+<polyline points="60.0,175.3 215.0,193.0 370.0,207.5 525.0,215.6 680.0,275.7" fill="none" stroke="#c9a27e" stroke-width="1.4" stroke-opacity="0.55"/>
+<circle cx="60.0" cy="175.3" r="2.2" fill="#c9a27e"/>
+<circle cx="215.0" cy="193.0" r="2.2" fill="#c9a27e"/>
+<circle cx="370.0" cy="207.5" r="2.2" fill="#c9a27e"/>
+<circle cx="525.0" cy="215.6" r="2.2" fill="#c9a27e"/>
+<circle cx="680.0" cy="275.7" r="2.2" fill="#c9a27e"/>
+<polyline points="60.0,192.0 215.0,207.0 370.0,219.3 525.0,224.5 680.0,289.0" fill="none" stroke="#2d62b3" stroke-width="2.4" stroke-opacity="1"/>
+<circle cx="60.0" cy="192.0" r="2.2" fill="#2d62b3"/>
+<circle cx="215.0" cy="207.0" r="2.2" fill="#2d62b3"/>
+<circle cx="370.0" cy="219.3" r="2.2" fill="#2d62b3"/>
+<circle cx="525.0" cy="224.5" r="2.2" fill="#2d62b3"/>
+<circle cx="680.0" cy="289.0" r="2.2" fill="#2d62b3"/>
+<polyline points="60.0,184.2 215.0,195.6 370.0,208.3 525.0,216.3 680.0,283.8" fill="none" stroke="#c9a27e" stroke-width="1.4" stroke-opacity="0.55"/>
+<circle cx="60.0" cy="184.2" r="2.2" fill="#c9a27e"/>
+<circle cx="215.0" cy="195.6" r="2.2" fill="#c9a27e"/>
+<circle cx="370.0" cy="208.3" r="2.2" fill="#c9a27e"/>
+<circle cx="525.0" cy="216.3" r="2.2" fill="#c9a27e"/>
+<circle cx="680.0" cy="283.8" r="2.2" fill="#c9a27e"/>
+<polyline points="60.0,180.4 215.0,194.1 370.0,206.4 525.0,213.7 680.0,264.5" fill="none" stroke="#c9a27e" stroke-width="1.4" stroke-opacity="0.55"/>
+<circle cx="60.0" cy="180.4" r="2.2" fill="#c9a27e"/>
+<circle cx="215.0" cy="194.1" r="2.2" fill="#c9a27e"/>
+<circle cx="370.0" cy="206.4" r="2.2" fill="#c9a27e"/>
+<circle cx="525.0" cy="213.7" r="2.2" fill="#c9a27e"/>
+<circle cx="680.0" cy="264.5" r="2.2" fill="#c9a27e"/>
+<polyline points="60.0,121.0 215.0,178.1 370.0,193.4 525.0,201.8 680.0,256.6" fill="none" stroke="#2d62b3" stroke-width="2.4" stroke-opacity="1"/>
+<circle cx="60.0" cy="121.0" r="2.2" fill="#2d62b3"/>
+<circle cx="215.0" cy="178.1" r="2.2" fill="#2d62b3"/>
+<circle cx="370.0" cy="193.4" r="2.2" fill="#2d62b3"/>
+<circle cx="525.0" cy="201.8" r="2.2" fill="#2d62b3"/>
+<circle cx="680.0" cy="256.6" r="2.2" fill="#2d62b3"/>
+<polyline points="60.0,171.1 215.0,188.9 370.0,204.7 525.0,212.8 680.0,282.0" fill="none" stroke="#c9a27e" stroke-width="1.4" stroke-opacity="0.55"/>
+<circle cx="60.0" cy="171.1" r="2.2" fill="#c9a27e"/>
+<circle cx="215.0" cy="188.9" r="2.2" fill="#c9a27e"/>
+<circle cx="370.0" cy="204.7" r="2.2" fill="#c9a27e"/>
+<circle cx="525.0" cy="212.8" r="2.2" fill="#c9a27e"/>
+<circle cx="680.0" cy="282.0" r="2.2" fill="#c9a27e"/>
+<polyline points="60.0,162.8 215.0,184.0 370.0,197.0 525.0,204.5 680.0,245.0" fill="none" stroke="#2d62b3" stroke-width="2.4" stroke-opacity="1"/>
+<circle cx="60.0" cy="162.8" r="2.2" fill="#2d62b3"/>
+<circle cx="215.0" cy="184.0" r="2.2" fill="#2d62b3"/>
+<circle cx="370.0" cy="197.0" r="2.2" fill="#2d62b3"/>
+<circle cx="525.0" cy="204.5" r="2.2" fill="#2d62b3"/>
+<circle cx="680.0" cy="245.0" r="2.2" fill="#2d62b3"/>
+<polyline points="60.0,168.9 215.0,190.3 370.0,202.9 525.0,209.8 680.0,241.5" fill="none" stroke="#c9a27e" stroke-width="1.4" stroke-opacity="0.55"/>
+<circle cx="60.0" cy="168.9" r="2.2" fill="#c9a27e"/>
+<circle cx="215.0" cy="190.3" r="2.2" fill="#c9a27e"/>
+<circle cx="370.0" cy="202.9" r="2.2" fill="#c9a27e"/>
+<circle cx="525.0" cy="209.8" r="2.2" fill="#c9a27e"/>
+<circle cx="680.0" cy="241.5" r="2.2" fill="#c9a27e"/>
+<polyline points="60.0,171.6 215.0,190.0 370.0,201.9 525.0,208.6 680.0,236.5" fill="none" stroke="#a2461f" stroke-width="2.6" stroke-opacity="1"/>
+<circle cx="60.0" cy="171.6" r="3.2" fill="#a2461f"/>
+<circle cx="215.0" cy="190.0" r="3.2" fill="#a2461f"/>
+<circle cx="370.0" cy="201.9" r="3.2" fill="#a2461f"/>
+<circle cx="525.0" cy="208.6" r="3.2" fill="#a2461f"/>
+<circle cx="680.0" cy="236.5" r="3.2" fill="#a2461f"/>
+<polyline points="60.0,175.1 215.0,198.7 370.0,214.8 525.0,221.9 680.0,297.9" fill="none" stroke="#a2461f" stroke-width="2.6" stroke-opacity="1"/>
+<circle cx="60.0" cy="175.1" r="3.2" fill="#a2461f"/>
+<circle cx="215.0" cy="198.7" r="3.2" fill="#a2461f"/>
+<circle cx="370.0" cy="214.8" r="3.2" fill="#a2461f"/>
+<circle cx="525.0" cy="221.9" r="3.2" fill="#a2461f"/>
+<circle cx="680.0" cy="297.9" r="3.2" fill="#a2461f"/>
+<polyline points="60.0,192.9 215.0,215.7 370.0,227.3 525.0,232.4 680.0,309.7" fill="none" stroke="#a2461f" stroke-width="2.6" stroke-opacity="1"/>
+<circle cx="60.0" cy="192.9" r="3.2" fill="#a2461f"/>
+<circle cx="215.0" cy="215.7" r="3.2" fill="#a2461f"/>
+<circle cx="370.0" cy="227.3" r="3.2" fill="#a2461f"/>
+<circle cx="525.0" cy="232.4" r="3.2" fill="#a2461f"/>
+<circle cx="680.0" cy="309.7" r="3.2" fill="#a2461f"/>
+<polyline points="60.0,175.7 215.0,193.5 370.0,205.6 525.0,212.4 680.0,245.6" fill="none" stroke="#a2461f" stroke-width="2.6" stroke-opacity="1"/>
+<circle cx="60.0" cy="175.7" r="3.2" fill="#a2461f"/>
+<circle cx="215.0" cy="193.5" r="3.2" fill="#a2461f"/>
+<circle cx="370.0" cy="205.6" r="3.2" fill="#a2461f"/>
+<circle cx="525.0" cy="212.4" r="3.2" fill="#a2461f"/>
+<circle cx="680.0" cy="245.6" r="3.2" fill="#a2461f"/>
+<text x="690.0" y="240.473376777" font-size="12" font-weight="700" fill="#a2461f">夕張市 (없음, 비탈 91%)</text>
+<text x="690.0" y="254.473376777" font-size="12" font-weight="700" fill="#2d62b3">むかわ町 (있음, 비탈 73%)</text>
+<text x="690.0" y="268.473376777" font-size="12" font-weight="700" fill="#a2461f">日高町 (없음, 비탈 78%)</text>
+<text x="690.0" y="282.473376777" font-size="12" font-weight="700" fill="#2d62b3">厚真町 (있음, 비탈 58%)</text>
+<text x="690.0" y="296.473376777" font-size="12" font-weight="700" fill="#2d62b3">北広島市 (있음, 비탈 10%)</text>
+<text x="690.0" y="310.473376777" font-size="12" font-weight="700" fill="#a2461f">苫小牧市 (없음, 비탈 8%)</text>
+<text x="690.0" y="324.473376777" font-size="12" font-weight="700" fill="#a2461f">長沼町 (없음, 비탈 5%)</text>
 </svg></div></figure>
-  <p class="meta">선 하나 = 시정촌 하나 (⑤, seed 0~3 평균 확률). <span style="color:#a2461f;font-weight:700">빨간 굵은 선 = 피해 없음</span>, 옅은 갈색 = 피해 있음, <span style="color:#2d62b3;font-weight:700">파란 선</span> = 본문에서 이야기하는 피해 있음 시정촌. 초록 띠가 상위 10%.</p>
+  <p class="meta">선 하나 = 시정촌 하나 (⑤, seed 0~4 평균 확률). <span style="color:#a2461f;font-weight:700">빨간 굵은 선 = 피해 없음</span>, 옅은 갈색 = 피해 있음, <span style="color:#2d62b3;font-weight:700">파란 선</span> = 본문에서 이야기하는 피해 있음 시정촌. 초록 띠가 상위 10%.</p>
   <div class="anal"><b>읽는 법</b><ul>
     <li><b>최댓값(맨 왼쪽)은 모든 선이 0.8~0.96에 몰려</b> 피해 없음(빨강)이 피해 있음 사이에 끼어 있습니다 (구마모토). 특히 氷川町은 0.89로 위쪽입니다</li>
     <li><b>평균(맨 오른쪽)은 선이 넓게 퍼지지만</b> 순서가 비탈 비율을 따라갑니다. 피해 없는 玉東町(비탈 51%)이 비탈이 적은 피해 있음 시정촌(熊本市 · 玉名市 · 荒尾市)보다 위로 올라갑니다</li>
     <li><b>상위 10%(초록 띠)</b>에서는 빨간 선 셋이 대부분 아래쪽으로 내려옵니다. 그래도 荒尾市 · 合志市(비탈 11% · 0.5%)는 여전히 아래에 있습니다</li>
-    <li>훗카이도는 모든 값이 0.3~0.6으로 낮고 서로 가까워 어느 방법이든 구별이 어렵습니다. 피해 없는 夕張市 · 日高町(비탈 91% · 78%)은 산이 많아 평균이 가장 높고, 상위 10%에서도 중간에 남습니다. 진앙에서 멀어 산사태가 없었던 곳이라 지형만으로는 구별이 안 됩니다</li>
+    <li>훗카이도는 모든 값이 0.3~0.6으로 낮고 서로 가까워 구별이 어렵습니다. 피해 없는 夕張市 · 日高町(비탈 91% · 78%)은 산이 많아 평균이 가장 높고, 상위 10%에서도 중간에 남습니다. 진앙에서 멀어 산사태가 없었던 곳이라 지형만으로는 구별이 안 됩니다</li>
   </ul></div>
 </section>
 
 <section id="why">
   <h2><span class="n">4</span>왜 상위 10%가 더 나은가: 틀린 쌍으로 보기</h2>
-  <p>AUC = (피해 있음, 피해 없음) 짝 중 피해 있음이 더 높게 나온 짝의 비율입니다. 틀린 짝을 세면 무엇이 AUC를 깎는지 보입니다 (⑤, seed 0~3 평균 확률로 한 번에 채점. seed마다 AUC를 내서 평균한 본문 숫자와는 조금 다름).</p>
+  <p>AUC = (피해 있음, 피해 없음) 짝 중 피해 있음이 더 높게 나온 짝의 비율입니다. 틀린 짝을 세면 무엇이 AUC를 깎는지 보입니다 (⑤, seed 0~4 평균 확률로 한 번에 채점. seed마다 AUC를 내서 평균한 숫자와는 조금 다름).</p>
   <div class="tw"><table>
-    <tr><th>구마모토 산사태 (26 × 3 = 78쌍)</th><th class="num">틀린 쌍</th><th>가장 많이 틀리게 만든 피해 없음 시정촌</th></tr>
-    <tr><td>최댓값</td><td class="num">14</td><td><b>氷川町 10쌍</b>: 튀는 칸(경사 14°, DPM 0.49)으로 최댓값 0.89, 피해 있음 10곳보다 높음</td></tr>
-    <tr><td>평균</td><td class="num">10</td><td><b>玉東町 5쌍</b>: 작은 마을인데 비탈이 51%라 평균 0.24, 비탈이 적은 熊本市 · 玉名市 · 荒尾市 · 宇城市보다 높음</td></tr>
-    <tr><td>상위 10%</td><td class="num"><b>9</b></td><td>氷川町 5쌍 · 玉東町 3쌍으로 둘 다 줄어듦. 남은 틀림은 대부분 合志市 · 荒尾市 · 玉名市 (비탈 0.5~18%)</td></tr>
+    <tr><th>구마모토 산사태 (78쌍)</th><th class="num">틀린 쌍</th><th>틀리게 만든 피해 없음 시정촌</th></tr>
+    <tr><td>최댓값</td><td class="num">14</td><td><b>氷川町 10쌍 · 玉東町 2쌍 · 菊陽町 2쌍</b>. 氷川町은 튀는 칸(경사 14°, DPM 0.49)으로 최댓값 0.89</td></tr>
+    <tr><td>평균</td><td class="num">10</td><td><b>玉東町 5쌍 · 氷川町 4쌍 · 菊陽町 1쌍</b>. 玉東町은 작은 마을인데 비탈이 51%라 평균 0.23</td></tr>
+    <tr><td>상위 10%</td><td class="num"><b>7</b></td><td>玉東町 3쌍 · 氷川町 3쌍 · 菊陽町 1쌍. 둘 다 줄어듦. 남은 틀림은 대부분 合志市 · 荒尾市 · 玉名市 (비탈 0.5~18%)</td></tr>
   </table></div>
   <div class="tw"><table>
-    <tr><th>훗카이도 산사태 (9 × 4 = 36쌍)</th><th class="num">틀린 쌍</th><th>가장 많이 틀리게 만든 피해 없음 시정촌</th></tr>
-    <tr><td>최댓값</td><td class="num"><b>12</b></td><td>夕張市 6쌍 · 苫小牧市 3쌍 · 日高町 3쌍</td></tr>
+    <tr><th>훗카이도 산사태 (36쌍)</th><th class="num">틀린 쌍</th><th>틀리게 만든 피해 없음 시정촌</th></tr>
+    <tr><td>최댓값</td><td class="num"><b>11</b></td><td>夕張市 4쌍 · 苫小牧市 4쌍 · 日高町 3쌍</td></tr>
     <tr><td>평균</td><td class="num">16</td><td><b>夕張市 9쌍 · 日高町 7쌍</b>: 비탈 91% · 78%라 평균이 가장 높음</td></tr>
-    <tr><td>상위 10%</td><td class="num">14</td><td>夕張市 7쌍 · 日高町 6쌍. 평균보다 줄지만 최댓값보다는 많음</td></tr>
+    <tr><td>상위 10%</td><td class="num">14</td><td>夕張市 7쌍 · 日高町 6쌍 · 苫小牧市 1쌍</td></tr>
   </table></div>
   <div class="anal"><b>정리</b><ul>
-    <li>상위 10%는 <b>최댓값의 실수(氷川町: 칸 몇 개만 튐)</b>와 <b>평균의 실수(玉東町: 비탈 비율만 큼)</b>를 둘 다 줄입니다. 그래서 구마모토(29곳, 산사태 평가의 60%)에서 가장 좋고, 전체 산사태 AUC도 가장 높게 나옵니다</li>
-    <li>훗카이도는 확률을 seed마다 평균 내고 한 번에 채점하면 최댓값이 가장 좋고, seed마다 채점해 평균 내면 상위 10%가 가장 좋습니다 (0.72 대 0.65). 차이가 작고 방식에 따라 뒤집혀 "훗카이도에서도 낫다"고 말하기는 어렵습니다</li>
+    <li>상위 10%는 <b>최댓값의 실수(氷川町: 칸 몇 개만 튐)</b>와 <b>평균의 실수(玉東町: 비탈 비율만 큼)</b>를 둘 다 줄입니다. 그래서 구마모토(29곳, 산사태 평가의 60%)에서 가장 좋고, 전체 산사태 AUC도 가장 높습니다</li>
+    <li>훗카이도는 seed마다 AUC를 내서 평균하면 상위 10%가 가장 좋지만(0.74 대 최댓값 0.66 · 평균 0.55), 확률을 평균 내고 한 번에 채점하면 최댓값이 가장 좋습니다 (위 표). 채점 방식에 따라 뒤집혀 "훗카이도에서도 낫다"고 말하기는 어렵습니다</li>
     <li>남는 틀림은 비탈이 아주 적은 피해 있음 시정촌(合志市 0.5% 등)과, 산은 많지만 진앙에서 멀어 피해가 없던 시정촌(夕張市 · 日高町)입니다. 둘 다 모으는 방법으로는 풀기 어렵고, 칸 단위 확률 자체가 더 정확해야 합니다</li>
   </ul></div>
 </section>
 
 <section id="res">
-  <h2><span class="n">5</span>결과 표: 상위 1 · 5 · 10 %까지</h2>
-  <h3 id="topk">상위 1 · 5 · 10 % 칸 평균으로 모으기 (10.22, 학습 그대로 채점만)</h3>
-  <p>시정촌 안 칸들의 사후확률을 높은 순서로 줄 세워 위에서 1 · 5 · 10 %만 평균합니다. 최댓값(칸 1개)처럼 잡음 칸 하나에 휘둘리지 않고, 평균(칸 전부)처럼 일부에만 있는 비탈이 묻히지도 않게 하려는 중간 방법입니다. 칸 결과를 PC에서 <code>cell_extract.py</code>로 줄여 받아 채점했습니다 (⑤는 seed 0~3, 나머지는 seed 0~2 평균).</p>
+  <h2><span class="n">5</span>결과 표: 상위 1 · 5 · 10 %까지 (seed 0~4 평균)</h2>
   <div class="tw"><table>
-    <tr><th rowspan="2">실험</th><th colspan="5"><span class="tag t-ls">산사태</span> AUC (49곳)</th><th colspan="2"><span class="tag t-lq">액상화</span> AUC (151곳)</th><th rowspan="2" class="num">전체<br>산사태 상위 10% + 액상화 최댓값</th><th rowspan="2" class="num">전체<br>둘 다 최댓값</th></tr>
+    <tr><th rowspan="2">실험 (seed 0~4 평균)</th><th colspan="5"><span class="tag t-ls">산사태</span> AUC (49곳)</th><th colspan="2"><span class="tag t-lq">액상화</span> AUC (151곳)</th></tr>
     <tr><th class="num">최댓값</th><th class="num">평균</th><th class="num">상위 1%</th><th class="num">상위 5%</th><th class="num">상위 10%</th><th class="num">최댓값</th><th class="num">상위 5%</th></tr>
-    <tr><td>⑤ 끄기 지도+U</td><td class="num">0.792</td><td class="num">0.804</td><td class="num">0.822</td><td class="num"><b>0.856</b></td><td class="num"><b>0.860</b></td><td class="num"><b>0.817</b></td><td class="num">0.739</td><td class="num"><b>0.828</b></td><td class="num">0.811</td></tr>
-    <tr><td>② soft+U</td><td class="num">0.761</td><td class="num">0.806</td><td class="num">0.818</td><td class="num"><b>0.853</b></td><td class="num"><b>0.856</b></td><td class="num"><b>0.794</b></td><td class="num">0.730</td><td class="num"><b>0.809</b></td><td class="num">0.786</td></tr>
-    <tr><td>③ 끄기만</td><td class="num">0.780</td><td class="num">0.781</td><td class="num">0.758</td><td class="num">0.783</td><td class="num">0.796</td><td class="num"><b>0.814</b></td><td class="num">0.765</td><td class="num">0.810</td><td class="num">0.806</td></tr>
-    <tr><td>④ 분산만</td><td class="num">0.778</td><td class="num">0.806</td><td class="num">0.848</td><td class="num"><b>0.862</b></td><td class="num"><b>0.873</b></td><td class="num"><b>0.723</b></td><td class="num">0.724</td><td class="num">0.760</td><td class="num">0.737</td></tr>
-    <tr><td>① baseline</td><td class="num">0.678</td><td class="num">0.644</td><td class="num">0.626</td><td class="num">0.669</td><td class="num">0.684</td><td class="num"><b>0.666</b></td><td class="num">0.638</td><td class="num">0.670</td><td class="num">0.669</td></tr>
-    <tr><td class="muted">USGS · pilotA A2</td><td class="num" colspan="5">산사태 0.729 · 0.879</td><td class="num" colspan="2">액상화 0.895 · 0.819</td><td class="num" colspan="2">전체 0.854 · 0.834</td></tr>
+    <tr><td>① baseline</td><td class="num"><b>0.728</b></td><td class="num">0.671</td><td class="num">0.648</td><td class="num">0.682</td><td class="num">0.682</td><td class="num"><b>0.696</b></td><td class="num">0.659</td></tr><tr><td>② soft+U</td><td class="num">0.773</td><td class="num">0.808</td><td class="num">0.827</td><td class="num">0.867</td><td class="num"><b>0.871</b></td><td class="num"><b>0.789</b></td><td class="num">0.721</td></tr><tr><td>③ 끄기만</td><td class="num">0.786</td><td class="num">0.790</td><td class="num">0.768</td><td class="num">0.786</td><td class="num"><b>0.799</b></td><td class="num"><b>0.799</b></td><td class="num">0.756</td></tr><tr><td>④ 분산만</td><td class="num">0.794</td><td class="num">0.809</td><td class="num">0.845</td><td class="num">0.871</td><td class="num"><b>0.880</b></td><td class="num"><b>0.747</b></td><td class="num">0.749</td></tr><tr><td>⑤ 끄기 지도+U</td><td class="num">0.790</td><td class="num">0.805</td><td class="num">0.829</td><td class="num">0.862</td><td class="num"><b>0.868</b></td><td class="num"><b>0.813</b></td><td class="num">0.733</td></tr>
   </table></div>
   <div class="tw"><table>
-    <tr><th>산사태 지진별 (⑤)</th><th class="num">최댓값</th><th class="num">평균</th><th class="num">상위 5%</th><th class="num">상위 10%</th><th class="num">USGS</th></tr>
-    <tr><td>구마모토 (29)</td><td class="num">0.81</td><td class="num">0.87</td><td class="num">0.88</td><td class="num">0.89</td><td class="num">0.64</td></tr>
-    <tr><td>오사카 (7)</td><td class="num">1.00</td><td class="num">1.00</td><td class="num">1.00</td><td class="num">1.00</td><td class="num">1.00</td></tr>
-    <tr><td>훗카이도 (13)</td><td class="num">0.65</td><td class="num">0.55</td><td class="num">0.73</td><td class="num">0.72</td><td class="num">0.78</td></tr>
-  </table></div>
-  <div class="anal"><b>읽는 법</b><ul>
-    <li><b>산사태는 상위 5 · 10 %가 최댓값 · 평균보다 모두 높습니다</b> (⑤ 0.792 · 0.804에서 0.856 · 0.860, ② · ④도 0.85~0.87). 구마모토에서는 평균만큼 좋고(0.88~0.89), 평균이 크게 틀리던 훗카이도에서도 최댓값보다 낫습니다(0.72~0.73). 두 방식의 좋은 점을 함께 얻은 셈입니다. USGS 산사태(0.729)보다 높고 pilotA(0.879)에 가깝습니다</li>
-    <li><b>액상화는 여전히 최댓값이 가장 좋습니다</b> (⑤ 0.817 대 상위 5% 0.739). 액상화는 시정촌 안 좁은 곳(강가 · 매립지)에서 나므로 가장 높은 칸 하나가 중요한 것으로 보입니다</li>
-    <li>산사태 상위 10% + 액상화 최댓값으로 모으면 ⑤ 전체 0.828로, 지금까지 가장 높습니다 (둘 다 최댓값 0.811, 섞기 0.821). 그래도 USGS 0.854보다는 낮습니다</li>
-    <li>③ · ①은 상위 %로 해도 거의 그대로입니다</li>
-    <li><b>주의</b>: 결과를 보고 고른 방법이라 참고용입니다. 쓰려면 비율(5%든 10%든)을 미리 정하고 seed를 더 늘려 확인해야 합니다. 산사태는 49곳(피해 없음 9곳)뿐이라 몇 곳의 순서로 크게 바뀝니다</li>
-  </ul></div>
-
-  <h3 id="topk-check">상위 10%가 우연이 아닌지 확인 (산사태 AUC, seed별)</h3>
-  <div class="tw"><table>
-    <tr><th>실험</th><th class="num">최댓값</th><th class="num">평균</th><th class="num">상위 10%</th><th class="num">순위 상관 (최댓값 · 평균 · 상위 10%)</th></tr>
-    <tr><td>⑤ (seed 0 · 1 · 2 · 3)</td><td class="num">0.75 · 0.73 · 0.85 · 0.84</td><td class="num">0.81 · 0.80 · 0.81 · 0.81</td><td class="num"><b>0.83 · 0.84 · 0.89 · 0.89</b></td><td class="num">0.82 · 0.97 · 0.77</td></tr>
-    <tr><td>② (seed 0 · 1 · 2)</td><td class="num">0.74 · 0.71 · 0.83</td><td class="num">0.81 · 0.80 · 0.81</td><td class="num"><b>0.81 · 0.86 · 0.89</b></td><td class="num">0.71 · 0.97 · 0.75</td></tr>
-    <tr><td>④ (seed 0 · 1 · 2)</td><td class="num">0.79 · 0.73 · 0.81</td><td class="num">0.81 · 0.80 · 0.81</td><td class="num"><b>0.88 · 0.85 · 0.89</b></td><td class="num">0.53 · 0.97 · 0.70</td></tr>
+    <tr><th>산사태 지진별 (⑤, seed 0~4 평균)</th><th class="num">최댓값</th><th class="num">평균</th><th class="num">상위 5%</th><th class="num">상위 10%</th><th class="num">USGS</th></tr>
+    <tr><td>구마모토 (29)</td><td class="num">0.80</td><td class="num">0.87</td><td class="num">0.88</td><td class="num">0.89</td><td class="num">0.64</td></tr><tr><td>오사카 (7)</td><td class="num">0.98</td><td class="num">1.00</td><td class="num">1.00</td><td class="num">1.00</td><td class="num">1.00</td></tr><tr><td>훗카이도 (13)</td><td class="num">0.66</td><td class="num">0.55</td><td class="num">0.75</td><td class="num">0.74</td><td class="num">0.78</td></tr>
   </table></div>
   <ul>
-    <li>⑤ · ② · ④에서 <b>seed마다 상위 10%가 최댓값 · 평균 이상</b>입니다 (② seed 0만 평균과 같음). 한 seed의 우연은 아닙니다</li>
-    <li>상위 5%와 10%가 거의 같아(0.85~0.87) 비율을 조금 바꿔도 결과가 크게 안 변합니다</li>
-    <li>다만 시정촌 순서의 seed 안정성(순위 상관 0.70~0.77)은 평균(0.97)보다 낮고 최댓값과 비슷합니다</li>
-    <li><b>남은 확인</b>: 10%를 지금 정해 두고, 아직 안 본 seed 4(와 ② ③ ④ ①의 seed 3)에서도 이기는지 봅니다. 산사태 평가는 49곳(피해 없음 9곳)뿐이라 다른 지진 자료가 있으면 더 좋습니다</li>
+    <li>산사태는 ⑤ · ② · ④에서 상위 5 · 10 %가 가장 높고(0.86~0.88), ③은 상위 10%가 조금 높은 정도, ①은 최댓값이 가장 높습니다</li>
+    <li>액상화는 다섯 실험 모두 최댓값이 가장 좋거나 같습니다</li>
   </ul>
-  
-
   <h3 id="confirm34">확인: 처음 보는 seed 3 · 4에서도 상위 10%가 이기나 (10.23)</h3>
   <p>상위 10%는 seed 0~2를 보고 고른 방법이라, 고른 뒤 처음 보는 seed 3 · 4로만 따로 채점했습니다.</p>
   <div class="tw"><table>
     <tr><th rowspan="2">실험</th><th colspan="3"><span class="tag t-ls">산사태</span> AUC, seed 3 · 4만</th><th rowspan="2" class="num">산사태 5개 평균<br>(최댓값 · 평균 · 상위 10%)</th><th rowspan="2" class="num">전체 5개 평균<br>둘 다 최댓값</th><th rowspan="2" class="num">전체 5개 평균<br>산사태 상위 10% + 액상화 최댓값</th></tr>
     <tr><th class="num">최댓값</th><th class="num">평균</th><th class="num">상위 10%</th></tr>
-    <tr><td>⑤ 끄기 지도+U</td><td class="num">0.809</td><td class="num">0.806</td><td class="num"><b>0.895</b></td><td class="num">0.790 · 0.805 · <b>0.868</b></td><td class="num">0.808</td><td class="num"><b>0.827</b></td></tr><tr><td>② soft+U</td><td class="num">0.790</td><td class="num">0.810</td><td class="num"><b>0.895</b></td><td class="num">0.773 · 0.808 · <b>0.871</b></td><td class="num">0.785</td><td class="num"><b>0.809</b></td></tr><tr><td>④ 분산만</td><td class="num">0.817</td><td class="num">0.814</td><td class="num"><b>0.891</b></td><td class="num">0.794 · 0.809 · <b>0.880</b></td><td class="num">0.758</td><td class="num"><b>0.779</b></td></tr><tr><td>③ 끄기만</td><td class="num">0.794</td><td class="num"><b>0.803</b></td><td class="num">0.802</td><td class="num">0.786 · 0.790 · <b>0.799</b></td><td class="num">0.796</td><td class="num"><b>0.799</b></td></tr><tr><td>① baseline</td><td class="num"><b>0.804</b></td><td class="num">0.711</td><td class="num">0.678</td><td class="num">0.728 · 0.671 · <b>0.682</b></td><td class="num">0.704</td><td class="num"><b>0.693</b></td></tr>
+    <tr><td>① baseline</td><td class="num"><b>0.804</b></td><td class="num">0.711</td><td class="num">0.678</td><td class="num">0.728 · 0.671 · <b>0.682</b></td><td class="num">0.704</td><td class="num"><b>0.693</b></td></tr><tr><td>② soft+U</td><td class="num">0.790</td><td class="num">0.810</td><td class="num"><b>0.895</b></td><td class="num">0.773 · 0.808 · <b>0.871</b></td><td class="num">0.785</td><td class="num"><b>0.809</b></td></tr><tr><td>③ 끄기만</td><td class="num">0.794</td><td class="num"><b>0.803</b></td><td class="num">0.802</td><td class="num">0.786 · 0.790 · <b>0.799</b></td><td class="num">0.796</td><td class="num"><b>0.799</b></td></tr><tr><td>④ 분산만</td><td class="num">0.817</td><td class="num">0.814</td><td class="num"><b>0.891</b></td><td class="num">0.794 · 0.809 · <b>0.880</b></td><td class="num">0.758</td><td class="num"><b>0.779</b></td></tr><tr><td>⑤ 끄기 지도+U</td><td class="num">0.809</td><td class="num">0.806</td><td class="num"><b>0.895</b></td><td class="num">0.790 · 0.805 · <b>0.868</b></td><td class="num">0.808</td><td class="num"><b>0.827</b></td></tr>
   </table></div>
   <div class="anal"><b>읽는 법</b><ul>
     <li><b>끄기 지도나 soft를 쓴 ⑤ · ② · ④에서는 처음 보는 seed 3 · 4에서도 상위 10%가 가장 높습니다</b> (산사태 0.89~0.90, 최댓값 · 평균은 0.79~0.82). seed 하나씩 봐도 seed 3 · 4 모두 이깁니다. 우연이 아니라고 볼 수 있습니다</li>
@@ -837,149 +785,27 @@ body{background:#fff}
     <li>액상화는 계속 최댓값이 가장 좋습니다. 산사태 상위 10% + 액상화 최댓값이면 ⑤ 전체 0.827 (둘 다 최댓값 0.808). 그래도 USGS 0.854보다는 낮습니다</li>
     <li>주 결과는 교수님 지시대로 최대 · 최대로 두고, 이 방법은 "미리 정한 뒤 새 seed로 확인한 추가 분석"으로 보고합니다</li>
   </ul></div>
+
 </section>
 
 <section id="stab">
-  <h2><span class="n">6</span>seed 안정성: 확률 값과 순서</h2>
-  <h3 id="muniswing">시정촌마다 사후확률이 seed에 따라 얼마나 바뀌나 (시정촌 단위 대 칸 단위, seed 0 · 1 · 2)</h3>
+  <h2><span class="n">6</span>seed 안정성: 확률 값과 순서 (seed 0~4)</h2>
   <div class="tw"><table>
     <tr><th>단위</th><th>실험</th><th>재해</th><th class="num">시정촌별 확률 폭 평균<br>(가장 큰 seed − 가장 작은 seed)</th><th class="num">폭 0.3 이상인 시정촌</th><th class="num">seed끼리 순위 상관<br>(지진 안, 1이면 순서 똑같음)</th></tr>
-    <tr><td>시정촌</td><td>DN</td><td><span class="tag t-ls">산사태</span></td><td class="num">0.44</td><td class="num">45%</td><td class="num"><b style="color:var(--warn)">0.05</b></td></tr><tr><td>시정촌</td><td>DN</td><td><span class="tag t-lq">액상화</span></td><td class="num">0.36</td><td class="num">40%</td><td class="num"><b style="color:inherit">0.78</b></td></tr><tr><td>시정촌</td><td>SOFTU</td><td><span class="tag t-ls">산사태</span></td><td class="num">0.42</td><td class="num">60%</td><td class="num"><b style="color:var(--warn)">0.54</b></td></tr><tr><td>시정촌</td><td>SOFTU</td><td><span class="tag t-lq">액상화</span></td><td class="num">0.36</td><td class="num">53%</td><td class="num"><b style="color:inherit">0.89</b></td></tr><tr><td>시정촌</td><td>SOFTU 끄기만</td><td><span class="tag t-ls">산사태</span></td><td class="num">0.45</td><td class="num">45%</td><td class="num"><b style="color:var(--warn)">0.34</b></td></tr><tr><td>시정촌</td><td>SOFTU 끄기만</td><td><span class="tag t-lq">액상화</span></td><td class="num">0.40</td><td class="num">42%</td><td class="num"><b style="color:inherit">0.73</b></td></tr><tr><td>시정촌</td><td>SOFTU 분산만</td><td><span class="tag t-ls">산사태</span></td><td class="num">0.42</td><td class="num">60%</td><td class="num"><b style="color:var(--warn)">0.55</b></td></tr><tr><td>시정촌</td><td>SOFTU 분산만</td><td><span class="tag t-lq">액상화</span></td><td class="num">0.33</td><td class="num">43%</td><td class="num"><b style="color:inherit">0.88</b></td></tr><tr><td>칸</td><td>⑤ 끄기 지도+U</td><td><span class="tag t-ls">산사태</span></td><td class="num">0.38</td><td class="num">56%</td><td class="num"><b style="color:inherit">0.82</b></td></tr><tr><td>칸</td><td>⑤ 끄기 지도+U</td><td><span class="tag t-lq">액상화</span></td><td class="num">0.34</td><td class="num">55%</td><td class="num"><b style="color:inherit">0.83</b></td></tr><tr><td>칸</td><td>② soft+U</td><td><span class="tag t-ls">산사태</span></td><td class="num">0.35</td><td class="num">52%</td><td class="num"><b style="color:inherit">0.71</b></td></tr><tr><td>칸</td><td>② soft+U</td><td><span class="tag t-lq">액상화</span></td><td class="num">0.34</td><td class="num">58%</td><td class="num"><b style="color:inherit">0.78</b></td></tr><tr><td>칸</td><td>③ 끄기만</td><td><span class="tag t-ls">산사태</span></td><td class="num">0.85</td><td class="num">100%</td><td class="num"><b style="color:inherit">0.82</b></td></tr><tr><td>칸</td><td>③ 끄기만</td><td><span class="tag t-lq">액상화</span></td><td class="num">0.25</td><td class="num">37%</td><td class="num"><b style="color:inherit">0.88</b></td></tr><tr><td>칸</td><td>④ 분산만</td><td><span class="tag t-ls">산사태</span></td><td class="num">0.33</td><td class="num">48%</td><td class="num"><b style="color:var(--warn)">0.53</b></td></tr><tr><td>칸</td><td>④ 분산만</td><td><span class="tag t-lq">액상화</span></td><td class="num">0.37</td><td class="num">59%</td><td class="num"><b style="color:inherit">0.61</b></td></tr><tr><td>칸</td><td>① baseline</td><td><span class="tag t-ls">산사태</span></td><td class="num">0.90</td><td class="num">100%</td><td class="num"><b style="color:var(--warn)">0.50</b></td></tr><tr><td>칸</td><td>① baseline</td><td><span class="tag t-lq">액상화</span></td><td class="num">0.69</td><td class="num">83%</td><td class="num"><b style="color:inherit">0.78</b></td></tr>
+    <tr><td>시정촌</td><td>DN</td><td><span class="tag t-ls">산사태</span></td><td class="num">0.45</td><td class="num">45%</td><td class="num"><b style="color:var(--warn)">0.08</b></td></tr><tr><td>시정촌</td><td>DN</td><td><span class="tag t-lq">액상화</span></td><td class="num">0.40</td><td class="num">45%</td><td class="num"><b style="color:inherit">0.78</b></td></tr><tr><td>시정촌</td><td>SOFTU</td><td><span class="tag t-ls">산사태</span></td><td class="num">0.43</td><td class="num">60%</td><td class="num"><b style="color:var(--warn)">0.59</b></td></tr><tr><td>시정촌</td><td>SOFTU</td><td><span class="tag t-lq">액상화</span></td><td class="num">0.37</td><td class="num">53%</td><td class="num"><b style="color:inherit">0.85</b></td></tr><tr><td>시정촌</td><td>SOFTU 끄기만</td><td><span class="tag t-ls">산사태</span></td><td class="num">0.45</td><td class="num">45%</td><td class="num"><b style="color:var(--warn)">0.37</b></td></tr><tr><td>시정촌</td><td>SOFTU 끄기만</td><td><span class="tag t-lq">액상화</span></td><td class="num">0.44</td><td class="num">47%</td><td class="num"><b style="color:inherit">0.76</b></td></tr><tr><td>시정촌</td><td>SOFTU 분산만</td><td><span class="tag t-ls">산사태</span></td><td class="num">0.43</td><td class="num">60%</td><td class="num"><b style="color:inherit">0.60</b></td></tr><tr><td>시정촌</td><td>SOFTU 분산만</td><td><span class="tag t-lq">액상화</span></td><td class="num">0.37</td><td class="num">48%</td><td class="num"><b style="color:inherit">0.84</b></td></tr><tr><td>칸</td><td>① baseline</td><td><span class="tag t-ls">산사태</span></td><td class="num">0.92</td><td class="num">100%</td><td class="num"><b style="color:var(--warn)">0.59</b></td></tr><tr><td>칸</td><td>① baseline</td><td><span class="tag t-lq">액상화</span></td><td class="num">0.88</td><td class="num">100%</td><td class="num"><b style="color:inherit">0.80</b></td></tr><tr><td>칸</td><td>② soft+U</td><td><span class="tag t-ls">산사태</span></td><td class="num">0.42</td><td class="num">64%</td><td class="num"><b style="color:inherit">0.73</b></td></tr><tr><td>칸</td><td>② soft+U</td><td><span class="tag t-lq">액상화</span></td><td class="num">0.35</td><td class="num">59%</td><td class="num"><b style="color:inherit">0.81</b></td></tr><tr><td>칸</td><td>③ 끄기만</td><td><span class="tag t-ls">산사태</span></td><td class="num">0.86</td><td class="num">100%</td><td class="num"><b style="color:inherit">0.79</b></td></tr><tr><td>칸</td><td>③ 끄기만</td><td><span class="tag t-lq">액상화</span></td><td class="num">0.27</td><td class="num">39%</td><td class="num"><b style="color:inherit">0.89</b></td></tr><tr><td>칸</td><td>④ 분산만</td><td><span class="tag t-ls">산사태</span></td><td class="num">0.39</td><td class="num">56%</td><td class="num"><b style="color:var(--warn)">0.58</b></td></tr><tr><td>칸</td><td>④ 분산만</td><td><span class="tag t-lq">액상화</span></td><td class="num">0.40</td><td class="num">60%</td><td class="num"><b style="color:inherit">0.69</b></td></tr><tr><td>칸</td><td>⑤ 끄기 지도+U</td><td><span class="tag t-ls">산사태</span></td><td class="num">0.42</td><td class="num">64%</td><td class="num"><b style="color:inherit">0.81</b></td></tr><tr><td>칸</td><td>⑤ 끄기 지도+U</td><td><span class="tag t-lq">액상화</span></td><td class="num">0.35</td><td class="num">55%</td><td class="num"><b style="color:inherit">0.83</b></td></tr>
   </table></div>
-  <p class="meta">정답이 있는 시정촌 전부 (산사태 77 · 액상화 191, AUC에서 빠지는 지진 포함). 칸 단위 값 = 시정촌 안 칸 최댓값. 순위 상관 = 같은 지진 안에서 seed 두 개씩 짝지어 Spearman 상관을 구해 평균. ② ③ ④는 고친 soft.</p>
-  <div class="tw"><table>
-    <tr><th>지진별 시정촌 사후확률 중앙값</th><th class="num">seed 0</th><th class="num">seed 1</th><th class="num">seed 2</th></tr>
-    <tr><td>시정촌 SOFTU · 산사태 · 오사카</td><td class="num">0.14</td><td class="num">0.87</td><td class="num">0.15</td></tr>
-    <tr><td>칸 ① baseline · 산사태 · 구마모토</td><td class="num">0.99</td><td class="num">1.00</td><td class="num">0.06</td></tr>
-    <tr><td>칸 ③ 끄기만 · 산사태 · 오사카</td><td class="num">0.17</td><td class="num">0.99</td><td class="num">0.16</td></tr>
-    <tr><td>칸 ⑤ 끄기 지도+U · 액상화 · 구마모토</td><td class="num">0.84</td><td class="num">0.84</td><td class="num">0.29</td></tr>
-  </table></div>
+  <p class="meta">정답이 있는 시정촌 전부 (산사태 77 · 액상화 191, AUC에서 빠지는 지진 포함). 칸 단위 값 = 시정촌 안 칸 최댓값. 순위 상관 = 같은 지진 안에서 seed 두 개씩 짝지어(10쌍) Spearman 상관을 구해 평균. 시정촌 U 실험은 바꾼 불확실도(<code>px_*</code>).</p>
   <div class="anal"><b>읽는 법</b><ul>
-    <li><b>확률 값 자체는 칸 단위도 크게 흔들립니다.</b> 시정촌 단위와 마찬가지로 시정촌별 폭 평균이 0.25~0.90이고, 절반 안팎의 시정촌이 seed에 따라 0.3 넘게 바뀝니다. 특히 ① · ③ 산사태는 거의 모든 시정촌이 바뀝니다</li>
-    <li>흔들림의 대부분은 <b>한 지진의 시정촌이 통째로 올라가거나 내려가는 것</b>입니다 (위 중앙값 표: 구마모토 산사태가 seed 0 · 1에서는 거의 1, seed 2에서는 0.06). 지진마다 함께 쓰는 a · c · w_x가 seed에 따라 다른 곳에 자리 잡기 때문이고, 칸 최댓값은 칸이 많아 1에 붙기 쉬워 더 크게 움직입니다</li>
-    <li><b>그러나 시정촌끼리의 순서는 칸 단위가 더 안정적입니다.</b> 산사태 순위 상관이 시정촌 0.05~0.55인데 칸은 ⑤ · ③ 0.82, ② 0.71. 액상화는 칸 ⑤ · ③ 0.83~0.88, 시정촌 0.73~0.89로 비슷합니다. AUC는 순서만 보므로, 확률이 통째로 움직여도 AUC는 덜 흔들립니다</li>
-    <li>끄기가 없는 칸 ④ · ①은 순위 상관도 0.50~0.78로 낮아 순서까지 흔들립니다. ④ 액상화 0.61이 노토 AUC 0.35 ~ 0.77의 원인입니다</li>
-    <li>그래서 칸 단위든 시정촌 단위든 <b>확률 값(예: 0.8이면 위험)을 그대로 쓰기는 어렵고</b>, 순서(어느 시정촌이 더 위험한가)로 보는 것이 맞습니다</li>
+    <li><b>확률 값 자체는 시정촌 · 칸 모두 seed마다 크게 바뀝니다</b> (폭 평균 0.27~0.92, 시정촌의 절반 안팎이 0.3 넘게 바뀜). 대부분은 한 지진의 시정촌이 통째로 오르내리는 흔들림입니다 (지진마다 함께 쓰는 a · c · w_x가 seed마다 다르게 학습됨)</li>
+    <li><b>순서는 칸 단위가 더 안정적입니다.</b> 산사태 순위 상관이 시정촌 0.08~0.60인데 칸 ⑤ 0.81 · ③ 0.79 · ② 0.73. AUC는 순서만 보므로 확률이 통째로 움직여도 덜 흔들립니다</li>
+    <li>끄기가 없는 칸 ④ · ①은 순위 상관도 낮아(산사태 0.58~0.59, ④ 액상화 0.69) 순서까지 흔들립니다</li>
+    <li>그래서 확률 값(예: 0.8이면 위험)을 그대로 쓰기는 어렵고, 순서(어느 시정촌이 더 위험한가)로 보는 것이 맞습니다</li>
   </ul></div>
-  <p class="lb" style="margin-top:6px">위 표는 칸 단위를 <b>산사태 · 액상화 둘 다 칸 최댓값</b>으로 모은 것입니다. 산사태를 <b>칸 평균</b>(섞기)으로 모으면:</p>
+  <h3>산사태를 다른 방법으로 모으면 (칸, seed 0~4): 폭 평균 · 순위 상관</h3>
   <div class="tw"><table>
-    <tr><th>칸 단위 산사태 (77곳)</th><th class="num">칸 최댓값: 폭 평균 · 순위 상관</th><th class="num">칸 평균: 폭 평균 · 순위 상관</th></tr>
-    <tr><td>⑤ 끄기 지도+U</td><td class="num">0.38 · 0.82</td><td class="num">0.24 · <b>0.97</b></td></tr>
-    <tr><td>② soft+U</td><td class="num">0.35 · 0.71</td><td class="num">0.29 · <b>0.97</b></td></tr>
-    <tr><td>③ 끄기만</td><td class="num">0.85 · 0.82</td><td class="num">0.70 · 0.89</td></tr>
-    <tr><td>④ 분산만</td><td class="num">0.33 · 0.53</td><td class="num">0.30 · <b>0.97</b></td></tr>
-    <tr><td>① baseline</td><td class="num">0.90 · 0.50</td><td class="num">0.83 · 0.55</td></tr>
+    <tr><th>칸 단위 산사태 (77곳)</th><th class="num">칸 최댓값</th><th class="num">칸 평균</th><th class="num">상위 10%</th></tr>
+    <tr><td>① baseline</td><td class="num">0.92 · 0.59</td><td class="num">0.83 · <b>0.72</b></td><td class="num">0.88 · 0.91</td></tr><tr><td>② soft+U</td><td class="num">0.42 · 0.73</td><td class="num">0.29 · <b>0.98</b></td><td class="num">0.43 · 0.78</td></tr><tr><td>③ 끄기만</td><td class="num">0.86 · 0.79</td><td class="num">0.70 · <b>0.93</b></td><td class="num">0.93 · 0.94</td></tr><tr><td>④ 분산만</td><td class="num">0.39 · 0.58</td><td class="num">0.31 · <b>0.98</b></td><td class="num">0.40 · 0.75</td></tr><tr><td>⑤ 끄기 지도+U</td><td class="num">0.42 · 0.81</td><td class="num">0.24 · <b>0.98</b></td><td class="num">0.42 · 0.80</td></tr>
   </table></div>
-  <p class="note"><b>주의: 확률 값의 폭은 칸 평균으로 해도 여전히 큽니다</b> (폭 평균 0.24~0.83, ⑤ · ② · ④도 시정촌 3곳 중 1곳 이상이 0.3 넘게 바뀜. 시정촌 단위는 0.42~0.45). 시정촌 단위의 "확률 값이 seed마다 크게 흔들리는" 문제는 칸 단위에도 남아 있습니다. 좋아지는 것은 <b>순서</b>입니다: 칸 평균으로 모으면 산사태 순서가 seed와 거의 상관없어집니다 (⑤ · ② · ④ 순위 상관 0.97). 최댓값은 칸 하나의 값에 좌우되지만 평균은 많은 칸을 합쳐 seed 영향이 상쇄되기 때문입니다. 섞기에서 산사태 AUC가 오르는 것(0.76~0.78 → 0.80)도 이 안정성 덕분으로 보입니다. 시정촌 단위 산사태 순위 상관은 0.05~0.55.</p>
-
-
+  <p class="note">칸 평균으로 모으면 산사태 순서가 seed와 거의 상관없어집니다 (⑤ · ② · ④ 순위 상관 0.98). 다만 확률 값의 폭은 평균으로 해도 0.24~0.83으로 여전히 큽니다. 상위 10%는 순서 안정성이 최댓값과 비슷합니다(0.75~0.80).</p>
 </section>
-
-<section id="detail">
-  <h2><span class="n">7</span>자세한 기록 (칸 단위 실험 기록에서 옮김)</h2>
-  
-  <p class="callout warn" style="display:block">이 절의 ② · ③ · ④는 <b>고치기 전 soft</b>(5~10° 칸도 둘 다 낮춤) 결과입니다. 고친 결과는 <a href="#mid">2.11</a>을 보세요. ⑤ · ①은 soft를 쓰지 않아 그대로입니다.</p>
-  <p>같은 학습 결과(면적 평균 5개 실험, seed 0)에서 시정촌 값을 칸 사후확률의 <b>최댓값</b>(교수님 지시, 지금 방식) 대신 <b>평균</b>으로 모아 다시 채점했습니다. 새로 학습하지 않고 저장된 결과로 계산했습니다.</p>
-  <div class="tw"><table>
-    <tr><th>실험</th><th class="num">최댓값 (전체 / 산사태 / 액상화)</th><th class="num">평균 (전체 / 산사태 / 액상화)</th><th class="num">전체 차이</th><th class="num">산사태 차이</th><th class="num">액상화 차이</th></tr>
-    <tr><td>① baseline</td><td class="num">0.617 / 0.663 / 0.602</td><td class="num">0.563 / 0.689 / 0.521</td><td class="num down">-0.054</td><td class="num up">+0.026</td><td class="num down">-0.081</td></tr><tr><td>② soft + U</td><td class="num">0.793 / 0.760 / 0.804</td><td class="num">0.743 / 0.799 / 0.724</td><td class="num down">-0.050</td><td class="num up">+0.039</td><td class="num down">-0.080</td></tr><tr><td>③ 끄기만</td><td class="num">0.775 / 0.752 / 0.783</td><td class="num">0.760 / 0.799 / 0.748</td><td class="num down">-0.015</td><td class="num up">+0.047</td><td class="num down">-0.035</td></tr><tr><td>④ 분산만</td><td class="num">0.619 / 0.812 / 0.556</td><td class="num">0.587 / 0.806 / 0.516</td><td class="num down">-0.032</td><td class="num down">-0.006</td><td class="num down">-0.040</td></tr><tr><td>⑤ 끄기 지도 + U</td><td class="num">0.797 / 0.753 / 0.812</td><td class="num">0.758 / 0.806 / 0.742</td><td class="num down">-0.039</td><td class="num up">+0.053</td><td class="num down">-0.070</td></tr>
-  </table></div>
-  <div class="pc" data-custom="1"><div class="lg"><span><i style="background:var(--muted);opacity:.35"></i>위 막대 (연한) = 최댓값 (지금)</span><span><i style="background:var(--muted)"></i>아래 막대 (진한) = 평균</span></div><div class="cols"><div class="col"><h4><i style="background:var(--all)"></i>전체</h4><div class="row"><div class="nm">① baseline</div><div class="bb"><div class="b"><span class="tr"><span class="f" style="width:23.4%;background:var(--all);opacity:.35"></span></span><em>0.617</em></div><div class="b B"><span class="tr"><span class="f" style="width:12.6%;background:var(--all)"></span></span><em>0.563</em></div></div></div><div class="row"><div class="nm">② soft + U</div><div class="bb"><div class="b"><span class="tr"><span class="f" style="width:58.6%;background:var(--all);opacity:.35"></span></span><em>0.793</em></div><div class="b B"><span class="tr"><span class="f" style="width:48.6%;background:var(--all)"></span></span><em>0.743</em></div></div></div><div class="row"><div class="nm">③ 끄기만</div><div class="bb"><div class="b"><span class="tr"><span class="f" style="width:55.0%;background:var(--all);opacity:.35"></span></span><em>0.775</em></div><div class="b B"><span class="tr"><span class="f" style="width:52.0%;background:var(--all)"></span></span><em>0.760</em></div></div></div><div class="row"><div class="nm">④ 분산만</div><div class="bb"><div class="b"><span class="tr"><span class="f" style="width:23.8%;background:var(--all);opacity:.35"></span></span><em>0.619</em></div><div class="b B"><span class="tr"><span class="f" style="width:17.4%;background:var(--all)"></span></span><em>0.587</em></div></div></div><div class="row"><div class="nm">⑤ 끄기 지도 + U</div><div class="bb"><div class="b"><span class="tr"><span class="f" style="width:59.4%;background:var(--all);opacity:.35"></span></span><em>0.797</em></div><div class="b B"><span class="tr"><span class="f" style="width:51.6%;background:var(--all)"></span></span><em>0.758</em></div></div></div><div class="ax"><div></div><div><span>0.5</span><span>0.75</span><span>1.0</span></div></div></div><div class="col"><h4><i style="background:var(--ls)"></i>산사태</h4><div class="row"><div class="nm">① baseline</div><div class="bb"><div class="b"><span class="tr"><span class="f" style="width:32.6%;background:var(--ls);opacity:.35"></span></span><em>0.663</em></div><div class="b B"><span class="tr"><span class="f" style="width:37.8%;background:var(--ls)"></span></span><em>0.689</em></div></div></div><div class="row"><div class="nm">② soft + U</div><div class="bb"><div class="b"><span class="tr"><span class="f" style="width:52.0%;background:var(--ls);opacity:.35"></span></span><em>0.760</em></div><div class="b B"><span class="tr"><span class="f" style="width:59.8%;background:var(--ls)"></span></span><em>0.799</em></div></div></div><div class="row"><div class="nm">③ 끄기만</div><div class="bb"><div class="b"><span class="tr"><span class="f" style="width:50.4%;background:var(--ls);opacity:.35"></span></span><em>0.752</em></div><div class="b B"><span class="tr"><span class="f" style="width:59.8%;background:var(--ls)"></span></span><em>0.799</em></div></div></div><div class="row"><div class="nm">④ 분산만</div><div class="bb"><div class="b"><span class="tr"><span class="f" style="width:62.4%;background:var(--ls);opacity:.35"></span></span><em>0.812</em></div><div class="b B"><span class="tr"><span class="f" style="width:61.2%;background:var(--ls)"></span></span><em>0.806</em></div></div></div><div class="row"><div class="nm">⑤ 끄기 지도 + U</div><div class="bb"><div class="b"><span class="tr"><span class="f" style="width:50.6%;background:var(--ls);opacity:.35"></span></span><em>0.753</em></div><div class="b B"><span class="tr"><span class="f" style="width:61.2%;background:var(--ls)"></span></span><em>0.806</em></div></div></div><div class="ax"><div></div><div><span>0.5</span><span>0.75</span><span>1.0</span></div></div></div><div class="col"><h4><i style="background:var(--lq)"></i>액상화</h4><div class="row"><div class="nm">① baseline</div><div class="bb"><div class="b"><span class="tr"><span class="f" style="width:20.4%;background:var(--lq);opacity:.35"></span></span><em>0.602</em></div><div class="b B"><span class="tr"><span class="f" style="width:4.2%;background:var(--lq)"></span></span><em>0.521</em></div></div></div><div class="row"><div class="nm">② soft + U</div><div class="bb"><div class="b"><span class="tr"><span class="f" style="width:60.8%;background:var(--lq);opacity:.35"></span></span><em>0.804</em></div><div class="b B"><span class="tr"><span class="f" style="width:44.8%;background:var(--lq)"></span></span><em>0.724</em></div></div></div><div class="row"><div class="nm">③ 끄기만</div><div class="bb"><div class="b"><span class="tr"><span class="f" style="width:56.6%;background:var(--lq);opacity:.35"></span></span><em>0.783</em></div><div class="b B"><span class="tr"><span class="f" style="width:49.6%;background:var(--lq)"></span></span><em>0.748</em></div></div></div><div class="row"><div class="nm">④ 분산만</div><div class="bb"><div class="b"><span class="tr"><span class="f" style="width:11.2%;background:var(--lq);opacity:.35"></span></span><em>0.556</em></div><div class="b B"><span class="tr"><span class="f" style="width:3.2%;background:var(--lq)"></span></span><em>0.516</em></div></div></div><div class="row"><div class="nm">⑤ 끄기 지도 + U</div><div class="bb"><div class="b"><span class="tr"><span class="f" style="width:62.4%;background:var(--lq);opacity:.35"></span></span><em>0.812</em></div><div class="b B"><span class="tr"><span class="f" style="width:48.4%;background:var(--lq)"></span></span><em>0.742</em></div></div></div><div class="ax"><div></div><div><span>0.5</span><span>0.75</span><span>1.0</span></div></div></div></div></div>
-  <div class="anal"><b>결과 분석</b><ul>
-    <li><b>전체는 다섯 실험 모두 최댓값이 높습니다</b> (예: ⑤ 0.797 대 0.758). 지금 방식(최댓값)이 낫습니다</li>
-    <li><b>산사태는 평균이 더 높습니다</b> (④ 빼고 0.75~0.76 → 0.80 안팎). ⑤에서 산사태 구마모토는 평균일 때 0.872로 pilotA(0.846)보다 높습니다. 산사태는 시정촌의 넓은 산지에 퍼져 일어나서 칸 평균이 더 맞는 것으로 보입니다</li>
-    <li><b>액상화는 최댓값이 훨씬 높습니다</b> (⑤ 0.812 대 0.742). 특히 노토 액상화가 0.907 → 0.725로 떨어집니다. 액상화는 해안·매립지 같은 좁은 곳에서 일어나 칸 하나가 높으면 그 시정촌에 피해가 있다고 보는 최댓값이 맞는 것으로 보입니다</li>
-  </ul></div>
-  <p class="lb" style="margin-top:6px">두 seed 평균으로 다시 보면</p>
-  <div class="tw"><table>
-    <tr><th>실험 (seed 0 · 1 평균)</th><th class="num">최댓값 (전체 / 산사태 / 액상화)</th><th class="num">평균 (전체 / 산사태 / 액상화)</th><th class="num">전체 차이</th><th class="num">산사태 차이</th><th class="num">액상화 차이</th></tr>
-    <tr><td>⑤ 끄기 지도 + U</td><td class="num">0.809 / 0.741 / 0.831</td><td class="num">0.758 / 0.803 / 0.743</td><td class="num down">−0.051</td><td class="num up">+0.061</td><td class="num down">−0.088</td></tr><tr><td>② soft + U</td><td class="num">0.799 / 0.745 / 0.816</td><td class="num">0.744 / 0.799 / 0.727</td><td class="num down">−0.055</td><td class="num up">+0.053</td><td class="num down">−0.090</td></tr><tr><td>③ 끄기만</td><td class="num">0.801 / 0.783 / 0.807</td><td class="num">0.766 / 0.780 / 0.761</td><td class="num down">−0.035</td><td class="num down">−0.003</td><td class="num down">−0.046</td></tr><tr><td>④ 분산만</td><td class="num">0.682 / 0.779 / 0.650</td><td class="num">0.657 / 0.806 / 0.609</td><td class="num down">−0.025</td><td class="num up">+0.027</td><td class="num down">−0.041</td></tr><tr><td>① baseline</td><td class="num">0.648 / 0.653 / 0.647</td><td class="num">0.585 / 0.641 / 0.567</td><td class="num down">−0.063</td><td class="num down">−0.013</td><td class="num down">−0.080</td></tr>
-  </table></div>
-  <p class="note">두 seed 평균에서도 같습니다: 전체·액상화는 최댓값이 높고, 산사태는 평균이 높습니다 (④ 빼고). seed 0만 볼 때의 결론이 그대로입니다.</p>
-  <h3>섞어서: 산사태는 칸 평균, 액상화는 칸 최댓값</h3>
-  <div class="tw"><table>
-    <tr><th>실험</th><th class="num">최댓값만 (전체 / 산사태 / 액상화)</th><th class="num">산사태 평균 + 액상화 최댓값</th><th class="num">전체 차이</th></tr>
-    <tr><td>① baseline</td><td class="num">0.617 / 0.663 / 0.602</td><td class="num">0.624 / 0.689 / 0.602</td><td class="num up">+0.007</td></tr><tr><td>② soft + U</td><td class="num">0.793 / 0.760 / 0.804</td><td class="num">0.803 / 0.799 / 0.804</td><td class="num up">+0.010</td></tr><tr><td>③ 끄기만</td><td class="num">0.775 / 0.752 / 0.783</td><td class="num">0.787 / 0.799 / 0.783</td><td class="num up">+0.012</td></tr><tr><td>④ 분산만</td><td class="num">0.619 / 0.812 / 0.556</td><td class="num">0.617 / 0.806 / 0.556</td><td class="num ">-0.002</td></tr><tr><td>⑤ 끄기 지도 + U</td><td class="num">0.797 / 0.753 / 0.812</td><td class="num">0.810 / 0.806 / 0.812</td><td class="num up">+0.013</td></tr>
-  </table></div>
-  <div class="pc" data-custom="1"><div class="lg"><span><i style="background:var(--muted);opacity:.35"></i>위 막대 (연한) = 최댓값만 (지금)</span><span><i style="background:var(--muted)"></i>아래 막대 (진한) = 산사태 평균 + 액상화 최댓값</span></div><div class="cols"><div class="col"><h4><i style="background:var(--all)"></i>전체</h4><div class="row"><div class="nm">① baseline</div><div class="bb"><div class="b"><span class="tr"><span class="f" style="width:23.4%;background:var(--all);opacity:.35"></span></span><em>0.617</em></div><div class="b B"><span class="tr"><span class="f" style="width:24.8%;background:var(--all)"></span></span><em>0.624</em></div></div></div><div class="row"><div class="nm">② soft + U</div><div class="bb"><div class="b"><span class="tr"><span class="f" style="width:58.6%;background:var(--all);opacity:.35"></span></span><em>0.793</em></div><div class="b B"><span class="tr"><span class="f" style="width:60.6%;background:var(--all)"></span></span><em>0.803</em></div></div></div><div class="row"><div class="nm">③ 끄기만</div><div class="bb"><div class="b"><span class="tr"><span class="f" style="width:55.0%;background:var(--all);opacity:.35"></span></span><em>0.775</em></div><div class="b B"><span class="tr"><span class="f" style="width:57.4%;background:var(--all)"></span></span><em>0.787</em></div></div></div><div class="row"><div class="nm">④ 분산만</div><div class="bb"><div class="b"><span class="tr"><span class="f" style="width:23.8%;background:var(--all);opacity:.35"></span></span><em>0.619</em></div><div class="b B"><span class="tr"><span class="f" style="width:23.4%;background:var(--all)"></span></span><em>0.617</em></div></div></div><div class="row"><div class="nm">⑤ 끄기 지도 + U</div><div class="bb"><div class="b"><span class="tr"><span class="f" style="width:59.4%;background:var(--all);opacity:.35"></span></span><em>0.797</em></div><div class="b B"><span class="tr"><span class="f" style="width:62.0%;background:var(--all)"></span></span><em>0.810</em></div></div></div><div class="ax"><div></div><div><span>0.5</span><span>0.75</span><span>1.0</span></div></div></div><div class="col"><h4><i style="background:var(--ls)"></i>산사태</h4><div class="row"><div class="nm">① baseline</div><div class="bb"><div class="b"><span class="tr"><span class="f" style="width:32.6%;background:var(--ls);opacity:.35"></span></span><em>0.663</em></div><div class="b B"><span class="tr"><span class="f" style="width:37.8%;background:var(--ls)"></span></span><em>0.689</em></div></div></div><div class="row"><div class="nm">② soft + U</div><div class="bb"><div class="b"><span class="tr"><span class="f" style="width:52.0%;background:var(--ls);opacity:.35"></span></span><em>0.760</em></div><div class="b B"><span class="tr"><span class="f" style="width:59.8%;background:var(--ls)"></span></span><em>0.799</em></div></div></div><div class="row"><div class="nm">③ 끄기만</div><div class="bb"><div class="b"><span class="tr"><span class="f" style="width:50.4%;background:var(--ls);opacity:.35"></span></span><em>0.752</em></div><div class="b B"><span class="tr"><span class="f" style="width:59.8%;background:var(--ls)"></span></span><em>0.799</em></div></div></div><div class="row"><div class="nm">④ 분산만</div><div class="bb"><div class="b"><span class="tr"><span class="f" style="width:62.4%;background:var(--ls);opacity:.35"></span></span><em>0.812</em></div><div class="b B"><span class="tr"><span class="f" style="width:61.2%;background:var(--ls)"></span></span><em>0.806</em></div></div></div><div class="row"><div class="nm">⑤ 끄기 지도 + U</div><div class="bb"><div class="b"><span class="tr"><span class="f" style="width:50.6%;background:var(--ls);opacity:.35"></span></span><em>0.753</em></div><div class="b B"><span class="tr"><span class="f" style="width:61.2%;background:var(--ls)"></span></span><em>0.806</em></div></div></div><div class="ax"><div></div><div><span>0.5</span><span>0.75</span><span>1.0</span></div></div></div><div class="col"><h4><i style="background:var(--lq)"></i>액상화</h4><div class="row"><div class="nm">① baseline</div><div class="bb"><div class="b"><span class="tr"><span class="f" style="width:20.4%;background:var(--lq);opacity:.35"></span></span><em>0.602</em></div><div class="b B"><span class="tr"><span class="f" style="width:20.4%;background:var(--lq)"></span></span><em>0.602</em></div></div></div><div class="row"><div class="nm">② soft + U</div><div class="bb"><div class="b"><span class="tr"><span class="f" style="width:60.8%;background:var(--lq);opacity:.35"></span></span><em>0.804</em></div><div class="b B"><span class="tr"><span class="f" style="width:60.8%;background:var(--lq)"></span></span><em>0.804</em></div></div></div><div class="row"><div class="nm">③ 끄기만</div><div class="bb"><div class="b"><span class="tr"><span class="f" style="width:56.6%;background:var(--lq);opacity:.35"></span></span><em>0.783</em></div><div class="b B"><span class="tr"><span class="f" style="width:56.6%;background:var(--lq)"></span></span><em>0.783</em></div></div></div><div class="row"><div class="nm">④ 분산만</div><div class="bb"><div class="b"><span class="tr"><span class="f" style="width:11.2%;background:var(--lq);opacity:.35"></span></span><em>0.556</em></div><div class="b B"><span class="tr"><span class="f" style="width:11.2%;background:var(--lq)"></span></span><em>0.556</em></div></div></div><div class="row"><div class="nm">⑤ 끄기 지도 + U</div><div class="bb"><div class="b"><span class="tr"><span class="f" style="width:62.4%;background:var(--lq);opacity:.35"></span></span><em>0.812</em></div><div class="b B"><span class="tr"><span class="f" style="width:62.4%;background:var(--lq)"></span></span><em>0.812</em></div></div></div><div class="ax"><div></div><div><span>0.5</span><span>0.75</span><span>1.0</span></div></div></div></div></div>
-  <div class="anal"><b>결과 분석</b><ul>
-    <li>④를 빼고 전체가 +0.007 ~ +0.013 오릅니다. 가장 높은 것은 <b>⑤ 0.810</b> (산사태 0.806, 액상화 0.812)</li>
-    <li>액상화는 그대로이고 산사태만 바뀝니다. 산사태 구마모토 0.769 → 0.872 (pilotA 0.846보다 높음), 홋카이도는 조금 내림 (0.583 → 0.556)</li>
-    <li><b>주의</b>: 결과(seed 0)를 보고 고른 조합이라, 이 숫자를 성능으로 내세우면 안 됩니다. seed 1 결과에서도 같은 방향으로 오르면 그때 방법으로 쓸 수 있습니다</li>
-    <li>여전히 USGS 기준선(0.854)·pilotA(0.855)보다 낮습니다</li>
-  </ul></div>
-<p class="lb" style="margin-top:6px">두 seed 평균으로 다시 보면</p>
-  <div class="tw"><table>
-    <tr><th>실험 (seed 0 · 1 평균)</th><th class="num">최댓값만</th><th class="num">산사태 평균 + 액상화 최댓값</th><th class="num">전체 차이</th><th class="num">섞기 seed 0 · seed 1</th></tr>
-    <tr><td>⑤ 끄기 지도 + U</td><td class="num">0.809 / 0.741 / 0.831</td><td class="num">0.824 / 0.803 / 0.831</td><td class="num up">+0.015</td><td class="num">0.810 · 0.838</td></tr><tr><td>② soft + U</td><td class="num">0.799 / 0.745 / 0.816</td><td class="num">0.812 / 0.799 / 0.816</td><td class="num up">+0.013</td><td class="num">0.803 · 0.822</td></tr><tr><td>③ 끄기만</td><td class="num">0.801 / 0.783 / 0.807</td><td class="num">0.800 / 0.780 / 0.807</td><td class="num down">−0.001</td><td class="num">0.787 · 0.814</td></tr><tr><td>④ 분산만</td><td class="num">0.682 / 0.779 / 0.650</td><td class="num">0.688 / 0.806 / 0.650</td><td class="num up">+0.007</td><td class="num">0.617 · 0.759</td></tr><tr><td>① baseline</td><td class="num">0.648 / 0.653 / 0.647</td><td class="num">0.645 / 0.641 / 0.647</td><td class="num down">−0.003</td><td class="num">0.624 · 0.667</td></tr>
-  </table></div>
-  <p class="note">seed 1에서도 ⑤ · ②는 섞기로 올라(⑤ 0.821 → 0.838, ② 0.805 → 0.822) 두 seed 평균 ⑤ 0.824 · ② 0.812입니다. ③은 seed 1에서 오히려 내려(0.827 → 0.814) 평균으로는 거의 같습니다. 그래서 "섞기가 항상 낫다"고까지는 말하기 어렵습니다.</p>
-  
-  <h3 id="whymean">왜 산사태는 최댓값보다 평균이 높게 나왔나 (⑤, seed 0 · 1 · 2 평균 확률로 확인)</h3>
-  <p>최댓값을 쓴 이유는 "비탈 비율이 작은 시정촌이라도 비탈이 있으면 산사태 확률이 묻히지 않게" 하려는 것이었습니다. 그런데 실제로는 산사태에서 평균이 더 높습니다. 지진별로 보면:</p>
-  <div class="tw"><table>
-    <tr><th>산사태 (⑤)</th><th class="num">최댓값 AUC</th><th class="num">평균 AUC</th><th class="num">참고: 칸 수만으로</th><th class="num">참고: 비탈 비율만으로</th></tr>
-    <tr><td>구마모토 (29곳, 피해 없음 3)</td><td class="num">0.82</td><td class="num"><b>0.87</b></td><td class="num">1.00</td><td class="num">0.79</td></tr>
-    <tr><td>오사카 (7곳, 피해 없음 2)</td><td class="num">1.00</td><td class="num">1.00</td><td class="num">1.00</td><td class="num">1.00</td></tr>
-    <tr><td>훗카이도 (13곳, 피해 없음 4)</td><td class="num"><b>0.67</b></td><td class="num">0.53</td><td class="num">0.25</td><td class="num">0.53</td></tr>
-  </table></div>
-  <div class="tw"><table>
-    <tr><th>구마모토 산사태 "피해 없음" 3곳</th><th class="num">칸 수</th><th class="num">비탈 비율</th><th class="num">칸 최댓값</th><th class="num">칸 평균</th></tr>
-    <tr><td>玉東町</td><td class="num">362</td><td class="num">0.51</td><td class="num">0.84</td><td class="num">0.24</td></tr>
-    <tr><td>菊陽町</td><td class="num">541</td><td class="num">0.02</td><td class="num">0.84</td><td class="num">0.05</td></tr>
-    <tr><td>氷川町</td><td class="num">463</td><td class="num">0.15</td><td class="num">0.89</td><td class="num">0.15</td></tr>
-    <tr><td class="muted">"피해 있음" 26곳 중앙값</td><td class="num">2,118</td><td class="num">0.49</td><td class="num">0.88</td><td class="num">0.28</td></tr>
-  </table></div>
-  <div class="anal"><b>읽는 법</b><ul>
-    <li><b>최댓값은 거의 모든 시정촌에서 높습니다.</b> 시정촌마다 칸이 수백~수천 개라, 비탈이 거의 없는 菊陽町(비탈 2%)도 칸 하나쯤은 높게 나와 최댓값 0.84가 됩니다. "피해 있음" 중앙값 0.88과 거의 같아 구별이 안 됩니다. 평균은 0.05로 확실히 낮습니다</li>
-    <li><b>정답 자체가 시정촌 크기와 얽혀 있습니다.</b> 구마모토 · 오사카는 칸 수만으로 AUC 1.00. 시정촌이 넓을수록 산사태가 한 건이라도 생길 가능성이 커서, "피해 없음"은 작은 시정촌뿐입니다. 평균은 비탈 비율(ρ 0.66~0.99)을 따라가고, 이것이 구마모토에서는 정답과 잘 맞습니다</li>
-    <li><b>훗카이도는 반대로 최댓값이 낫습니다.</b> "피해 없음" 4곳 중 夕張市(비탈 91%) · 日高町(78%)은 산이 많지만 진앙에서 멀어 산사태가 없었습니다. 평균은 비탈 비율을 따라 이 두 곳을 높게 매겨 틀립니다</li>
-    <li><b>우려했던 경우(비탈 비율은 작은데 산사태가 난 시정촌)는 있지만, 최댓값이 구해 주지 못했습니다.</b> 荒尾市(비탈 11%) · 合志市(0.5%)는 최댓값으로도 29곳 중 28 · 29위, 평균으로도 27 · 29위. 枚方市(오사카, 4%)만 최댓값 3위 · 평균 5위로 조금 나음. 이 시정촌들은 가장 높은 칸조차 다른 시정촌의 가장 높은 칸보다 낮았습니다 (荒尾市 0.83, 合志市 0.76 대 0.84~0.89). 다만 정답이 시정촌 단위라 <b>실제 산사태가 난 칸이 어디인지, 그 칸의 확률이 얼마였는지는 알 수 없습니다</b> (산사태 위치 자료 없음)</li>
-    <li>산사태 전체 AUC는 구마모토(29곳)가 가장 크게 반영되어, 구마모토에서 이기는 평균이 전체로도 높게 나옵니다. 산사태 평가가 49곳(피해 없음 9곳)뿐이라 이 결론은 약합니다</li>
-  </ul></div>
-
-  <h3 id="cellcheck">산사태 시정촌 안을 들여다보기: 비탈 칸의 확률이 낮았나 (⑤, seed 0~3 평균)</h3>
-  <div class="tw"><table>
-    <tr><th>구마모토</th><th class="num">비탈 칸 (10° 이상)</th><th class="num">비탈 칸 USGS 평균</th><th class="num">비탈 칸 DPM 평균</th><th class="num">비탈 칸 사후확률 상위 5%</th><th class="num">최댓값</th><th class="num">최댓값 칸의 경사 · DPM</th></tr>
-    <tr><td>荒尾市 (피해 있음)</td><td class="num">96 / 838</td><td class="num">0.002</td><td class="num">0.17</td><td class="num">0.81</td><td class="num">0.83</td><td class="num">12.8° · 0.41</td></tr>
-    <tr><td>合志市 (피해 있음)</td><td class="num">4 / 793</td><td class="num">0.003</td><td class="num">0.20</td><td class="num">0.60</td><td class="num">0.77</td><td class="num">5.3° · 0.34</td></tr>
-    <tr><td>玉東町 (피해 없음)</td><td class="num">183 / 362</td><td class="num">0.004</td><td class="num">0.13</td><td class="num">0.80</td><td class="num">0.84</td><td class="num">17.3° · 0.46</td></tr>
-    <tr><td>菊陽町 (피해 없음)</td><td class="num">10 / 541</td><td class="num">0.031</td><td class="num">0.15</td><td class="num">0.70</td><td class="num">0.84</td><td class="num">5.6° · 0.36</td></tr>
-    <tr><td>氷川町 (피해 없음)</td><td class="num">73 / 463</td><td class="num">0.022</td><td class="num">0.19</td><td class="num">0.87</td><td class="num">0.89</td><td class="num">14.4° · 0.49</td></tr>
-  </table></div>
-  <div class="anal"><b>읽는 법</b><ul>
-    <li><b>荒尾市의 비탈 칸은 확률이 낮지 않았습니다.</b> 가장 높은 칸이 경사 12.8° 비탈 칸이고 DPM 0.41(강한 변화)이라 0.83이 나왔습니다. 비탈 칸 상위 5%도 0.81입니다</li>
-    <li><b>문제는 "피해 없음" 시정촌의 비탈 칸도 똑같이 높다는 것</b>입니다. 玉東町(비탈 17.3°, DPM 0.46) · 氷川町(14.4°, 0.49)도 DPM이 강하게 나와 0.84 · 0.89입니다. 구마모토는 지진 피해가 넓게 퍼져 DPM이 어디서나 크게 나오므로, DPM만으로는 산사태가 난 비탈과 안 난 비탈을 구별하기 어렵습니다</li>
-    <li>비탈 칸의 USGS 사전확률은 0.002~0.03으로 아주 작아서, 칸 사후확률은 거의 DPM이 정합니다</li>
-    <li>그래서 비탈 칸을 모두 올리는 것으로는 해결되지 않습니다. 산사태와 다른 변화(건물 피해, 농지 변화 등)를 구별할 정보가 더 필요합니다 (예: 더 잘게 나눈 DPM, 산사태 위치 자료로 칸 단위 검증)</li>
-    <li>菊陽町 · 合志市는 최댓값 칸이 비탈이 아닌 5° 근처 칸이었습니다. 비탈이 아닌 곳의 강한 DPM이 시정촌 값을 정한 경우로, 최댓값이 잡음에 약한 예입니다</li>
-  </ul></div>
-
-  <h3 id="mid-hyb">섞기 (산사태 칸 평균 + 액상화 칸 최댓값), seed 0 · 1 · 2</h3>
-  <div class="tw"><table>
-    <tr><th>실험</th><th class="num">기본 3개 평균</th><th class="num">섞기 seed 0 · 1 · 2</th><th class="num">섞기 3개 평균</th><th class="num">차이</th><th class="num">산사태 (기본 · 섞기)</th></tr>
-    <tr><td>⑤ 끄기 지도 + U</td><td class="num">0.815</td><td class="num">0.810 · 0.838 · 0.816</td><td class="num"><b>0.821</b></td><td class="num up">+0.006</td><td class="num">0.778 · 0.804</td></tr>
-    <tr><td>③ 끄기만 (고친 뒤)</td><td class="num">0.806</td><td class="num">0.812 · 0.824 · 0.782</td><td class="num"><b>0.806</b></td><td class="num">0.000</td><td class="num">0.780 · 0.781</td></tr>
-    <tr><td>② soft + U (고친 뒤)</td><td class="num">0.786</td><td class="num">0.801 · 0.810 · 0.779</td><td class="num"><b>0.797</b></td><td class="num up">+0.011</td><td class="num">0.761 · 0.806</td></tr>
-    <tr><td>④ 분산만 (고친 뒤)</td><td class="num">0.737</td><td class="num">0.646 · 0.787 · 0.798</td><td class="num"><b>0.744</b></td><td class="num up">+0.007</td><td class="num">0.778 · 0.806</td></tr>
-    <tr><td>① baseline</td><td class="num">0.669</td><td class="num">0.624 · 0.667 · 0.691</td><td class="num"><b>0.661</b></td><td class="num down">−0.008</td><td class="num">0.678 · 0.644</td></tr>
-  </table></div>
-  <p class="meta">학습은 그대로, 시정촌으로 모으는 방법만 바꿔 다시 채점. 액상화는 둘 다 칸 최댓값이라 같음. 결과를 보고 고른 조합이라 참고용.</p>
-
-  
-<h3 id="mix-seed1">seed 0 · 1 섞기 결과 (10.21, 고치기 전 soft, 칸 단위 실험 기록 2.10에서 옮김)</h3>
-  <div class="note"><b>"섞기"란</b>: 시정촌 값을 모으는 방법만 바꾼 것입니다. 학습은 위와 똑같고, 칸 결과를 시정촌으로 모을 때 <b>산사태는 칸 평균, 액상화는 칸 최댓값</b>을 씁니다 (위 표는 둘 다 칸 최댓값). 결과를 보고 고른 조합이라 참고용입니다. 자세한 설명은 <a href="#agg" style="color:var(--accent)">2.9</a>.</div>
-  <div class="tw"><table>
-    <tr><th>섞기 (산사태 칸 평균 + 액상화 칸 최댓값)</th><th colspan="3">전체</th><th>산사태 (두 seed 평균)</th><th>액상화 (기본과 같음)</th></tr>
-    <tr><th>실험</th><th>seed 0</th><th>seed 1</th><th>평균</th><th></th><th></th></tr>
-    <tr><td>⑤ 끄기 지도 + U</td><td>0.810</td><td>0.838</td><td><b>0.824</b></td><td>0.803</td><td>0.831</td></tr>
-    <tr><td>② soft + U</td><td>0.803</td><td>0.822</td><td><b>0.812</b></td><td>0.799</td><td>0.816</td></tr>
-    <tr><td>③ soft + U 끄기만</td><td>0.787</td><td>0.814</td><td><b>0.800</b></td><td>0.780</td><td>0.807</td></tr>
-    <tr><td>④ soft + U 분산만</td><td>0.617</td><td>0.759</td><td><b>0.688</b></td><td>0.806</td><td>0.650</td></tr>
-    <tr><td>① baseline</td><td>0.624</td><td>0.667</td><td><b>0.645</b></td><td>0.641</td><td>0.647</td></tr>
-  </table></div>
-  <figure><svg viewBox="0 0 1000 350" role="img" aria-label="섞기 결과 seed 0과 seed 1" style="width:100%;height:auto"><text x="50" y="16" style="font-size:14px;font-weight:700;fill:var(--fg)">섞기: 산사태 = 칸 평균, 액상화 = 칸 최댓값</text><rect x="560" y="6" width="12" height="12" fill="#9fb6d6"/><text x="577" y="17" style="font-size:12px;fill:var(--fg)">seed 0</text><rect x="640" y="6" width="12" height="12" fill="#2a4d7a"/><text x="657" y="17" style="font-size:12px;fill:var(--fg)">seed 1</text><line x1="720" y1="12" x2="744" y2="12" stroke="#a2461f" stroke-width="2" stroke-dasharray="5 3"/><text x="750" y="17" style="font-size:12px;fill:var(--fg)">USGS 기준선</text><line x1="50" y1="280.0" x2="980" y2="280.0" stroke="var(--line)"/><text x="44" y="284.0" text-anchor="end" style="font-size:11px;fill:var(--muted)">0.5</text><line x1="50" y1="231.1" x2="980" y2="231.1" stroke="var(--line)"/><text x="44" y="235.1" text-anchor="end" style="font-size:11px;fill:var(--muted)">0.6</text><line x1="50" y1="182.2" x2="980" y2="182.2" stroke="var(--line)"/><text x="44" y="186.2" text-anchor="end" style="font-size:11px;fill:var(--muted)">0.7</text><line x1="50" y1="133.3" x2="980" y2="133.3" stroke="var(--line)"/><text x="44" y="137.3" text-anchor="end" style="font-size:11px;fill:var(--muted)">0.8</text><line x1="50" y1="84.4" x2="980" y2="84.4" stroke="var(--line)"/><text x="44" y="88.4" text-anchor="end" style="font-size:11px;fill:var(--muted)">0.9</text><text x="205.0" y="44" text-anchor="middle" style="font-size:14px;font-weight:700;fill:var(--fg)">전체</text><line x1="58.0" y1="106.9" x2="352.0" y2="106.9" stroke="#a2461f" stroke-width="2" stroke-dasharray="5 3"/><rect x="67.0" y="128.4" width="19.7" height="151.6" fill="#9fb6d6"/><text x="76.8" y="124.4" text-anchor="middle" style="font-size:9.5px;fill:var(--fg)">0.81</text><rect x="89.7" y="114.8" width="19.7" height="165.2" fill="#2a4d7a"/><text x="99.5" y="110.8" text-anchor="middle" style="font-size:9.5px;fill:var(--fg)">0.84</text><text x="89.0" y="298" text-anchor="middle" style="font-size:11px;fill:var(--fg)">⑤</text><text x="89.0" y="313" text-anchor="middle" style="font-size:9.5px;fill:var(--muted)">평균 0.824</text><rect x="125.0" y="131.9" width="19.7" height="148.1" fill="#9fb6d6"/><text x="134.8" y="127.9" text-anchor="middle" style="font-size:9.5px;fill:var(--fg)">0.80</text><rect x="147.7" y="122.6" width="19.7" height="157.4" fill="#2a4d7a"/><text x="157.5" y="118.6" text-anchor="middle" style="font-size:9.5px;fill:var(--fg)">0.82</text><text x="147.0" y="298" text-anchor="middle" style="font-size:11px;fill:var(--fg)">②</text><text x="147.0" y="313" text-anchor="middle" style="font-size:9.5px;fill:var(--muted)">평균 0.812</text><rect x="183.0" y="139.7" width="19.7" height="140.3" fill="#9fb6d6"/><text x="192.8" y="135.7" text-anchor="middle" style="font-size:9.5px;fill:var(--fg)">0.79</text><rect x="205.7" y="126.5" width="19.7" height="153.5" fill="#2a4d7a"/><text x="215.5" y="122.5" text-anchor="middle" style="font-size:9.5px;fill:var(--fg)">0.81</text><text x="205.0" y="298" text-anchor="middle" style="font-size:11px;fill:var(--fg)">③</text><text x="205.0" y="313" text-anchor="middle" style="font-size:9.5px;fill:var(--muted)">평균 0.800</text><rect x="241.0" y="222.8" width="19.7" height="57.2" fill="#9fb6d6"/><text x="250.8" y="218.8" text-anchor="middle" style="font-size:9.5px;fill:var(--fg)">0.62</text><rect x="263.7" y="153.4" width="19.7" height="126.6" fill="#2a4d7a"/><text x="273.5" y="149.4" text-anchor="middle" style="font-size:9.5px;fill:var(--fg)">0.76</text><text x="263.0" y="298" text-anchor="middle" style="font-size:11px;fill:var(--fg)">④</text><text x="263.0" y="313" text-anchor="middle" style="font-size:9.5px;fill:var(--muted)">평균 0.688</text><rect x="299.0" y="219.4" width="19.7" height="60.6" fill="#9fb6d6"/><text x="308.8" y="215.4" text-anchor="middle" style="font-size:9.5px;fill:var(--fg)">0.62</text><rect x="321.7" y="198.4" width="19.7" height="81.6" fill="#2a4d7a"/><text x="331.5" y="194.4" text-anchor="middle" style="font-size:9.5px;fill:var(--fg)">0.67</text><text x="321.0" y="298" text-anchor="middle" style="font-size:11px;fill:var(--fg)">①</text><text x="321.0" y="313" text-anchor="middle" style="font-size:9.5px;fill:var(--muted)">평균 0.645</text><text x="515.0" y="44" text-anchor="middle" style="font-size:14px;font-weight:700;fill:var(--fg)">산사태</text><line x1="368.0" y1="168.0" x2="662.0" y2="168.0" stroke="#a2461f" stroke-width="2" stroke-dasharray="5 3"/><rect x="377.0" y="130.4" width="19.7" height="149.6" fill="#9fb6d6"/><text x="386.8" y="126.4" text-anchor="middle" style="font-size:9.5px;fill:var(--fg)">0.81</text><rect x="399.7" y="133.8" width="19.7" height="146.2" fill="#2a4d7a"/><text x="409.5" y="129.8" text-anchor="middle" style="font-size:9.5px;fill:var(--fg)">0.80</text><text x="399.0" y="298" text-anchor="middle" style="font-size:11px;fill:var(--fg)">⑤</text><text x="399.0" y="313" text-anchor="middle" style="font-size:9.5px;fill:var(--muted)">평균 0.803</text><rect x="435.0" y="133.8" width="19.7" height="146.2" fill="#9fb6d6"/><text x="444.8" y="129.8" text-anchor="middle" style="font-size:9.5px;fill:var(--fg)">0.80</text><rect x="457.7" y="133.8" width="19.7" height="146.2" fill="#2a4d7a"/><text x="467.5" y="129.8" text-anchor="middle" style="font-size:9.5px;fill:var(--fg)">0.80</text><text x="457.0" y="298" text-anchor="middle" style="font-size:11px;fill:var(--fg)">②</text><text x="457.0" y="313" text-anchor="middle" style="font-size:9.5px;fill:var(--muted)">평균 0.799</text><rect x="493.0" y="133.8" width="19.7" height="146.2" fill="#9fb6d6"/><text x="502.8" y="129.8" text-anchor="middle" style="font-size:9.5px;fill:var(--fg)">0.80</text><rect x="515.7" y="152.4" width="19.7" height="127.6" fill="#2a4d7a"/><text x="525.5" y="148.4" text-anchor="middle" style="font-size:9.5px;fill:var(--fg)">0.76</text><text x="515.0" y="298" text-anchor="middle" style="font-size:11px;fill:var(--fg)">③</text><text x="515.0" y="313" text-anchor="middle" style="font-size:9.5px;fill:var(--muted)">평균 0.780</text><rect x="551.0" y="130.4" width="19.7" height="149.6" fill="#9fb6d6"/><text x="560.8" y="126.4" text-anchor="middle" style="font-size:9.5px;fill:var(--fg)">0.81</text><rect x="573.7" y="130.4" width="19.7" height="149.6" fill="#2a4d7a"/><text x="583.5" y="126.4" text-anchor="middle" style="font-size:9.5px;fill:var(--fg)">0.81</text><text x="573.0" y="298" text-anchor="middle" style="font-size:11px;fill:var(--fg)">④</text><text x="573.0" y="313" text-anchor="middle" style="font-size:9.5px;fill:var(--muted)">평균 0.806</text><rect x="609.0" y="187.6" width="19.7" height="92.4" fill="#9fb6d6"/><text x="618.8" y="183.6" text-anchor="middle" style="font-size:9.5px;fill:var(--fg)">0.69</text><rect x="631.7" y="235.0" width="19.7" height="45.0" fill="#2a4d7a"/><text x="641.5" y="231.0" text-anchor="middle" style="font-size:9.5px;fill:var(--fg)">0.59</text><text x="631.0" y="298" text-anchor="middle" style="font-size:11px;fill:var(--fg)">①</text><text x="631.0" y="313" text-anchor="middle" style="font-size:9.5px;fill:var(--muted)">평균 0.641</text><text x="825.0" y="44" text-anchor="middle" style="font-size:14px;font-weight:700;fill:var(--fg)">액상화</text><line x1="678.0" y1="86.9" x2="972.0" y2="86.9" stroke="#a2461f" stroke-width="2" stroke-dasharray="5 3"/><rect x="687.0" y="127.5" width="19.7" height="152.5" fill="#9fb6d6"/><text x="696.8" y="123.5" text-anchor="middle" style="font-size:9.5px;fill:var(--fg)">0.81</text><rect x="709.7" y="108.9" width="19.7" height="171.1" fill="#2a4d7a"/><text x="719.5" y="104.9" text-anchor="middle" style="font-size:9.5px;fill:var(--fg)">0.85</text><text x="709.0" y="298" text-anchor="middle" style="font-size:11px;fill:var(--fg)">⑤</text><text x="709.0" y="313" text-anchor="middle" style="font-size:9.5px;fill:var(--muted)">평균 0.831</text><rect x="745.0" y="131.4" width="19.7" height="148.6" fill="#9fb6d6"/><text x="754.8" y="127.4" text-anchor="middle" style="font-size:9.5px;fill:var(--fg)">0.80</text><rect x="767.7" y="119.2" width="19.7" height="160.8" fill="#2a4d7a"/><text x="777.5" y="115.2" text-anchor="middle" style="font-size:9.5px;fill:var(--fg)">0.83</text><text x="767.0" y="298" text-anchor="middle" style="font-size:11px;fill:var(--fg)">②</text><text x="767.0" y="313" text-anchor="middle" style="font-size:9.5px;fill:var(--muted)">평균 0.816</text><rect x="803.0" y="141.6" width="19.7" height="138.4" fill="#9fb6d6"/><text x="812.8" y="137.6" text-anchor="middle" style="font-size:9.5px;fill:var(--fg)">0.78</text><rect x="825.7" y="118.2" width="19.7" height="161.8" fill="#2a4d7a"/><text x="835.5" y="114.2" text-anchor="middle" style="font-size:9.5px;fill:var(--fg)">0.83</text><text x="825.0" y="298" text-anchor="middle" style="font-size:11px;fill:var(--fg)">③</text><text x="825.0" y="313" text-anchor="middle" style="font-size:9.5px;fill:var(--muted)">평균 0.807</text><rect x="861.0" y="252.6" width="19.7" height="27.4" fill="#9fb6d6"/><text x="870.8" y="248.6" text-anchor="middle" style="font-size:9.5px;fill:var(--fg)">0.56</text><rect x="883.7" y="160.7" width="19.7" height="119.3" fill="#2a4d7a"/><text x="893.5" y="156.7" text-anchor="middle" style="font-size:9.5px;fill:var(--fg)">0.74</text><text x="883.0" y="298" text-anchor="middle" style="font-size:11px;fill:var(--fg)">④</text><text x="883.0" y="313" text-anchor="middle" style="font-size:9.5px;fill:var(--muted)">평균 0.650</text><rect x="919.0" y="230.1" width="19.7" height="49.9" fill="#9fb6d6"/><text x="928.8" y="226.1" text-anchor="middle" style="font-size:9.5px;fill:var(--fg)">0.60</text><rect x="941.7" y="186.6" width="19.7" height="93.4" fill="#2a4d7a"/><text x="951.5" y="182.6" text-anchor="middle" style="font-size:9.5px;fill:var(--fg)">0.69</text><text x="941.0" y="298" text-anchor="middle" style="font-size:11px;fill:var(--fg)">①</text><text x="941.0" y="313" text-anchor="middle" style="font-size:9.5px;fill:var(--muted)">평균 0.647</text><text x="500.0" y="340" text-anchor="middle" style="font-size:11px;fill:var(--muted)">세로축은 0.5부터 · ⑤ 끄기 지도 + U, ② soft + U, ③ soft + U 끄기만, ④ soft + U 분산만, ① baseline · USGS 겹친 면적 평균</text></svg><figcaption>액상화 칸은 기본과 똑같습니다 (액상화는 둘 다 칸 최댓값). 달라지는 것은 산사태와 그에 따른 전체입니다.</figcaption></figure>
-</section>
-
-
 </main>
