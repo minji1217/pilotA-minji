@@ -777,11 +777,11 @@ body{background:#fff}
   <h2><span class="n">2.9</span>시정촌으로 모으는 방법: 최댓값 · 평균 · 상위 10% → <a href="https://claude.ai/artifact/WhLVRkNgEAsrNiCJKiRjaP" style="color:var(--accent)">부록으로 옮김</a></h2>
   <p>칸 확률을 시정촌 하나로 모으는 방법(학습은 그대로, 채점만 다름) 비교는 내용이 많아 <a href="https://claude.ai/artifact/WhLVRkNgEAsrNiCJKiRjaP" style="color:var(--accent)"><b>칸 단위 부록: 시정촌으로 모으기</b></a>로 옮겼습니다 (최댓값 대 평균, 섞기, 상위 1 · 5 · 10 %, 왜 산사태에서 상위 10%가 나은지, 산사태 시정촌 칸 들여다보기, seed 안정성).</p>
   <div class="tw"><table>
-    <tr><th>⑤ 끄기 지도 + U</th><th class="num">최댓값</th><th class="num">평균</th><th class="num">상위 10%</th></tr>
-    <tr><td><span class="tag t-ls">산사태</span> AUC</td><td class="num">0.792</td><td class="num">0.804</td><td class="num"><b>0.860</b></td></tr>
-    <tr><td><span class="tag t-lq">액상화</span> AUC</td><td class="num"><b>0.817</b></td><td class="num">0.740</td><td class="num">0.735</td></tr>
+    <tr><th>⑤ 끄기 지도 + U (seed 5개)</th><th class="num">최댓값</th><th class="num">평균</th><th class="num">상위 10%</th></tr>
+    <tr><td><span class="tag t-ls">산사태</span> AUC</td><td class="num">0.790</td><td class="num">0.805</td><td class="num"><b>0.868</b></td></tr>
+    <tr><td><span class="tag t-lq">액상화</span> AUC</td><td class="num"><b>0.813</b></td><td class="num">0.738</td><td class="num">0.729</td></tr>
   </table></div>
-  <p class="meta">산사태 상위 10% + 액상화 최댓값이면 ⑤ 전체 0.828 (둘 다 최댓값 0.811). 결과를 보고 고른 방법이라 참고용이며, 아직 안 본 seed 3 · 4로 확인할 예정.</p>
+  <p class="meta">산사태 상위 10% + 액상화 최댓값이면 ⑤ 전체 0.827 (둘 다 최댓값 0.808). seed 0~2를 보고 골랐고, 처음 보는 seed 3 · 4에서도 ⑤ · ② · ④는 상위 10%가 가장 높음 (부록 5절).</p>
 </section>
 
 <section id="seed1">

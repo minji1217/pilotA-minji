@@ -178,13 +178,13 @@ body{background:#fff}
 <section id="sum">
   <h2><span class="n">★</span>한눈에</h2>
   <div class="tw"><table>
-    <tr><th>모으는 법</th><th>쓰는 칸</th><th class="num">산사태 AUC (⑤)</th><th class="num">액상화 AUC (⑤)</th><th>약점</th></tr>
-    <tr><td>최댓값</td><td>가장 높은 칸 1개</td><td class="num">0.792</td><td class="num"><b>0.817</b></td><td>칸이 많으면 어느 시정촌이든 칸 하나는 높게 튀어 다 비슷해짐</td></tr>
-    <tr><td>평균</td><td>칸 전부</td><td class="num">0.804</td><td class="num">0.740</td><td>넓은 평지에 묻혀 비탈이 일부인 시정촌이 낮아짐. 산은 많지만 반응이 약한 곳이 높아짐</td></tr>
-    <tr><td><b>상위 10% 평균</b></td><td>높은 칸 위에서 10%</td><td class="num"><b>0.860</b></td><td class="num">0.735</td><td>비탈이 10%보다 훨씬 적으면 평지 칸이 섞여 묻힘. 결과를 보고 고른 방법</td></tr>
+    <tr><th>모으는 법</th><th>쓰는 칸</th><th class="num">산사태 AUC (⑤, seed 5개)</th><th class="num">액상화 AUC (⑤, seed 5개)</th><th>약점</th></tr>
+    <tr><td>최댓값</td><td>가장 높은 칸 1개</td><td class="num">0.790</td><td class="num"><b>0.813</b></td><td>칸이 많으면 어느 시정촌이든 칸 하나는 높게 튀어 다 비슷해짐</td></tr>
+    <tr><td>평균</td><td>칸 전부</td><td class="num">0.805</td><td class="num">0.738</td><td>넓은 평지에 묻혀 비탈이 일부인 시정촌이 낮아짐. 산은 많지만 반응이 약한 곳이 높아짐</td></tr>
+    <tr><td><b>상위 10% 평균</b></td><td>높은 칸 위에서 10%</td><td class="num"><b>0.868</b></td><td class="num">0.729</td><td>비탈이 10%보다 훨씬 적으면 평지 칸이 섞여 묻힘. seed 0~2를 보고 골랐지만 새 seed 3 · 4에서도 확인됨</td></tr>
   </table></div>
   <ul>
-    <li><b>산사태는 상위 10%(0.860)가 가장 높고</b>, 액상화는 최댓값(0.817)이 가장 높습니다. 산사태 상위 10% + 액상화 최댓값이면 ⑤ 전체 0.828 (둘 다 최댓값 0.811)</li>
+    <li><b>산사태는 상위 10%(0.868)가 가장 높고</b>, 액상화는 최댓값(0.813)이 가장 높습니다 (seed 5개 평균). 산사태 상위 10% + 액상화 최댓값이면 ⑤ 전체 0.827 (둘 다 최댓값 0.808). <a href="#confirm34">처음 보는 seed 3 · 4에서도 확인됨</a></li>
     <li>상위 10%의 장점은 "잡음 칸 하나에 안 휘둘림"(최댓값의 약점 보완)과 "넓은 평지에 안 묻힘"(평균의 약점 보완)을 함께 얻는 것입니다</li>
     <li>"아주 작은 비탈"(시정촌의 몇 %)을 더 잘 잡는 방법은 아닙니다. 그런 곳은 상위 10%에도 평지 칸이 섞입니다 (2절)</li>
   </ul>
@@ -807,6 +807,20 @@ body{background:#fff}
     <li><b>남은 확인</b>: 10%를 지금 정해 두고, 아직 안 본 seed 4(와 ② ③ ④ ①의 seed 3)에서도 이기는지 봅니다. 산사태 평가는 49곳(피해 없음 9곳)뿐이라 다른 지진 자료가 있으면 더 좋습니다</li>
   </ul>
   
+
+  <h3 id="confirm34">확인: 처음 보는 seed 3 · 4에서도 상위 10%가 이기나 (10.23)</h3>
+  <p>상위 10%는 seed 0~2를 보고 고른 방법이라, 고른 뒤 처음 보는 seed 3 · 4로만 따로 채점했습니다.</p>
+  <div class="tw"><table>
+    <tr><th rowspan="2">실험</th><th colspan="3"><span class="tag t-ls">산사태</span> AUC, seed 3 · 4만</th><th rowspan="2" class="num">산사태 5개 평균<br>(최댓값 · 평균 · 상위 10%)</th><th rowspan="2" class="num">전체 5개 평균<br>둘 다 최댓값</th><th rowspan="2" class="num">전체 5개 평균<br>산사태 상위 10% + 액상화 최댓값</th></tr>
+    <tr><th class="num">최댓값</th><th class="num">평균</th><th class="num">상위 10%</th></tr>
+    <tr><td>⑤ 끄기 지도+U</td><td class="num">0.809</td><td class="num">0.806</td><td class="num"><b>0.895</b></td><td class="num">0.790 · 0.805 · <b>0.868</b></td><td class="num">0.808</td><td class="num"><b>0.827</b></td></tr><tr><td>② soft+U</td><td class="num">0.790</td><td class="num">0.810</td><td class="num"><b>0.895</b></td><td class="num">0.773 · 0.808 · <b>0.871</b></td><td class="num">0.785</td><td class="num"><b>0.809</b></td></tr><tr><td>④ 분산만</td><td class="num">0.817</td><td class="num">0.814</td><td class="num"><b>0.891</b></td><td class="num">0.794 · 0.809 · <b>0.880</b></td><td class="num">0.758</td><td class="num"><b>0.779</b></td></tr><tr><td>③ 끄기만</td><td class="num">0.794</td><td class="num"><b>0.803</b></td><td class="num">0.802</td><td class="num">0.786 · 0.790 · <b>0.799</b></td><td class="num">0.796</td><td class="num"><b>0.799</b></td></tr><tr><td>① baseline</td><td class="num"><b>0.804</b></td><td class="num">0.711</td><td class="num">0.678</td><td class="num">0.728 · 0.671 · <b>0.682</b></td><td class="num">0.704</td><td class="num"><b>0.693</b></td></tr>
+  </table></div>
+  <div class="anal"><b>읽는 법</b><ul>
+    <li><b>끄기 지도나 soft를 쓴 ⑤ · ② · ④에서는 처음 보는 seed 3 · 4에서도 상위 10%가 가장 높습니다</b> (산사태 0.89~0.90, 최댓값 · 평균은 0.79~0.82). seed 하나씩 봐도 seed 3 · 4 모두 이깁니다. 우연이 아니라고 볼 수 있습니다</li>
+    <li>③ 끄기만은 평균과 거의 같고, ① baseline(끄기 · soft 없음)은 오히려 최댓값이 낫습니다. 평지 칸이 꺼지지 않으면 상위 10%에 평지의 튀는 칸이 섞이기 때문으로 보입니다</li>
+    <li>액상화는 계속 최댓값이 가장 좋습니다. 산사태 상위 10% + 액상화 최댓값이면 ⑤ 전체 0.827 (둘 다 최댓값 0.808). 그래도 USGS 0.854보다는 낮습니다</li>
+    <li>주 결과는 교수님 지시대로 최대 · 최대로 두고, 이 방법은 "미리 정한 뒤 새 seed로 확인한 추가 분석"으로 보고합니다</li>
+  </ul></div>
 </section>
 
 <section id="stab">
