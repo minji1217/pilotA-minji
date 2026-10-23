@@ -156,7 +156,7 @@ body{background:#fff}
   <h1>칸 확률을 시정촌 하나로 모으는 방법: 최댓값 · 평균 · 상위 10%</h1>
   <p class="lede">칸 단위로 학습한 뒤, 시정촌 안 칸들의 사후확률을 시정촌 값 하나로 모아 채점합니다. 모으는 방법은 학습에 들어가지 않고 채점할 때만 쓰입니다. 이 페이지는 최댓값 · 평균 · 상위 % 평균을 비교하고, 왜 산사태에서 상위 10%가 가장 높게 나왔는지 풀어 씁니다.</p>
   <p class="meta">본문: <a href="https://claude.ai/artifact/Uqmg4X8sLnLZeZX1jYmKpJ" style="color:var(--accent)">칸 단위 실험 기록</a> (주 결과 = 최대 · 최대). 이 페이지의 숫자는 모두 <b>seed 0~4 다섯 개 평균</b>이고, ② ③ ④는 고친 soft입니다. 칸 결과는 PC에서 <code>cell_extract.py</code>로 줄여 받았습니다.</p>
-  <nav class="toc" aria-label="차례"><a href="#read">★ 먼저</a><a href="#easy">0. 쉽게</a><a href="#all5">★ 한눈에</a><a href="#how">1. 세 가지 방법</a><a href="#part">2. 상위 10%와 비탈 비율</a><a href="#curve">3. 실제 곡선</a><a href="#why">4. 왜 더 나은가</a><a href="#res">5. 결과 표 · 새 seed 확인</a><a href="#stab">6. seed 안정성</a></nav>
+  <nav class="toc" aria-label="차례"><a href="#read">★ 먼저</a><a href="#extra3">★ 추가 실험 1 · 2 · 3</a><a href="#easy">0. 쉽게</a><a href="#all5">★ 한눈에</a><a href="#how">1. 세 가지 방법</a><a href="#part">2. 상위 10%와 비탈 비율</a><a href="#curve">3. 실제 곡선</a><a href="#why">4. 왜 더 나은가</a><a href="#res">5. 결과 표 · 새 seed 확인</a><a href="#stab">6. seed 안정성</a></nav>
 </header>
 
 
@@ -174,6 +174,227 @@ body{background:#fff}
     <li><b>초록 삼각형</b> = <b>USGS 기준선</b>의 AUC: DisasterNet 없이 USGS 사전확률을 그대로 점수로 써서 같은 시정촌들로 채점한 값 (전체 0.854). 점들이 삼각형보다 <b>오른쪽이면 USGS보다 잘한 것, 왼쪽이면 못한 것</b></li>
     <li><b>점선</b> = 0.5 (무작위 수준). 예: ⑤ 산사태 구마모토는 USGS 0.641 대 0.803 (오른쪽, 잘함), 액상화 구마모토는 0.947 대 0.918 (왼쪽, 조금 못함)</li>
   </ul></div>
+</section>
+
+<section id="extra3">
+  <h2><span class="n">★</span>추가 실험 1 · 2 · 3: 최댓값 대신 다른 방법으로 채점 (seed 0~4 평균, 슬라이드용)</h2>
+  <p>학습은 그대로 두고, 칸 사후확률을 시정촌 값으로 모으는 방법만 바꿔 다시 채점했습니다 (새로 학습하지 않음). 위 막대(연한) = 최댓값(주 결과), 아래 막대(진한) = 바꾼 방법. 슬라이드용 PNG는 <code>docs/html/img/agg_max_vs_*.png</code>.</p>
+
+  <h3>추가 실험 1: 산사태 · 액상화 모두 칸 평균</h3>
+  <figure><div class="tw"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 362" width="1100" role="img" aria-label="최댓값 대 평균 (산사태 · 액상화 모두 칸 평균)" style="max-width:100%;height:auto;min-width:700px;font-family:'IBM Plex Sans KR','Malgun Gothic',sans-serif"><rect width="1100" height="362" fill="#fff"/>
+<rect x="12" y="10" width="22" height="9" fill="#c9ced7"/><text x="40" y="19" font-size="12" fill="#5b6577">위 막대 (연한) = 최댓값 (주 결과)</text><rect x="250" y="10" width="22" height="9" fill="#5b6577"/><text x="278" y="19" font-size="12" fill="#5b6577">아래 막대 (진한) = 평균 (산사태 · 액상화 모두 칸 평균)</text>
+<rect x="12" y="36" width="10" height="10" fill="#3f8f5a"/><text x="28" y="45" font-size="13" font-weight="700" fill="#1d2430">전체 (200곳)</text>
+<line x1="110.0" x2="110.0" y1="54" y2="318" stroke="#eceef2"/><text x="110.0" y="332" text-anchor="middle" font-size="10" fill="#5b6577">0.5</text>
+<line x1="212.0" x2="212.0" y1="54" y2="318" stroke="#eceef2"/><text x="212.0" y="332" text-anchor="middle" font-size="10" fill="#5b6577">0.75</text>
+<line x1="314.0" x2="314.0" y1="54" y2="318" stroke="#eceef2"/><text x="314.0" y="332" text-anchor="middle" font-size="10" fill="#5b6577">1.0</text>
+<text x="102" y="80" text-anchor="end" font-size="12" fill="#1d2430">① baseline</text>
+<rect x="110" y="64" width="83.25208049902412" height="12" rx="2" fill="#b5d9c0"/><text x="318" y="74" font-size="11" fill="#5b6577">0.704</text>
+<rect x="110" y="79" width="48.666863432033125" height="12" rx="2" fill="#3f8f5a"/><text x="318" y="89" font-size="11" font-weight="700" fill="#1d2430">0.619</text>
+<text x="102" y="132" text-anchor="end" font-size="12" fill="#1d2430">② soft + U</text>
+<rect x="110" y="116" width="116.36254556831668" height="12" rx="2" fill="#b5d9c0"/><text x="318" y="126" font-size="11" fill="#5b6577">0.785</text>
+<rect x="110" y="131" width="104.19809797402229" height="12" rx="2" fill="#3f8f5a"/><text x="318" y="141" font-size="11" font-weight="700" fill="#1d2430">0.755</text>
+<text x="102" y="184" text-anchor="end" font-size="12" fill="#1d2430">③ 끄기만</text>
+<rect x="110" y="168" width="120.76312855167274" height="12" rx="2" fill="#b5d9c0"/><text x="318" y="178" font-size="11" fill="#5b6577">0.796</text>
+<rect x="110" y="183" width="108.81719124353907" height="12" rx="2" fill="#3f8f5a"/><text x="318" y="193" font-size="11" font-weight="700" fill="#1d2430">0.767</text>
+<text x="102" y="236" text-anchor="end" font-size="12" fill="#1d2430">④ 분산만</text>
+<rect x="110" y="220" width="105.3695930285703" height="12" rx="2" fill="#b5d9c0"/><text x="318" y="230" font-size="11" fill="#5b6577">0.758</text>
+<rect x="110" y="235" width="80.9622482697294" height="12" rx="2" fill="#3f8f5a"/><text x="318" y="245" font-size="11" font-weight="700" fill="#1d2430">0.698</text>
+<text x="102" y="288" text-anchor="end" font-size="12" fill="#1d2430">⑤ 끄기 지도 + U</text>
+<rect x="110" y="272" width="125.5524549240381" height="12" rx="2" fill="#b5d9c0"/><text x="318" y="282" font-size="11" fill="#5b6577">0.808</text>
+<rect x="110" y="287" width="103.78103372924414" height="12" rx="2" fill="#3f8f5a"/><text x="318" y="297" font-size="11" font-weight="700" fill="#1d2430">0.754</text>
+<rect x="382" y="36" width="10" height="10" fill="#b5651d"/><text x="398" y="45" font-size="13" font-weight="700" fill="#1d2430">산사태 (49곳)</text>
+<line x1="480.0" x2="480.0" y1="54" y2="318" stroke="#eceef2"/><text x="480.0" y="332" text-anchor="middle" font-size="10" fill="#5b6577">0.5</text>
+<line x1="582.0" x2="582.0" y1="54" y2="318" stroke="#eceef2"/><text x="582.0" y="332" text-anchor="middle" font-size="10" fill="#5b6577">0.75</text>
+<line x1="684.0" x2="684.0" y1="54" y2="318" stroke="#eceef2"/><text x="684.0" y="332" text-anchor="middle" font-size="10" fill="#5b6577">1.0</text>
+<text x="472" y="80" text-anchor="end" font-size="12" fill="#1d2430">① baseline</text>
+<rect x="480" y="64" width="93.11267399267399" height="12" rx="2" fill="#e3c3a5"/><text x="688" y="74" font-size="11" fill="#5b6577">0.728</text>
+<rect x="480" y="79" width="69.74003139717422" height="12" rx="2" fill="#b5651d"/><text x="688" y="89" font-size="11" font-weight="700" fill="#1d2430">0.671</text>
+<text x="472" y="132" text-anchor="end" font-size="12" fill="#1d2430">② soft + U</text>
+<rect x="480" y="116" width="111.1890737833595" height="12" rx="2" fill="#e3c3a5"/><text x="688" y="126" font-size="11" fill="#5b6577">0.773</text>
+<rect x="480" y="131" width="125.57048665620096" height="12" rx="2" fill="#b5651d"/><text x="688" y="141" font-size="11" font-weight="700" fill="#1d2430">0.808</text>
+<text x="472" y="184" text-anchor="end" font-size="12" fill="#1d2430">③ 끄기만</text>
+<rect x="480" y="168" width="116.59989534275246" height="12" rx="2" fill="#e3c3a5"/><text x="688" y="178" font-size="11" fill="#5b6577">0.786</text>
+<rect x="480" y="183" width="118.21182626896905" height="12" rx="2" fill="#b5651d"/><text x="688" y="193" font-size="11" font-weight="700" fill="#1d2430">0.790</text>
+<text x="472" y="236" text-anchor="end" font-size="12" fill="#1d2430">④ 분산만</text>
+<rect x="480" y="220" width="119.82162218733652" height="12" rx="2" fill="#e3c3a5"/><text x="688" y="230" font-size="11" fill="#5b6577">0.794</text>
+<rect x="480" y="235" width="126.18963893249611" height="12" rx="2" fill="#b5651d"/><text x="688" y="245" font-size="11" font-weight="700" fill="#1d2430">0.809</text>
+<text x="472" y="288" text-anchor="end" font-size="12" fill="#1d2430">⑤ 끄기 지도 + U</text>
+<rect x="480" y="272" width="118.47656724228159" height="12" rx="2" fill="#e3c3a5"/><text x="688" y="282" font-size="11" fill="#5b6577">0.790</text>
+<rect x="480" y="287" width="124.33218210361065" height="12" rx="2" fill="#b5651d"/><text x="688" y="297" font-size="11" font-weight="700" fill="#1d2430">0.805</text>
+<rect x="752" y="36" width="10" height="10" fill="#2d62b3"/><text x="768" y="45" font-size="13" font-weight="700" fill="#1d2430">액상화 (151곳)</text>
+<line x1="850.0" x2="850.0" y1="54" y2="318" stroke="#eceef2"/><text x="850.0" y="332" text-anchor="middle" font-size="10" fill="#5b6577">0.5</text>
+<line x1="952.0" x2="952.0" y1="54" y2="318" stroke="#eceef2"/><text x="952.0" y="332" text-anchor="middle" font-size="10" fill="#5b6577">0.75</text>
+<line x1="1054.0" x2="1054.0" y1="54" y2="318" stroke="#eceef2"/><text x="1054.0" y="332" text-anchor="middle" font-size="10" fill="#5b6577">1.0</text>
+<text x="842" y="80" text-anchor="end" font-size="12" fill="#1d2430">① baseline</text>
+<rect x="850" y="64" width="80.05228525936286" height="12" rx="2" fill="#b3c8ea"/><text x="1058" y="74" font-size="11" fill="#5b6577">0.696</text>
+<rect x="850" y="79" width="41.82855064864293" height="12" rx="2" fill="#2d62b3"/><text x="1058" y="89" font-size="11" font-weight="700" fill="#1d2430">0.603</text>
+<text x="842" y="132" text-anchor="end" font-size="12" fill="#1d2430">② soft + U</text>
+<rect x="850" y="116" width="118.04135429323651" height="12" rx="2" fill="#b3c8ea"/><text x="1058" y="126" font-size="11" fill="#5b6577">0.789</text>
+<rect x="850" y="131" width="97.26268707715633" height="12" rx="2" fill="#2d62b3"/><text x="1058" y="141" font-size="11" font-weight="700" fill="#1d2430">0.738</text>
+<text x="842" y="184" text-anchor="end" font-size="12" fill="#1d2430">③ 끄기만</text>
+<rect x="850" y="168" width="122.11411151350774" height="12" rx="2" fill="#b3c8ea"/><text x="1058" y="178" font-size="11" fill="#5b6577">0.799</text>
+<rect x="850" y="183" width="105.76860106972401" height="12" rx="2" fill="#2d62b3"/><text x="1058" y="193" font-size="11" font-weight="700" fill="#1d2430">0.759</text>
+<text x="842" y="236" text-anchor="end" font-size="12" fill="#1d2430">④ 분산만</text>
+<rect x="850" y="220" width="100.67986171214943" height="12" rx="2" fill="#b3c8ea"/><text x="1058" y="230" font-size="11" fill="#5b6577">0.747</text>
+<rect x="850" y="235" width="66.28581024008986" height="12" rx="2" fill="#2d62b3"/><text x="1058" y="245" font-size="11" font-weight="700" fill="#1d2430">0.662</text>
+<text x="842" y="288" text-anchor="end" font-size="12" fill="#1d2430">⑤ 끄기 지도 + U</text>
+<rect x="850" y="272" width="127.84860390685981" height="12" rx="2" fill="#b3c8ea"/><text x="1058" y="282" font-size="11" fill="#5b6577">0.813</text>
+<rect x="850" y="287" width="97.112118031602" height="12" rx="2" fill="#2d62b3"/><text x="1058" y="297" font-size="11" font-weight="700" fill="#1d2430">0.738</text>
+</svg></div></figure>
+  <div class="tw"><table><tr><th>실험 (seed 0~4 평균)</th><th class="num">최댓값 (전체 / 산사태 / 액상화)</th><th class="num">평균 (전체 / 산사태 / 액상화)</th><th class="num">전체 차이</th><th class="num">산사태 차이</th><th class="num">액상화 차이</th></tr><tr><td>① baseline</td><td class="num">0.704 / 0.728 / 0.696</td><td class="num">0.619 / 0.671 / 0.603</td><td class="num down">−0.085</td><td class="num down">−0.057</td><td class="num down">−0.094</td></tr><tr><td>② soft + U</td><td class="num">0.785 / 0.773 / 0.789</td><td class="num">0.755 / 0.808 / 0.738</td><td class="num down">−0.030</td><td class="num up">+0.035</td><td class="num down">−0.051</td></tr><tr><td>③ 끄기만</td><td class="num">0.796 / 0.786 / 0.799</td><td class="num">0.767 / 0.790 / 0.759</td><td class="num down">−0.029</td><td class="num up">+0.004</td><td class="num down">−0.040</td></tr><tr><td>④ 분산만</td><td class="num">0.758 / 0.794 / 0.747</td><td class="num">0.698 / 0.809 / 0.662</td><td class="num down">−0.060</td><td class="num up">+0.016</td><td class="num down">−0.084</td></tr><tr><td>⑤ 끄기 지도 + U</td><td class="num">0.808 / 0.790 / 0.813</td><td class="num">0.754 / 0.805 / 0.738</td><td class="num down">−0.053</td><td class="num up">+0.014</td><td class="num down">−0.075</td></tr></table></div>
+  <div class="anal"><b>분석</b><ul>
+    <li><b>전체는 다섯 실험 모두 최댓값이 더 높습니다</b> (평균으로 바꾸면 −0.029 ~ −0.085)</li>
+    <li>떨어지는 건 <b>액상화</b>입니다 (−0.040 ~ −0.094). 액상화는 강가 · 매립지처럼 시정촌 안 좁은 곳에서 나서, 평균을 내면 넓은 나머지 땅에 묻힙니다</li>
+    <li><b>산사태는 ① 빼고 평균이 조금 더 높습니다</b> (+0.004 ~ +0.035). 산사태 최댓값은 칸 하나만 튀어도 높아지는데(氷川町), 평균은 그런 칸에 덜 휘둘립니다</li>
+  </ul></div>
+
+  <h3>추가 실험 2: 산사태는 칸 평균, 액상화는 칸 최댓값 (섞기)</h3>
+  <figure><div class="tw"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 362" width="1100" role="img" aria-label="최댓값 대 섞기 (산사태 칸 평균 + 액상화 칸 최댓값)" style="max-width:100%;height:auto;min-width:700px;font-family:'IBM Plex Sans KR','Malgun Gothic',sans-serif"><rect width="1100" height="362" fill="#fff"/>
+<rect x="12" y="10" width="22" height="9" fill="#c9ced7"/><text x="40" y="19" font-size="12" fill="#5b6577">위 막대 (연한) = 최댓값 (주 결과)</text><rect x="250" y="10" width="22" height="9" fill="#5b6577"/><text x="278" y="19" font-size="12" fill="#5b6577">아래 막대 (진한) = 섞기 (산사태 칸 평균 + 액상화 칸 최댓값)</text>
+<rect x="12" y="36" width="10" height="10" fill="#3f8f5a"/><text x="28" y="45" font-size="13" font-weight="700" fill="#1d2430">전체 (200곳)</text>
+<line x1="110.0" x2="110.0" y1="54" y2="318" stroke="#eceef2"/><text x="110.0" y="332" text-anchor="middle" font-size="10" fill="#5b6577">0.5</text>
+<line x1="212.0" x2="212.0" y1="54" y2="318" stroke="#eceef2"/><text x="212.0" y="332" text-anchor="middle" font-size="10" fill="#5b6577">0.75</text>
+<line x1="314.0" x2="314.0" y1="54" y2="318" stroke="#eceef2"/><text x="314.0" y="332" text-anchor="middle" font-size="10" fill="#5b6577">1.0</text>
+<text x="102" y="80" text-anchor="end" font-size="12" fill="#1d2430">① baseline</text>
+<rect x="110" y="64" width="83.25208049902412" height="12" rx="2" fill="#b5d9c0"/><text x="318" y="74" font-size="11" fill="#5b6577">0.704</text>
+<rect x="110" y="79" width="77.52578306312668" height="12" rx="2" fill="#3f8f5a"/><text x="318" y="89" font-size="11" font-weight="700" fill="#1d2430">0.690</text>
+<text x="102" y="132" text-anchor="end" font-size="12" fill="#1d2430">② soft + U</text>
+<rect x="110" y="116" width="116.36254556831668" height="12" rx="2" fill="#b5d9c0"/><text x="318" y="126" font-size="11" fill="#5b6577">0.785</text>
+<rect x="110" y="131" width="119.88599172216283" height="12" rx="2" fill="#3f8f5a"/><text x="318" y="141" font-size="11" font-weight="700" fill="#1d2430">0.794</text>
+<text x="102" y="184" text-anchor="end" font-size="12" fill="#1d2430">③ 끄기만</text>
+<rect x="110" y="168" width="120.76312855167274" height="12" rx="2" fill="#b5d9c0"/><text x="318" y="178" font-size="11" fill="#5b6577">0.796</text>
+<rect x="110" y="183" width="121.15805162859581" height="12" rx="2" fill="#3f8f5a"/><text x="318" y="193" font-size="11" font-weight="700" fill="#1d2430">0.797</text>
+<text x="102" y="236" text-anchor="end" font-size="12" fill="#1d2430">④ 분산만</text>
+<rect x="110" y="220" width="105.3695930285703" height="12" rx="2" fill="#b5d9c0"/><text x="318" y="230" font-size="11" fill="#5b6577">0.758</text>
+<rect x="110" y="235" width="106.92975713113441" height="12" rx="2" fill="#3f8f5a"/><text x="318" y="245" font-size="11" font-weight="700" fill="#1d2430">0.762</text>
+<text x="102" y="288" text-anchor="end" font-size="12" fill="#1d2430">⑤ 끄기 지도 + U</text>
+<rect x="110" y="272" width="125.5524549240381" height="12" rx="2" fill="#b5d9c0"/><text x="318" y="282" font-size="11" fill="#5b6577">0.808</text>
+<rect x="110" y="287" width="126.98708056506376" height="12" rx="2" fill="#3f8f5a"/><text x="318" y="297" font-size="11" font-weight="700" fill="#1d2430">0.811</text>
+<rect x="382" y="36" width="10" height="10" fill="#b5651d"/><text x="398" y="45" font-size="13" font-weight="700" fill="#1d2430">산사태 (49곳)</text>
+<line x1="480.0" x2="480.0" y1="54" y2="318" stroke="#eceef2"/><text x="480.0" y="332" text-anchor="middle" font-size="10" fill="#5b6577">0.5</text>
+<line x1="582.0" x2="582.0" y1="54" y2="318" stroke="#eceef2"/><text x="582.0" y="332" text-anchor="middle" font-size="10" fill="#5b6577">0.75</text>
+<line x1="684.0" x2="684.0" y1="54" y2="318" stroke="#eceef2"/><text x="684.0" y="332" text-anchor="middle" font-size="10" fill="#5b6577">1.0</text>
+<text x="472" y="80" text-anchor="end" font-size="12" fill="#1d2430">① baseline</text>
+<rect x="480" y="64" width="93.11267399267399" height="12" rx="2" fill="#e3c3a5"/><text x="688" y="74" font-size="11" fill="#5b6577">0.728</text>
+<rect x="480" y="79" width="69.74003139717422" height="12" rx="2" fill="#b5651d"/><text x="688" y="89" font-size="11" font-weight="700" fill="#1d2430">0.671</text>
+<text x="472" y="132" text-anchor="end" font-size="12" fill="#1d2430">② soft + U</text>
+<rect x="480" y="116" width="111.1890737833595" height="12" rx="2" fill="#e3c3a5"/><text x="688" y="126" font-size="11" fill="#5b6577">0.773</text>
+<rect x="480" y="131" width="125.57048665620096" height="12" rx="2" fill="#b5651d"/><text x="688" y="141" font-size="11" font-weight="700" fill="#1d2430">0.808</text>
+<text x="472" y="184" text-anchor="end" font-size="12" fill="#1d2430">③ 끄기만</text>
+<rect x="480" y="168" width="116.59989534275246" height="12" rx="2" fill="#e3c3a5"/><text x="688" y="178" font-size="11" fill="#5b6577">0.786</text>
+<rect x="480" y="183" width="118.21182626896905" height="12" rx="2" fill="#b5651d"/><text x="688" y="193" font-size="11" font-weight="700" fill="#1d2430">0.790</text>
+<text x="472" y="236" text-anchor="end" font-size="12" fill="#1d2430">④ 분산만</text>
+<rect x="480" y="220" width="119.82162218733652" height="12" rx="2" fill="#e3c3a5"/><text x="688" y="230" font-size="11" fill="#5b6577">0.794</text>
+<rect x="480" y="235" width="126.18963893249611" height="12" rx="2" fill="#b5651d"/><text x="688" y="245" font-size="11" font-weight="700" fill="#1d2430">0.809</text>
+<text x="472" y="288" text-anchor="end" font-size="12" fill="#1d2430">⑤ 끄기 지도 + U</text>
+<rect x="480" y="272" width="118.47656724228159" height="12" rx="2" fill="#e3c3a5"/><text x="688" y="282" font-size="11" fill="#5b6577">0.790</text>
+<rect x="480" y="287" width="124.33218210361065" height="12" rx="2" fill="#b5651d"/><text x="688" y="297" font-size="11" font-weight="700" fill="#1d2430">0.805</text>
+<rect x="752" y="36" width="10" height="10" fill="#2d62b3"/><text x="768" y="45" font-size="13" font-weight="700" fill="#1d2430">액상화 (151곳)</text>
+<line x1="850.0" x2="850.0" y1="54" y2="318" stroke="#eceef2"/><text x="850.0" y="332" text-anchor="middle" font-size="10" fill="#5b6577">0.5</text>
+<line x1="952.0" x2="952.0" y1="54" y2="318" stroke="#eceef2"/><text x="952.0" y="332" text-anchor="middle" font-size="10" fill="#5b6577">0.75</text>
+<line x1="1054.0" x2="1054.0" y1="54" y2="318" stroke="#eceef2"/><text x="1054.0" y="332" text-anchor="middle" font-size="10" fill="#5b6577">1.0</text>
+<text x="842" y="80" text-anchor="end" font-size="12" fill="#1d2430">① baseline</text>
+<rect x="850" y="64" width="80.05228525936286" height="12" rx="2" fill="#b3c8ea"/><text x="1058" y="74" font-size="11" fill="#5b6577">0.696</text>
+<rect x="850" y="79" width="80.05228525936286" height="12" rx="2" fill="#2d62b3"/><text x="1058" y="89" font-size="11" font-weight="700" fill="#1d2430">0.696</text>
+<text x="842" y="132" text-anchor="end" font-size="12" fill="#1d2430">② soft + U</text>
+<rect x="850" y="116" width="118.04135429323651" height="12" rx="2" fill="#b3c8ea"/><text x="1058" y="126" font-size="11" fill="#5b6577">0.789</text>
+<rect x="850" y="131" width="118.04135429323651" height="12" rx="2" fill="#2d62b3"/><text x="1058" y="141" font-size="11" font-weight="700" fill="#1d2430">0.789</text>
+<text x="842" y="184" text-anchor="end" font-size="12" fill="#1d2430">③ 끄기만</text>
+<rect x="850" y="168" width="122.11411151350774" height="12" rx="2" fill="#b3c8ea"/><text x="1058" y="178" font-size="11" fill="#5b6577">0.799</text>
+<rect x="850" y="183" width="122.11411151350774" height="12" rx="2" fill="#2d62b3"/><text x="1058" y="193" font-size="11" font-weight="700" fill="#1d2430">0.799</text>
+<text x="842" y="236" text-anchor="end" font-size="12" fill="#1d2430">④ 분산만</text>
+<rect x="850" y="220" width="100.67986171214943" height="12" rx="2" fill="#b3c8ea"/><text x="1058" y="230" font-size="11" fill="#5b6577">0.747</text>
+<rect x="850" y="235" width="100.67986171214943" height="12" rx="2" fill="#2d62b3"/><text x="1058" y="245" font-size="11" font-weight="700" fill="#1d2430">0.747</text>
+<text x="842" y="288" text-anchor="end" font-size="12" fill="#1d2430">⑤ 끄기 지도 + U</text>
+<rect x="850" y="272" width="127.84860390685981" height="12" rx="2" fill="#b3c8ea"/><text x="1058" y="282" font-size="11" fill="#5b6577">0.813</text>
+<rect x="850" y="287" width="127.84860390685981" height="12" rx="2" fill="#2d62b3"/><text x="1058" y="297" font-size="11" font-weight="700" fill="#1d2430">0.813</text>
+</svg></div></figure>
+  <div class="tw"><table><tr><th>실험 (seed 0~4 평균)</th><th class="num">최댓값 (전체 / 산사태 / 액상화)</th><th class="num">섞기 (전체 / 산사태 / 액상화)</th><th class="num">전체 차이</th><th class="num">산사태 차이</th><th class="num">액상화 차이</th></tr><tr><td>① baseline</td><td class="num">0.704 / 0.728 / 0.696</td><td class="num">0.690 / 0.671 / 0.696</td><td class="num down">−0.014</td><td class="num down">−0.057</td><td class="num ">+0.000</td></tr><tr><td>② soft + U</td><td class="num">0.785 / 0.773 / 0.789</td><td class="num">0.794 / 0.808 / 0.789</td><td class="num up">+0.009</td><td class="num up">+0.035</td><td class="num ">+0.000</td></tr><tr><td>③ 끄기만</td><td class="num">0.796 / 0.786 / 0.799</td><td class="num">0.797 / 0.790 / 0.799</td><td class="num up">+0.001</td><td class="num up">+0.004</td><td class="num ">+0.000</td></tr><tr><td>④ 분산만</td><td class="num">0.758 / 0.794 / 0.747</td><td class="num">0.762 / 0.809 / 0.747</td><td class="num up">+0.004</td><td class="num up">+0.016</td><td class="num ">+0.000</td></tr><tr><td>⑤ 끄기 지도 + U</td><td class="num">0.808 / 0.790 / 0.813</td><td class="num">0.811 / 0.805 / 0.813</td><td class="num up">+0.004</td><td class="num up">+0.014</td><td class="num ">+0.000</td></tr></table></div>
+  <div class="anal"><b>분석</b><ul>
+    <li>추가 실험 1에서 각 재해가 더 좋았던 쪽(산사태 평균, 액상화 최댓값)을 합친 것입니다. 액상화는 최댓값 그대로라 같고, 산사태만 바뀝니다</li>
+    <li><b>① 빼고 전체가 +0.001 ~ +0.009 오릅니다</b>. 가장 높은 것은 ⑤ 0.811 (산사태 0.805, 액상화 0.813)</li>
+    <li>오르는 폭이 작고(seed 흔들림 안), ①은 오히려 내려갑니다 (−0.014). 여전히 USGS 기준선 0.854 · pilotA 0.855보다 낮습니다</li>
+  </ul></div>
+
+  <h3>추가 실험 3: 산사태는 칸 상위 10% 평균, 액상화는 칸 최댓값</h3>
+  <figure><div class="tw"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 362" width="1100" role="img" aria-label="최댓값 대 산사태 상위 10% 평균 + 액상화 칸 최댓값" style="max-width:100%;height:auto;min-width:700px;font-family:'IBM Plex Sans KR','Malgun Gothic',sans-serif"><rect width="1100" height="362" fill="#fff"/>
+<rect x="12" y="10" width="22" height="9" fill="#c9ced7"/><text x="40" y="19" font-size="12" fill="#5b6577">위 막대 (연한) = 최댓값 (주 결과)</text><rect x="250" y="10" width="22" height="9" fill="#5b6577"/><text x="278" y="19" font-size="12" fill="#5b6577">아래 막대 (진한) = 산사태 상위 10% 평균 + 액상화 칸 최댓값</text>
+<rect x="12" y="36" width="10" height="10" fill="#3f8f5a"/><text x="28" y="45" font-size="13" font-weight="700" fill="#1d2430">전체 (200곳)</text>
+<line x1="110.0" x2="110.0" y1="54" y2="318" stroke="#eceef2"/><text x="110.0" y="332" text-anchor="middle" font-size="10" fill="#5b6577">0.5</text>
+<line x1="212.0" x2="212.0" y1="54" y2="318" stroke="#eceef2"/><text x="212.0" y="332" text-anchor="middle" font-size="10" fill="#5b6577">0.75</text>
+<line x1="314.0" x2="314.0" y1="54" y2="318" stroke="#eceef2"/><text x="314.0" y="332" text-anchor="middle" font-size="10" fill="#5b6577">1.0</text>
+<text x="102" y="80" text-anchor="end" font-size="12" fill="#1d2430">① baseline</text>
+<rect x="110" y="64" width="83.25208049902412" height="12" rx="2" fill="#b5d9c0"/><text x="318" y="74" font-size="11" fill="#5b6577">0.704</text>
+<rect x="110" y="79" width="78.59198819133184" height="12" rx="2" fill="#3f8f5a"/><text x="318" y="89" font-size="11" font-weight="700" fill="#1d2430">0.693</text>
+<text x="102" y="132" text-anchor="end" font-size="12" fill="#1d2430">② soft + U</text>
+<rect x="110" y="116" width="116.36254556831668" height="12" rx="2" fill="#b5d9c0"/><text x="318" y="126" font-size="11" fill="#5b6577">0.785</text>
+<rect x="110" y="131" width="126.24747890165003" height="12" rx="2" fill="#3f8f5a"/><text x="318" y="141" font-size="11" font-weight="700" fill="#1d2430">0.809</text>
+<text x="102" y="184" text-anchor="end" font-size="12" fill="#1d2430">③ 끄기만</text>
+<rect x="110" y="168" width="120.76312855167274" height="12" rx="2" fill="#b5d9c0"/><text x="318" y="178" font-size="11" fill="#5b6577">0.796</text>
+<rect x="110" y="183" width="122.03769265423685" height="12" rx="2" fill="#3f8f5a"/><text x="318" y="193" font-size="11" font-weight="700" fill="#1d2430">0.799</text>
+<text x="102" y="236" text-anchor="end" font-size="12" fill="#1d2430">④ 분산만</text>
+<rect x="110" y="220" width="105.3695930285703" height="12" rx="2" fill="#b5d9c0"/><text x="318" y="230" font-size="11" fill="#5b6577">0.758</text>
+<rect x="110" y="235" width="114.00611610549339" height="12" rx="2" fill="#3f8f5a"/><text x="318" y="245" font-size="11" font-weight="700" fill="#1d2430">0.779</text>
+<text x="102" y="288" text-anchor="end" font-size="12" fill="#1d2430">⑤ 끄기 지도 + U</text>
+<rect x="110" y="272" width="125.5524549240381" height="12" rx="2" fill="#b5d9c0"/><text x="318" y="282" font-size="11" fill="#5b6577">0.808</text>
+<rect x="110" y="287" width="133.35728569326886" height="12" rx="2" fill="#3f8f5a"/><text x="318" y="297" font-size="11" font-weight="700" fill="#1d2430">0.827</text>
+<rect x="382" y="36" width="10" height="10" fill="#b5651d"/><text x="398" y="45" font-size="13" font-weight="700" fill="#1d2430">산사태 (49곳)</text>
+<line x1="480.0" x2="480.0" y1="54" y2="318" stroke="#eceef2"/><text x="480.0" y="332" text-anchor="middle" font-size="10" fill="#5b6577">0.5</text>
+<line x1="582.0" x2="582.0" y1="54" y2="318" stroke="#eceef2"/><text x="582.0" y="332" text-anchor="middle" font-size="10" fill="#5b6577">0.75</text>
+<line x1="684.0" x2="684.0" y1="54" y2="318" stroke="#eceef2"/><text x="684.0" y="332" text-anchor="middle" font-size="10" fill="#5b6577">1.0</text>
+<text x="472" y="80" text-anchor="end" font-size="12" fill="#1d2430">① baseline</text>
+<rect x="480" y="64" width="93.11267399267399" height="12" rx="2" fill="#e3c3a5"/><text x="688" y="74" font-size="11" fill="#5b6577">0.728</text>
+<rect x="480" y="79" width="74.09188906331758" height="12" rx="2" fill="#b5651d"/><text x="688" y="89" font-size="11" font-weight="700" fill="#1d2430">0.682</text>
+<text x="472" y="132" text-anchor="end" font-size="12" fill="#1d2430">② soft + U</text>
+<rect x="480" y="116" width="111.1890737833595" height="12" rx="2" fill="#e3c3a5"/><text x="688" y="126" font-size="11" fill="#5b6577">0.773</text>
+<rect x="480" y="131" width="151.5357404500262" height="12" rx="2" fill="#b5651d"/><text x="688" y="141" font-size="11" font-weight="700" fill="#1d2430">0.871</text>
+<text x="472" y="184" text-anchor="end" font-size="12" fill="#1d2430">③ 끄기만</text>
+<rect x="480" y="168" width="116.59989534275246" height="12" rx="2" fill="#e3c3a5"/><text x="688" y="178" font-size="11" fill="#5b6577">0.786</text>
+<rect x="480" y="183" width="121.80219780219772" height="12" rx="2" fill="#b5651d"/><text x="688" y="193" font-size="11" font-weight="700" fill="#1d2430">0.799</text>
+<text x="472" y="236" text-anchor="end" font-size="12" fill="#1d2430">④ 분산만</text>
+<rect x="480" y="220" width="119.82162218733652" height="12" rx="2" fill="#e3c3a5"/><text x="688" y="230" font-size="11" fill="#5b6577">0.794</text>
+<rect x="480" y="235" width="155.07273678702245" height="12" rx="2" fill="#b5651d"/><text x="688" y="245" font-size="11" font-weight="700" fill="#1d2430">0.880</text>
+<text x="472" y="288" text-anchor="end" font-size="12" fill="#1d2430">⑤ 끄기 지도 + U</text>
+<rect x="480" y="272" width="118.47656724228159" height="12" rx="2" fill="#e3c3a5"/><text x="688" y="282" font-size="11" fill="#5b6577">0.790</text>
+<rect x="480" y="287" width="150.3330193615908" height="12" rx="2" fill="#b5651d"/><text x="688" y="297" font-size="11" font-weight="700" fill="#1d2430">0.868</text>
+<rect x="752" y="36" width="10" height="10" fill="#2d62b3"/><text x="768" y="45" font-size="13" font-weight="700" fill="#1d2430">액상화 (151곳)</text>
+<line x1="850.0" x2="850.0" y1="54" y2="318" stroke="#eceef2"/><text x="850.0" y="332" text-anchor="middle" font-size="10" fill="#5b6577">0.5</text>
+<line x1="952.0" x2="952.0" y1="54" y2="318" stroke="#eceef2"/><text x="952.0" y="332" text-anchor="middle" font-size="10" fill="#5b6577">0.75</text>
+<line x1="1054.0" x2="1054.0" y1="54" y2="318" stroke="#eceef2"/><text x="1054.0" y="332" text-anchor="middle" font-size="10" fill="#5b6577">1.0</text>
+<text x="842" y="80" text-anchor="end" font-size="12" fill="#1d2430">① baseline</text>
+<rect x="850" y="64" width="80.05228525936286" height="12" rx="2" fill="#b3c8ea"/><text x="1058" y="74" font-size="11" fill="#5b6577">0.696</text>
+<rect x="850" y="79" width="80.05228525936286" height="12" rx="2" fill="#2d62b3"/><text x="1058" y="89" font-size="11" font-weight="700" fill="#1d2430">0.696</text>
+<text x="842" y="132" text-anchor="end" font-size="12" fill="#1d2430">② soft + U</text>
+<rect x="850" y="116" width="118.04135429323651" height="12" rx="2" fill="#b3c8ea"/><text x="1058" y="126" font-size="11" fill="#5b6577">0.789</text>
+<rect x="850" y="131" width="118.04135429323651" height="12" rx="2" fill="#2d62b3"/><text x="1058" y="141" font-size="11" font-weight="700" fill="#1d2430">0.789</text>
+<text x="842" y="184" text-anchor="end" font-size="12" fill="#1d2430">③ 끄기만</text>
+<rect x="850" y="168" width="122.11411151350774" height="12" rx="2" fill="#b3c8ea"/><text x="1058" y="178" font-size="11" fill="#5b6577">0.799</text>
+<rect x="850" y="183" width="122.11411151350774" height="12" rx="2" fill="#2d62b3"/><text x="1058" y="193" font-size="11" font-weight="700" fill="#1d2430">0.799</text>
+<text x="842" y="236" text-anchor="end" font-size="12" fill="#1d2430">④ 분산만</text>
+<rect x="850" y="220" width="100.67986171214943" height="12" rx="2" fill="#b3c8ea"/><text x="1058" y="230" font-size="11" fill="#5b6577">0.747</text>
+<rect x="850" y="235" width="100.67986171214943" height="12" rx="2" fill="#2d62b3"/><text x="1058" y="245" font-size="11" font-weight="700" fill="#1d2430">0.747</text>
+<text x="842" y="288" text-anchor="end" font-size="12" fill="#1d2430">⑤ 끄기 지도 + U</text>
+<rect x="850" y="272" width="127.84860390685981" height="12" rx="2" fill="#b3c8ea"/><text x="1058" y="282" font-size="11" fill="#5b6577">0.813</text>
+<rect x="850" y="287" width="127.84860390685981" height="12" rx="2" fill="#2d62b3"/><text x="1058" y="297" font-size="11" font-weight="700" fill="#1d2430">0.813</text>
+</svg></div></figure>
+  <div class="tw"><table><tr><th>실험 (seed 0~4 평균)</th><th class="num">최댓값 (전체 / 산사태 / 액상화)</th><th class="num">산사태 상위 10% (전체 / 산사태 / 액상화)</th><th class="num">전체 차이</th><th class="num">산사태 차이</th><th class="num">액상화 차이</th></tr><tr><td>① baseline</td><td class="num">0.704 / 0.728 / 0.696</td><td class="num">0.693 / 0.682 / 0.696</td><td class="num down">−0.011</td><td class="num down">−0.047</td><td class="num ">+0.000</td></tr><tr><td>② soft + U</td><td class="num">0.785 / 0.773 / 0.789</td><td class="num">0.809 / 0.871 / 0.789</td><td class="num up">+0.024</td><td class="num up">+0.099</td><td class="num ">+0.000</td></tr><tr><td>③ 끄기만</td><td class="num">0.796 / 0.786 / 0.799</td><td class="num">0.799 / 0.799 / 0.799</td><td class="num up">+0.003</td><td class="num up">+0.013</td><td class="num ">+0.000</td></tr><tr><td>④ 분산만</td><td class="num">0.758 / 0.794 / 0.747</td><td class="num">0.779 / 0.880 / 0.747</td><td class="num up">+0.021</td><td class="num up">+0.086</td><td class="num ">+0.000</td></tr><tr><td>⑤ 끄기 지도 + U</td><td class="num">0.808 / 0.790 / 0.813</td><td class="num">0.827 / 0.868 / 0.813</td><td class="num up">+0.019</td><td class="num up">+0.078</td><td class="num ">+0.000</td></tr></table></div>
+  <div class="anal"><b>분석</b><ul>
+    <li><b>산사태가 크게 오릅니다</b>: ⑤ +0.078 (0.790 → 0.868), ② +0.099, ④ +0.086. 최댓값(칸 하나)과 평균(칸 전부)의 중간이라, 튀는 칸 하나에도 · 넓은 평지에도 덜 휘둘립니다 (0 · 4절)</li>
+    <li>전체는 ⑤ <b>0.827</b>로 지금까지 가장 높습니다 (최댓값 0.808, 섞기 0.811). ② 0.809 · ④ 0.779도 최댓값보다 0.02 이상 높습니다</li>
+    <li>③은 거의 같고(+0.003), ①은 내려갑니다(−0.011). 평지 칸이 꺼지지 않는 ①은 상위 10%에 평지의 튀는 칸이 섞이기 때문으로 보입니다</li>
+    <li>seed 0~2를 보고 고른 방법이지만, 처음 보는 seed 3 · 4에서도 ⑤ · ② · ④는 상위 10%가 가장 높았습니다 (5절). 그래도 USGS 0.854에는 못 미칩니다</li>
+  </ul></div>
+
+  <h3>세 가지를 한 줄로</h3>
+  <div class="tw"><table>
+    <tr><th>⑤ 끄기 지도 + U (seed 0~4 평균)</th><th class="num">전체</th><th class="num">산사태</th><th class="num">액상화</th></tr>
+    <tr><td>최댓값 (주 결과)</td><td class="num">0.808</td><td class="num">0.790</td><td class="num">0.813</td></tr>
+    <tr><td>추가 실험 1: 모두 평균</td><td class="num">0.754</td><td class="num">0.805</td><td class="num">0.738</td></tr>
+    <tr><td>추가 실험 2: 산사태 평균 + 액상화 최댓값</td><td class="num">0.811</td><td class="num">0.805</td><td class="num">0.813</td></tr>
+    <tr><td>추가 실험 3: 산사태 상위 10% + 액상화 최댓값</td><td class="num"><b>0.827</b></td><td class="num"><b>0.868</b></td><td class="num">0.813</td></tr>
+    <tr><td class="muted">USGS 기준선</td><td class="num">0.854</td><td class="num">0.729</td><td class="num">0.895</td></tr>
+  </table></div>
+  <p class="note">액상화는 최댓값, 산사태는 상위 10%가 가장 좋습니다. 남은 차이(USGS 0.854와 0.03)는 액상화(0.813 대 0.895)에서 나옵니다.</p>
 </section>
 
 <section id="easy">
