@@ -156,7 +156,7 @@ body{background:#fff}
   <h1>칸 확률을 시정촌 하나로 모으는 방법: 최댓값 · 평균 · 상위 10%</h1>
   <p class="lede">칸 단위로 학습한 뒤, 시정촌 안 칸들의 사후확률을 시정촌 값 하나로 모아 채점합니다. 모으는 방법은 학습에 들어가지 않고 채점할 때만 쓰입니다. 이 페이지는 최댓값 · 평균 · 상위 % 평균을 비교하고, 왜 산사태에서 상위 10%가 가장 높게 나왔는지 풀어 씁니다.</p>
   <p class="meta">본문: <a href="https://claude.ai/artifact/Uqmg4X8sLnLZeZX1jYmKpJ" style="color:var(--accent)">칸 단위 실험 기록</a> (주 결과 = 최대 · 최대). 이 페이지의 숫자는 모두 <b>seed 0~4 다섯 개 평균</b>이고, ② ③ ④는 고친 soft입니다. 칸 결과는 PC에서 <code>cell_extract.py</code>로 줄여 받았습니다.</p>
-  <nav class="toc" aria-label="차례"><a href="#read">★ 먼저</a><a href="#extra3">★ 추가 실험 1 · 2 · 3</a><a href="#easy">0. 쉽게</a><a href="#all5">★ 한눈에</a><a href="#how">1. 세 가지 방법</a><a href="#part">2. 상위 10%와 비탈 비율</a><a href="#curve">3. 실제 곡선</a><a href="#why">4. 왜 더 나은가</a><a href="#res">5. 결과 표 · 새 seed 확인</a><a href="#stab">6. seed 안정성</a></nav>
+  <nav class="toc" aria-label="차례"><a href="#read">★ 먼저</a><a href="#extra3">★ 추가 실험 1 · 2 · 3</a><a href="#vsold">★ 기존 슬라이드와 비교</a><a href="#easy">0. 쉽게</a><a href="#all5">★ 한눈에</a><a href="#how">1. 세 가지 방법</a><a href="#part">2. 상위 10%와 비탈 비율</a><a href="#curve">3. 실제 곡선</a><a href="#why">4. 왜 더 나은가</a><a href="#res">5. 결과 표 · 새 seed 확인</a><a href="#stab">6. seed 안정성</a></nav>
 </header>
 
 
@@ -395,6 +395,39 @@ body{background:#fff}
     <tr><td class="muted">USGS 기준선</td><td class="num">0.854</td><td class="num">0.729</td><td class="num">0.895</td></tr>
   </table></div>
   <p class="note">액상화는 최댓값, 산사태는 상위 10%가 가장 좋습니다. 남은 차이(USGS 0.854와 0.03)는 액상화(0.813 대 0.895)에서 나옵니다.</p>
+</section>
+
+<section id="vsold">
+  <h2><span class="n">★</span>기존 슬라이드(seed 하나)와 비교: 왜 숫자가 바뀌었나</h2>
+  <p>기존 랩미팅 슬라이드의 칸 단위 숫자는 <b>seed 0 하나</b>였고 ② · ③ · ④는 <b>고치기 전 soft</b>였습니다. 지금은 <b>seed 0~4 다섯 개 평균</b>이고 <b>고친 soft</b>(5~10° 칸은 그대로)입니다. 가운데 열(seed 0 · 고친 soft)을 보면 두 변화 중 무엇 때문인지 나눠 볼 수 있습니다. ① · ⑤는 soft를 쓰지 않아 첫 두 열이 같습니다.</p>
+  <h3>최대 · 최대 (주 결과)</h3>
+  <div class="tw"><table>
+    <tr><th>실험 (전체 AUC)</th><th class="num">기존 슬라이드<br>seed 0 · 고치기 전 soft</th><th class="num">seed 0<br>고친 soft</th><th class="num">지금<br>seed 0~4 평균 · 고친 soft</th><th class="num">지금 − 기존</th></tr>
+    <tr><td>① baseline</td><td class="num">0.617</td><td class="num">0.617</td><td class="num"><b>0.704</b></td><td class="num up">+0.087</td></tr><tr><td>② soft + U</td><td class="num">0.793</td><td class="num">0.782</td><td class="num"><b>0.785</b></td><td class="num down">−0.008</td></tr><tr><td>③ soft + U (끄기만)</td><td class="num">0.775</td><td class="num">0.800</td><td class="num"><b>0.796</b></td><td class="num up">+0.021</td></tr><tr><td>④ soft + U (분산만)</td><td class="num">0.619</td><td class="num">0.640</td><td class="num"><b>0.758</b></td><td class="num up">+0.139</td></tr><tr><td>⑤ 끄기 지도 + U</td><td class="num">0.797</td><td class="num">0.797</td><td class="num"><b>0.808</b></td><td class="num up">+0.010</td></tr>
+  </table></div>
+<h3>평균 · 평균 (추가 실험 1)</h3>
+  <div class="tw"><table>
+    <tr><th>실험 (전체 AUC)</th><th class="num">기존 슬라이드<br>seed 0 · 고치기 전 soft</th><th class="num">seed 0<br>고친 soft</th><th class="num">지금<br>seed 0~4 평균 · 고친 soft</th><th class="num">지금 − 기존</th></tr>
+    <tr><td>① baseline</td><td class="num">0.563</td><td class="num">0.563</td><td class="num"><b>0.619</b></td><td class="num up">+0.057</td></tr><tr><td>② soft + U</td><td class="num">0.743</td><td class="num">0.762</td><td class="num"><b>0.755</b></td><td class="num up">+0.013</td></tr><tr><td>③ soft + U (끄기만)</td><td class="num">0.760</td><td class="num">0.775</td><td class="num"><b>0.767</b></td><td class="num up">+0.007</td></tr><tr><td>④ soft + U (분산만)</td><td class="num">0.587</td><td class="num">0.582</td><td class="num"><b>0.698</b></td><td class="num up">+0.112</td></tr><tr><td>⑤ 끄기 지도 + U</td><td class="num">0.758</td><td class="num">0.758</td><td class="num"><b>0.754</b></td><td class="num ">−0.003</td></tr>
+  </table></div>
+<h3>평균 · 최대 = 섞기 (추가 실험 2)</h3>
+  <div class="tw"><table>
+    <tr><th>실험 (전체 AUC)</th><th class="num">기존 슬라이드<br>seed 0 · 고치기 전 soft</th><th class="num">seed 0<br>고친 soft</th><th class="num">지금<br>seed 0~4 평균 · 고친 soft</th><th class="num">지금 − 기존</th></tr>
+    <tr><td>① baseline</td><td class="num">0.624</td><td class="num">0.624</td><td class="num"><b>0.690</b></td><td class="num up">+0.066</td></tr><tr><td>② soft + U</td><td class="num">0.803</td><td class="num">0.801</td><td class="num"><b>0.794</b></td><td class="num down">−0.009</td></tr><tr><td>③ soft + U (끄기만)</td><td class="num">0.787</td><td class="num">0.812</td><td class="num"><b>0.797</b></td><td class="num up">+0.010</td></tr><tr><td>④ soft + U (분산만)</td><td class="num">0.617</td><td class="num">0.646</td><td class="num"><b>0.762</b></td><td class="num up">+0.145</td></tr><tr><td>⑤ 끄기 지도 + U</td><td class="num">0.810</td><td class="num">0.810</td><td class="num"><b>0.811</b></td><td class="num ">+0.001</td></tr>
+  </table></div>
+<h3>상위 10% · 최대 (추가 실험 3)</h3>
+  <div class="tw"><table>
+    <tr><th>실험 (전체 AUC)</th><th class="num">기존 슬라이드<br>seed 0 · 고치기 전 soft</th><th class="num">seed 0<br>고친 soft</th><th class="num">지금<br>seed 0~4 평균 · 고친 soft</th><th class="num">지금 − 기존</th></tr>
+    <tr><td>① baseline</td><td class="num">0.626</td><td class="num">0.626</td><td class="num"><b>0.693</b></td><td class="num up">+0.067</td></tr><tr><td>② soft + U</td><td class="num">–</td><td class="num">0.801</td><td class="num"><b>0.809</b></td><td class="num">–</td></tr><tr><td>③ soft + U (끄기만)</td><td class="num">–</td><td class="num">0.806</td><td class="num"><b>0.799</b></td><td class="num">–</td></tr><tr><td>④ soft + U (분산만)</td><td class="num">–</td><td class="num">0.663</td><td class="num"><b>0.779</b></td><td class="num">–</td></tr><tr><td>⑤ 끄기 지도 + U</td><td class="num">0.816</td><td class="num">0.816</td><td class="num"><b>0.827</b></td><td class="num up">+0.011</td></tr>
+  </table></div>
+
+  <p class="meta">상위 10%는 고치기 전 soft로는 칸 파일을 받지 않아 ② · ③ · ④의 "기존"이 없습니다 (–). 모두 액상화는 칸 최댓값이고, 바뀌는 것은 시정촌으로 모으는 방법뿐입니다.</p>
+  <div class="anal"><b>읽는 법</b><ul>
+    <li><b>크게 오른 것은 끄기가 없는 ① · ④</b>입니다 (최대 · 최대 ① 0.617 → 0.704, ④ 0.619 → 0.758). 대부분 seed 때문입니다: seed 0이 다섯 개 중 가장 나쁜 seed였습니다 (① 0.617 · 0.679 · 0.710 · 0.771 · 0.742, ④ 0.640 · 0.770 · 0.800 · 0.821 · 0.760). 끄기가 없으면 seed에 크게 흔들려 평균을 내면 많이 오릅니다</li>
+    <li><b>soft 수정 효과는 작습니다</b> (seed 0끼리, 최대 · 최대 ② −0.011 · ③ +0.025 · ④ +0.021)</li>
+    <li><b>끄기가 있는 ⑤ · ② · ③은 거의 그대로</b>입니다 (0.01~0.02 차이). 원래 seed에 덜 흔들리는 실험이라서입니다</li>
+    <li>모으는 방법 사이의 결론은 그대로입니다: 전체는 평균 · 평균이 가장 낮고, 섞기는 최대 · 최대보다 조금 높고, 산사태 상위 10%가 가장 높습니다</li>
+  </ul></div>
 </section>
 
 <section id="easy">
