@@ -156,7 +156,7 @@ body{background:#fff}
   <h1>칸 확률을 시정촌 하나로 모으는 방법: 최댓값 · 평균 · 상위 10%</h1>
   <p class="lede">칸 단위로 학습한 뒤, 시정촌 안 칸들의 사후확률을 시정촌 값 하나로 모아 채점합니다. 모으는 방법은 학습에 들어가지 않고 채점할 때만 쓰입니다. 이 페이지는 최댓값 · 평균 · 상위 % 평균을 비교하고, 왜 산사태에서 상위 10%가 가장 높게 나왔는지 풀어 씁니다.</p>
   <p class="meta">본문: <a href="https://claude.ai/artifact/Uqmg4X8sLnLZeZX1jYmKpJ" style="color:var(--accent)">칸 단위 실험 기록</a> (주 결과 = 최대 · 최대). 이 페이지의 숫자는 모두 <b>seed 0~4 다섯 개 평균</b>이고, ② ③ ④는 고친 soft입니다. 칸 결과는 PC에서 <code>cell_extract.py</code>로 줄여 받았습니다.</p>
-  <nav class="toc" aria-label="차례"><a href="#read">★ 먼저</a><a href="#extra3">★ 추가 실험 1 · 2 · 3</a><a href="#vsold">★ 기존 슬라이드와 비교</a><a href="#easy">0. 쉽게</a><a href="#all5">★ 한눈에</a><a href="#how">1. 세 가지 방법</a><a href="#part">2. 상위 10%와 비탈 비율</a><a href="#curve">3. 실제 곡선</a><a href="#why">4. 왜 더 나은가</a><a href="#res">5. 결과 표 · 새 seed 확인</a><a href="#stab">6. seed 안정성</a></nav>
+  <nav class="toc" aria-label="차례"><a href="#read">★ 먼저</a><a href="#why10">★ 왜 상위 10%인가</a><a href="#extra3">★ 추가 실험 1 · 2 · 3</a><a href="#vsold">★ 기존 슬라이드와 비교</a><a href="#easy">0. 쉽게</a><a href="#all5">★ 한눈에</a><a href="#how">1. 세 가지 방법</a><a href="#part">2. 상위 10%와 비탈 비율</a><a href="#curve">3. 실제 곡선</a><a href="#why">4. 왜 더 나은가</a><a href="#res">5. 결과 표 · 새 seed 확인</a><a href="#stab">6. seed 안정성</a></nav>
 </header>
 
 
@@ -175,6 +175,147 @@ body{background:#fff}
     <li><b>점선</b> = 0.5 (무작위 수준). 예: ⑤ 산사태 구마모토는 USGS 0.641 대 0.803 (오른쪽, 잘함), 액상화 구마모토는 0.947 대 0.918 (왼쪽, 조금 못함)</li>
   </ul></div>
 </section>
+
+<section id="why10">
+  <h2><span class="n">★</span>왜 상위 10%가 가장 좋았나: 29곳 줄 세우기</h2>
+  <div class="callout"><p><b>세 줄 요약</b></p><ul>
+    <li><b>AUC는 "줄을 세웠을 때 피해 없는 곳이 얼마나 아래에 있나"입니다.</b> 확률 값 크기는 상관없고 순서만 봅니다</li>
+    <li>구마모토 산사태는 피해 없는 곳이 <b>3곳뿐</b>(氷川町 · 玉東町 · 菊陽町)이라, 이 3곳이 몇 등이냐가 AUC를 거의 정합니다</li>
+    <li>최댓값과 평균은 이 3곳 중 하나씩을 위로 올려 버리고, 상위 10%는 셋 다 아래로 보냅니다. 그래서 상위 10%가 가장 높습니다</li></ul></div>
+  <figure><div class="tw">
+<svg viewBox="0 0 760 294" width="100%" role="img" aria-label="구마모토 산사태 29곳을 모으는 방법마다 높은 순서로 줄 세운 그림" style="font-family:var(--sans);max-width:760px">
+<text x="118" y="18" font-size="12" fill="var(--muted)">1등 (확률 가장 높음)</text>
+<text x="610" y="18" font-size="12" fill="var(--muted)" text-anchor="end">29등 (가장 낮음)</text>
+<text x="632" y="18" font-size="12" fill="var(--muted)">틀린 쌍 / 78</text>
+<text x="0" y="66" font-size="14" font-weight="600" fill="var(--fg)">최댓값</text>
+<text x="0" y="83" font-size="11.5" fill="var(--muted)">칸 1개</text>
+<line x1="118" y1="62" x2="610" y2="62" stroke="var(--line)" stroke-width="1"/>
+<circle cx="118.0" cy="62" r="5" fill="var(--muted)" opacity=".45"/>
+<circle cx="135.6" cy="62" r="5" fill="var(--muted)" opacity=".45"/>
+<circle cx="153.1" cy="62" r="5" fill="var(--muted)" opacity=".45"/>
+<circle cx="170.7" cy="62" r="5" fill="var(--muted)" opacity=".45"/>
+<circle cx="188.3" cy="62" r="5" fill="var(--muted)" opacity=".45"/>
+<circle cx="205.9" cy="62" r="5" fill="var(--muted)" opacity=".45"/>
+<circle cx="223.4" cy="62" r="5" fill="var(--muted)" opacity=".45"/>
+<circle cx="241.0" cy="62" r="5" fill="var(--muted)" opacity=".45"/>
+<circle cx="258.6" cy="62" r="5" fill="var(--muted)" opacity=".45"/>
+<circle cx="276.1" cy="62" r="5" fill="var(--muted)" opacity=".45"/>
+<circle cx="293.7" cy="62" r="5" fill="var(--muted)" opacity=".45"/>
+<circle cx="311.3" cy="62" r="5" fill="var(--muted)" opacity=".45"/>
+<circle cx="328.9" cy="62" r="5" fill="var(--muted)" opacity=".45"/>
+<circle cx="346.4" cy="62" r="5" fill="var(--muted)" opacity=".45"/>
+<circle cx="364.0" cy="62" r="5" fill="var(--muted)" opacity=".45"/>
+<circle cx="381.6" cy="62" r="5" fill="var(--muted)" opacity=".45"/>
+<circle cx="416.7" cy="62" r="5" fill="var(--muted)" opacity=".45"/>
+<circle cx="434.3" cy="62" r="5" fill="var(--muted)" opacity=".45"/>
+<circle cx="451.9" cy="62" r="5" fill="var(--muted)" opacity=".45"/>
+<circle cx="469.4" cy="62" r="5" fill="var(--muted)" opacity=".45"/>
+<circle cx="487.0" cy="62" r="5" fill="var(--muted)" opacity=".45"/>
+<circle cx="504.6" cy="62" r="5" fill="var(--muted)" opacity=".45"/>
+<circle cx="522.1" cy="62" r="5" fill="var(--muted)" opacity=".45"/>
+<circle cx="539.7" cy="62" r="5" fill="var(--muted)" opacity=".45"/>
+<circle cx="592.4" cy="62" r="5" fill="var(--muted)" opacity=".45"/>
+<circle cx="610.0" cy="62" r="5" fill="var(--muted)" opacity=".45"/>
+<circle cx="399.1" cy="62" r="7" fill="var(--warn)"/>
+<text x="399.1" y="49" font-size="11.5" fill="var(--warn)" text-anchor="middle">氷川町 17등</text>
+<circle cx="557.3" cy="62" r="7" fill="var(--warn)"/>
+<text x="557.3" y="86" font-size="11.5" fill="var(--warn)" text-anchor="middle">菊陽町 26등</text>
+<circle cx="574.9" cy="62" r="7" fill="var(--warn)"/>
+<text x="574.9" y="49" font-size="11.5" fill="var(--warn)" text-anchor="middle">玉東町 27등</text>
+<text x="632" y="67" font-size="18" font-weight="700" fill="var(--fg)">14</text>
+<text x="660" y="67" font-size="12" fill="var(--muted)">AUC 0.82</text>
+<text x="0" y="144" font-size="14" font-weight="600" fill="var(--fg)">평균</text>
+<text x="0" y="161" font-size="11.5" fill="var(--muted)">칸 전부</text>
+<line x1="118" y1="140" x2="610" y2="140" stroke="var(--line)" stroke-width="1"/>
+<circle cx="118.0" cy="140" r="5" fill="var(--muted)" opacity=".45"/>
+<circle cx="135.6" cy="140" r="5" fill="var(--muted)" opacity=".45"/>
+<circle cx="153.1" cy="140" r="5" fill="var(--muted)" opacity=".45"/>
+<circle cx="170.7" cy="140" r="5" fill="var(--muted)" opacity=".45"/>
+<circle cx="188.3" cy="140" r="5" fill="var(--muted)" opacity=".45"/>
+<circle cx="205.9" cy="140" r="5" fill="var(--muted)" opacity=".45"/>
+<circle cx="223.4" cy="140" r="5" fill="var(--muted)" opacity=".45"/>
+<circle cx="241.0" cy="140" r="5" fill="var(--muted)" opacity=".45"/>
+<circle cx="258.6" cy="140" r="5" fill="var(--muted)" opacity=".45"/>
+<circle cx="276.1" cy="140" r="5" fill="var(--muted)" opacity=".45"/>
+<circle cx="293.7" cy="140" r="5" fill="var(--muted)" opacity=".45"/>
+<circle cx="311.3" cy="140" r="5" fill="var(--muted)" opacity=".45"/>
+<circle cx="328.9" cy="140" r="5" fill="var(--muted)" opacity=".45"/>
+<circle cx="346.4" cy="140" r="5" fill="var(--muted)" opacity=".45"/>
+<circle cx="364.0" cy="140" r="5" fill="var(--muted)" opacity=".45"/>
+<circle cx="381.6" cy="140" r="5" fill="var(--muted)" opacity=".45"/>
+<circle cx="399.1" cy="140" r="5" fill="var(--muted)" opacity=".45"/>
+<circle cx="416.7" cy="140" r="5" fill="var(--muted)" opacity=".45"/>
+<circle cx="434.3" cy="140" r="5" fill="var(--muted)" opacity=".45"/>
+<circle cx="451.9" cy="140" r="5" fill="var(--muted)" opacity=".45"/>
+<circle cx="469.4" cy="140" r="5" fill="var(--muted)" opacity=".45"/>
+<circle cx="504.6" cy="140" r="5" fill="var(--muted)" opacity=".45"/>
+<circle cx="539.7" cy="140" r="5" fill="var(--muted)" opacity=".45"/>
+<circle cx="557.3" cy="140" r="5" fill="var(--muted)" opacity=".45"/>
+<circle cx="574.9" cy="140" r="5" fill="var(--muted)" opacity=".45"/>
+<circle cx="610.0" cy="140" r="5" fill="var(--muted)" opacity=".45"/>
+<circle cx="487.0" cy="140" r="7" fill="var(--warn)"/>
+<text x="487.0" y="127" font-size="11.5" fill="var(--warn)" text-anchor="middle">玉東町 22등</text>
+<circle cx="522.1" cy="140" r="7" fill="var(--warn)"/>
+<text x="522.1" y="164" font-size="11.5" fill="var(--warn)" text-anchor="middle">氷川町 24등</text>
+<circle cx="592.4" cy="140" r="7" fill="var(--warn)"/>
+<text x="592.4" y="127" font-size="11.5" fill="var(--warn)" text-anchor="middle">菊陽町 28등</text>
+<text x="632" y="145" font-size="18" font-weight="700" fill="var(--fg)">10</text>
+<text x="660" y="145" font-size="12" fill="var(--muted)">AUC 0.87</text>
+<text x="0" y="222" font-size="14" font-weight="600" fill="var(--fg)">상위 10%</text>
+<text x="0" y="239" font-size="11.5" fill="var(--muted)">높은 칸 10%</text>
+<line x1="118" y1="218" x2="610" y2="218" stroke="var(--line)" stroke-width="1"/>
+<circle cx="118.0" cy="218" r="5" fill="var(--muted)" opacity=".45"/>
+<circle cx="135.6" cy="218" r="5" fill="var(--muted)" opacity=".45"/>
+<circle cx="153.1" cy="218" r="5" fill="var(--muted)" opacity=".45"/>
+<circle cx="170.7" cy="218" r="5" fill="var(--muted)" opacity=".45"/>
+<circle cx="188.3" cy="218" r="5" fill="var(--muted)" opacity=".45"/>
+<circle cx="205.9" cy="218" r="5" fill="var(--muted)" opacity=".45"/>
+<circle cx="223.4" cy="218" r="5" fill="var(--muted)" opacity=".45"/>
+<circle cx="241.0" cy="218" r="5" fill="var(--muted)" opacity=".45"/>
+<circle cx="258.6" cy="218" r="5" fill="var(--muted)" opacity=".45"/>
+<circle cx="276.1" cy="218" r="5" fill="var(--muted)" opacity=".45"/>
+<circle cx="293.7" cy="218" r="5" fill="var(--muted)" opacity=".45"/>
+<circle cx="311.3" cy="218" r="5" fill="var(--muted)" opacity=".45"/>
+<circle cx="328.9" cy="218" r="5" fill="var(--muted)" opacity=".45"/>
+<circle cx="346.4" cy="218" r="5" fill="var(--muted)" opacity=".45"/>
+<circle cx="364.0" cy="218" r="5" fill="var(--muted)" opacity=".45"/>
+<circle cx="381.6" cy="218" r="5" fill="var(--muted)" opacity=".45"/>
+<circle cx="399.1" cy="218" r="5" fill="var(--muted)" opacity=".45"/>
+<circle cx="416.7" cy="218" r="5" fill="var(--muted)" opacity=".45"/>
+<circle cx="434.3" cy="218" r="5" fill="var(--muted)" opacity=".45"/>
+<circle cx="451.9" cy="218" r="5" fill="var(--muted)" opacity=".45"/>
+<circle cx="469.4" cy="218" r="5" fill="var(--muted)" opacity=".45"/>
+<circle cx="487.0" cy="218" r="5" fill="var(--muted)" opacity=".45"/>
+<circle cx="504.6" cy="218" r="5" fill="var(--muted)" opacity=".45"/>
+<circle cx="557.3" cy="218" r="5" fill="var(--muted)" opacity=".45"/>
+<circle cx="574.9" cy="218" r="5" fill="var(--muted)" opacity=".45"/>
+<circle cx="610.0" cy="218" r="5" fill="var(--muted)" opacity=".45"/>
+<circle cx="522.1" cy="218" r="7" fill="var(--warn)"/>
+<text x="522.1" y="205" font-size="11.5" fill="var(--warn)" text-anchor="middle">氷川町 24등</text>
+<circle cx="539.7" cy="218" r="7" fill="var(--warn)"/>
+<text x="539.7" y="242" font-size="11.5" fill="var(--warn)" text-anchor="middle">玉東町 25등</text>
+<circle cx="592.4" cy="218" r="7" fill="var(--warn)"/>
+<text x="592.4" y="205" font-size="11.5" fill="var(--warn)" text-anchor="middle">菊陽町 28등</text>
+<text x="632" y="223" font-size="18" font-weight="700" fill="var(--fg)">7</text>
+<text x="660" y="223" font-size="12" fill="var(--muted)">AUC 0.91</text>
+</svg>
+  </div><figcaption>구마모토 산사태 29곳 (⑤ 끄기 지도 + U, seed 0~4 평균 확률). 회색 점 = 피해 있음 26곳, 빨간 점 = 피해 없음 3곳. 왼쪽일수록 확률이 높습니다. 빨간 점보다 오른쪽(아래 순위)에 있는 회색 점 하나가 "틀린 쌍" 하나입니다. 짝은 모두 26 × 3 = 78쌍. 그림의 AUC는 확률을 평균 내고 한 번에 채점한 값이라, seed마다 채점해 평균한 표의 숫자(⑤ 구마모토 최댓값 0.803 · 상위 10% 0.892)와 조금 다릅니다.</figcaption></figure>
+  <div class="tw"><table>
+    <tr><th>방법</th><th>무엇이 틀리게 만드나</th><th class="num">틀린 쌍</th></tr>
+    <tr><td>최댓값 (칸 1개)</td><td><b>氷川町이 17등</b>까지 올라옴. 피해가 없는데 비탈 칸 하나(14°, DPM 0.49)가 튀어서 0.89. 칸 1개만 보니 이 한 칸이 시정촌 값이 됨. 아래 피해 있는 10곳과 순서가 뒤집힘</td><td class="num">14</td></tr>
+    <tr><td>평균 (칸 전부)</td><td><b>玉東町이 22등</b>. 땅의 51%가 비탈이라 평균이 높음 (0.23). 반대로 피해 있는 熊本市는 비탈이 20%뿐이고 나머지 80% 칸은 확률이 거의 0이라 평균이 0.14로 깎임</td><td class="num">10</td></tr>
+    <tr><td>상위 10%</td><td>튀는 칸 1개로는 위 10%가 다 채워지지 않아 氷川町이 내려가고 (24등), 평지가 아무리 넓어도 위 10%만 보니 熊本市가 깎이지 않음. 玉東町도 25등으로 내려감</td><td class="num">7</td></tr>
+  </table></div>
+  <div class="anal"><b>그런데 액상화는 왜 최댓값이 제일 좋나</b><ul>
+    <li>액상화는 강가 · 매립지처럼 <b>시정촌의 아주 좁은 곳</b>(10%보다 훨씬 적음)에서 납니다. 상위 10%로 넓히면 그 좁은 곳 바깥의 낮은 칸이 섞여 묻힙니다 (⑤ 액상화 최댓값 0.813, 상위 5%만 해도 0.733)</li>
+    <li>산사태는 비탈이 시정촌의 10~50%로 <b>어느 정도 넓게</b> 있어서, 위 10%가 거의 비탈 칸으로 채워집니다</li></ul></div>
+  <div class="anal" style="border-color:var(--warn)"><b>주의: "가장 좋다"를 크게 말하기 어려운 이유</b><ul>
+    <li><b>피해 없는 곳이 적습니다.</b> 산사태 평가 49곳 중 피해 없음은 9곳 (구마모토 3, 오사카 2, 훗카이도 4). 구마모토는 3곳의 순위만 바뀌어도 AUC가 0.1 가까이 움직입니다 (틀린 쌍 1개 = 0.013)</li>
+    <li><b>지진마다 다릅니다.</b> ⑤ seed별 AUC 평균으로 구마모토 0.803에서 0.892로, 훗카이도 0.661에서 0.744로, 오사카 0.980에서 1.000으로 오릅니다. 그런데 훗카이도는 확률을 먼저 평균 내고 한 번에 채점하면 최댓값이 더 좋아서(4절), 훗카이도에서 나은지는 분명하지 않습니다</li>
+    <li><b>결과를 보고 고른 방법입니다.</b> 10%는 seed 0~2를 보고 골랐고 seed 3 · 4에서도 같았지만, 시정촌은 같은 49곳입니다. 새 지진에서도 좋을지는 모릅니다</li>
+    <li>그래서 주 결과는 교수님 지시대로 <b>최대 · 최대</b>로 두고, 상위 10%는 "산사태는 이렇게 모으면 더 좋아질 수 있다"는 부록 결과로 둡니다</li></ul></div>
+</section>
+
 
 <section id="extra3">
   <h2><span class="n">★</span>추가 실험 1 · 2 · 3: 최댓값 대신 다른 방법으로 채점 (seed 0~4 평균, 슬라이드용)</h2>

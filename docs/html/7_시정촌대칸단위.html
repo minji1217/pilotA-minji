@@ -189,7 +189,7 @@ td.up{color:var(--all);font-weight:700} td.down{color:var(--warn);font-weight:70
   <div class="callout">
     <p><b>"seed 0"은 두 방식에서 같은 뜻인가?</b></p>
     <ul>
-      <li><b>번호와 쓰는 법은 같습니다.</b> 두 방식 모두 지진마다 학습을 시작할 때 <code>torch.manual_seed(seed)</code>를 한 번 부릅니다 (시정촌 <code>model._fit_group</code>, 칸 <code>run_cells_max.fit_cells</code>). 그래서 시정촌 seed 0과 칸 seed 0은 "같은 출발 번호"입니다.</li>
+      <li><b>번호와 쓰는 법은 같습니다.</b> 두 방식 모두 지진마다 학습을 시작할 때 <code>torch.manual_seed(seed)</code>를 한 번 부릅니다 (시정촌 <code>model._fit_group</code>, 칸 <code>run_cells_max.fit_cells</code>). 그래서 시정촌 seed 0과 칸 seed 0은 "같은 출발 번호"입니다. 쓴 번호는 두 실험 모두 <b>0, 1, 2, 3, 4</b> 다섯 개입니다.</li>
       <li><b>뽑히는 난수까지 같지는 않습니다.</b> 줄 수가 다르기 때문입니다. 예를 들어 줄마다 따로 두는 flow 값(<code>flow_local</code>)의 처음 값과 샘플 ε를 뽑는 개수가 시정촌은 40~81줄, 칸은 4.5만~32만 줄 분량입니다. 그래서 같은 seed 0이라도 그 다음부터 나오는 숫자는 서로 다릅니다.</li>
       <li>그래서 "시정촌 seed 0"과 "칸 seed 0"을 하나씩 짝지어 비교하는 것은 의미가 크지 않습니다. 각 방식 안에서 seed가 <b>얼마나 흔들리는지</b>, 그리고 <b>5개 평균끼리</b> 비교하는 것이 맞습니다.</li>
     </ul>
@@ -283,5 +283,39 @@ td.up{color:var(--all);font-weight:700} td.down{color:var(--warn);font-weight:70
     <li>seed 번호는 같아도 줄 수가 달라 난수는 다르므로, seed끼리 짝짓지 않고 5개 평균끼리 비교합니다</li>
   </ul></div>
   
+<h3 id="seedby">seed 하나씩 (같은 seed 번호끼리, 전체 AUC)</h3>
+<p class="meta">두 실험 모두 seed 0 · 1 · 2 · 3 · 4 다섯 개입니다. 위 칸 = 시정촌, 아래 칸 = 칸 단위. 진하게 = 그 seed에서 더 높은 쪽. 폭 = 가장 높은 seed − 가장 낮은 seed.</p>
+<div class="tw"><table><tr><th>실험</th><th>단위</th><th class="num">seed 0</th><th class="num">seed 1</th><th class="num">seed 2</th><th class="num">seed 3</th><th class="num">seed 4</th><th class="num">5개 평균</th><th class="num">폭</th><th class="num">칸이 이긴 seed</th></tr>
+<tr><td rowspan="2">① baseline</td><td>시정촌</td><td class="num"><b>0.638</b></td><td class="num">0.647</td><td class="num">0.603</td><td class="num">0.651</td><td class="num">0.530</td><td class="num">0.614</td><td class="num">0.121</td><td class="num" rowspan="2">4 / 5</td></tr>
+<tr><td>칸</td><td class="num">0.617</td><td class="num"><b>0.679</b></td><td class="num"><b>0.710</b></td><td class="num"><b>0.771</b></td><td class="num"><b>0.742</b></td><td class="num"><b>0.704</b></td><td class="num">0.154</td></tr>
+<tr><td rowspan="2">② SOFTU</td><td>시정촌</td><td class="num">0.750</td><td class="num">0.754</td><td class="num">0.744</td><td class="num">0.710</td><td class="num">0.735</td><td class="num">0.738</td><td class="num">0.044</td><td class="num" rowspan="2">5 / 5</td></tr>
+<tr><td>칸</td><td class="num"><b>0.782</b></td><td class="num"><b>0.790</b></td><td class="num"><b>0.785</b></td><td class="num"><b>0.785</b></td><td class="num"><b>0.784</b></td><td class="num"><b>0.785</b></td><td class="num">0.008</td></tr>
+<tr><td rowspan="2">③ 끄기만</td><td>시정촌</td><td class="num">0.755</td><td class="num">0.733</td><td class="num">0.731</td><td class="num">0.678</td><td class="num">0.714</td><td class="num">0.722</td><td class="num">0.077</td><td class="num" rowspan="2">5 / 5</td></tr>
+<tr><td>칸</td><td class="num"><b>0.800</b></td><td class="num"><b>0.839</b></td><td class="num"><b>0.778</b></td><td class="num"><b>0.812</b></td><td class="num"><b>0.751</b></td><td class="num"><b>0.796</b></td><td class="num">0.087</td></tr>
+<tr><td rowspan="2">④ 분산만</td><td>시정촌</td><td class="num"><b>0.774</b></td><td class="num"><b>0.777</b></td><td class="num">0.751</td><td class="num">0.715</td><td class="num">0.739</td><td class="num">0.751</td><td class="num">0.062</td><td class="num" rowspan="2">3 / 5</td></tr>
+<tr><td>칸</td><td class="num">0.640</td><td class="num">0.770</td><td class="num"><b>0.800</b></td><td class="num"><b>0.821</b></td><td class="num"><b>0.760</b></td><td class="num"><b>0.758</b></td><td class="num">0.181</td></tr>
+</table></div>
+<div class="anal"><b>읽는 법</b><ul>
+<li><b>② SOFTU는 다섯 seed 모두 칸 단위가 높습니다</b> (0.78~0.79 대 0.71~0.75). 칸 ②는 폭이 0.008로 seed에 거의 안 흔들립니다</li>
+<li>③ 끄기만은 다섯 seed 모두, ① baseline은 seed 0 하나 빼고 칸 단위가 높습니다</li>
+<li><b>④ 분산만은 seed마다 뒤집힙니다.</b> seed 0 · 1은 시정촌이 높고 (seed 0은 0.774 대 0.640으로 0.13 차이), seed 2~4는 칸이 0.02~0.11 높습니다. 그래서 5개 평균이 거의 같습니다 (0.751 대 0.758). 끄기가 없는 칸 ④는 폭이 0.181로 가장 큽니다</li>
+<li>seed 번호가 같아도 줄 수가 달라 뽑히는 난수는 다르므로, 표에서 같은 열끼리 짝지어 "seed 0에서 누가 이겼다"고 말하는 것은 의미가 크지 않습니다. 5개 평균과 폭을 보는 것이 맞습니다</li></ul></div>
+<h3 id="evby">지진 × 재해별 (seed 0~4 평균)</h3>
+<p class="meta">한 칸에 "시정촌 / 칸". 차이 = 칸 − 시정촌. 시정촌 수는 그 지진 × 재해의 평가 시정촌 수 (전체 AUC의 가중치).</p>
+<div class="tw"><table><tr><th>지진 × 재해</th><th class="num">시정촌 수</th><th class="num">USGS</th><th class="num">① baseline<br>시정촌 / 칸</th><th class="num">차이</th><th class="num">② SOFTU<br>시정촌 / 칸</th><th class="num">차이</th><th class="num">③ 끄기만<br>시정촌 / 칸</th><th class="num">차이</th><th class="num">④ 분산만<br>시정촌 / 칸</th><th class="num">차이</th></tr>
+<tr><td>구마모토 산사태</td><td class="num">29</td><td class="num">0.64</td><td class="num">0.54 / 0.82</td><td class="num up">+0.277</td><td class="num">0.84 / 0.79</td><td class="num down">−0.046</td><td class="num">0.82 / 0.80</td><td class="num down">−0.026</td><td class="num">0.84 / 0.82</td><td class="num down">−0.015</td></tr>
+<tr><td>오사카 산사태</td><td class="num">7</td><td class="num">1.00</td><td class="num">0.22 / 0.78</td><td class="num up">+0.560</td><td class="num">0.98 / 0.98</td><td class="num">0.000</td><td class="num">0.90 / 1.00</td><td class="num up">+0.100</td><td class="num">0.98 / 0.98</td><td class="num">0.000</td></tr>
+<tr><td>훗카이도 산사태</td><td class="num">13</td><td class="num">0.78</td><td class="num">0.60 / 0.49</td><td class="num down">−0.106</td><td class="num">0.58 / 0.62</td><td class="num up">+0.033</td><td class="num">0.58 / 0.64</td><td class="num up">+0.061</td><td class="num">0.59 / 0.63</td><td class="num up">+0.039</td></tr>
+<tr><td>구마모토 액상화</td><td class="num">40</td><td class="num">0.95</td><td class="num">0.63 / 0.64</td><td class="num up">+0.016</td><td class="num">0.82 / 0.90</td><td class="num up">+0.080</td><td class="num">0.78 / 0.88</td><td class="num up">+0.101</td><td class="num">0.82 / 0.92</td><td class="num up">+0.093</td></tr>
+<tr><td>훗카이도 액상화</td><td class="num">40</td><td class="num">0.93</td><td class="num">0.59 / 0.58</td><td class="num down">−0.009</td><td class="num">0.67 / 0.56</td><td class="num down">−0.112</td><td class="num">0.65 / 0.59</td><td class="num down">−0.066</td><td class="num">0.72 / 0.71</td><td class="num down">−0.009</td></tr>
+<tr><td>후쿠시마 액상화</td><td class="num">7</td><td class="num">0.50</td><td class="num">0.57 / 0.50</td><td class="num down">−0.067</td><td class="num">0.77 / 0.53</td><td class="num down">−0.233</td><td class="num">0.60 / 0.50</td><td class="num down">−0.100</td><td class="num">0.77 / 0.50</td><td class="num down">−0.267</td></tr>
+<tr><td>노토반도 액상화</td><td class="num">64</td><td class="num">0.89</td><td class="num">0.70 / 0.82</td><td class="num up">+0.120</td><td class="num">0.68 / 0.89</td><td class="num up">+0.205</td><td class="num">0.70 / 0.91</td><td class="num up">+0.209</td><td class="num">0.69 / 0.69</td><td class="num down">−0.002</td></tr>
+</table></div>
+<div class="anal"><b>읽는 법</b><ul>
+<li><b>칸 단위가 크게 이기는 곳은 액상화 구마모토와 노토입니다.</b> 노토 액상화(64곳, 가장 큰 가중치)는 ② · ③에서 0.68~0.70이 0.89~0.91로 오르고, 구마모토 액상화(40곳)도 0.78~0.82가 0.88~0.92로 오릅니다. 액상화가 시정촌의 좁은 곳에서 나서, 칸으로 나눠 최댓값을 보면 그 좁은 곳이 시정촌 평균에 묻히지 않기 때문으로 보입니다</li>
+<li><b>시정촌 단위가 나은 곳도 있습니다.</b> 훗카이도 액상화(40곳)는 ② · ③에서 시정촌이 0.07~0.11 높고, 후쿠시마 액상화(7곳)도 ② · ④에서 시정촌이 0.23~0.27 높습니다 (다만 7곳뿐이라 짝 하나에 크게 움직임). 구마모토 산사태도 ② · ③은 시정촌이 조금 높습니다</li>
+<li>① baseline은 산사태에서 칸이 크게 높습니다 (구마모토 0.54 대 0.82, 오사카 0.22 대 0.78). 시정촌 ①은 산사태 AUC가 0.5 아래인 seed가 있을 만큼 불안정했습니다</li>
+<li>④ 분산만 노토 액상화는 칸이 0.69로 낮은데, seed 폭이 0.46입니다 (seed 0에서 크게 무너짐). ④ 전체가 시정촌과 비슷하게 나온 주된 이유입니다</li>
+<li>정리: 칸 단위의 이득은 대부분 <b>액상화, 특히 노토 · 구마모토</b>에서 나오고, 훗카이도 액상화는 오히려 내려갑니다</li></ul></div>
 </section>
 </main>
