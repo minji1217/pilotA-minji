@@ -154,7 +154,7 @@ body{background:#fff}
 <header style="display:flex;flex-direction:column;gap:14px">
   <div class="eyebrow">실험 기록 · 2026-10-19</div>
   <h1>DisasterNet 칸 단위 실험: 시정촌 = 칸 사후확률 최댓값</h1>
-  <p class="lede">교수님 지시대로 250 m 칸 단위로 학습하고, 시정촌 사후확률을 시정촌 안 칸들의 최댓값으로 정해 AUC를 구합니다. 칸의 USGS 사전확률·불확실도는 <b>칸과 겹친 USGS 칸들의 면적 평균</b>을 씁니다. <b>최신 (10.22, 2.11)</b>: soft의 5~10° 칸 부작용을 고쳐 ② · ③ · ④를 다시 돌렸고, seed 0 · 1 평균은 ⑤ 0.809 · ③ 0.820 · ② 0.786 · ④ 0.705 · ① 0.648입니다. seed 2까지 3개 평균은 ⑤ 0.815 · ③ 0.806 · ② 0.786 · ④ 0.737 · ① 0.669 (seed 3 · 4는 도는 중). 아래 2 · 2.9 · 2.10 · 3절의 ② · ③ · ④는 <b>고치기 전 soft</b> 결과로, 기록으로 남겨 둡니다.</p>
+  <p class="lede">교수님 지시대로 250 m 칸 단위로 학습하고, 시정촌 사후확률을 시정촌 안 칸들의 최댓값으로 정해 AUC를 구합니다. 칸의 USGS 사전확률·불확실도는 <b>칸과 겹친 USGS 칸들의 면적 평균</b>을 씁니다. <b>최종 (10.23, seed 0~4 다섯 개 평균, 2.12)</b>: ⑤ 끄기 지도 + U 0.808 · ③ 끄기만 0.796 · ② soft + U 0.785 · ④ 분산만 0.758 · ① baseline 0.704 (② ③ ④는 5~10° 칸을 고친 soft). USGS 기준선 0.854 · pilotA 0.855보다는 낮습니다. 아래 2 · 2.9 · 2.10 · 3절의 ② · ③ · ④는 고치기 전 soft 결과로, 기록으로 남겨 둡니다.</p>
   <p class="meta">시정촌 단위 실험은 <a href="https://claude.ai/artifact/TcF9dowvBuwwu66vdqEaT6" style="color:var(--accent)">DisasterNet 실험 기록</a>에 있습니다.</p>
   <p class="meta">크기는 모두 <b>세로(남북) × 가로(동서)</b>. 일본 표준 칸(지역메시)과 USGS 칸은 위경도 각도로 정해져 있어서, 가로 길이가 위도에 따라 달라집니다 (남쪽 구마모토가 길고 북쪽 홋카이도가 짧음). "250 m 칸" · "100 m 칸"은 이름이고 실제로는 약 230 × 260~290 m, 약 92 × 100~118 m입니다.</p>
 </header>
@@ -613,7 +613,7 @@ body{background:#fff}
     <tr><td>③ soft + U (끄기만)</td><td class="yes">○</td><td class="yes">○</td><td class="no">✗</td><td>연구실 PC</td><td>✅ 완료 · 아래 결과 · <b>seed 1 완료 (2.10)</b></td></tr>
     <tr><td>④ soft + U (분산만)</td><td class="yes">○</td><td class="no">✗</td><td class="yes">○</td><td>연구실 PC</td><td>✅ 완료 · 아래 결과 · <b>seed 1 완료 (2.10)</b></td></tr>
     <tr><td>⑤ 끄기 지도 + U</td><td class="no">✗ (끄기 지도로 0 고정)</td><td class="yes">○</td><td class="yes">○</td><td>연구실 PC</td><td>✅ 완료 · 아래 결과 · <b>seed 1 완료 (2.10)</b></td></tr>
-    <tr><td>②③④ 다시: 5~10° 칸 고친 soft (<a href="#softmid">★ 5~10° 칸 문제</a>)</td><td class="yes">○ (고침)</td><td>②③과 같음</td><td>②④와 같음</td><td>연구실 PC</td><td>✅ seed 0 · 1 완료 (10.22 아침, <a href="#mid">2.11</a>) · seed 2 · 3 · 4 도는 중</td></tr>
+    <tr><td>②③④ 다시: 5~10° 칸 고친 soft (<a href="#softmid">★ 5~10° 칸 문제</a>)</td><td class="yes">○ (고침)</td><td>②③과 같음</td><td>②④와 같음</td><td>연구실 PC</td><td>✅ seed 0~4 완료 (10.23, <a href="#final5">2.12</a>)</td></tr>
   </table></div>
   <p class="meta">seed 1은 10.21 연구실 PC에서 5개 모두 끝남 (2.10). USGS 값 = 칸과 겹친 USGS 칸들의 면적 평균 (<code>raw/local_250m_byevent_usgs_aw.csv.gz</code>, 결과 폴더 끝 <code>_aw</code>). U 끄기는 논문 기준(불확실도 0·999만). 모두 BD 없음, flow K = 4, 3000 epoch, seed 0. 한 실험에 약 77분</p>
 </section>
@@ -1355,6 +1355,86 @@ body{background:#fff}
   <p class="meta">시정촌마다 사후확률이 seed에 따라 얼마나 바뀌는지(확률 값과 순서)는 <a href="https://claude.ai/artifact/WhLVRkNgEAsrNiCJKiRjaP#stab" style="color:var(--accent)">부록 6절</a>로 옮김.</p>
 </section>
 
+<section id="final5">
+  <h2><span class="n">2.12</span>최종: seed 5개 평균 (seed 0~4, 10.23)</h2>
+  <p>다섯 실험을 seed 0~4로 모두 돌렸습니다 (② ③ ④는 고친 soft). 시정촌 값은 칸 최댓값(교수님 지시, 주 결과).</p>
+  <figure><div class="tw"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 496" width="900" role="img" aria-label="픽셀 단위 실험 seed 5개 평균 AUC" style="max-width:100%;height:auto;min-width:640px;font-family:'IBM Plex Sans KR','Malgun Gothic',sans-serif"><rect width="900" height="496" fill="#fff"/>
+<line x1="190.0" x2="190.0" y1="34" y2="446" stroke="#eceef2"/><text x="190.0" y="462" text-anchor="middle" font-size="11" fill="#5b6577">0.5</text>
+<line x1="318.0" x2="318.0" y1="34" y2="446" stroke="#eceef2"/><text x="318.0" y="462" text-anchor="middle" font-size="11" fill="#5b6577">0.6</text>
+<line x1="445.99999999999994" x2="445.99999999999994" y1="34" y2="446" stroke="#eceef2"/><text x="445.99999999999994" y="462" text-anchor="middle" font-size="11" fill="#5b6577">0.7</text>
+<line x1="574.0" x2="574.0" y1="34" y2="446" stroke="#eceef2"/><text x="574.0" y="462" text-anchor="middle" font-size="11" fill="#5b6577">0.8</text>
+<line x1="702.0" x2="702.0" y1="34" y2="446" stroke="#eceef2"/><text x="702.0" y="462" text-anchor="middle" font-size="11" fill="#5b6577">0.9</text>
+<line x1="830.0" x2="830.0" y1="34" y2="446" stroke="#eceef2"/><text x="830.0" y="462" text-anchor="middle" font-size="11" fill="#5b6577">1.0</text>
+<text x="180" y="69.0" text-anchor="end" font-size="13" font-weight="400" fill="#5b6577">USGS 기준선</text>
+<rect x="190" y="46" width="453.47714343975383" height="12" rx="2" fill="#3f8f5a" opacity="0.55"/><text x="648.4771434397538" y="56" font-size="11" font-weight="400" fill="#1d2430">0.854</text>
+<rect x="190" y="61" width="292.59375545089824" height="12" rx="2" fill="#b5651d" opacity="0.55"/><text x="487.59375545089824" y="71" font-size="11" font-weight="400" fill="#1d2430">0.729</text>
+<rect x="190" y="76" width="505.6843355685878" height="12" rx="2" fill="#2d62b3" opacity="0.55"/><text x="700.6843355685878" y="86" font-size="11" font-weight="400" fill="#1d2430">0.895</text>
+<text x="180" y="127.0" text-anchor="end" font-size="13" font-weight="400" fill="#5b6577">pilotA A2</text>
+<rect x="190" y="104" width="454.8744338410538" height="12" rx="2" fill="#3f8f5a" opacity="0.55"/><text x="649.8744338410538" y="114" font-size="11" font-weight="400" fill="#1d2430">0.855</text>
+<rect x="190" y="119" width="476.2881562881563" height="12" rx="2" fill="#b5651d" opacity="0.55"/><text x="671.2881562881563" y="129" font-size="11" font-weight="400" fill="#1d2430">0.872</text>
+<rect x="190" y="134" width="447.92561000060334" height="12" rx="2" fill="#2d62b3" opacity="0.55"/><text x="642.9256100006033" y="144" font-size="11" font-weight="400" fill="#1d2430">0.850</text>
+<line x1="10" x2="890" y1="152" y2="152" stroke="#c9ced7" stroke-dasharray="4 3"/>
+<text x="180" y="185.0" text-anchor="end" font-size="13" font-weight="700" fill="#1d2430">⑤ 끄기 지도 + U</text>
+<rect x="190" y="162" width="393.8900546636489" height="12" rx="2" fill="#3f8f5a" opacity="1"/><text x="617.6049784076349" y="172" font-size="11" font-weight="700" fill="#1d2430">0.808</text>
+<rect x="190" y="177" width="371.6911913483343" height="12" rx="2" fill="#b5651d" opacity="1"/><text x="566.6911913483343" y="187" font-size="11" font-weight="400" fill="#1d2430">0.790</text>
+<rect x="190" y="192" width="401.09365931563843" height="12" rx="2" fill="#2d62b3" opacity="1"/><text x="596.0936593156384" y="202" font-size="11" font-weight="400" fill="#1d2430">0.813</text>
+<circle cx="570.6" cy="168" r="3" fill="#fff" stroke="#1d2430" stroke-width="1.4"/>
+<circle cx="600.8" cy="168" r="3" fill="#fff" stroke="#1d2430" stroke-width="1.4"/>
+<circle cx="608.6" cy="168" r="3" fill="#fff" stroke="#1d2430" stroke-width="1.4"/>
+<circle cx="571.7" cy="168" r="3" fill="#fff" stroke="#1d2430" stroke-width="1.4"/>
+<circle cx="567.8" cy="168" r="3" fill="#fff" stroke="#1d2430" stroke-width="1.4"/>
+<text x="180" y="243.0" text-anchor="end" font-size="13" font-weight="700" fill="#1d2430">③ soft + U (끄기만)</text>
+<rect x="190" y="220" width="378.8647170248556" height="12" rx="2" fill="#3f8f5a" opacity="1"/><text x="632.8707571485065" y="230" font-size="11" font-weight="700" fill="#1d2430">0.796</text>
+<rect x="190" y="235" width="365.80359323216476" height="12" rx="2" fill="#b5651d" opacity="1"/><text x="560.8035932321648" y="245" font-size="11" font-weight="400" fill="#1d2430">0.786</text>
+<rect x="190" y="250" width="383.10309494433807" height="12" rx="2" fill="#2d62b3" opacity="1"/><text x="578.1030949443381" y="260" font-size="11" font-weight="400" fill="#1d2430">0.799</text>
+<circle cx="574.2" cy="226" r="3" fill="#fff" stroke="#1d2430" stroke-width="1.4"/>
+<circle cx="623.9" cy="226" r="3" fill="#fff" stroke="#1d2430" stroke-width="1.4"/>
+<circle cx="545.3" cy="226" r="3" fill="#fff" stroke="#1d2430" stroke-width="1.4"/>
+<circle cx="589.1" cy="226" r="3" fill="#fff" stroke="#1d2430" stroke-width="1.4"/>
+<circle cx="511.9" cy="226" r="3" fill="#fff" stroke="#1d2430" stroke-width="1.4"/>
+<text x="180" y="301.0" text-anchor="end" font-size="13" font-weight="700" fill="#1d2430">② soft + U</text>
+<rect x="190" y="278" width="365.05896648883663" height="12" rx="2" fill="#3f8f5a" opacity="1"/><text x="570.1236272788619" y="288" font-size="11" font-weight="700" fill="#1d2430">0.785</text>
+<rect x="190" y="293" width="348.828466771324" height="12" rx="2" fill="#b5651d" opacity="1"/><text x="543.828466771324" y="303" font-size="11" font-weight="400" fill="#1d2430">0.773</text>
+<rect x="190" y="308" width="370.32581739054604" height="12" rx="2" fill="#2d62b3" opacity="1"/><text x="565.325817390546" y="318" font-size="11" font-weight="400" fill="#1d2430">0.789</text>
+<circle cx="551.2" cy="284" r="3" fill="#fff" stroke="#1d2430" stroke-width="1.4"/>
+<circle cx="561.1" cy="284" r="3" fill="#fff" stroke="#1d2430" stroke-width="1.4"/>
+<circle cx="554.2" cy="284" r="3" fill="#fff" stroke="#1d2430" stroke-width="1.4"/>
+<circle cx="555.4" cy="284" r="3" fill="#fff" stroke="#1d2430" stroke-width="1.4"/>
+<circle cx="553.3" cy="284" r="3" fill="#fff" stroke="#1d2430" stroke-width="1.4"/>
+<text x="180" y="359.0" text-anchor="end" font-size="13" font-weight="700" fill="#1d2430">④ soft + U (분산만)</text>
+<rect x="190" y="336" width="330.571272246495" height="12" rx="2" fill="#3f8f5a" opacity="1"/><text x="610.3591900678775" y="346" font-size="11" font-weight="700" fill="#1d2430">0.758</text>
+<rect x="190" y="351" width="375.9109715681144" height="12" rx="2" fill="#b5651d" opacity="1"/><text x="570.9109715681144" y="361" font-size="11" font-weight="400" fill="#1d2430">0.794</text>
+<rect x="190" y="366" width="315.85838968517476" height="12" rx="2" fill="#2d62b3" opacity="1"/><text x="510.85838968517476" y="376" font-size="11" font-weight="400" fill="#1d2430">0.747</text>
+<circle cx="369.5" cy="342" r="3" fill="#fff" stroke="#1d2430" stroke-width="1.4"/>
+<circle cx="535.4" cy="342" r="3" fill="#fff" stroke="#1d2430" stroke-width="1.4"/>
+<circle cx="573.7" cy="342" r="3" fill="#fff" stroke="#1d2430" stroke-width="1.4"/>
+<circle cx="601.4" cy="342" r="3" fill="#fff" stroke="#1d2430" stroke-width="1.4"/>
+<circle cx="522.8" cy="342" r="3" fill="#fff" stroke="#1d2430" stroke-width="1.4"/>
+<text x="180" y="417.0" text-anchor="end" font-size="13" font-weight="700" fill="#1d2430">① baseline</text>
+<rect x="190" y="394" width="261.1829976439972" height="12" rx="2" fill="#3f8f5a" opacity="1"/><text x="546.4285329634295" y="404" font-size="11" font-weight="700" fill="#1d2430">0.704</text>
+<rect x="190" y="409" width="292.11819291819296" height="12" rx="2" fill="#b5651d" opacity="1"/><text x="487.11819291819296" y="419" font-size="11" font-weight="400" fill="#1d2430">0.728</text>
+<rect x="190" y="424" width="251.14442434309922" height="12" rx="2" fill="#2d62b3" opacity="1"/><text x="446.1444243430992" y="434" font-size="11" font-weight="400" fill="#1d2430">0.696</text>
+<circle cx="340.1" cy="400" r="3" fill="#fff" stroke="#1d2430" stroke-width="1.4"/>
+<circle cx="419.5" cy="400" r="3" fill="#fff" stroke="#1d2430" stroke-width="1.4"/>
+<circle cx="458.7" cy="400" r="3" fill="#fff" stroke="#1d2430" stroke-width="1.4"/>
+<circle cx="537.4" cy="400" r="3" fill="#fff" stroke="#1d2430" stroke-width="1.4"/>
+<circle cx="500.2" cy="400" r="3" fill="#fff" stroke="#1d2430" stroke-width="1.4"/>
+<rect x="200" y="472" width="12" height="12" fill="#3f8f5a"/><text x="216" y="482" font-size="12">전체 (200곳)</text><rect x="320" y="472" width="12" height="12" fill="#b5651d"/><text x="336" y="482" font-size="12">산사태 (49곳)</text><rect x="450" y="472" width="12" height="12" fill="#2d62b3"/><text x="466" y="482" font-size="12">액상화 (151곳)</text><circle cx="590" cy="478" r="3" fill="#fff" stroke="#1d2430" stroke-width="1.4"/><text x="598" y="482" font-size="12">전체 AUC, seed 하나씩 (0~4)</text>
+</svg></div><figcaption>막대 = seed 5개 평균, 동그라미 = 전체 AUC의 seed 하나씩. 슬라이드용 PNG: <code>docs/html/img/pixel_seed5.png</code></figcaption></figure>
+  <div class="tw"><table>
+    <tr><th>실험 (칸 최댓값, seed 0~4)</th><th class="num">전체</th><th class="num">산사태</th><th class="num">액상화</th><th class="num">seed 0 · 1 · 2 · 3 · 4 (전체)</th><th class="num">seed 폭</th><th class="num">참고: 섞기 전체</th></tr>
+    <tr><td>⑤ 끄기 지도 + U</td><td class="num"><b>0.808</b></td><td class="num">0.790</td><td class="num">0.813</td><td class="num mini">0.797 · 0.821 · 0.827 · 0.798 · 0.795</td><td class="num">0.032</td><td class="num">0.811</td></tr><tr><td>③ soft + U (끄기만)</td><td class="num"><b>0.796</b></td><td class="num">0.786</td><td class="num">0.799</td><td class="num mini">0.800 · 0.839 · 0.778 · 0.812 · 0.751</td><td class="num">0.087</td><td class="num">0.797</td></tr><tr><td>② soft + U</td><td class="num"><b>0.785</b></td><td class="num">0.773</td><td class="num">0.789</td><td class="num mini">0.782 · 0.790 · 0.785 · 0.785 · 0.784</td><td class="num">0.008</td><td class="num">0.794</td></tr><tr><td>④ soft + U (분산만)</td><td class="num"><b>0.758</b></td><td class="num">0.794</td><td class="num">0.747</td><td class="num mini">0.640 · 0.770 · 0.800 · 0.821 · 0.760</td><td class="num">0.181</td><td class="num">0.762</td></tr><tr><td>① baseline</td><td class="num"><b>0.704</b></td><td class="num">0.728</td><td class="num">0.696</td><td class="num mini">0.617 · 0.679 · 0.710 · 0.771 · 0.742</td><td class="num">0.154</td><td class="num">0.690</td></tr>
+    <tr><td class="muted">USGS 기준선 · pilotA A2</td><td class="num" colspan="6">0.854 · 0.855 (산사태 0.729 · 0.872, 액상화 0.895 · 0.850)</td></tr>
+  </table></div>
+  <div class="anal"><b>읽는 법</b><ul>
+    <li><b>⑤ 끄기 지도 + U가 0.808로 가장 높고</b>, 끄기가 있는 ⑤ · ③ · ②가 0.785~0.808에 모입니다. 끄기가 없는 ④ 0.758 · ① 0.704는 낮습니다</li>
+    <li><b>seed 흔들림</b>: 끄기가 있는 ② 0.008 · ⑤ 0.032는 작고, ③ 0.087 · ① 0.154 · ④ 0.181은 큽니다 (④는 0.640 ~ 0.821)</li>
+    <li>모든 실험이 USGS 기준선(0.854) · pilotA(0.855)보다 낮습니다. 산사태는 ① 빼고 모두 USGS(0.729)보다 높지만(0.773~0.794), 액상화가 USGS(0.895)보다 0.08 이상 낮아 전체가 밀립니다</li>
+    <li>3개 평균(⑤ 0.815 · ③ 0.806 · ② 0.786 · ④ 0.737 · ① 0.669)과 순서는 같고, ④ · ①이 seed 3 · 4에서 올라 조금 높아졌습니다</li>
+  </ul></div>
+</section>
+
+
 
 <section>
   <h2><span class="n">3</span>지진별 (USGS 값 = 겹친 면적 평균)</h2>
@@ -1388,7 +1468,7 @@ body{background:#fff}
   <ul>
     <li>완료: 면적 평균 5개 실험 (10.20, 연구실 PC)</li>
     <li>완료: seed 1 다섯 개 모두 (10.21, 연구실 PC). 결과는 2.10, 두 seed 평균은 2 · 2.9 · 3에도 덧붙임</li>
-    <li>완료 (10.22): 5~10° 칸을 고친 soft로 ② · ③ · ④ 다시 (seed 0 · 1, 2.11). 진행 중: seed 2 · 3 · 4 (10.23 새벽 예상). 끝나면 지금 결과와 나란히 비교하고, 시정촌 실험과 칸 실험의 seed 0 · seed 1 비교표(시정촌 대 칸 단위 페이지 4절)도 새 결과로 다시 만들기</li>
+    <li>완료 (10.22 ~ 10.23): 5~10° 칸을 고친 soft로 ② · ③ · ④ 다시, 다섯 실험 모두 seed 0~4 (2.11 · 2.12). 끝나면 지금 결과와 나란히 비교하고, 시정촌 실험과 칸 실험의 seed 0 · seed 1 비교표(시정촌 대 칸 단위 페이지 4절)도 새 결과로 다시 만들기</li>
     <li>교수님 확인 (10.20): 칸(픽셀) 단위 실험은 학습도 픽셀 단위로 하는 것이 맞음 → 지금 방식 그대로</li>
     <li>나중에: 칸 단위 soft만 · U만 (효과 나눠 보기), flow K = 8, base 상관도로 잡음 칸 거르기, 시정촌으로 모으는 방법(최댓값 대 평균) 비교, GPU로 돌리기</li>
   </ul>
