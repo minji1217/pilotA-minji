@@ -86,6 +86,11 @@ hr{border:0;border-top:1px solid var(--line);margin:0}
 .mini{font-size:11px;color:var(--muted)}
 td.up{color:var(--all);font-weight:700} td.down{color:var(--warn);font-weight:700}
 .status{display:inline-block;font-size:12px;padding:2px 10px;border-radius:99px;background:var(--soft);color:var(--muted)}
+
+.seedtab{border-collapse:collapse;font-size:14px} .seedtab th{font-weight:700;padding:7px 9px;border-bottom:2px solid #c9ced7;text-align:left;background:transparent}
+.seedtab td{padding:6px 9px;border-bottom:1px solid var(--line)} .seedtab th.n,.seedtab td.n{text-align:center;font-variant-numeric:tabular-nums;min-width:56px}
+.seedtab tr.top td{border-top:2px solid #c9ced7} .seedtab td.u{font-weight:700;vertical-align:middle;background:var(--soft)} .seedtab td.e{font-weight:700;white-space:nowrap}
+.seedtab td.w{outline:3px solid #a2461f;outline-offset:-3px;font-weight:700} .seedtab td.b{font-weight:700;color:var(--warn)}
 </style>
 
 <style>
@@ -330,8 +335,35 @@ td.up{color:var(--all);font-weight:700} td.down{color:var(--warn);font-weight:70
 <li>SOFTU_분산만 노토 액상화는 칸이 0.69로 낮은데, seed 폭이 0.46입니다 (seed 0에서 크게 무너짐). SOFTU_분산만 전체가 시정촌과 비슷하게 나온 주된 이유입니다</li>
 <li>정리: 칸 단위의 이득은 대부분 <b>액상화, 특히 노토 · 구마모토</b>에서 나오고, 훗카이도 액상화는 오히려 내려갑니다</li></ul></div>
 </section>
+<section id="best">
+  <h2><span class="n">5</span>seed별로 보면: 어떤 실험이 가장 좋은가</h2>
+  <p>seed 0~4 각각에서 시정촌 실험 5개와 칸(픽셀) 실험 5개의 전체 AUC입니다. 같은 seed 번호라도 두 방식의 난수는 다르므로(4절), 각 단위 <b>안에서</b> 어느 실험이 1등인지와 평균 · 가장 나쁜 seed를 봅니다.</p>
+  <div class="tw"><table class="seedtab"><tr><th>단위</th><th>실험</th><th class="n">seed 0</th><th class="n">seed 1</th><th class="n">seed 2</th><th class="n">seed 3</th><th class="n">seed 4</th><th class="n">평균</th><th class="n">가장 나쁜 seed</th><th class="n">1등 횟수</th></tr>
+<tr class="top"><td rowspan="5" class="u">시정촌</td><td class="e">DN</td><td class="n" style="background:rgb(214,220,229);color:#1d2430">0.638</td><td class="n" style="background:rgb(206,214,225);color:#1d2430">0.647</td><td class="n" style="background:rgb(242,243,247);color:#1d2430">0.603</td><td class="n" style="background:rgb(203,211,223);color:#1d2430">0.651</td><td class="n" style="background:rgb(245,246,249);color:#1d2430">0.530</td><td class="n">0.614</td><td class="n">0.530</td><td class="n">–</td></tr>
+<tr><td class="e">SOFT</td><td class="n" style="background:rgb(109,132,163);color:#fff">0.767</td><td class="n" style="background:rgb(142,160,185);color:#1d2430">0.726</td><td class="n" style="background:rgb(163,178,198);color:#1d2430">0.700</td><td class="n" style="background:rgb(174,187,204);color:#1d2430">0.687</td><td class="n" style="background:rgb(189,199,214);color:#1d2430">0.669</td><td class="n">0.710</td><td class="n">0.669</td><td class="n">–</td></tr>
+<tr><td class="e">SOFTU</td><td class="n" style="background:rgb(122,144,172);color:#fff">0.750</td><td class="n" style="background:rgb(120,142,171);color:#fff">0.754</td><td class="n" style="background:rgb(128,148,175);color:#fff">0.744</td><td class="n" style="background:rgb(155,171,193);color:#1d2430">0.710</td><td class="n" style="background:rgb(135,155,180);color:#1d2430">0.735</td><td class="n">0.738</td><td class="n">0.710</td><td class="n">–</td></tr>
+<tr><td class="e">SOFTU_끄기만</td><td class="n" style="background:rgb(119,141,170);color:#fff">0.755</td><td class="n" style="background:rgb(136,155,181);color:#1d2430">0.733</td><td class="n" style="background:rgb(138,157,182);color:#1d2430">0.731</td><td class="n" style="background:rgb(181,193,209);color:#1d2430">0.678</td><td class="n" style="background:rgb(152,169,191);color:#1d2430">0.714</td><td class="n">0.722</td><td class="n">0.678</td><td class="n">–</td></tr>
+<tr><td class="e">SOFTU_분산만</td><td class="n w" style="background:rgb(103,128,160);color:#fff">0.774</td><td class="n w" style="background:rgb(101,126,159);color:#fff">0.777</td><td class="n w" style="background:rgb(122,143,172);color:#fff">0.751</td><td class="n w" style="background:rgb(151,168,190);color:#1d2430">0.715</td><td class="n w" style="background:rgb(132,152,178);color:#fff">0.739</td><td class="n b">0.751</td><td class="n b">0.715</td><td class="n">5</td></tr>
+<tr class="top"><td rowspan="5" class="u">픽셀</td><td class="e">DN</td><td class="n" style="background:rgb(230,234,240);color:#1d2430">0.617</td><td class="n" style="background:rgb(180,192,208);color:#1d2430">0.679</td><td class="n" style="background:rgb(155,171,193);color:#1d2430">0.710</td><td class="n" style="background:rgb(105,130,161);color:#fff">0.771</td><td class="n" style="background:rgb(129,149,176);color:#fff">0.742</td><td class="n">0.704</td><td class="n">0.617</td><td class="n">–</td></tr>
+<tr><td class="e">SOFTU</td><td class="n" style="background:rgb(97,122,156);color:#fff">0.782</td><td class="n" style="background:rgb(90,117,152);color:#fff">0.790</td><td class="n" style="background:rgb(95,121,155);color:#fff">0.785</td><td class="n" style="background:rgb(94,120,154);color:#fff">0.785</td><td class="n" style="background:rgb(95,121,155);color:#fff">0.784</td><td class="n">0.785</td><td class="n">0.782</td><td class="n">–</td></tr>
+<tr><td class="e">SOFTU_끄기만</td><td class="n w" style="background:rgb(82,110,147);color:#fff">0.800</td><td class="n w" style="background:rgb(50,84,127);color:#fff">0.839</td><td class="n" style="background:rgb(100,125,158);color:#fff">0.778</td><td class="n" style="background:rgb(73,102,141);color:#fff">0.812</td><td class="n" style="background:rgb(121,143,172);color:#fff">0.751</td><td class="n">0.796</td><td class="n">0.751</td><td class="n">2</td></tr>
+<tr><td class="e">SOFTU_분산만</td><td class="n" style="background:rgb(212,218,228);color:#1d2430">0.640</td><td class="n" style="background:rgb(107,131,162);color:#fff">0.770</td><td class="n" style="background:rgb(82,110,147);color:#fff">0.800</td><td class="n w" style="background:rgb(65,96,136);color:#fff">0.821</td><td class="n" style="background:rgb(115,137,167);color:#fff">0.760</td><td class="n">0.758</td><td class="n">0.640</td><td class="n">1</td></tr>
+<tr><td class="e">LOCALU</td><td class="n" style="background:rgb(84,112,148);color:#fff">0.797</td><td class="n" style="background:rgb(65,96,136);color:#fff">0.821</td><td class="n w" style="background:rgb(60,92,133);color:#fff">0.827</td><td class="n" style="background:rgb(84,112,148);color:#fff">0.798</td><td class="n w" style="background:rgb(86,114,149);color:#fff">0.795</td><td class="n b">0.808</td><td class="n b">0.795</td><td class="n">2</td></tr>
+<tr class="top"><td class="u">기준</td><td class="e">USGS 기준선</td><td class="n" colspan="5" style="color:#3f8f5a">0.854 (seed 없음)</td><td class="n">0.854</td><td class="n"></td><td class="n"></td></tr>
+</table></div>
+  <p class="meta">색이 진할수록 높음. 빨간 테두리 = 그 seed에서 그 단위 안 1등. 빨간 글씨 = 그 단위 안에서 평균 · 가장 나쁜 seed가 가장 높은 실험. 슬라이드용 PNG: <code>docs/html/img/seed_by_seed_best.png</code></p>
+  <div class="anal"><b>읽는 법</b><ul>
+    <li><b>시정촌 단위는 SOFTU_분산만이 seed 5개 모두 1등</b>입니다 (평균 0.751, 가장 나쁜 seed 0.715)</li>
+    <li><b>칸 단위는 seed마다 1등이 바뀝니다</b>: SOFTU_끄기만 2번 (seed 0 · 1), LOCALU 2번 (seed 2 · 4), SOFTU_분산만 1번 (seed 3)</li>
+    <li>그래도 <b>LOCALU가 평균(0.808)과 가장 나쁜 seed(0.795) 모두 가장 높고</b>, 다섯 seed 모두 3등 안에 듭니다. SOFTU_끄기만은 평균 0.796이지만 seed 4에서 0.751로 내려갑니다</li>
+    <li>LOCALU의 가장 나쁜 seed(0.795)도 시정촌 실험 전체에서 가장 좋은 seed(SOFTU_분산만 seed 1, 0.777)보다 높습니다</li>
+    <li>다만 LOCALU와 SOFTU_끄기만의 평균 차이 0.012는 seed 흔들림(SOFTU_끄기만 폭 0.087) 안이라 "확실히 더 좋다"기보다 <b>"가장 안정적으로 높다"</b>고 말하는 것이 맞습니다</li>
+    <li><b>최종: 칸 단위 LOCALU</b> (평균 0.808, 가장 나쁜 seed 0.795). 아직 USGS 기준선 0.854보다는 0.046 낮습니다</li>
+  </ul></div>
+</section>
+
 <section id="seedstab">
-  <h2><span class="n">5</span>seed 안정성: 시정촌 대 칸 (seed 0~4)</h2>
+  <h2><span class="n">6</span>seed 안정성: 시정촌 대 칸 (seed 0~4)</h2>
   <p>두 방식 모두 seed 0 · 1 · 2 · 3 · 4로 돌렸습니다. 두 가지를 봅니다. ① 전체 AUC가 seed마다 얼마나 다른가, ② 시정촌 확률의 <b>순서</b>가 seed끼리 얼마나 같은가 (AUC는 순서만 보므로 ②가 흔들림의 원인).</p>
   <h3>① 전체 AUC의 흔들림</h3>
   <figure><div class="tw"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 470" width="1000" role="img" aria-label="seed 0~4 전체 AUC: 시정촌 단위 대 픽셀 단위" style="font-family:'IBM Plex Sans KR','Malgun Gothic',sans-serif;max-width:100%;height:auto"><rect width="1000" height="470" fill="#fff"/>
