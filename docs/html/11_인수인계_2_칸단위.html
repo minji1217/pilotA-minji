@@ -1,0 +1,454 @@
+<!doctype html>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>DisasterNet 칸 단위 실험</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;600&display=swap">
+<style>
+:root{
+  /* 인수인계 문서: 한 열 읽기 레이아웃, 표·그림만 넓게 */
+  --bg:#ffffff; --fg:#1b2330; --muted:#5d6676; --line:#e2e5ea; --soft:#f3f5f8; --tint:#eaf0f7;
+  --accent:#23507f; --ls:#b5651d; --lq:#2d62b3; --all:#3c8a57; --warn:#a8452a; --ref:#8a93a3;
+  --ls-bg:#f8efe6; --lq-bg:#e9f0fa; --all-bg:#e9f4ed; --warn-bg:#fbeee8;
+  --sans:'IBM Plex Sans KR',system-ui,-apple-system,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;
+  --mono:'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#12161c; --fg:#e6e9ee; --muted:#9aa3b0; --line:#2a313b; --soft:#1a2029; --tint:#1c2736;
+  --accent:#8db4e8; --ls:#e09a5c; --lq:#74a2ea; --all:#6cc08a; --warn:#ef8a62; --ref:#77808f;
+  --ls-bg:#2a2119; --lq-bg:#18233a; --all-bg:#17281d; --warn-bg:#2d1d16; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#12161c; --fg:#e6e9ee; --muted:#9aa3b0; --line:#2a313b; --soft:#1a2029; --tint:#1c2736;
+  --accent:#8db4e8; --ls:#e09a5c; --lq:#74a2ea; --all:#6cc08a; --warn:#ef8a62; --ref:#77808f;
+  --ls-bg:#2a2119; --lq-bg:#18233a; --all-bg:#17281d; --warn-bg:#2d1d16; color-scheme:dark}
+body{background:var(--bg);color:var(--fg);font-family:var(--sans);font-size:16px;line-height:1.7;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+main{max-width:880px;margin:0 auto;padding-block:40px 80px;display:flex;flex-direction:column;gap:44px}
+header{display:flex;flex-direction:column;gap:12px}
+.eyebrow{font-size:13px;letter-spacing:.06em;color:var(--muted);font-weight:500}
+h1{font-size:clamp(26px,4vw,34px);line-height:1.3;margin:0;text-wrap:balance}
+h2{font-size:23px;line-height:1.35;margin:0 0 4px;text-wrap:balance;display:flex;gap:12px;align-items:baseline}
+h2 .n{font-family:var(--mono);font-size:15px;color:var(--accent);font-weight:600;flex:none}
+h3{font-size:18px;margin:18px 0 2px}
+p{margin:0;max-width:68ch} section{display:flex;flex-direction:column;gap:14px} section>ul,section>ol{margin:0;padding-left:22px;max-width:68ch}
+li+li{margin-top:4px}
+.lede{font-size:17.5px;color:var(--fg);max-width:64ch}
+.meta{font-size:13.5px;color:var(--muted)}
+a{color:var(--accent)}
+code{font-family:var(--mono);font-size:.88em;background:var(--soft);padding:1px 5px;border-radius:4px}
+pre{font-family:var(--mono);font-size:13px;line-height:1.6;background:var(--soft);border:1px solid var(--line);border-radius:8px;padding:12px 14px;overflow-x:auto;margin:0}
+.toc{display:flex;flex-wrap:wrap;gap:6px 8px;font-size:13.5px}
+.toc a{text-decoration:none;color:var(--fg);border:1px solid var(--line);border-radius:999px;padding:3px 11px}
+.toc a:hover,.toc a:focus-visible{border-color:var(--accent);color:var(--accent);outline:none}
+.key{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+.key div{border:1px solid var(--line);border-radius:10px;padding:14px 16px;display:flex;flex-direction:column;gap:2px;min-width:0}
+.key b{font-size:30px;line-height:1.15;font-variant-numeric:tabular-nums}
+.key span{font-size:13.5px;color:var(--muted)}
+.key .best b{color:var(--accent)} .key .ref b{color:var(--all)}
+.box{background:var(--soft);border-radius:10px;padding:14px 18px;display:flex;flex-direction:column;gap:8px}
+.box.tip{background:var(--tint)} .box.warn{background:var(--warn-bg)}
+.box ul{margin:0;padding-left:20px} .box p{max-width:none}
+.box .t{font-weight:700}
+.tw{overflow-x:auto;min-width:0}
+table{border-collapse:collapse;width:100%;font-size:14.5px}
+th{text-align:left;font-weight:700;font-size:13px;color:var(--muted);padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:bottom}
+td{padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+tr.hi td{background:var(--tint)} tr.ref td{color:var(--muted)}
+.tag{display:inline-block;font-size:12px;font-weight:600;padding:1px 8px;border-radius:999px;white-space:nowrap}
+.t-ls{background:var(--ls-bg);color:var(--ls)} .t-lq{background:var(--lq-bg);color:var(--lq)} .t-all{background:var(--all-bg);color:var(--all)}
+.yes{color:var(--all);font-weight:700} .no{color:var(--muted)}
+.up{color:var(--all);font-weight:600} .down{color:var(--warn);font-weight:600}
+figure{margin:0;display:flex;flex-direction:column;gap:8px} figcaption{font-size:13.5px;color:var(--muted);max-width:none}
+svg text{font-family:var(--sans)}
+.c-fg{fill:var(--fg)} .c-mu{fill:var(--muted)} .c-ls{fill:var(--ls)} .c-lq{fill:var(--lq)} .c-all{fill:var(--all)} .c-ac{fill:var(--accent)} .c-ref{fill:var(--ref)} .c-warn{fill:var(--warn)}
+.c-soft{fill:var(--soft)} .c-bg{fill:var(--bg)} .c-tint{fill:var(--tint)} .c-lsbg{fill:var(--ls-bg)} .c-lqbg{fill:var(--lq-bg)}
+.s-line{stroke:var(--line)} .s-mu{stroke:var(--muted)} .s-fg{stroke:var(--fg)} .s-ac{stroke:var(--accent)} .s-warn{stroke:var(--warn)} .s-all{stroke:var(--all)}
+.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+.steps div{border:1px solid var(--line);border-radius:10px;padding:12px 14px;min-width:0;display:flex;flex-direction:column;gap:4px}
+.steps b{font-size:15px} .steps span{font-size:14px;color:var(--muted)}
+.foot{font-size:13px;color:var(--muted);border-top:1px solid var(--line);padding-top:16px}
+@media (prefers-reduced-motion:reduce){*{scroll-behavior:auto}}
+</style>
+<style>.seedt td.u{font-weight:700;vertical-align:middle;background:var(--soft)} .seedt tr.top td{border-top:2px solid var(--line)}
+.seedt td.w{outline:3px solid var(--warn);outline-offset:-3px;font-weight:700} .seedt td.b{font-weight:700;color:var(--warn)}
+.cellt td.off{background:var(--soft);font-weight:700} .cellt td.low{background:repeating-linear-gradient(45deg,var(--soft),var(--soft) 5px,var(--line) 5px,var(--line) 7px);font-weight:700} .cellt td.keep{color:var(--muted)}</style>
+<main>
+<header>
+  <div class="eyebrow">재난 파일럿 · DisasterNet 인수인계 2 / 2 · 2026-10-23 기준</div>
+  <h1>DisasterNet 칸(픽셀) 단위 실험</h1>
+  <p class="lede">시정촌 단위(<a href="https://claude.ai/artifact/UpGVai4nNwqVRKoLB6wPnu">1편</a>)로는 USGS를 넘지 못해서, 250 m 칸마다 학습하고 시정촌 값은 칸 사후확률의 최댓값으로 내는 실험을 했습니다. 왜 칸으로 내려갔고, 칸에 무엇을 붙였고, 어떻게 나왔는지 순서대로 정리했습니다. DisasterNet 모델 설명과 용어는 1편 2절에 있습니다.</p>
+  <div class="key">
+    <div class="best"><b>0.808</b><span>칸 단위 최고 (LOCALU)</span></div>
+    <div><b>0.751</b><span>시정촌 단위 최고 (SOFTU_분산만)</span></div>
+    <div class="ref"><b>0.854</b><span>USGS 기준선</span></div>
+    <div><b>0.795</b><span>LOCALU의 가장 나쁜 seed</span></div>
+  </div>
+  <p class="meta">숫자는 모두 전체 AUC (평가 시정촌 200곳), seed 0~4 다섯 번 평균입니다. 채점 방법은 1편 6절과 같습니다.</p>
+  <nav class="toc" aria-label="차례"><a href="#why">1 왜 칸으로</a><a href="#cell">2 칸 만들기</a><a href="#off">3 칸에서 끄기</a><a href="#exp">4 실험 5개</a><a href="#res">5 결과</a><a href="#vs">6 시정촌 대 칸</a><a href="#seed">7 seed별</a><a href="#learn">8 알게 된 것</a><a href="#run">9 다시 돌리기</a><a href="#next">10 남은 일</a></nav>
+</header>
+
+<section id="why">
+  <h2><span class="n">1</span>왜 칸 단위로 내려갔나</h2>
+  <ul>
+    <li><b>끄기를 제대로 할 수 있습니다.</b> 원 논문은 위치마다 "일어날 수 없는 재해"를 0으로 끕니다. 시정촌에는 비탈과 평지가 섞여 있어 이걸 못 했지만, 250 m 칸은 경사가 하나라 비탈 칸 · 평지 칸으로 나눌 수 있습니다.</li>
+    <li><b>좁은 곳의 신호가 살아납니다.</b> 시정촌 평균 DPM에서는 강가 · 매립지처럼 좁은 곳의 변화가 넓은 나머지 땅에 묻힙니다. 칸으로 나누면 그 칸만 따로 봅니다.</li>
+    <li>교수님 지시: <b>칸마다 학습하고, 시정촌 값은 칸 사후확률의 최댓값</b>. 정답이 시정촌 단위라 채점은 시정촌으로 해야 하기 때문입니다.</li>
+  </ul>
+  <figure><svg viewBox="0 0 860 300" width="100%" role="img" aria-label="시정촌 안 250 m 칸마다 사후확률을 내고 그중 최댓값을 시정촌 값으로 쓰는 그림" style="max-width:860px;height:auto">
+<rect x="30" y="30" width="43" height="43" rx="3" class="c-lq" opacity="0.16"/>
+<text x="51.5" y="57" text-anchor="middle" font-size="12" class="c-fg" font-weight="400">0.05</text>
+<rect x="76" y="30" width="43" height="43" rx="3" class="c-lq" opacity="0.19"/>
+<text x="97.5" y="57" text-anchor="middle" font-size="12" class="c-fg" font-weight="400">0.08</text>
+<rect x="122" y="30" width="43" height="43" rx="3" class="c-lq" opacity="0.22"/>
+<text x="143.5" y="57" text-anchor="middle" font-size="12" class="c-fg" font-weight="400">0.12</text>
+<rect x="168" y="30" width="43" height="43" rx="3" class="c-lq" opacity="0.38"/>
+<text x="189.5" y="57" text-anchor="middle" font-size="12" class="c-fg" font-weight="400">0.30</text>
+<rect x="214" y="30" width="43" height="43" rx="3" class="c-lq" opacity="0.31"/>
+<text x="235.5" y="57" text-anchor="middle" font-size="12" class="c-fg" font-weight="400">0.22</text>
+<rect x="260" y="30" width="43" height="43" rx="3" class="c-lq" opacity="0.21"/>
+<text x="281.5" y="57" text-anchor="middle" font-size="12" class="c-fg" font-weight="400">0.10</text>
+<rect x="30" y="76" width="43" height="43" rx="3" class="c-lq" opacity="0.17"/>
+<text x="51.5" y="103" text-anchor="middle" font-size="12" class="c-fg" font-weight="400">0.06</text>
+<rect x="76" y="76" width="43" height="43" rx="3" class="c-lq" opacity="0.21"/>
+<text x="97.5" y="103" text-anchor="middle" font-size="12" class="c-fg" font-weight="400">0.10</text>
+<rect x="122" y="76" width="43" height="43" rx="3" class="c-lq" opacity="0.47"/>
+<text x="143.5" y="103" text-anchor="middle" font-size="12" class="c-fg" font-weight="400">0.41</text>
+<rect x="168" y="76" width="43" height="43" rx="3" class="c-lq" opacity="0.83"/>
+<text x="189.5" y="103" text-anchor="middle" font-size="12" class="c-bg" font-weight="700">0.83</text>
+<rect x="214" y="76" width="43" height="43" rx="3" class="c-lq" opacity="0.59"/>
+<text x="235.5" y="103" text-anchor="middle" font-size="12" class="c-bg" font-weight="400">0.55</text>
+<rect x="260" y="76" width="43" height="43" rx="3" class="c-lq" opacity="0.22"/>
+<text x="281.5" y="103" text-anchor="middle" font-size="12" class="c-fg" font-weight="400">0.12</text>
+<rect x="30" y="122" width="43" height="43" rx="3" class="c-lq" opacity="0.15"/>
+<text x="51.5" y="149" text-anchor="middle" font-size="12" class="c-fg" font-weight="400">0.04</text>
+<rect x="76" y="122" width="43" height="43" rx="3" class="c-lq" opacity="0.20"/>
+<text x="97.5" y="149" text-anchor="middle" font-size="12" class="c-fg" font-weight="400">0.09</text>
+<rect x="122" y="122" width="43" height="43" rx="3" class="c-lq" opacity="0.43"/>
+<text x="143.5" y="149" text-anchor="middle" font-size="12" class="c-fg" font-weight="400">0.36</text>
+<rect x="168" y="122" width="43" height="43" rx="3" class="c-lq" opacity="0.65"/>
+<text x="189.5" y="149" text-anchor="middle" font-size="12" class="c-bg" font-weight="400">0.62</text>
+<rect x="214" y="122" width="43" height="43" rx="3" class="c-lq" opacity="0.36"/>
+<text x="235.5" y="149" text-anchor="middle" font-size="12" class="c-fg" font-weight="400">0.28</text>
+<rect x="260" y="122" width="43" height="43" rx="3" class="c-lq" opacity="0.18"/>
+<text x="281.5" y="149" text-anchor="middle" font-size="12" class="c-fg" font-weight="400">0.07</text>
+<rect x="30" y="168" width="43" height="43" rx="3" class="c-lq" opacity="0.15"/>
+<text x="51.5" y="195" text-anchor="middle" font-size="12" class="c-fg" font-weight="400">0.03</text>
+<rect x="76" y="168" width="43" height="43" rx="3" class="c-lq" opacity="0.16"/>
+<text x="97.5" y="195" text-anchor="middle" font-size="12" class="c-fg" font-weight="400">0.05</text>
+<rect x="122" y="168" width="43" height="43" rx="3" class="c-lq" opacity="0.21"/>
+<text x="143.5" y="195" text-anchor="middle" font-size="12" class="c-fg" font-weight="400">0.11</text>
+<rect x="168" y="168" width="43" height="43" rx="3" class="c-lq" opacity="0.28"/>
+<text x="189.5" y="195" text-anchor="middle" font-size="12" class="c-fg" font-weight="400">0.19</text>
+<rect x="214" y="168" width="43" height="43" rx="3" class="c-lq" opacity="0.20"/>
+<text x="235.5" y="195" text-anchor="middle" font-size="12" class="c-fg" font-weight="400">0.09</text>
+<rect x="260" y="168" width="43" height="43" rx="3" class="c-lq" opacity="0.15"/>
+<text x="281.5" y="195" text-anchor="middle" font-size="12" class="c-fg" font-weight="400">0.04</text>
+<rect x="30" y="214" width="43" height="43" rx="3" class="c-lq" opacity="0.14"/>
+<text x="51.5" y="241" text-anchor="middle" font-size="12" class="c-fg" font-weight="400">0.02</text>
+<rect x="76" y="214" width="43" height="43" rx="3" class="c-lq" opacity="0.15"/>
+<text x="97.5" y="241" text-anchor="middle" font-size="12" class="c-fg" font-weight="400">0.03</text>
+<rect x="122" y="214" width="43" height="43" rx="3" class="c-lq" opacity="0.17"/>
+<text x="143.5" y="241" text-anchor="middle" font-size="12" class="c-fg" font-weight="400">0.06</text>
+<rect x="168" y="214" width="43" height="43" rx="3" class="c-lq" opacity="0.19"/>
+<text x="189.5" y="241" text-anchor="middle" font-size="12" class="c-fg" font-weight="400">0.08</text>
+<rect x="214" y="214" width="43" height="43" rx="3" class="c-lq" opacity="0.16"/>
+<text x="235.5" y="241" text-anchor="middle" font-size="12" class="c-fg" font-weight="400">0.05</text>
+<rect x="260" y="214" width="43" height="43" rx="3" class="c-lq" opacity="0.15"/>
+<text x="281.5" y="241" text-anchor="middle" font-size="12" class="c-fg" font-weight="400">0.03</text>
+<rect x="165" y="73" width="49" height="49" rx="4" fill="none" class="s-warn" stroke-width="3"/>
+<text x="30" y="284" font-size="13" class="c-mu">한 시정촌 안의 250 m 칸들 (숫자 = 칸의 액상화 사후확률, 예시)</text>
+<line x1="330" y1="125" x2="420" y2="125" class="s-mu" stroke-width="1.6"/><path d="M420,119 L430,125 L420,131 z" class="c-mu"/>
+<rect x="445" y="60" width="380" height="130" rx="12" class="c-tint"/>
+<text x="470" y="96" font-size="15" font-weight="700" class="c-fg">시정촌 값 = 칸 사후확률의 최댓값</text>
+<text x="470" y="126" font-size="30" font-weight="700" class="c-warn">0.83</text>
+<text x="560" y="124" font-size="13" class="c-fg">이 값을 시정촌 정답과 비교 (AUC)</text>
+<text x="470" y="164" font-size="12.5" class="c-mu">산사태 · 액상화 둘 다 최댓값 (교수님 지시)</text>
+</svg><figcaption>학습은 칸마다, 채점은 시정촌마다. 모델과 학습 설정(손실, flow, 3000 epoch, 지진마다 따로, 정답 안 씀)은 시정촌 실험과 같고, 한 줄이 시정촌에서 칸으로 바뀌었을 뿐입니다. 지진마다 약 4.5만~32만 칸.</figcaption></figure>
+</section>
+
+<section id="cell">
+  <h2><span class="n">2</span>칸 만들기: 칸 하나에 무엇이 붙나</h2>
+  <p>칸은 일본 지역 메시의 250 m 칸(1/4 메시, 실제 약 230 × 260~290 m)입니다. 칸 중심이 들어간 시정촌에 속합니다. 칸마다 아래 세 가지를 붙입니다.</p>
+  <figure><svg viewBox="0 0 860 230" width="100%" role="img" aria-label="250 m 칸 하나에 DPM, USGS 사전확률과 불확실도, 경사가 붙는 방법" style="max-width:860px;height:auto">
+<g transform="translate(14,14)">
+<text x="0" y="12" font-size="14" font-weight="700" class="c-fg">DPM</text><rect x="0" y="24" width="22" height="22" rx="2" class="c-lq" opacity="0.46"/><rect x="24" y="24" width="22" height="22" rx="2" class="c-lq" opacity="0.61"/><rect x="48" y="24" width="22" height="22" rx="2" class="c-lq" opacity="0.52"/><rect x="72" y="24" width="22" height="22" rx="2" class="c-lq" opacity="0.67"/><rect x="96" y="24" width="22" height="22" rx="2" class="c-lq" opacity="0.55"/><rect x="120" y="24" width="22" height="22" rx="2" class="c-lq" opacity="0.40"/><rect x="0" y="48" width="22" height="22" rx="2" class="c-lq" opacity="0.49"/><rect x="24" y="48" width="22" height="22" rx="2" class="c-lq" opacity="0.73"/><rect x="48" y="48" width="22" height="22" rx="2" class="c-lq" opacity="0.46"/><rect x="72" y="48" width="22" height="22" rx="2" class="c-lq" opacity="0.61"/><rect x="96" y="48" width="22" height="22" rx="2" class="c-lq" opacity="0.52"/><rect x="120" y="48" width="22" height="22" rx="2" class="c-lq" opacity="0.67"/><rect x="0" y="72" width="22" height="22" rx="2" class="c-lq" opacity="0.55"/><rect x="24" y="72" width="22" height="22" rx="2" class="c-lq" opacity="0.40"/><rect x="48" y="72" width="22" height="22" rx="2" class="c-lq" opacity="0.49"/><rect x="72" y="72" width="22" height="22" rx="2" class="c-lq" opacity="0.73"/><rect x="96" y="72" width="22" height="22" rx="2" class="c-lq" opacity="0.46"/><rect x="120" y="72" width="22" height="22" rx="2" class="c-lq" opacity="0.61"/><rect x="0" y="96" width="22" height="22" rx="2" class="c-lq" opacity="0.52"/><rect x="24" y="96" width="22" height="22" rx="2" class="c-lq" opacity="0.67"/><rect x="48" y="96" width="22" height="22" rx="2" class="c-lq" opacity="0.55"/><rect x="72" y="96" width="22" height="22" rx="2" class="c-lq" opacity="0.40"/><rect x="96" y="96" width="22" height="22" rx="2" class="c-lq" opacity="0.49"/><rect x="120" y="96" width="22" height="22" rx="2" class="c-lq" opacity="0.73"/><rect x="0" y="120" width="22" height="22" rx="2" class="c-lq" opacity="0.46"/><rect x="24" y="120" width="22" height="22" rx="2" class="c-lq" opacity="0.61"/><rect x="48" y="120" width="22" height="22" rx="2" class="c-lq" opacity="0.52"/><rect x="72" y="120" width="22" height="22" rx="2" class="c-lq" opacity="0.67"/><rect x="96" y="120" width="22" height="22" rx="2" class="c-lq" opacity="0.55"/><rect x="120" y="120" width="22" height="22" rx="2" class="c-lq" opacity="0.40"/><rect x="0" y="144" width="22" height="22" rx="2" class="c-lq" opacity="0.49"/><rect x="24" y="144" width="22" height="22" rx="2" class="c-lq" opacity="0.73"/><rect x="48" y="144" width="22" height="22" rx="2" class="c-lq" opacity="0.46"/><rect x="72" y="144" width="22" height="22" rx="2" class="c-lq" opacity="0.61"/><rect x="96" y="144" width="22" height="22" rx="2" class="c-lq" opacity="0.52"/><rect x="120" y="144" width="22" height="22" rx="2" class="c-lq" opacity="0.67"/><rect x="-3" y="21" width="150" height="150" rx="4" fill="none" class="s-fg" stroke-width="2"/>
+<text x="0" y="196" font-size="12" class="c-mu">40 m 화소 약 41개의 평균</text><text x="0" y="212" font-size="12" class="c-mu">− 프레임 중앙값</text></g>
+<g transform="translate(300,14)">
+<text x="0" y="12" font-size="14" font-weight="700" class="c-fg">USGS 사전확률 · 불확실도</text>
+<rect x="0" y="24" width="100" height="80" class="c-lsbg s-line"/><rect x="100" y="24" width="100" height="80" class="c-ls s-line" opacity=".55"/>
+<rect x="0" y="104" width="100" height="80" class="c-ls s-line" opacity=".3"/><rect x="100" y="104" width="100" height="80" class="c-lsbg s-line"/>
+<rect x="45" y="54" width="110" height="110" fill="none" class="s-warn" stroke-width="2.5"/>
+<text x="72" y="90" text-anchor="middle" font-size="12" class="c-fg">33%</text><text x="128" y="90" text-anchor="middle" font-size="12" class="c-fg">47%</text>
+<text x="72" y="140" text-anchor="middle" font-size="12" class="c-fg">8%</text><text x="128" y="140" text-anchor="middle" font-size="12" class="c-fg">12%</text>
+<text x="0" y="204" font-size="12" class="c-mu">걸친 USGS 칸들을 겹친 넓이 비율로 평균</text></g>
+<g transform="translate(600,14)">
+<text x="0" y="12" font-size="14" font-weight="700" class="c-fg">경사</text>
+<rect x="0" y="30" width="230" height="40" rx="6" class="c-lqbg"/><text x="12" y="55" font-size="13" class="c-lq">평지 (5° 미만) · 24.2%</text>
+<rect x="0" y="78" width="230" height="40" rx="6" class="c-soft"/><text x="12" y="103" font-size="13" class="c-fg">중간 (5~10°) · 13.8%</text>
+<rect x="0" y="126" width="230" height="40" rx="6" class="c-lsbg"/><text x="12" y="151" font-size="13" class="c-ls">비탈 (10° 이상) · 59.4%</text>
+<text x="0" y="196" font-size="12" class="c-mu">칸마다 경사 하나 (전체 칸 중 비율)</text></g>
+</svg><figcaption>그림의 색과 숫자는 예시입니다.</figcaption></figure>
+  <div class="tw"><table>
+    <tr><th>값</th><th>만드는 법</th><th>파일</th></tr>
+    <tr><td><b>DPM</b></td><td>칸 안 40 m 화소(약 41개) DPM 평균 − 위성 프레임 중앙값. 시정촌 실험과 같은 규칙을 칸에 적용</td><td><code>raw/dpm_250m_v8_slim.csv.gz</code></td></tr>
+    <tr><td><b>USGS 사전확률 · 불확실도</b></td><td>칸에 걸친 USGS 칸들의 값을 겹친 넓이 비율로 평균. USGS 칸은 산사태 약 230 × 170~195 m, 액상화 약 460 × 340~390 m라 우리 칸 하나가 USGS 칸 여러 개에 걸칩니다. 확률 999(계산 안 함)는 0</td><td rowspan="2"><code>raw/local_250m_byevent_usgs_aw.csv.gz</code></td></tr>
+    <tr><td><b>경사</b></td><td>국토수치정보 경사(250 m). 평지 5° 미만 · 중간 5~10° · 비탈 10° 이상</td></tr>
+  </table></div>
+  <div class="box"><span class="t">물 칸은 학습에서 뺍니다 (전체 칸의 약 2.5%)</span>
+    <p>100 m 토지이용 자료에서 칸 안에 중심이 든 100 m 칸의 절반 넘게 하천 · 호수 · 바다면 물 칸입니다. 물 위에서는 재해가 없는데 수면은 DPM이 잘 튀어서, 최댓값으로 모으면 물 칸 하나가 시정촌 값을 차지할 수 있기 때문입니다. 원 논문의 끄기 지도도 물은 끕니다.</p></div>
+</section>
+
+<section id="off">
+  <h2><span class="n">3</span>칸에서의 지형 정보와 U</h2>
+  <p>시정촌 실험의 soft와 U를 칸에 맞게 옮겼고, 원 논문처럼 끄기 지도를 쓰는 방법을 하나 더 넣었습니다.</p>
+  <div class="tw"><table class="cellt">
+    <tr><th>지형 정보</th><th>재해</th><th>평지 칸 (5° 미만)</th><th>중간 칸 (5~10°)</th><th>비탈 칸 (10° 이상)</th></tr>
+    <tr><td rowspan="2"><b>soft</b><br><span class="meta">SOFTU 계열</span></td><td><span class="tag t-ls">산사태</span></td><td class="low">1/100로 낮춤</td><td class="keep">그대로</td><td class="keep">그대로</td></tr>
+    <tr><td><span class="tag t-lq">액상화</span></td><td class="keep">그대로</td><td class="keep">그대로</td><td class="low">1/100로 낮춤</td></tr>
+    <tr><td rowspan="2"><b>끄기 지도</b><br><span class="meta">LOCALU</span></td><td><span class="tag t-ls">산사태</span></td><td class="off">0으로 끔</td><td class="keep">그대로</td><td class="keep">그대로</td></tr>
+    <tr><td><span class="tag t-lq">액상화</span></td><td class="keep">그대로</td><td class="keep">그대로</td><td class="off">0으로 끔</td></tr>
+  </table></div>
+  <ul>
+    <li><b>soft</b>: 칸은 비율이 0 아니면 1이라, 시정촌의 log(비율)을 그대로 옮기면 "1/100로 낮춤(로짓에 log 0.01 = −4.6을 더함)" 아니면 "그대로"가 됩니다. 사전확률을 낮출 뿐 0으로 고정하지는 않아서, DPM이 아주 크면 다시 올라갈 수 있습니다.</li>
+    <li><b>끄기 지도</b>: 원 논문의 LOCAL.mat처럼 경사로 만든 지도로 사후확률을 0으로 고정합니다. 되돌릴 수 없어서 확실한 곳만 끕니다.</li>
+    <li><b>중간 칸(5~10°)은 둘 다 켭니다.</b> 산사태 · 액상화가 둘 다 날 수 있는 경사라서입니다.</li>
+    <li><b>U 끄기</b>: 칸의 USGS 불확실도가 0 또는 999면 그 칸의 그 재해를 0으로. <b>U 분산</b>: 그 칸의 USGS 불확실도를 분산으로 (0 · 999 칸은 1).</li>
+  </ul>
+</section>
+
+<section id="exp">
+  <h2><span class="n">4</span>실험 5개</h2>
+  <p>이름은 시정촌 실험과 같은 규칙입니다. 같은 이름이면 같은 설정이라 시정촌 결과와 바로 비교할 수 있습니다. LOCALU는 칸에만 있습니다.</p>
+  <div class="tw"><table>
+    <tr><th>이름</th><th>지형 정보</th><th>U 끄기</th><th>U 분산</th><th>결과 폴더 (outputs/disasternet/)</th></tr>
+    <tr><td><b>DN</b></td><td class="no">–</td><td class="no">–</td><td class="no">–</td><td><code>cells_max_aw</code></td></tr>
+    <tr><td><b>SOFTU</b></td><td>soft</td><td class="yes">○</td><td class="yes">○</td><td><code>cells_max_softunc_paper_aw_mid</code></td></tr>
+    <tr><td><b>SOFTU_끄기만</b></td><td>soft</td><td class="yes">○</td><td class="no">–</td><td><code>cells_max_softunc_off_paper_aw_mid</code></td></tr>
+    <tr><td><b>SOFTU_분산만</b></td><td>soft</td><td class="no">–</td><td class="yes">○</td><td><code>cells_max_softunc_var_paper_aw_mid</code></td></tr>
+    <tr><td><b>LOCALU</b></td><td>끄기 지도</td><td class="yes">○</td><td class="yes">○</td><td><code>cells_max_local_unc_paper_aw</code></td></tr>
+  </table></div>
+  <p class="meta">폴더 이름의 <code>aw</code> = USGS 값을 넓이 평균으로, <code>paper</code> = U 끄기를 논문 기준(불확실도 0 · 999)으로, <code>mid</code> = soft에서 중간 칸을 그대로 둔 버전.</p>
+</section>
+
+<section id="res">
+  <h2><span class="n">5</span>결과</h2>
+  <figure><svg viewBox="0 0 860 472" width="100%" role="img" aria-label="칸 단위 실험 5개의 seed 5개 평균 AUC" style="max-width:860px;height:auto">
+<line x1="170.0" x2="170.0" y1="26" y2="426" class="s-line"/><text x="170.0" y="442" text-anchor="middle" font-size="11.5" class="c-mu">0.5</text>
+<line x1="294.0" x2="294.0" y1="26" y2="426" class="s-line"/><text x="294.0" y="442" text-anchor="middle" font-size="11.5" class="c-mu">0.6</text>
+<line x1="418.0" x2="418.0" y1="26" y2="426" class="s-line"/><text x="418.0" y="442" text-anchor="middle" font-size="11.5" class="c-mu">0.7</text>
+<line x1="542.0" x2="542.0" y1="26" y2="426" class="s-line"/><text x="542.0" y="442" text-anchor="middle" font-size="11.5" class="c-mu">0.8</text>
+<line x1="666.0" x2="666.0" y1="26" y2="426" class="s-line"/><text x="666.0" y="442" text-anchor="middle" font-size="11.5" class="c-mu">0.9</text>
+<line x1="790.0" x2="790.0" y1="26" y2="426" class="s-line"/><text x="790.0" y="442" text-anchor="middle" font-size="11.5" class="c-mu">1.0</text>
+<text x="158" y="62.0" text-anchor="end" font-size="13.5" font-weight="400" class="c-mu">USGS 기준선</text>
+<rect x="170" y="39" width="439.3" height="12" rx="2" class="c-all" opacity="0.45"/>
+<text x="617.3" y="49" font-size="11.5" font-weight="400" class="c-fg">0.854</text>
+<rect x="170" y="54" width="283.5" height="12" rx="2" class="c-ls" opacity="0.45"/>
+<text x="461.5" y="64" font-size="11.5" font-weight="400" class="c-fg">0.729</text>
+<rect x="170" y="69" width="489.9" height="12" rx="2" class="c-lq" opacity="0.45"/>
+<text x="667.9" y="79" font-size="11.5" font-weight="400" class="c-fg">0.895</text>
+<text x="158" y="118.0" text-anchor="end" font-size="13.5" font-weight="400" class="c-mu">pilotA</text>
+<rect x="170" y="95" width="440.2" height="12" rx="2" class="c-all" opacity="0.45"/>
+<text x="618.2" y="105" font-size="11.5" font-weight="400" class="c-fg">0.855</text>
+<rect x="170" y="110" width="461.3" height="12" rx="2" class="c-ls" opacity="0.45"/>
+<text x="639.3" y="120" font-size="11.5" font-weight="400" class="c-fg">0.872</text>
+<rect x="170" y="125" width="434.0" height="12" rx="2" class="c-lq" opacity="0.45"/>
+<text x="612.0" y="135" font-size="11.5" font-weight="400" class="c-fg">0.850</text>
+<line x1="8" x2="852" y1="142" y2="142" class="s-mu" stroke-dasharray="4 4"/>
+<text x="158" y="174.0" text-anchor="end" font-size="13.5" font-weight="700" class="c-fg">DN</text>
+<rect x="170" y="151" width="253.0" height="12" rx="2" class="c-all" opacity="1"/>
+<text x="514.6" y="161" font-size="11.5" font-weight="700" class="c-fg">0.704</text>
+<rect x="170" y="166" width="283.0" height="12" rx="2" class="c-ls" opacity="1"/>
+<text x="461.0" y="176" font-size="11.5" font-weight="400" class="c-fg">0.728</text>
+<rect x="170" y="181" width="243.3" height="12" rx="2" class="c-lq" opacity="1"/>
+<text x="421.3" y="191" font-size="11.5" font-weight="400" class="c-fg">0.696</text>
+<circle cx="315.4" cy="157" r="3.2" class="c-bg s-fg" stroke-width="1.4"/>
+<circle cx="392.3" cy="157" r="3.2" class="c-bg s-fg" stroke-width="1.4"/>
+<circle cx="430.3" cy="157" r="3.2" class="c-bg s-fg" stroke-width="1.4"/>
+<circle cx="506.6" cy="157" r="3.2" class="c-bg s-fg" stroke-width="1.4"/>
+<circle cx="470.5" cy="157" r="3.2" class="c-bg s-fg" stroke-width="1.4"/>
+<text x="158" y="230.0" text-anchor="end" font-size="13.5" font-weight="700" class="c-fg">SOFTU</text>
+<rect x="170" y="207" width="353.7" height="12" rx="2" class="c-all" opacity="1"/>
+<text x="537.5" y="217" font-size="11.5" font-weight="700" class="c-fg">0.785</text>
+<rect x="170" y="222" width="337.9" height="12" rx="2" class="c-ls" opacity="1"/>
+<text x="515.9" y="232" font-size="11.5" font-weight="400" class="c-fg">0.773</text>
+<rect x="170" y="237" width="358.8" height="12" rx="2" class="c-lq" opacity="1"/>
+<text x="536.8" y="247" font-size="11.5" font-weight="400" class="c-fg">0.789</text>
+<circle cx="519.9" cy="213" r="3.2" class="c-bg s-fg" stroke-width="1.4"/>
+<circle cx="529.5" cy="213" r="3.2" class="c-bg s-fg" stroke-width="1.4"/>
+<circle cx="522.8" cy="213" r="3.2" class="c-bg s-fg" stroke-width="1.4"/>
+<circle cx="524.0" cy="213" r="3.2" class="c-bg s-fg" stroke-width="1.4"/>
+<circle cx="521.9" cy="213" r="3.2" class="c-bg s-fg" stroke-width="1.4"/>
+<text x="158" y="286.0" text-anchor="end" font-size="13.5" font-weight="700" class="c-fg">SOFTU_끄기만</text>
+<rect x="170" y="263" width="367.0" height="12" rx="2" class="c-all" opacity="1"/>
+<text x="598.3" y="273" font-size="11.5" font-weight="700" class="c-fg">0.796</text>
+<rect x="170" y="278" width="354.4" height="12" rx="2" class="c-ls" opacity="1"/>
+<text x="532.4" y="288" font-size="11.5" font-weight="400" class="c-fg">0.786</text>
+<rect x="170" y="293" width="371.1" height="12" rx="2" class="c-lq" opacity="1"/>
+<text x="549.1" y="303" font-size="11.5" font-weight="400" class="c-fg">0.799</text>
+<circle cx="542.2" cy="269" r="3.2" class="c-bg s-fg" stroke-width="1.4"/>
+<circle cx="590.3" cy="269" r="3.2" class="c-bg s-fg" stroke-width="1.4"/>
+<circle cx="514.2" cy="269" r="3.2" class="c-bg s-fg" stroke-width="1.4"/>
+<circle cx="556.6" cy="269" r="3.2" class="c-bg s-fg" stroke-width="1.4"/>
+<circle cx="481.9" cy="269" r="3.2" class="c-bg s-fg" stroke-width="1.4"/>
+<text x="158" y="342.0" text-anchor="end" font-size="13.5" font-weight="700" class="c-fg">SOFTU_분산만</text>
+<rect x="170" y="319" width="320.2" height="12" rx="2" class="c-all" opacity="1"/>
+<text x="576.5" y="329" font-size="11.5" font-weight="700" class="c-fg">0.758</text>
+<rect x="170" y="334" width="364.2" height="12" rx="2" class="c-ls" opacity="1"/>
+<text x="542.2" y="344" font-size="11.5" font-weight="400" class="c-fg">0.794</text>
+<rect x="170" y="349" width="306.0" height="12" rx="2" class="c-lq" opacity="1"/>
+<text x="484.0" y="359" font-size="11.5" font-weight="400" class="c-fg">0.747</text>
+<circle cx="343.9" cy="325" r="3.2" class="c-bg s-fg" stroke-width="1.4"/>
+<circle cx="504.6" cy="325" r="3.2" class="c-bg s-fg" stroke-width="1.4"/>
+<circle cx="541.8" cy="325" r="3.2" class="c-bg s-fg" stroke-width="1.4"/>
+<circle cx="568.5" cy="325" r="3.2" class="c-bg s-fg" stroke-width="1.4"/>
+<circle cx="492.4" cy="325" r="3.2" class="c-bg s-fg" stroke-width="1.4"/>
+<text x="158" y="398.0" text-anchor="end" font-size="13.5" font-weight="700" class="c-fg">LOCALU</text>
+<rect x="170" y="375" width="381.6" height="12" rx="2" class="c-all" opacity="1"/>
+<text x="583.5" y="385" font-size="11.5" font-weight="700" class="c-fg">0.808</text>
+<rect x="170" y="390" width="360.1" height="12" rx="2" class="c-ls" opacity="1"/>
+<text x="538.1" y="400" font-size="11.5" font-weight="400" class="c-fg">0.790</text>
+<rect x="170" y="405" width="388.6" height="12" rx="2" class="c-lq" opacity="1"/>
+<text x="566.6" y="415" font-size="11.5" font-weight="400" class="c-fg">0.813</text>
+<circle cx="538.7" cy="381" r="3.2" class="c-bg s-fg" stroke-width="1.4"/>
+<circle cx="568.0" cy="381" r="3.2" class="c-bg s-fg" stroke-width="1.4"/>
+<circle cx="575.5" cy="381" r="3.2" class="c-bg s-fg" stroke-width="1.4"/>
+<circle cx="539.8" cy="381" r="3.2" class="c-bg s-fg" stroke-width="1.4"/>
+<circle cx="536.0" cy="381" r="3.2" class="c-bg s-fg" stroke-width="1.4"/>
+<rect x="170" y="450" width="12" height="12" rx="2" class="c-all"/><text x="187" y="460" font-size="12.5" class="c-fg">전체 (200곳)</text>
+<rect x="300" y="450" width="12" height="12" rx="2" class="c-ls"/><text x="317" y="460" font-size="12.5" class="c-fg">산사태 (49곳)</text>
+<rect x="430" y="450" width="12" height="12" rx="2" class="c-lq"/><text x="447" y="460" font-size="12.5" class="c-fg">액상화 (151곳)</text>
+<circle cx="566" cy="456" r="3.2" class="c-bg s-fg" stroke-width="1.4"/><text x="575" y="460" font-size="12.5" class="c-fg">전체 AUC, seed 하나씩</text>
+</svg><figcaption>막대 = seed 5개 평균, 동그라미 = seed 하나씩의 전체 AUC.</figcaption></figure>
+  <div class="tw"><table>
+    <tr><th>실험</th><th class="num">전체</th><th class="num">산사태</th><th class="num">액상화</th><th class="num">seed 폭</th></tr>
+    <tr class="ref"><td>USGS 기준선</td><td class="num">0.854</td><td class="num">0.729</td><td class="num">0.895</td><td class="num">–</td></tr>
+    <tr class="ref"><td>pilotA</td><td class="num">0.855</td><td class="num">0.872</td><td class="num">0.850</td><td class="num">–</td></tr>
+    <tr><td><b>DN</b></td><td class="num">0.704</td><td class="num">0.728</td><td class="num">0.696</td><td class="num">0.154</td></tr><tr><td><b>SOFTU</b></td><td class="num">0.785</td><td class="num">0.773</td><td class="num">0.789</td><td class="num">0.008</td></tr><tr><td><b>SOFTU_끄기만</b></td><td class="num">0.796</td><td class="num">0.786</td><td class="num">0.799</td><td class="num">0.087</td></tr><tr><td><b>SOFTU_분산만</b></td><td class="num">0.758</td><td class="num">0.794</td><td class="num">0.747</td><td class="num">0.181</td></tr><tr class=hi><td><b>LOCALU</b></td><td class="num">0.808</td><td class="num">0.790</td><td class="num">0.813</td><td class="num">0.032</td></tr>
+  </table></div>
+  <p class="meta">seed 폭 = 가장 높은 seed − 가장 낮은 seed (전체 AUC).</p>
+  <div class="box"><span class="t">시정촌 값은 왜 최댓값인가</span>
+    <p>칸 평균으로 모아 다시 채점해 보면 액상화가 크게 떨어집니다 (LOCALU 액상화 0.813에서 0.738로). 액상화는 시정촌 안 좁은 곳에서 나서 평균을 내면 묻히기 때문입니다. 그래서 산사태 · 액상화 모두 최댓값을 씁니다.</p></div>
+</section>
+
+<section id="vs">
+  <h2><span class="n">6</span>시정촌 단위와 비교</h2>
+  <figure><svg viewBox="0 0 860 330" width="100%" role="img" aria-label="같은 실험의 시정촌 단위와 칸 단위 전체 AUC 비교" style="max-width:860px;height:auto">
+<line x1="56" x2="844" y1="250.0" y2="250.0" class="s-line"/><text x="48" y="254.0" text-anchor="end" font-size="11.5" class="c-mu">0.5</text>
+<line x1="56" x2="844" y1="195.0" y2="195.0" class="s-line"/><text x="48" y="199.0" text-anchor="end" font-size="11.5" class="c-mu">0.6</text>
+<line x1="56" x2="844" y1="140.0" y2="140.0" class="s-line"/><text x="48" y="144.0" text-anchor="end" font-size="11.5" class="c-mu">0.7</text>
+<line x1="56" x2="844" y1="85.0" y2="85.0" class="s-line"/><text x="48" y="89.0" text-anchor="end" font-size="11.5" class="c-mu">0.8</text>
+<line x1="56" x2="844" y1="30.0" y2="30.0" class="s-line"/><text x="48" y="34.0" text-anchor="end" font-size="11.5" class="c-mu">0.9</text>
+<line x1="56" x2="844" y1="55.3" y2="55.3" class="s-all" stroke-dasharray="5 4"/><text x="842" y="49.3" text-anchor="end" font-size="11.5" class="c-all">USGS 0.854</text>
+<rect x="81.80000000000001" y="187.4" width="50" height="62.6" rx="3" class="c-ref"/><text x="106.80000000000001" y="181.4" text-anchor="middle" font-size="12" font-weight="700" class="c-fg">0.614</text>
+<rect x="137.8" y="137.8" width="50" height="112.2" rx="3" class="c-ac"/><text x="162.8" y="131.8" text-anchor="middle" font-size="12" font-weight="700" class="c-fg">0.704</text>
+<text x="134.8" y="270.0" text-anchor="middle" font-size="12" font-weight="700" class="c-all">+0.090</text>
+<text x="134.8" y="290.0" text-anchor="middle" font-size="13" font-weight="700" class="c-fg">DN</text>
+<rect x="239.39999999999998" y="118.9" width="50" height="131.1" rx="3" class="c-ref"/><text x="264.4" y="112.9" text-anchor="middle" font-size="12" font-weight="700" class="c-fg">0.738</text>
+<rect x="295.4" y="93.1" width="50" height="156.9" rx="3" class="c-ac"/><text x="320.4" y="87.1" text-anchor="middle" font-size="12" font-weight="700" class="c-fg">0.785</text>
+<text x="292.4" y="270.0" text-anchor="middle" font-size="12" font-weight="700" class="c-all">+0.047</text>
+<text x="292.4" y="290.0" text-anchor="middle" font-size="13" font-weight="700" class="c-fg">SOFTU</text>
+<rect x="397.0" y="127.9" width="50" height="122.1" rx="3" class="c-ref"/><text x="422.0" y="121.9" text-anchor="middle" font-size="12" font-weight="700" class="c-fg">0.722</text>
+<rect x="453.0" y="87.2" width="50" height="162.8" rx="3" class="c-ac"/><text x="478.0" y="81.2" text-anchor="middle" font-size="12" font-weight="700" class="c-fg">0.796</text>
+<text x="450.0" y="270.0" text-anchor="middle" font-size="12" font-weight="700" class="c-all">+0.074</text>
+<text x="450.0" y="290.0" text-anchor="middle" font-size="13" font-weight="700" class="c-fg">SOFTU_끄기만</text>
+<rect x="554.5999999999999" y="111.9" width="50" height="138.1" rx="3" class="c-ref"/><text x="579.5999999999999" y="105.9" text-anchor="middle" font-size="12" font-weight="700" class="c-fg">0.751</text>
+<rect x="610.5999999999999" y="108.0" width="50" height="142.0" rx="3" class="c-ac"/><text x="635.5999999999999" y="102.0" text-anchor="middle" font-size="12" font-weight="700" class="c-fg">0.758</text>
+<text x="607.5999999999999" y="270.0" text-anchor="middle" font-size="12" font-weight="700" class="c-all">+0.007</text>
+<text x="607.5999999999999" y="290.0" text-anchor="middle" font-size="13" font-weight="700" class="c-fg">SOFTU_분산만</text>
+<text x="737.1999999999999" y="242.0" text-anchor="middle" font-size="11" class="c-mu">없음</text>
+<rect x="768.1999999999999" y="80.8" width="50" height="169.2" rx="3" class="c-ac"/><text x="793.1999999999999" y="74.8" text-anchor="middle" font-size="12" font-weight="700" class="c-fg">0.808</text>
+<text x="765.1999999999999" y="290.0" text-anchor="middle" font-size="13" font-weight="700" class="c-fg">LOCALU</text>
+<rect x="56" y="309" width="12" height="12" rx="2" class="c-ref"/><text x="73" y="320" font-size="12.5" class="c-fg">시정촌 단위</text><rect x="166" y="309" width="12" height="12" rx="2" class="c-ac"/><text x="183" y="320" font-size="12.5" class="c-fg">칸 단위 (시정촌 값 = 칸 최댓값)</text><text x="416" y="320" font-size="12.5" class="c-mu">초록 숫자 = 칸 − 시정촌</text>
+</svg><figcaption>seed 5개 평균 전체 AUC. 같은 이름 = 같은 설정.</figcaption></figure>
+  <p><b>같은 설정이면 칸 단위가 모두 높습니다</b> (+0.007 ~ +0.090). 지진별로 보면 오른 몫은 주로 액상화입니다.</p>
+  <div class="tw"><table>
+    <tr><th>지진 × 재해</th><th class="num">시정촌 수</th><th class="num">USGS</th><th class="num">시정촌 최고<br>SOFTU_분산만</th><th class="num">칸 SOFTU</th><th class="num">칸 LOCALU</th><th class="num">LOCALU − 시정촌 최고</th></tr>
+    <tr><td><span class="tag t-ls">산사태</span> 구마모토</td><td class="num">29</td><td class="num">0.641</td><td class="num">0.838</td><td class="num">0.792</td><td class="num">0.803</td><td class="num down">−0.036</td></tr><tr><td><span class="tag t-ls">산사태</span> 오사카</td><td class="num">7</td><td class="num">1.000</td><td class="num">0.980</td><td class="num">0.980</td><td class="num">0.980</td><td class="num">0.000</td></tr><tr><td><span class="tag t-ls">산사태</span> 훗카이도</td><td class="num">13</td><td class="num">0.778</td><td class="num">0.589</td><td class="num">0.617</td><td class="num">0.661</td><td class="num up">+0.072</td></tr><tr><td><span class="tag t-lq">액상화</span> 구마모토</td><td class="num">40</td><td class="num">0.947</td><td class="num">0.823</td><td class="num">0.903</td><td class="num">0.918</td><td class="num up">+0.095</td></tr><tr><td><span class="tag t-lq">액상화</span> 훗카이도</td><td class="num">40</td><td class="num">0.926</td><td class="num">0.716</td><td class="num">0.563</td><td class="num">0.608</td><td class="num down">−0.108</td></tr><tr><td><span class="tag t-lq">액상화</span> 후쿠시마</td><td class="num">7</td><td class="num">0.500</td><td class="num">0.767</td><td class="num">0.533</td><td class="num">0.533</td><td class="num down">−0.233</td></tr><tr><td><span class="tag t-lq">액상화</span> 노토반도</td><td class="num">64</td><td class="num">0.887</td><td class="num">0.695</td><td class="num">0.888</td><td class="num">0.907</td><td class="num up">+0.213</td></tr>
+  </table></div>
+  <ul>
+    <li><b>크게 오른 곳</b>: 노토 액상화(64곳, 가장 큰 비중) 0.695에서 0.907로, 구마모토 액상화 0.823에서 0.918로</li>
+    <li><b>오히려 내려간 곳</b>: 훗카이도 액상화(0.716에서 0.608), 후쿠시마 액상화(7곳뿐), 구마모토 산사태(조금)</li>
+  </ul>
+</section>
+
+<section id="seed">
+  <h2><span class="n">7</span>seed별로 보면: 어떤 실험이 가장 좋은가</h2>
+  <div class="tw"><table class="seedt"><tr><th>단위</th><th>실험</th><th class="num">seed 0</th><th class="num">seed 1</th><th class="num">seed 2</th><th class="num">seed 3</th><th class="num">seed 4</th><th class="num">평균</th><th class="num">가장 나쁜 seed</th><th class="num">1등</th></tr>
+<tr class="top"><td rowspan="4" class="u">시정촌</td><td><b>DN</b></td><td class="num" style="background:rgb(203,212,225);color:#1b2330">0.638</td><td class="num" style="background:rgb(196,207,221);color:#1b2330">0.647</td><td class="num" style="background:rgb(229,234,242);color:#1b2330">0.603</td><td class="num" style="background:rgb(193,204,219);color:#1b2330">0.651</td><td class="num" style="background:rgb(232,237,244);color:#1b2330">0.530</td><td class="num">0.614</td><td class="num">0.530</td><td class="num">–</td></tr>
+<tr><td><b>SOFTU</b></td><td class="num" style="background:rgb(117,140,170);color:#fff">0.750</td><td class="num" style="background:rgb(115,138,169);color:#fff">0.754</td><td class="num" style="background:rgb(122,144,173);color:#fff">0.744</td><td class="num" style="background:rgb(148,166,190);color:#1b2330">0.710</td><td class="num" style="background:rgb(129,150,178);color:#1b2330">0.735</td><td class="num">0.738</td><td class="num">0.710</td><td class="num">–</td></tr>
+<tr><td><b>SOFTU_끄기만</b></td><td class="num" style="background:rgb(114,138,168);color:#fff">0.755</td><td class="num" style="background:rgb(130,151,178);color:#1b2330">0.733</td><td class="num" style="background:rgb(132,153,180);color:#1b2330">0.731</td><td class="num" style="background:rgb(172,187,206);color:#1b2330">0.678</td><td class="num" style="background:rgb(145,164,188);color:#1b2330">0.714</td><td class="num">0.722</td><td class="num">0.678</td><td class="num">–</td></tr>
+<tr><td><b>SOFTU_분산만</b></td><td class="num w" style="background:rgb(99,125,159);color:#fff">0.774</td><td class="num w" style="background:rgb(97,123,157);color:#fff">0.777</td><td class="num w" style="background:rgb(117,140,170);color:#fff">0.751</td><td class="num w" style="background:rgb(144,163,187);color:#1b2330">0.715</td><td class="num w" style="background:rgb(126,148,176);color:#fff">0.739</td><td class="num b">0.751</td><td class="num b">0.715</td><td class="num">5</td></tr>
+<tr class="top"><td rowspan="5" class="u">칸</td><td><b>DN</b></td><td class="num" style="background:rgb(218,225,235);color:#1b2330">0.617</td><td class="num" style="background:rgb(171,186,205);color:#1b2330">0.679</td><td class="num" style="background:rgb(148,166,190);color:#1b2330">0.710</td><td class="num" style="background:rgb(101,127,160);color:#fff">0.771</td><td class="num" style="background:rgb(123,145,174);color:#fff">0.742</td><td class="num">0.704</td><td class="num">0.617</td><td class="num">–</td></tr>
+<tr><td><b>SOFTU</b></td><td class="num" style="background:rgb(93,120,155);color:#fff">0.782</td><td class="num" style="background:rgb(87,115,151);color:#fff">0.790</td><td class="num" style="background:rgb(91,118,153);color:#fff">0.785</td><td class="num" style="background:rgb(91,118,153);color:#fff">0.785</td><td class="num" style="background:rgb(92,119,154);color:#fff">0.784</td><td class="num">0.785</td><td class="num">0.782</td><td class="num">–</td></tr>
+<tr><td><b>SOFTU_끄기만</b></td><td class="num w" style="background:rgb(79,108,146);color:#fff">0.800</td><td class="num w" style="background:rgb(50,84,127);color:#fff">0.839</td><td class="num" style="background:rgb(97,123,157);color:#fff">0.778</td><td class="num" style="background:rgb(71,101,140);color:#fff">0.812</td><td class="num" style="background:rgb(116,140,170);color:#fff">0.751</td><td class="num">0.796</td><td class="num">0.751</td><td class="num">2</td></tr>
+<tr><td><b>SOFTU_분산만</b></td><td class="num" style="background:rgb(201,211,224);color:#1b2330">0.640</td><td class="num" style="background:rgb(102,128,161);color:#fff">0.770</td><td class="num" style="background:rgb(80,109,146);color:#fff">0.800</td><td class="num w" style="background:rgb(63,95,135);color:#fff">0.821</td><td class="num" style="background:rgb(110,134,165);color:#fff">0.760</td><td class="num">0.758</td><td class="num">0.640</td><td class="num">1</td></tr>
+<tr><td><b>LOCALU</b></td><td class="num" style="background:rgb(82,110,147);color:#fff">0.797</td><td class="num" style="background:rgb(64,95,136);color:#fff">0.821</td><td class="num w" style="background:rgb(59,91,133);color:#fff">0.827</td><td class="num" style="background:rgb(81,110,147);color:#fff">0.798</td><td class="num w" style="background:rgb(83,112,148);color:#fff">0.795</td><td class="num b">0.808</td><td class="num b">0.795</td><td class="num">2</td></tr>
+</table></div>
+  <p class="meta">전체 AUC. 색이 진할수록 높음. 테두리 = 그 seed에서 그 단위 안 1등. 빨간 글씨 = 그 단위 안에서 평균 · 가장 나쁜 seed가 가장 높은 실험. 같은 seed 번호라도 시정촌과 칸은 줄 수가 달라 뽑히는 난수가 다르므로, 단위 <b>안에서</b> 비교합니다.</p>
+  <ul>
+    <li><b>시정촌</b>: SOFTU_분산만이 seed 5개 모두 1등</li>
+    <li><b>칸</b>: seed마다 1등이 바뀝니다 (SOFTU_끄기만 2번, LOCALU 2번, SOFTU_분산만 1번). 그래도 <b>LOCALU가 평균(0.808)과 가장 나쁜 seed(0.795) 모두 가장 높고</b>, 다섯 seed 모두 3등 안입니다</li>
+    <li>LOCALU의 가장 나쁜 seed(0.795)도 시정촌 실험의 가장 좋은 seed(0.777)보다 높습니다</li>
+    <li>LOCALU와 SOFTU_끄기만의 평균 차이 0.012는 seed 흔들림 안이라 "확실히 더 좋다"기보다 <b>"가장 안정적으로 높다"</b>입니다</li>
+  </ul>
+  <div class="box warn"><span class="t">SOFTU_분산만의 seed 0이 0.640으로 낮은 이유</span>
+    <p>seed 0에서 노토 액상화 AUC가 0.35로 무너졌습니다 (다른 seed는 0.76~0.81). 노토 64곳 중 42곳의 확률이 0.99 이상으로 붙어서 순서가 사실상 무작위가 됐고, 끄기가 없어 불확실도가 0 · 999뿐인 노토 피해 없음 11곳이 맨 위로 올라갔습니다. 끄기가 있는 SOFTU · SOFTU_끄기만 · LOCALU의 노토 액상화는 seed마다 0.87~0.92로 안정적입니다.</p></div>
+</section>
+
+<section id="learn">
+  <h2><span class="n">8</span>무엇을 알게 됐나</h2>
+  <ol>
+    <li><b>칸 단위가 시정촌 단위보다 낫습니다.</b> 같은 설정끼리 모두 높고, 최고도 0.751에서 0.808로 올랐습니다. 주로 액상화(노토 · 구마모토)에서 오릅니다.</li>
+    <li><b>끄기가 있는 실험이 높고 안정적입니다.</b> LOCALU 0.808 · SOFTU_끄기만 0.796 · SOFTU 0.785. 끄기가 없는 SOFTU_분산만(0.758)과 DN(0.704)은 낮고 seed에 크게 흔들립니다 (폭 0.181, 0.154).</li>
+    <li><b>최종 최고는 LOCALU</b> (평균 0.808, 가장 나쁜 seed 0.795).</li>
+    <li><b>아직 USGS 기준선(0.854)과 pilotA(0.855)보다 낮습니다.</b> 산사태는 USGS보다 높지만(0.790 대 0.729), 액상화가 낮습니다(0.813 대 0.895). 특히 훗카이도 액상화가 0.61로 USGS 0.93보다 크게 낮고, 모든 칸 실험에서 seed마다 0.11~0.25씩 흔들립니다.</li>
+    <li>seed가 달라도 시정촌 확률 <b>순서</b>가 얼마나 같은지 보면, 산사태는 칸이 더 일정합니다 (예: DN의 seed끼리 순위 상관 시정촌 0.08, 칸 0.59). 액상화는 비슷합니다.</li>
+  </ol>
+</section>
+
+<section id="run">
+  <h2><span class="n">9</span>다시 돌리기</h2>
+  <p>칸 실험은 계산량이 커서 연구실 PC(Windows, CPU)에서 돌렸습니다. <b>실험 하나 · seed 하나에 약 1시간 25분</b> (지진 5개를 동시에). 중간에 꺼져도 다시 실행하면 저장된 지점부터 이어서 돌아갑니다.</p>
+  <h3>필요한 파일 (선배에게 받기)</h3>
+  <ul><li><code>raw/local_250m_byevent_usgs_aw.csv.gz</code> (칸별 경사 · USGS 확률 · 불확실도), <code>raw/dpm_250m_v8_slim.csv.gz</code> (칸별 DPM), 1편의 <code>raw/DisasterNet_입력_v5.xlsx</code> (정답)</li></ul>
+  <h3>학습 (Windows 명령 프롬프트, 저장소 폴더에서)</h3>
+<pre>set O=outputs\disasternet
+set L=--local raw\local_250m_byevent_usgs_aw.csv.gz --jobs 5 --threads 2 --off-rule paper --seeds 0 1 2 3 4
+py -3.10 -m disasternet.run_cells_max %L%                                       --out-dir %O%\cells_max_aw
+py -3.10 -m disasternet.run_cells_max %L% --soft --soft-mid --unc               --out-dir %O%\cells_max_softunc_paper_aw_mid
+py -3.10 -m disasternet.run_cells_max %L% --soft --soft-mid --unc --unc-mode off --out-dir %O%\cells_max_softunc_off_paper_aw_mid
+py -3.10 -m disasternet.run_cells_max %L% --soft --soft-mid --unc --unc-mode var --out-dir %O%\cells_max_softunc_var_paper_aw_mid
+py -3.10 -m disasternet.run_cells_max %L% --local-off --unc                     --out-dir %O%\cells_max_local_unc_paper_aw</pre>
+  <p class="meta">결과: 폴더마다 <code>predictions_seed0~4.csv</code> (시정촌별 칸 최댓값 <code>p_ls</code> · <code>p_lq</code>, 참고용 칸 평균 <code>p_ls_mean</code> · <code>p_lq_mean</code>)와 칸 전체 결과 <code>cells_*_seed*.csv.gz</code> (수십 MB). 칸 결과는 커서 GitHub에 못 올리므로 <code>disasternet/cell_extract.py</code>로 시정촌별 요약만 뽑아 옮깁니다.</p>
+  <h3>채점 (1편과 같은 스크립트)</h3>
+<pre>python -m disasternet.compare_latest --pilota-outputs &lt;pilotA 저장소&gt;/outputs --dn-dir outputs/disasternet \
+  --runs DN=cells_max_aw SOFTU=cells_max_softunc_paper_aw_mid SOFTU_off=cells_max_softunc_off_paper_aw_mid \
+         SOFTU_var=cells_max_softunc_var_paper_aw_mid LOCALU=cells_max_local_unc_paper_aw</pre>
+  <h3>코드 위치</h3>
+  <div class="tw"><table>
+    <tr><th>파일</th><th>하는 일</th></tr>
+    <tr><td><code>disasternet/run_cells_max.py</code></td><td>칸 자료 읽기 (물 칸 빼기), soft · 끄기 지도 · U 적용, 학습, 시정촌 최댓값 내기</td></tr>
+    <tr><td><code>disasternet/model.py</code></td><td>모델 (시정촌 실험과 같음)</td></tr>
+    <tr><td><code>disasternet/cell_extract.py</code></td><td>칸 결과를 시정촌 요약으로 줄이기</td></tr>
+    <tr><td><code>disasternet/compare_latest.py</code></td><td>채점</td></tr>
+  </table></div>
+</section>
+
+<section id="next">
+  <h2><span class="n">10</span>남은 일</h2>
+  <ul>
+    <li><b>액상화가 USGS보다 낮은 원인 찾기</b>, 특히 훗카이도 액상화 (칸 0.61 대 USGS 0.93). USGS를 넘으려면 여기를 올려야 합니다</li>
+    <li>LOCALU와 SOFTU_끄기만을 확실히 가르려면 seed를 더 돌려야 합니다 (5개로는 차이 0.012가 흔들림 안)</li>
+    <li>랩미팅에서 교수님 의견을 듣고 방향을 정할 예정입니다</li>
+  </ul>
+  <div class="box"><span class="t">헷갈리기 쉬운 것</span>
+    <ul>
+      <li>예전 기록에는 칸 실험이 ① baseline ② soft + U ③ 끄기만 ④ 분산만 ⑤ 끄기 지도 + U로 적혀 있습니다. 각각 DN · SOFTU · SOFTU_끄기만 · SOFTU_분산만 · LOCALU입니다</li>
+      <li>시정촌 실험 기록의 ①~④(DN · SOFT · DNU · SOFTU)와는 번호가 다른 실험입니다</li>
+      <li>저장소의 <code>cells_max_*</code> 폴더 중 <code>_aw</code>, <code>_aw_mid</code>가 붙지 않은 것은 예전 버전입니다. 위 표의 폴더만 보면 됩니다</li>
+    </ul></div>
+</section>
+
+<p class="foot">2026-10-23 기준. 1편: <a href="https://claude.ai/artifact/UpGVai4nNwqVRKoLB6wPnu">DisasterNet 시정촌 단위 실험</a></p>
+</main>

@@ -1,0 +1,370 @@
+<!doctype html>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>DisasterNet 시정촌 실험</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;600&display=swap">
+<style>
+:root{
+  /* 인수인계 문서: 한 열 읽기 레이아웃, 표·그림만 넓게 */
+  --bg:#ffffff; --fg:#1b2330; --muted:#5d6676; --line:#e2e5ea; --soft:#f3f5f8; --tint:#eaf0f7;
+  --accent:#23507f; --ls:#b5651d; --lq:#2d62b3; --all:#3c8a57; --warn:#a8452a; --ref:#8a93a3;
+  --ls-bg:#f8efe6; --lq-bg:#e9f0fa; --all-bg:#e9f4ed; --warn-bg:#fbeee8;
+  --sans:'IBM Plex Sans KR',system-ui,-apple-system,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;
+  --mono:'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#12161c; --fg:#e6e9ee; --muted:#9aa3b0; --line:#2a313b; --soft:#1a2029; --tint:#1c2736;
+  --accent:#8db4e8; --ls:#e09a5c; --lq:#74a2ea; --all:#6cc08a; --warn:#ef8a62; --ref:#77808f;
+  --ls-bg:#2a2119; --lq-bg:#18233a; --all-bg:#17281d; --warn-bg:#2d1d16; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#12161c; --fg:#e6e9ee; --muted:#9aa3b0; --line:#2a313b; --soft:#1a2029; --tint:#1c2736;
+  --accent:#8db4e8; --ls:#e09a5c; --lq:#74a2ea; --all:#6cc08a; --warn:#ef8a62; --ref:#77808f;
+  --ls-bg:#2a2119; --lq-bg:#18233a; --all-bg:#17281d; --warn-bg:#2d1d16; color-scheme:dark}
+body{background:var(--bg);color:var(--fg);font-family:var(--sans);font-size:16px;line-height:1.7;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+main{max-width:880px;margin:0 auto;padding-block:40px 80px;display:flex;flex-direction:column;gap:44px}
+header{display:flex;flex-direction:column;gap:12px}
+.eyebrow{font-size:13px;letter-spacing:.06em;color:var(--muted);font-weight:500}
+h1{font-size:clamp(26px,4vw,34px);line-height:1.3;margin:0;text-wrap:balance}
+h2{font-size:23px;line-height:1.35;margin:0 0 4px;text-wrap:balance;display:flex;gap:12px;align-items:baseline}
+h2 .n{font-family:var(--mono);font-size:15px;color:var(--accent);font-weight:600;flex:none}
+h3{font-size:18px;margin:18px 0 2px}
+p{margin:0;max-width:68ch} section{display:flex;flex-direction:column;gap:14px} section>ul,section>ol{margin:0;padding-left:22px;max-width:68ch}
+li+li{margin-top:4px}
+.lede{font-size:17.5px;color:var(--fg);max-width:64ch}
+.meta{font-size:13.5px;color:var(--muted)}
+a{color:var(--accent)}
+code{font-family:var(--mono);font-size:.88em;background:var(--soft);padding:1px 5px;border-radius:4px}
+pre{font-family:var(--mono);font-size:13px;line-height:1.6;background:var(--soft);border:1px solid var(--line);border-radius:8px;padding:12px 14px;overflow-x:auto;margin:0}
+.toc{display:flex;flex-wrap:wrap;gap:6px 8px;font-size:13.5px}
+.toc a{text-decoration:none;color:var(--fg);border:1px solid var(--line);border-radius:999px;padding:3px 11px}
+.toc a:hover,.toc a:focus-visible{border-color:var(--accent);color:var(--accent);outline:none}
+.key{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+.key div{border:1px solid var(--line);border-radius:10px;padding:14px 16px;display:flex;flex-direction:column;gap:2px;min-width:0}
+.key b{font-size:30px;line-height:1.15;font-variant-numeric:tabular-nums}
+.key span{font-size:13.5px;color:var(--muted)}
+.key .best b{color:var(--accent)} .key .ref b{color:var(--all)}
+.box{background:var(--soft);border-radius:10px;padding:14px 18px;display:flex;flex-direction:column;gap:8px}
+.box.tip{background:var(--tint)} .box.warn{background:var(--warn-bg)}
+.box ul{margin:0;padding-left:20px} .box p{max-width:none}
+.box .t{font-weight:700}
+.tw{overflow-x:auto;min-width:0}
+table{border-collapse:collapse;width:100%;font-size:14.5px}
+th{text-align:left;font-weight:700;font-size:13px;color:var(--muted);padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:bottom}
+td{padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+tr.hi td{background:var(--tint)} tr.ref td{color:var(--muted)}
+.tag{display:inline-block;font-size:12px;font-weight:600;padding:1px 8px;border-radius:999px;white-space:nowrap}
+.t-ls{background:var(--ls-bg);color:var(--ls)} .t-lq{background:var(--lq-bg);color:var(--lq)} .t-all{background:var(--all-bg);color:var(--all)}
+.yes{color:var(--all);font-weight:700} .no{color:var(--muted)}
+.up{color:var(--all);font-weight:600} .down{color:var(--warn);font-weight:600}
+figure{margin:0;display:flex;flex-direction:column;gap:8px} figcaption{font-size:13.5px;color:var(--muted);max-width:none}
+svg text{font-family:var(--sans)}
+.c-fg{fill:var(--fg)} .c-mu{fill:var(--muted)} .c-ls{fill:var(--ls)} .c-lq{fill:var(--lq)} .c-all{fill:var(--all)} .c-ac{fill:var(--accent)} .c-ref{fill:var(--ref)} .c-warn{fill:var(--warn)}
+.c-soft{fill:var(--soft)} .c-bg{fill:var(--bg)} .c-tint{fill:var(--tint)} .c-lsbg{fill:var(--ls-bg)} .c-lqbg{fill:var(--lq-bg)}
+.s-line{stroke:var(--line)} .s-mu{stroke:var(--muted)} .s-fg{stroke:var(--fg)} .s-ac{stroke:var(--accent)} .s-warn{stroke:var(--warn)} .s-all{stroke:var(--all)}
+.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+.steps div{border:1px solid var(--line);border-radius:10px;padding:12px 14px;min-width:0;display:flex;flex-direction:column;gap:4px}
+.steps b{font-size:15px} .steps span{font-size:14px;color:var(--muted)}
+.foot{font-size:13px;color:var(--muted);border-top:1px solid var(--line);padding-top:16px}
+@media (prefers-reduced-motion:reduce){*{scroll-behavior:auto}}
+</style>
+
+<main>
+<header>
+  <div class="eyebrow">재난 파일럿 · DisasterNet 인수인계 1 / 2 · 2026-10-23 기준</div>
+  <h1>DisasterNet 시정촌 단위 실험</h1>
+  <p class="lede">시정촌 하나를 한 줄로 두고 DisasterNet을 돌린 실험입니다. 무엇을 하려고 했고, 어떻게 돌렸고, 어떻게 나왔는지를 순서대로 정리했습니다. 이 결과를 보고 다음 단계로 넘어간 칸(픽셀) 단위 실험은 <a href="https://claude.ai/artifact/ABVNTp3TEo7D7jB8xfU721">2편</a>에 있습니다.</p>
+  <div class="key">
+    <div class="best"><b>0.751</b><span>시정촌 단위 최고 (SOFTU_분산만)</span></div>
+    <div class="ref"><b>0.854</b><span>USGS 기준선 (USGS 확률을 그대로 점수로)</span></div>
+    <div><b>0.855</b><span>pilotA (우리 기존 방법)</span></div>
+    <div><b>0.614</b><span>DisasterNet 기본 설정 (DN)</span></div>
+  </div>
+  <p class="meta">숫자는 모두 전체 AUC (평가 시정촌 200곳), seed 0~4 다섯 번 평균입니다.</p>
+  <nav class="toc" aria-label="차례"><a href="#goal">1 목표</a><a href="#dn">2 DisasterNet</a><a href="#data">3 데이터</a><a href="#change">4 시정촌에 맞게 바꾼 것</a><a href="#exp">5 실험 8개</a><a href="#eval">6 채점</a><a href="#res">7 결과</a><a href="#learn">8 알게 된 것</a><a href="#run">9 다시 돌리기</a><a href="#care">10 주의할 점</a></nav>
+</header>
+
+<section id="goal">
+  <h2><span class="n">1</span>무엇을 하려고 했나</h2>
+  <p>지진이 난 뒤 <b>시정촌마다 산사태 · 액상화가 났는지</b>를 맞히는 문제입니다. 시정촌별 정답(났음 1 / 안 났음 0)이 있고, 모델이 낸 확률이 정답을 얼마나 잘 줄 세우는지(AUC)로 평가합니다.</p>
+  <p>비교 대상은 두 가지입니다.</p>
+  <ul>
+    <li><b>USGS 기준선 (0.854)</b>: 미국지질조사국(USGS)이 지진 직후 내는 산사태 · 액상화 확률 지도를 시정촌 값으로 모아 그대로 점수로 쓴 것</li>
+    <li><b>pilotA (0.855)</b>: 우리가 먼저 만든 방법</li>
+  </ul>
+  <p>질문은 하나였습니다. <b>USGS 확률에 위성 영상(DPM)을 더해 DisasterNet으로 고치면, USGS보다 잘 맞힐 수 있나?</b></p>
+</section>
+
+<section id="dn">
+  <h2><span class="n">2</span>DisasterNet 다시 보기</h2>
+  <p>논문: Li et al., <i>DisasterNet: Causal Bayesian Networks with Normalizing Flows for Cascading Hazards Estimation from Satellite Imagery</i>, KDD 2023. 공식 코드: <a href="https://github.com/SusuXu/DisasterNet">github.com/SusuXu/DisasterNet</a></p>
+  <p>지진이 나면 산사태 · 액상화 같은 재해가 땅을 바꾸고, 그 변화가 위성 영상에 남습니다. DisasterNet은 반대로 <b>"땅이 이만큼 변했으니 여기서는 무엇이 일어났을 것"</b>을 추론합니다. USGS 확률을 출발점(사전확률)으로 두고, 위성 신호를 가장 잘 설명하도록 확률을 고친 결과(사후확률)가 답입니다. <b>학습에 정답을 쓰지 않습니다.</b> 정답은 채점할 때만 씁니다.</p>
+  <figure><svg viewBox="0 0 860 250" width="100%" role="img" aria-label="DisasterNet이 USGS 사전확률에서 출발해 DPM을 설명하도록 사후확률을 고치는 흐름" style="max-width:860px;height:auto">
+<defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" class="c-mu"/></marker></defs>
+<rect x="10" y="30" width="200" height="74" rx="10" class="c-lsbg"/><text x="110" y="60" text-anchor="middle" font-size="15" font-weight="700" class="c-ls">USGS 산사태 확률</text><text x="110" y="82" text-anchor="middle" font-size="12.5" class="c-mu">사전확률 (출발점)</text>
+<rect x="10" y="126" width="200" height="74" rx="10" class="c-lqbg"/><text x="110" y="156" text-anchor="middle" font-size="15" font-weight="700" class="c-lq">USGS 액상화 확률</text><text x="110" y="178" text-anchor="middle" font-size="12.5" class="c-mu">사전확률 (출발점)</text>
+<rect x="300" y="40" width="250" height="150" rx="12" class="c-tint"/>
+<text x="425" y="72" text-anchor="middle" font-size="15.5" font-weight="700" class="c-fg">DisasterNet</text>
+<text x="425" y="98" text-anchor="middle" font-size="13" class="c-fg">시정촌마다 확률을 조금씩 고쳐</text>
+<text x="425" y="118" text-anchor="middle" font-size="13" class="c-fg">관측된 DPM을 가장 잘</text>
+<text x="425" y="138" text-anchor="middle" font-size="13" class="c-fg">설명하는 값을 찾는다</text>
+<text x="425" y="168" text-anchor="middle" font-size="12" class="c-mu">지진마다 따로, 정답 없이</text>
+<rect x="640" y="60" width="210" height="110" rx="10" class="c-soft"/><text x="745" y="96" text-anchor="middle" font-size="15" font-weight="700" class="c-fg">사후확률</text><text x="745" y="120" text-anchor="middle" font-size="13" class="c-fg">시정촌별 산사태 · 액상화</text><text x="745" y="142" text-anchor="middle" font-size="12.5" class="c-mu">이것을 정답과 비교 (AUC)</text>
+<rect x="300" y="210" width="250" height="36" rx="8" class="c-soft"/><text x="425" y="233" text-anchor="middle" font-size="13" class="c-fg">위성 DPM (땅이 얼마나 변했나)</text>
+<line x1="212" y1="67" x2="296" y2="95" class="s-mu" stroke-width="1.6" marker-end="url(#ah)"/>
+<line x1="212" y1="163" x2="296" y2="135" class="s-mu" stroke-width="1.6" marker-end="url(#ah)"/>
+<line x1="425" y1="208" x2="425" y2="194" class="s-mu" stroke-width="1.6" marker-end="url(#ah)"/>
+<line x1="552" y1="115" x2="636" y2="115" class="s-mu" stroke-width="1.6" marker-end="url(#ah)"/>
+</svg><figcaption>원 논문에는 건물붕괴(BD) 노드도 있지만, 우리 최종 실험에서는 뺐습니다 (4절).</figcaption></figure>
+  <h3>용어 정리</h3>
+  <div class="tw"><table>
+    <tr><th>용어</th><th>뜻</th></tr>
+    <tr><td><b>사전확률</b></td><td>위성 신호를 보기 전의 확률. USGS가 낸 산사태 · 액상화 확률을 씁니다</td></tr>
+    <tr><td><b>DPM</b></td><td>Damage Proxy Map. 지진 전후 Sentinel-1 위성 영상이 얼마나 달라졌는지 (지진 전 상관도 − 지진 후 상관도). 땅이 변하면 커집니다. 화소 하나가 40 m</td></tr>
+    <tr><td><b>사후확률</b></td><td>DPM까지 보고 고친 확률. 모델의 답</td></tr>
+    <tr><td><b>관측식</b></td><td>log(DPM + 2) ≈ w0 + w_산사태 × 산사태 확률 + w_액상화 × 액상화 확률. "재해 확률이 높을수록 DPM이 크다"는 연결고리. w는 지진마다 학습</td></tr>
+    <tr><td><b>출발점 μ와 분산</b></td><td>시정촌마다 확률을 뽑을 때 쓰는 정규분포의 중심과 폭. 중심 μ는 사전확률에서 시작하고 시정촌마다 보정값을 학습합니다. 폭(분산)은 기본 1</td></tr>
+    <tr><td><b>flow</b></td><td>뽑은 값을 한 번 더 구부려 분포 모양을 자유롭게 만드는 변환 (planar flow 4번)</td></tr>
+    <tr><td><b>손실</b></td><td>ELBO (DPM을 잘 설명하면서 사전확률에서 너무 멀어지지 않게) + triplet (DPM이 큰 곳이 확률도 높게)</td></tr>
+    <tr><td><b>seed</b></td><td>난수 시작 번호. 학습 시작 직전에 <code>torch.manual_seed(0~4)</code>. 처음 가중치와 매번 뽑는 샘플이 달라져 결과가 조금씩 다릅니다. 그래서 5번 돌려 평균</td></tr>
+  </table></div>
+  <div class="box"><span class="t">학습 설정 (모든 실험 공통)</span>
+    <ul><li>지진마다 따로 학습 (5개 지진 = 5번), 정답은 안 씀</li>
+    <li>Adam, 학습률 0.01, 3000 epoch, 학습 때 시정촌마다 샘플 8개, 끝나면 샘플 256개 평균을 사후확률로 저장</li>
+    <li>seed 0 · 1 · 2 · 3 · 4 다섯 번</li></ul></div>
+</section>
+
+<section id="data">
+  <h2><span class="n">3</span>데이터</h2>
+  <p>DPM이 있는 지진 5개, 지진 × 시정촌 264줄입니다 (지진마다 40~81곳).</p>
+  <div class="tw"><table>
+    <tr><th>열 (raw/DisasterNet_입력_v5.xlsx, 시트 입력)</th><th>뜻</th><th>만든 방법</th></tr>
+    <tr><td><code>LS_prior_평균</code></td><td>산사태 사전확률</td><td>중심점이 시정촌 안에 드는 USGS 칸들의 <b>평균</b></td></tr>
+    <tr><td><code>LQ_prior_최대</code></td><td>액상화 사전확률</td><td>같은 USGS 칸들의 <b>최댓값</b>. 액상화는 강가 · 매립지처럼 좁은 곳에서 나서 평균을 내면 묻힙니다</td></tr>
+    <tr><td><code>DPM_배경차</code></td><td>관측</td><td>시정촌 안 40 m 화소 DPM 평균 − 그 위성 프레임의 중앙값 (프레임마다 기준 밝기가 달라서 뺌)</td></tr>
+    <tr><td><code>LS_정답</code>, <code>LQ_정답</code></td><td>정답 0/1</td><td>채점에만 씀. 빈칸 = 모름</td></tr>
+  </table></div>
+  <ul>
+    <li><b>지진</b>: 2016 구마모토 · 2018 오사카 · 2018 훗카이도 · 2021 후쿠시마 · 2024 노토반도</li>
+    <li><b>지형 비율</b> (<code>raw/terrain_fractions.csv</code>): 시정촌 안 250 m 칸 중 비탈(경사 10° 이상) 비율 <code>frac_LS</code>, 평지(5° 미만) 비율 <code>frac_LQ</code>. 국토수치정보 경사 자료로 계산 (<code>disasternet/terrain_fractions.py</code>)</li>
+    <li><b>USGS 불확실도</b> (<code>raw/muni_usgs_pixel.csv</code>): USGS가 확률 지도와 함께 내는 불확실도 지도를 사전확률과 <b>같은 규칙</b>(USGS 칸 중심점이 시정촌 안)으로 모은 것 (<code>disasternet/muni_usgs_pixel.py</code>)</li>
+  </ul>
+</section>
+
+<section id="change">
+  <h2><span class="n">4</span>시정촌에 맞게 바꾼 것</h2>
+  <p>원 논문은 <b>화소(위치) 하나</b>마다 확률을 냅니다. 우리는 <b>시정촌 하나</b>를 한 줄로 바꿨습니다. 그래서 세 가지를 바꿨습니다.</p>
+
+  <h3>4.1 건물붕괴(BD) 노드를 뺐다</h3>
+  <p>교수님 지시로 산사태 · 액상화만 남겼습니다. 빼 보니 기본 실험 네 개 모두 전체 AUC가 올랐습니다 (DN 0.606에서 0.614, SOFT 0.677에서 0.710, DNU 0.669에서 0.675, SOFTU 0.722에서 0.738). 이후 모든 실험은 BD 없이 돌립니다.</p>
+
+  <h3>4.2 왜 "끄기"가 문제인가</h3>
+  <p>원 논문은 화소마다 <b>일어날 수 없는 재해를 0으로 고정</b>합니다(끄기). 비탈 화소는 액상화를, 평지 화소는 산사태를 끕니다. 그러면 "이 화소의 DPM 변화는 산사태 때문"처럼 원인이 하나로 좁혀집니다.</p>
+  <p>시정촌에서는 그대로 못 합니다. <b>시정촌 하나에 비탈과 평지가 섞여 있기 때문</b>입니다. 예를 들어 熊本市는 비탈 20%, 평지 66%라 산사태를 끌 수도, 그냥 둘 수도 없습니다. 그래서 끄는 대신 아래 두 가지를 넣었습니다.</p>
+
+  <h3>4.3 지형 정보 soft: 비율만큼 사전확률을 깎는다</h3>
+  <p>산사태 사전확률에는 log(비탈 비율)을, 액상화 사전확률에는 log(평지 비율)을 로짓에 더합니다 (비율이 1%보다 작으면 1%로).</p>
+  <div class="tw"><table>
+    <tr><th>예 (熊本市)</th><th class="num">비율</th><th class="num">로짓에 더하는 값</th><th>효과</th></tr>
+    <tr><td><span class="tag t-ls">산사태</span></td><td class="num">비탈 20%</td><td class="num">log 0.20 = −1.60</td><td>산사태 사전확률이 크게 내려감</td></tr>
+    <tr><td><span class="tag t-lq">액상화</span></td><td class="num">평지 66%</td><td class="num">log 0.66 = −0.42</td><td>조금만 내려감</td></tr>
+    <tr><td>비탈 100%인 곳</td><td class="num">100%</td><td class="num">log 1 = 0</td><td>그대로</td></tr>
+  </table></div>
+  <p>비율이 0에 가까울수록 끄기에 가까워집니다. 비탈 칸이 하나도 없는 시정촌은 산사태가 1/100(로짓 −4.6)로 내려가 사실상 꺼집니다.</p>
+
+  <h3>4.4 USGS 불확실도 U: 끄기와 분산 두 가지 역할</h3>
+  <div class="steps">
+    <div><b>U 끄기</b><span>시정촌 안 USGS 칸의 불확실도가 <b>전부 0 또는 999</b>(USGS가 계산 안 한 곳)이면 그 재해를 0으로 고정. 공식 코드와 같은 기준. 실제로 꺼진 곳: 산사태 5곳, 액상화 11곳</span></div>
+    <div><b>U 분산</b><span>확률을 뽑는 정규분포의 폭을 기본값 1 대신 그 시정촌 USGS 불확실도 평균으로. USGS가 불확실하다고 본 곳은 넓게, 확신하는 곳은 좁게 뽑힙니다</span></div>
+  </div>
+  <p class="meta">산사태로 꺼지는 5곳은 원래 산사태 정답이 없는 곳이라 채점에 안 들어가고, 액상화로 꺼지는 11곳은 모두 노토의 피해 없음 시정촌입니다.</p>
+</section>
+
+<section id="exp">
+  <h2><span class="n">5</span>실험 8개</h2>
+  <p>학습 설정은 모두 같고, soft와 U를 넣느냐 빼느냐만 다릅니다. 이름 규칙: <b>DN</b> = 기본, <b>SOFT</b> = 지형 정보 추가, <b>U</b> = USGS 불확실도 추가, <b>_끄기만 · _분산만</b> = U의 한 역할만.</p>
+  <div class="tw"><table>
+    <tr><th>이름</th><th>soft</th><th>U 끄기</th><th>U 분산</th><th>이 실험으로 보는 것</th><th>결과 폴더 (outputs/disasternet/)</th></tr>
+    <tr><td><b>DN</b></td><td class="no">–</td><td class="no">–</td><td class="no">–</td><td>기본 DisasterNet</td><td><code>nobd_DN</code></td></tr>
+    <tr><td><b>SOFT</b></td><td class="yes">○</td><td class="no">–</td><td class="no">–</td><td>지형 정보의 효과</td><td><code>nobd_SOFT</code></td></tr>
+    <tr><td><b>DNU</b></td><td class="no">–</td><td class="yes">○</td><td class="yes">○</td><td>USGS 불확실도의 효과</td><td><code>px_DNU</code></td></tr>
+    <tr><td><b>SOFTU</b></td><td class="yes">○</td><td class="yes">○</td><td class="yes">○</td><td>둘 다</td><td><code>px_SOFTU</code></td></tr>
+    <tr><td><b>DNU_끄기만</b></td><td class="no">–</td><td class="yes">○</td><td class="no">–</td><td rowspan="2">U 효과가 끄기와 분산 중 어디서 오나</td><td><code>px_DNU_off</code></td></tr>
+    <tr><td><b>DNU_분산만</b></td><td class="no">–</td><td class="no">–</td><td class="yes">○</td><td><code>px_DNU_var</code></td></tr>
+    <tr><td><b>SOFTU_끄기만</b></td><td class="yes">○</td><td class="yes">○</td><td class="no">–</td><td rowspan="2">soft가 있을 때도 같은가</td><td><code>px_SOFTU_off</code></td></tr>
+    <tr><td><b>SOFTU_분산만</b></td><td class="yes">○</td><td class="no">–</td><td class="yes">○</td><td><code>px_SOFTU_var</code></td></tr>
+  </table></div>
+  <div class="box"><span class="t">확인 실험: 분산은 "작게만" 하면 되나?</span>
+    <p>U 분산이 효과가 있는 게 USGS 정보 때문인지, 그냥 폭이 작아져서인지 보려고 DN에 모든 시정촌 같은 분산을 줘 봤습니다. 모두 0.001이면 0.616 (DN과 같음), 모두 0.01이면 0.657로, 시정촌마다 다른 USGS 불확실도를 쓴 DNU_분산만(0.681)보다 낮습니다. <b>시정촌마다 다른 값이라는 점이 중요</b>합니다. 폴더: <code>nobd_DN_cvar001</code>, <code>nobd_DN_cvar01</code></p></div>
+</section>
+
+<section id="eval">
+  <h2><span class="n">6</span>채점 방법</h2>
+  <p><b>AUC</b> = 피해 있는 시정촌 하나와 없는 시정촌 하나를 뽑았을 때, 피해 있는 쪽 확률이 더 높을 확률. 0.5는 동전 던지기, 1은 완벽입니다. 확률 크기는 상관없고 <b>순서만</b> 봅니다.</p>
+  <ol>
+    <li>지진 × 재해마다 따로 AUC를 냅니다. 정답이 한쪽뿐이면 AUC를 못 내서 뺍니다 (산사태 후쿠시마 · 노토, 액상화 오사카)</li>
+    <li>전체 AUC = 지진별 AUC를 그 지진의 시정촌 수로 가중평균. 산사태 49곳 + 액상화 151곳 = 200곳</li>
+    <li>seed 0~4 각각 AUC를 낸 뒤 평균</li>
+  </ol>
+  <div class="tw"><table>
+    <tr><th>지진 × 재해</th><th class="num">피해 있음 / 없음</th><th class="num">USGS</th><th class="num">DN</th><th class="num">SOFT</th><th class="num">SOFTU</th><th class="num">SOFTU_분산만</th></tr>
+    <tr><td><span class="tag t-ls">산사태</span> 구마모토</td><td class="num">26 / 3</td><td class="num">0.641</td><td class="num">0.544</td><td class="num">0.818</td><td class="num">0.838</td><td class="num">0.838</td></tr><tr><td><span class="tag t-ls">산사태</span> 오사카</td><td class="num">5 / 2</td><td class="num">1.000</td><td class="num">0.220</td><td class="num">0.840</td><td class="num">0.980</td><td class="num">0.980</td></tr><tr><td><span class="tag t-ls">산사태</span> 훗카이도</td><td class="num">9 / 4</td><td class="num">0.778</td><td class="num">0.600</td><td class="num">0.650</td><td class="num">0.583</td><td class="num">0.589</td></tr><tr><td><span class="tag t-lq">액상화</span> 구마모토</td><td class="num">18 / 22</td><td class="num">0.947</td><td class="num">0.628</td><td class="num">0.806</td><td class="num">0.823</td><td class="num">0.823</td></tr><tr><td><span class="tag t-lq">액상화</span> 훗카이도</td><td class="num">17 / 23</td><td class="num">0.926</td><td class="num">0.590</td><td class="num">0.640</td><td class="num">0.675</td><td class="num">0.716</td></tr><tr><td><span class="tag t-lq">액상화</span> 후쿠시마</td><td class="num">6 / 1</td><td class="num">0.500</td><td class="num">0.567</td><td class="num">0.667</td><td class="num">0.767</td><td class="num">0.767</td></tr><tr><td><span class="tag t-lq">액상화</span> 노토반도</td><td class="num">33 / 31</td><td class="num">0.887</td><td class="num">0.703</td><td class="num">0.647</td><td class="num">0.682</td><td class="num">0.695</td></tr>
+  </table></div>
+  <p class="meta">값은 seed 5개 평균 AUC. 산사태는 피해 없음이 2~4곳뿐이라 짝 하나에 AUC가 크게 움직이고, 후쿠시마 액상화는 피해 없음이 1곳뿐이라 거의 의미가 없습니다. 채점 코드: <code>disasternet/compare_latest.py</code></p>
+</section>
+
+<section id="res">
+  <h2><span class="n">7</span>결과</h2>
+  <figure><svg viewBox="0 0 860 640" width="100%" role="img" aria-label="시정촌 단위 실험 8개의 seed 5개 평균 AUC" style="max-width:860px;height:auto">
+<line x1="170.0" x2="170.0" y1="26" y2="594" class="s-line"/><text x="170.0" y="610" text-anchor="middle" font-size="11.5" class="c-mu">0.5</text>
+<line x1="294.0" x2="294.0" y1="26" y2="594" class="s-line"/><text x="294.0" y="610" text-anchor="middle" font-size="11.5" class="c-mu">0.6</text>
+<line x1="418.0" x2="418.0" y1="26" y2="594" class="s-line"/><text x="418.0" y="610" text-anchor="middle" font-size="11.5" class="c-mu">0.7</text>
+<line x1="542.0" x2="542.0" y1="26" y2="594" class="s-line"/><text x="542.0" y="610" text-anchor="middle" font-size="11.5" class="c-mu">0.8</text>
+<line x1="666.0" x2="666.0" y1="26" y2="594" class="s-line"/><text x="666.0" y="610" text-anchor="middle" font-size="11.5" class="c-mu">0.9</text>
+<line x1="790.0" x2="790.0" y1="26" y2="594" class="s-line"/><text x="790.0" y="610" text-anchor="middle" font-size="11.5" class="c-mu">1.0</text>
+<text x="158" y="62.0" text-anchor="end" font-size="13.5" font-weight="400" class="c-mu">USGS 기준선</text>
+<rect x="170" y="39" width="439.3" height="12" rx="2" class="c-all" opacity="0.45"/>
+<text x="617.3" y="49" font-size="11.5" font-weight="400" class="c-fg">0.854</text>
+<rect x="170" y="54" width="283.5" height="12" rx="2" class="c-ls" opacity="0.45"/>
+<text x="461.5" y="64" font-size="11.5" font-weight="400" class="c-fg">0.729</text>
+<rect x="170" y="69" width="489.9" height="12" rx="2" class="c-lq" opacity="0.45"/>
+<text x="667.9" y="79" font-size="11.5" font-weight="400" class="c-fg">0.895</text>
+<text x="158" y="118.0" text-anchor="end" font-size="13.5" font-weight="400" class="c-mu">pilotA</text>
+<rect x="170" y="95" width="440.7" height="12" rx="2" class="c-all" opacity="0.45"/>
+<text x="618.7" y="105" font-size="11.5" font-weight="400" class="c-fg">0.855</text>
+<rect x="170" y="110" width="461.4" height="12" rx="2" class="c-ls" opacity="0.45"/>
+<text x="639.4" y="120" font-size="11.5" font-weight="400" class="c-fg">0.872</text>
+<rect x="170" y="125" width="433.9" height="12" rx="2" class="c-lq" opacity="0.45"/>
+<text x="611.9" y="135" font-size="11.5" font-weight="400" class="c-fg">0.850</text>
+<line x1="8" x2="852" y1="142" y2="142" class="s-mu" stroke-dasharray="4 4"/>
+<text x="158" y="174.0" text-anchor="end" font-size="13.5" font-weight="700" class="c-fg">DN</text>
+<rect x="170" y="151" width="141.1" height="12" rx="2" class="c-all" opacity="1"/>
+<text x="319.1" y="161" font-size="11.5" font-weight="700" class="c-fg">0.614</text>
+<rect x="170" y="166" width="15.3" height="12" rx="2" class="c-ls" opacity="1"/>
+<text x="193.3" y="176" font-size="11.5" font-weight="400" class="c-fg">0.512</text>
+<rect x="170" y="181" width="182.0" height="12" rx="2" class="c-lq" opacity="1"/>
+<text x="360.0" y="191" font-size="11.5" font-weight="400" class="c-fg">0.647</text>
+<text x="158" y="230.0" text-anchor="end" font-size="13.5" font-weight="700" class="c-fg">SOFT</text>
+<rect x="170" y="207" width="260.1" height="12" rx="2" class="c-all" opacity="1"/>
+<text x="438.1" y="217" font-size="11.5" font-weight="700" class="c-fg">0.710</text>
+<rect x="170" y="222" width="342.9" height="12" rx="2" class="c-ls" opacity="1"/>
+<text x="520.9" y="232" font-size="11.5" font-weight="400" class="c-fg">0.777</text>
+<rect x="170" y="237" width="233.2" height="12" rx="2" class="c-lq" opacity="1"/>
+<text x="411.2" y="247" font-size="11.5" font-weight="400" class="c-fg">0.688</text>
+<text x="158" y="286.0" text-anchor="end" font-size="13.5" font-weight="700" class="c-fg">DNU</text>
+<rect x="170" y="263" width="217.3" height="12" rx="2" class="c-all" opacity="1"/>
+<text x="395.3" y="273" font-size="11.5" font-weight="700" class="c-fg">0.675</text>
+<rect x="170" y="278" width="150.3" height="12" rx="2" class="c-ls" opacity="1"/>
+<text x="328.3" y="288" font-size="11.5" font-weight="400" class="c-fg">0.621</text>
+<rect x="170" y="293" width="239.1" height="12" rx="2" class="c-lq" opacity="1"/>
+<text x="417.1" y="303" font-size="11.5" font-weight="400" class="c-fg">0.693</text>
+<text x="158" y="342.0" text-anchor="end" font-size="13.5" font-weight="700" class="c-fg">SOFTU</text>
+<rect x="170" y="319" width="295.7" height="12" rx="2" class="c-all" opacity="1"/>
+<text x="473.7" y="329" font-size="11.5" font-weight="700" class="c-fg">0.738</text>
+<rect x="170" y="334" width="360.8" height="12" rx="2" class="c-ls" opacity="1"/>
+<text x="538.8" y="344" font-size="11.5" font-weight="400" class="c-fg">0.791</text>
+<rect x="170" y="349" width="274.5" height="12" rx="2" class="c-lq" opacity="1"/>
+<text x="452.5" y="359" font-size="11.5" font-weight="400" class="c-fg">0.721</text>
+<text x="158" y="398.0" text-anchor="end" font-size="13.5" font-weight="700" class="c-fg">DNU_끄기만</text>
+<rect x="170" y="375" width="171.1" height="12" rx="2" class="c-all" opacity="1"/>
+<text x="349.1" y="385" font-size="11.5" font-weight="700" class="c-fg">0.638</text>
+<rect x="170" y="390" width="47.5" height="12" rx="2" class="c-ls" opacity="1"/>
+<text x="225.5" y="400" font-size="11.5" font-weight="400" class="c-fg">0.538</text>
+<rect x="170" y="405" width="211.2" height="12" rx="2" class="c-lq" opacity="1"/>
+<text x="389.2" y="415" font-size="11.5" font-weight="400" class="c-fg">0.670</text>
+<text x="158" y="454.0" text-anchor="end" font-size="13.5" font-weight="700" class="c-fg">DNU_분산만</text>
+<rect x="170" y="431" width="225.0" height="12" rx="2" class="c-all" opacity="1"/>
+<text x="403.0" y="441" font-size="11.5" font-weight="700" class="c-fg">0.681</text>
+<rect x="170" y="446" width="136.4" height="12" rx="2" class="c-ls" opacity="1"/>
+<text x="314.4" y="456" font-size="11.5" font-weight="400" class="c-fg">0.610</text>
+<rect x="170" y="461" width="253.8" height="12" rx="2" class="c-lq" opacity="1"/>
+<text x="431.8" y="471" font-size="11.5" font-weight="400" class="c-fg">0.705</text>
+<text x="158" y="510.0" text-anchor="end" font-size="13.5" font-weight="700" class="c-fg">SOFTU_끄기만</text>
+<rect x="170" y="487" width="275.3" height="12" rx="2" class="c-all" opacity="1"/>
+<text x="453.3" y="497" font-size="11.5" font-weight="700" class="c-fg">0.722</text>
+<rect x="170" y="502" width="335.4" height="12" rx="2" class="c-ls" opacity="1"/>
+<text x="513.4" y="512" font-size="11.5" font-weight="400" class="c-fg">0.770</text>
+<rect x="170" y="517" width="255.8" height="12" rx="2" class="c-lq" opacity="1"/>
+<text x="433.8" y="527" font-size="11.5" font-weight="400" class="c-fg">0.706</text>
+<text x="158" y="566.0" text-anchor="end" font-size="13.5" font-weight="700" class="c-fg">SOFTU_분산만</text>
+<rect x="170" y="543" width="311.4" height="12" rx="2" class="c-all" opacity="1"/>
+<text x="489.4" y="553" font-size="11.5" font-weight="700" class="c-fg">0.751</text>
+<rect x="170" y="558" width="362.7" height="12" rx="2" class="c-ls" opacity="1"/>
+<text x="540.7" y="568" font-size="11.5" font-weight="400" class="c-fg">0.792</text>
+<rect x="170" y="573" width="294.7" height="12" rx="2" class="c-lq" opacity="1"/>
+<text x="472.7" y="583" font-size="11.5" font-weight="400" class="c-fg">0.738</text>
+<rect x="170" y="618" width="12" height="12" rx="2" class="c-all"/><text x="187" y="628" font-size="12.5" class="c-fg">전체 (200곳)</text>
+<rect x="300" y="618" width="12" height="12" rx="2" class="c-ls"/><text x="317" y="628" font-size="12.5" class="c-fg">산사태 (49곳)</text>
+<rect x="430" y="618" width="12" height="12" rx="2" class="c-lq"/><text x="447" y="628" font-size="12.5" class="c-fg">액상화 (151곳)</text>
+</svg><figcaption>seed 5개 평균. 위 두 줄(연한 색)은 비교 기준입니다.</figcaption></figure>
+  <div class="tw"><table>
+    <tr><th>실험</th><th class="num">전체</th><th class="num">산사태</th><th class="num">액상화</th></tr>
+    <tr class="ref"><td>USGS 기준선</td><td class="num">0.854</td><td class="num">0.729</td><td class="num">0.895</td></tr>
+    <tr class="ref"><td>pilotA</td><td class="num">0.855</td><td class="num">0.872</td><td class="num">0.850</td></tr>
+    <tr><td><b>DN</b></td><td class="num">0.614</td><td class="num">0.512</td><td class="num">0.647</td></tr><tr><td><b>SOFT</b></td><td class="num">0.710</td><td class="num">0.777</td><td class="num">0.688</td></tr><tr><td><b>DNU</b></td><td class="num">0.675</td><td class="num">0.621</td><td class="num">0.693</td></tr><tr><td><b>SOFTU</b></td><td class="num">0.738</td><td class="num">0.791</td><td class="num">0.721</td></tr><tr><td><b>DNU_끄기만</b></td><td class="num">0.638</td><td class="num">0.538</td><td class="num">0.670</td></tr><tr><td><b>DNU_분산만</b></td><td class="num">0.681</td><td class="num">0.610</td><td class="num">0.705</td></tr><tr><td><b>SOFTU_끄기만</b></td><td class="num">0.722</td><td class="num">0.770</td><td class="num">0.706</td></tr><tr class=hi><td><b>SOFTU_분산만</b></td><td class="num">0.751</td><td class="num">0.792</td><td class="num">0.738</td></tr>
+  </table></div>
+  <p class="meta">SOFTU_분산만의 seed별 전체 AUC: 0.774 · 0.777 · 0.751 · 0.715 · 0.739. 다섯 seed 모두 시정촌 실험 중 1등이었습니다.</p>
+</section>
+
+<section id="learn">
+  <h2><span class="n">8</span>무엇을 알게 됐나</h2>
+  <ol>
+    <li><b>지형 정보(soft)가 산사태를 크게 올립니다.</b> 산사태 AUC가 DN 0.512에서 SOFT 0.777로 오릅니다. 비탈이 적은 시정촌의 산사태 확률을 깎는 것이 잘 통합니다.</li>
+    <li><b>USGS 불확실도의 효과는 대부분 분산에서 옵니다.</b> DNU_분산만(0.681)이 DNU 전체(0.675)와 비슷하고, 끄기만(0.638)은 효과가 작습니다. 꺼지는 시정촌이 적기 때문입니다 (산사태 5곳은 채점 대상이 아니고, 액상화 11곳은 채점 대상의 7%).</li>
+    <li><b>soft 위에서도 같습니다.</b> SOFT 0.710에 분산을 더하면 0.751 (+0.041), 끄기를 더하면 0.722. 다만 soft가 없을 때(DN 0.614에서 DNU_분산만 0.681, +0.067)보다 오르는 폭은 줄어듭니다.</li>
+    <li><b>가장 좋은 SOFTU_분산만도 0.751로, USGS 기준선 0.854와 pilotA 0.855보다 낮습니다.</b> 산사태는 USGS보다 높지만(0.792 대 0.729), 액상화가 크게 낮습니다(0.738 대 0.895).</li>
+    <li><b>seed마다 흔들림이 큽니다.</b> 같은 설정도 seed에 따라 전체 AUC가 0.04~0.12 달라지고, 시정촌 확률 값이 지진 전체로 통째로 오르내립니다. 특히 지형 정보가 없으면 산사태 순서가 seed마다 거의 무관합니다 (DN의 seed끼리 순위 상관 0.08).</li>
+  </ol>
+  <div class="box tip"><span class="t">그래서 칸(픽셀) 단위로 넘어갔습니다</span>
+    <p>시정촌 단위로는 원 논문처럼 "일어날 수 없는 재해 끄기"를 제대로 할 수 없고, 시정촌 평균 DPM에서는 좁은 곳(액상화가 나는 강가 · 매립지)의 신호가 묻힙니다. 교수님 지시로 <b>250 m 칸마다 학습하고, 시정촌 값은 칸 사후확률의 최댓값으로</b> 내는 실험을 했습니다. 결과는 0.808로 시정촌 최고 0.751보다 높았습니다. 자세한 내용은 <a href="https://claude.ai/artifact/ABVNTp3TEo7D7jB8xfU721">2편: 칸(픽셀) 단위 실험</a>.</p></div>
+</section>
+
+<section id="run">
+  <h2><span class="n">9</span>다시 돌리기</h2>
+  <p><code>raw/</code>와 <code>outputs/</code>는 용량 때문에 저장소에 올리지 않았습니다. <b>선배에게 폴더를 따로 받아야 합니다.</b> 저장소: <code>minji1217/pilotA-minji</code>, 브랜치 <code>claude/dazzling-babbage-8c6yd4</code>.</p>
+  <h3>필요한 파일</h3>
+  <ul>
+    <li><code>raw/DisasterNet_입력_v5.xlsx</code> (입력 통합표), <code>raw/terrain_fractions.csv</code> (지형 비율), <code>raw/muni_usgs_pixel.csv</code> (시정촌별 USGS 불확실도)</li>
+  </ul>
+  <h3>학습 (저장소 맨 위 폴더에서)</h3>
+<pre>O=outputs/disasternet; T=raw/terrain_fractions.csv; U="--usgs-muni raw/muni_usgs_pixel.csv --no-bd --jobs 5"
+python -m disasternet.run_input_v5 --no-bd --out-dir $O/nobd_DN   --jobs 5
+python -m disasternet.run_input_v5 --no-bd --terrain $T --out-dir $O/nobd_SOFT --jobs 5
+python -m disasternet.run_muni_unc $U                         --out-dir $O/px_DNU
+python -m disasternet.run_muni_unc $U --terrain $T            --out-dir $O/px_SOFTU
+python -m disasternet.run_muni_unc $U --unc off               --out-dir $O/px_DNU_off
+python -m disasternet.run_muni_unc $U --unc var               --out-dir $O/px_DNU_var
+python -m disasternet.run_muni_unc $U --unc off --terrain $T  --out-dir $O/px_SOFTU_off
+python -m disasternet.run_muni_unc $U --unc var --terrain $T  --out-dir $O/px_SOFTU_var</pre>
+  <p class="meta">실험 하나(seed 5개)에 몇 분 걸립니다. 결과는 폴더마다 <code>predictions_seed0.csv</code> ~ <code>seed4.csv</code> (열: seed, event_idx, muni_code, p_ls, p_lq).</p>
+  <h3>채점</h3>
+<pre>python -m disasternet.compare_latest --pilota-outputs &lt;pilotA 저장소&gt;/outputs \
+  --runs DN=nobd_DN SOFT=nobd_SOFT DNU=px_DNU SOFTU=px_SOFTU \
+         DNU_off=px_DNU_off DNU_var=px_DNU_var SOFTU_off=px_SOFTU_off SOFTU_var=px_SOFTU_var</pre>
+  <p class="meta">USGS 기준선 · pilotA와 같은 시정촌 · 같은 정답으로 채점해 전체 · 산사태 · 액상화 AUC 표를 출력합니다. 7절의 숫자가 그대로 나와야 합니다.</p>
+  <h3>코드 위치</h3>
+  <div class="tw"><table>
+    <tr><th>파일</th><th>하는 일</th></tr>
+    <tr><td><code>disasternet/model.py</code></td><td>DisasterNet 모델과 학습 (<code>fit_disasternet</code>, <code>_fit_group</code>)</td></tr>
+    <tr><td><code>disasternet/run_input_v5.py</code></td><td>입력표 읽기, DN · SOFT 실행</td></tr>
+    <tr><td><code>disasternet/run_muni_unc.py</code></td><td>U(끄기 · 분산)를 넣은 실행</td></tr>
+    <tr><td><code>disasternet/compare_latest.py</code></td><td>채점</td></tr>
+  </table></div>
+</section>
+
+<section id="care">
+  <h2><span class="n">10</span>주의할 점</h2>
+  <ul>
+    <li><b>저장소에 예전 시도 코드가 많이 남아 있습니다</b> (cellmix, hard, orig_port, input_v5_* 폴더 등). 이 문서에 나온 파일과 폴더만 보면 됩니다.</li>
+    <li><b>pilotA 숫자는 0.855</b>(원래 설정)를 씁니다. 채점 스크립트에 다른 pilotA 결과 폴더를 넣으면 0.834처럼 다르게 나올 수 있습니다.</li>
+    <li><b>U 끄기 기준은 불확실도 0 · 999만</b>입니다 (공식 코드와 같음). USGS 확률이 0인 것은 기준에 넣지 않습니다.</li>
+    <li><b>시정촌 USGS 값에는 물 칸도 들어 있습니다.</b> 사전확률 표가 원래 그렇게 만들어져 있어서 불확실도도 같은 규칙으로 맞췄습니다.</li>
+    <li><b>산사태 표본이 작습니다.</b> 피해 없음이 구마모토 3곳, 오사카 2곳, 훗카이도 4곳뿐이라 산사태 AUC는 크게 흔들립니다.</li>
+    <li>seed 하나만 보고 결론 내지 마세요. 반드시 5개 평균으로 비교합니다.</li>
+  </ul>
+</section>
+
+<p class="foot">2026-10-23 기준. 더 자세한 과정은 선배의 실험 기록 페이지들(시정촌 실험 기록, 연구일지)에 있지만, 진행에 필요한 내용은 이 문서와 2편이 전부입니다.</p>
+</main>
