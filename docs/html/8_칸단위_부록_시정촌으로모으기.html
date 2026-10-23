@@ -156,8 +156,25 @@ body{background:#fff}
   <h1>칸 확률을 시정촌 하나로 모으는 방법: 최댓값 · 평균 · 상위 10%</h1>
   <p class="lede">칸 단위로 학습한 뒤, 시정촌 안 칸들의 사후확률을 시정촌 값 하나로 모아 채점합니다. 모으는 방법은 학습에 들어가지 않고 채점할 때만 쓰입니다. 이 페이지는 최댓값 · 평균 · 상위 % 평균을 비교하고, 왜 산사태에서 상위 10%가 가장 높게 나왔는지 풀어 씁니다.</p>
   <p class="meta">본문: <a href="https://claude.ai/artifact/Uqmg4X8sLnLZeZX1jYmKpJ" style="color:var(--accent)">칸 단위 실험 기록</a> (주 결과 = 최대 · 최대). 이 페이지의 숫자는 모두 <b>seed 0~4 다섯 개 평균</b>이고, ② ③ ④는 고친 soft입니다. 칸 결과는 PC에서 <code>cell_extract.py</code>로 줄여 받았습니다.</p>
-  <nav class="toc" aria-label="차례"><a href="#easy">0. 쉽게</a><a href="#all5">★ 한눈에</a><a href="#how">1. 세 가지 방법</a><a href="#part">2. 상위 10%와 비탈 비율</a><a href="#curve">3. 실제 곡선</a><a href="#why">4. 왜 더 나은가</a><a href="#res">5. 결과 표 · 새 seed 확인</a><a href="#stab">6. seed 안정성</a></nav>
+  <nav class="toc" aria-label="차례"><a href="#read">★ 먼저</a><a href="#easy">0. 쉽게</a><a href="#all5">★ 한눈에</a><a href="#how">1. 세 가지 방법</a><a href="#part">2. 상위 10%와 비탈 비율</a><a href="#curve">3. 실제 곡선</a><a href="#why">4. 왜 더 나은가</a><a href="#res">5. 결과 표 · 새 seed 확인</a><a href="#stab">6. seed 안정성</a></nav>
 </header>
+
+
+<section id="read">
+  <h2><span class="n">★</span>먼저: 어떤 숫자가 최대 · 최대이고, 그림은 어떻게 읽나</h2>
+  <div class="tw"><table>
+    <tr><th>페이지</th><th>산사태 시정촌 값</th><th>액상화 시정촌 값</th></tr>
+    <tr><td><a href="https://claude.ai/artifact/Uqmg4X8sLnLZeZX1jYmKpJ" style="color:var(--accent)">칸 단위 실험 기록</a> (주 결과, 교수님 지시)</td><td><b>칸 최댓값</b></td><td><b>칸 최댓값</b></td></tr>
+    <tr><td>시정촌 대 칸 단위 비교</td><td>칸 최댓값</td><td>칸 최댓값</td></tr>
+    <tr><td>이 부록</td><td>칸 최댓값 · 칸 평균(섞기) · 상위 1 · 5 · 10 % 평균을 <b>비교</b></td><td>칸 최댓값 (부록 결과 표에서만 상위 5%도 참고로)</td></tr>
+  </table></div>
+  <p>즉 <b>실험 기록의 숫자는 항상 최대 · 최대</b>이고, 이 부록에서만 산사태를 모으는 방법을 바꿔 봅니다. 학습은 모두 같고, 시정촌으로 모으는 단계만 다릅니다.</p>
+  <div class="callout"><p><b>지진별 seed 그림 읽는 법</b> (칸 단위 실험 기록 3절, 시정촌 실험 기록 6절)</p><ul>
+    <li><b>점</b> = seed 하나로 그 지진 × 재해만 채점한 AUC, <b>옅은 띠</b> = 가장 낮은 seed ~ 가장 높은 seed, <b>검은 세로선</b> = seed 평균, "폭" = 가장 높은 − 가장 낮은 (0.2 이상 빨간 글씨)</li>
+    <li><b>초록 삼각형</b> = <b>USGS 기준선</b>의 AUC: DisasterNet 없이 USGS 사전확률을 그대로 점수로 써서 같은 시정촌들로 채점한 값 (전체 0.854). 점들이 삼각형보다 <b>오른쪽이면 USGS보다 잘한 것, 왼쪽이면 못한 것</b></li>
+    <li><b>점선</b> = 0.5 (무작위 수준). 예: ⑤ 산사태 구마모토는 USGS 0.641 대 0.803 (오른쪽, 잘함), 액상화 구마모토는 0.947 대 0.918 (왼쪽, 조금 못함)</li>
+  </ul></div>
+</section>
 
 <section id="easy">
   <h2><span class="n">0</span>쉽게 한 장으로</h2>
