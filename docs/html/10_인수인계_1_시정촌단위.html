@@ -94,6 +94,15 @@ svg text{font-family:var(--sans)}
     <li><b>USGS 기준선 (0.854)</b>: 미국지질조사국(USGS)이 지진 직후 내는 산사태 · 액상화 확률 지도를 시정촌 값으로 모아 그대로 점수로 쓴 것</li>
     <li><b>pilotA (0.855)</b>: 우리가 먼저 만든 방법</li>
   </ul>
+  <div class="box"><span class="t">pilotA 비교값의 설정: 산사태 E3 + 액상화 J (pilotA 저장소 followup4-lq-J-labels / -nolabels 브랜치)</span>
+    <ul>
+      <li><b>산사태 prior (E3 모델)</b>: z = log p̄ + log k + log cov + κ · 산지비율. p̄ = USGS 평균, k = 시정촌 안 USGS 칸 수, cov = 산사태 정답을 판독한 범위 비율. κ만 학습</li>
+      <li><b>액상화 prior (조건 J)</b>: z = log p̄ + b + (log k − 학습 행 평균). b만 학습. b는 모든 시정촌에 같은 값이라 순서는 log p̄ + log k와 같음</li>
+      <li><b>사후</b>: prior에 지진 피해 통계(6개 채널, 음이항 분포)를 더해 시정촌별 산사태 · 액상화 확률을 냄</li>
+      <li><b>지진 분리</b>: 맞힐 지진 하나를 학습에서 통째로 빼고 나머지 8개 지진으로 학습한 뒤 그 지진을 예측. DPM이 있는 5개 지진을 하나씩 돌아가며 뺌니다</li>
+      <li><b>E3</b> = 뺀 지진의 지진 상수 α_e를 그 지진의 피해 통계로 맞춘 것 (정답은 안 씀). λ_γ = λ_κ = 10</li>
+      <li><b>라벨</b>: 학습 지진의 산사태 정답은 학습에 씀. 액상화 정답까지 쓰면 A1 (0.847), 안 쓰면 A2 (<b>0.855</b>, 우리가 비교에 쓰는 값). 뺀 지진의 정답은 어느 쪽도 안 씀</li>
+    </ul></div>
   <p>질문은 하나였습니다. <b>USGS 확률에 위성 영상(DPM)을 더해 DisasterNet으로 고치면, USGS보다 잘 맞힐 수 있나?</b></p>
 </section>
 
