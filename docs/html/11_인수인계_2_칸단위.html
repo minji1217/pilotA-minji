@@ -210,6 +210,41 @@ svg text{font-family:var(--sans)}
     <tr><td><b>USGS 사전확률 · 불확실도</b></td><td>칸에 걸친 USGS 칸들의 값을 겹친 넓이 비율로 평균. USGS 칸은 산사태 약 230 × 170~195 m, 액상화 약 460 × 340~390 m라 우리 칸 하나가 USGS 칸 여러 개에 걸칩니다. 확률 999(계산 안 함)는 0</td><td rowspan="2"><code>raw/local_250m_byevent_usgs_aw.csv.gz</code></td></tr>
     <tr><td><b>경사</b></td><td>국토수치정보 경사(250 m). 평지 5° 미만 · 중간 5~10° · 비탈 10° 이상</td></tr>
   </table></div>
+  <h3>위성 프레임이 겹치는 칸의 DPM</h3>
+  <p>위성 영상은 궤도(같은 날 같은 방향으로 찍은 줄)마다 여러 장의 프레임으로 나뉘고, 이웃한 프레임은 가장자리가 겹칩니다. 겹친 곳의 칸은 두 프레임의 화소를 다 갖게 되는데, 시정촌 실험(v8)과 <b>똑같은 규칙</b>으로 합쳤습니다.</p>
+  <figure><svg viewBox="0 0 860 470" width="100%" role="img" aria-label="같은 궤도의 두 프레임이 겹칠 때 프레임마다 배경차를 먼저 구하고 화소 수로 합치는 과정" style="max-width:860px;height:auto">
+<text x="20" y="26" font-size="15" font-weight="700" class="c-fg">① 같은 궤도의 프레임 두 장이 위아래로 겹침</text>
+<rect x="40" y="48" width="300" height="190" rx="4" class="c-lq" opacity=".16"/>
+<rect x="40" y="48" width="300" height="190" rx="4" fill="none" class="s-ac" stroke-width="2"/>
+<text x="52" y="70" font-size="13" font-weight="700" class="c-ac">프레임 A (중앙값 0.20)</text>
+<rect x="40" y="210" width="300" height="160" rx="4" class="c-ls" opacity=".14"/>
+<rect x="40" y="210" width="300" height="160" rx="4" fill="none" class="s-warn" stroke-width="2"/>
+<text x="52" y="358" font-size="13" font-weight="700" class="c-warn">프레임 B (중앙값 0.25)</text>
+<text x="56" y="228" font-size="12" class="c-mu">겹친 띠</text>
+<rect x="150" y="190" width="70" height="40" fill="none" class="s-fg" stroke-width="2.5"/>
+<text x="228" y="186" font-size="12.5" font-weight="700" class="c-fg">250 m 칸 하나</text>
+<text x="20" y="400" font-size="12.5" class="c-mu">이 칸은 A 화소 41개(칸 전체)와</text>
+<text x="20" y="420" font-size="12.5" class="c-mu">B 화소 20개(아래 절반)를 둘 다 가짐.</text>
+<text x="20" y="440" font-size="12.5" class="c-mu">다른 궤도(다른 날 찍은 영상)는 섞지 않음</text>
+
+<text x="430" y="26" font-size="15" font-weight="700" class="c-fg">② 프레임마다 따로 기준을 빼기</text>
+<rect x="430" y="44" width="410" height="112" rx="8" class="c-soft"/>
+<text x="446" y="70" font-size="13" class="c-ac" font-weight="700">프레임 A의 화소 41개</text>
+<text x="446" y="92" font-size="13" class="c-fg">평균 0.50 − 프레임 A 중앙값 0.20 = <tspan font-weight="700">0.30</tspan></text>
+<text x="446" y="120" font-size="13" class="c-warn" font-weight="700">프레임 B의 화소 20개 (칸 절반만 덮음)</text>
+<text x="446" y="142" font-size="13" class="c-fg">평균 0.45 − 프레임 B 중앙값 0.25 = <tspan font-weight="700">0.20</tspan></text>
+
+<text x="430" y="196" font-size="15" font-weight="700" class="c-fg">③ 화소 수만큼 비중을 둬서 합치기</text>
+<rect x="430" y="214" width="410" height="70" rx="8" class="c-tint"/>
+<text x="446" y="242" font-size="13" class="c-fg">(41 × 0.30 + 20 × 0.20) ÷ (41 + 20)</text>
+<text x="446" y="268" font-size="14" font-weight="700" class="c-fg">= 0.267  이 칸의 DPM_배경차</text>
+
+<text x="430" y="322" font-size="15" font-weight="700" class="c-fg">시정촌 단위(v8)도 똑같이 했음</text>
+<text x="430" y="346" font-size="13" class="c-fg">시정촌 실험의 DPM도 "프레임별 배경차를 먼저 구하고,</text>
+<text x="430" y="366" font-size="13" class="c-fg">같은 궤도 안에서만 화소 수로 합침"이었음.</text>
+<text x="430" y="386" font-size="13" class="c-fg">칸 단위는 같은 규칙을 시정촌 대신 250 m 칸에 적용한 것.</text>
+<text x="430" y="416" font-size="12" class="c-mu">숫자는 설명용 예시입니다.</text>
+</svg><figcaption>궤도는 시정촌마다 그 시정촌을 가장 많이 덮는 하나만 씁니다 (경계 칸은 칸 중심이 속한 시정촌의 궤도). 프레임마다 기준 밝기가 달라서, 원래 화소값을 바로 섞지 않고 각 프레임 안에서 중앙값을 먼저 뺀 뒤 합칩니다.</figcaption></figure>
   <div class="box"><span class="t">물 칸은 학습에서 뺍니다 (전체 칸의 약 2.5%)</span>
     <p>100 m 토지이용 자료에서 칸 안에 중심이 든 100 m 칸의 절반 넘게 하천 · 호수 · 바다면 물 칸입니다. 물 위에서는 재해가 없는데 수면은 DPM이 잘 튀어서, 최댓값으로 모으면 물 칸 하나가 시정촌 값을 차지할 수 있기 때문입니다. 원 논문의 끄기 지도도 물은 끕니다.</p></div>
 </section>
