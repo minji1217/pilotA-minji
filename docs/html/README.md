@@ -15,3 +15,4 @@
 | 9_칸단위_지난기록.html | 칸 단위 이전 결과 (seed 0·1, 고치기 전 soft, 중심점 USGS, 원본 학습 방식) | https://claude.ai/artifact/JaEwowMCpq62Q1bkpGgbum |
 | 10_인수인계_1_시정촌단위.html | **후배 인수인계 1편**: 시정촌 단위 실험 8개 (목표 · 설정 · 실행 · 결과) | https://claude.ai/artifact/UpGVai4nNwqVRKoLB6wPnu |
 | 11_인수인계_2_칸단위.html | **후배 인수인계 2편**: 칸(픽셀) 단위 실험 5개, 시정촌 대비 비교 | https://claude.ai/artifact/ABVNTp3TEo7D7jB8xfU721 |
+| 12_pilotA_공헌점.html | pilotA 공헌점 (DisasterNet 칸 단위 대비) | https://claude.ai/artifact/SwaAyVd9acpFFPcWH3RDVa |

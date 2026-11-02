@@ -1,0 +1,108 @@
+<!doctype html>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>pilotA 공헌점</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;600&display=swap">
+<style>
+:root{
+  /* 인수인계 문서: 한 열 읽기 레이아웃, 표·그림만 넓게 */
+  --bg:#ffffff; --fg:#1b2330; --muted:#5d6676; --line:#e2e5ea; --soft:#f3f5f8; --tint:#eaf0f7;
+  --accent:#23507f; --ls:#b5651d; --lq:#2d62b3; --all:#3c8a57; --warn:#a8452a; --ref:#8a93a3;
+  --ls-bg:#f8efe6; --lq-bg:#e9f0fa; --all-bg:#e9f4ed; --warn-bg:#fbeee8;
+  --sans:'IBM Plex Sans KR',system-ui,-apple-system,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;
+  --mono:'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#12161c; --fg:#e6e9ee; --muted:#9aa3b0; --line:#2a313b; --soft:#1a2029; --tint:#1c2736;
+  --accent:#8db4e8; --ls:#e09a5c; --lq:#74a2ea; --all:#6cc08a; --warn:#ef8a62; --ref:#77808f;
+  --ls-bg:#2a2119; --lq-bg:#18233a; --all-bg:#17281d; --warn-bg:#2d1d16; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#12161c; --fg:#e6e9ee; --muted:#9aa3b0; --line:#2a313b; --soft:#1a2029; --tint:#1c2736;
+  --accent:#8db4e8; --ls:#e09a5c; --lq:#74a2ea; --all:#6cc08a; --warn:#ef8a62; --ref:#77808f;
+  --ls-bg:#2a2119; --lq-bg:#18233a; --all-bg:#17281d; --warn-bg:#2d1d16; color-scheme:dark}
+body{background:var(--bg);color:var(--fg);font-family:var(--sans);font-size:16px;line-height:1.7;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+main{max-width:880px;margin:0 auto;padding-block:40px 80px;display:flex;flex-direction:column;gap:44px}
+header{display:flex;flex-direction:column;gap:12px}
+.eyebrow{font-size:13px;letter-spacing:.06em;color:var(--muted);font-weight:500}
+h1{font-size:clamp(26px,4vw,34px);line-height:1.3;margin:0;text-wrap:balance}
+h2{font-size:23px;line-height:1.35;margin:0 0 4px;text-wrap:balance;display:flex;gap:12px;align-items:baseline}
+h2 .n{font-family:var(--mono);font-size:15px;color:var(--accent);font-weight:600;flex:none}
+h3{font-size:18px;margin:18px 0 2px}
+p{margin:0;max-width:68ch} section{display:flex;flex-direction:column;gap:14px} section>ul,section>ol{margin:0;padding-left:22px;max-width:68ch}
+li+li{margin-top:4px}
+.lede{font-size:17.5px;color:var(--fg);max-width:64ch}
+.meta{font-size:13.5px;color:var(--muted)}
+a{color:var(--accent)}
+code{font-family:var(--mono);font-size:.88em;background:var(--soft);padding:1px 5px;border-radius:4px}
+pre{font-family:var(--mono);font-size:13px;line-height:1.6;background:var(--soft);border:1px solid var(--line);border-radius:8px;padding:12px 14px;overflow-x:auto;margin:0}
+.toc{display:flex;flex-wrap:wrap;gap:6px 8px;font-size:13.5px}
+.toc a{text-decoration:none;color:var(--fg);border:1px solid var(--line);border-radius:999px;padding:3px 11px}
+.toc a:hover,.toc a:focus-visible{border-color:var(--accent);color:var(--accent);outline:none}
+.key{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+.key div{border:1px solid var(--line);border-radius:10px;padding:14px 16px;display:flex;flex-direction:column;gap:2px;min-width:0}
+.key b{font-size:30px;line-height:1.15;font-variant-numeric:tabular-nums}
+.key span{font-size:13.5px;color:var(--muted)}
+.key .best b{color:var(--accent)} .key .ref b{color:var(--all)}
+.box{background:var(--soft);border-radius:10px;padding:14px 18px;display:flex;flex-direction:column;gap:8px}
+.box.tip{background:var(--tint)} .box.warn{background:var(--warn-bg)}
+.box ul{margin:0;padding-left:20px} .box p{max-width:none}
+.box .t{font-weight:700}
+.tw{overflow-x:auto;min-width:0}
+table{border-collapse:collapse;width:100%;font-size:14.5px}
+th{text-align:left;font-weight:700;font-size:13px;color:var(--muted);padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:bottom}
+td{padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+tr.hi td{background:var(--tint)} tr.ref td{color:var(--muted)}
+.tag{display:inline-block;font-size:12px;font-weight:600;padding:1px 8px;border-radius:999px;white-space:nowrap}
+.t-ls{background:var(--ls-bg);color:var(--ls)} .t-lq{background:var(--lq-bg);color:var(--lq)} .t-all{background:var(--all-bg);color:var(--all)}
+.yes{color:var(--all);font-weight:700} .no{color:var(--muted)}
+.up{color:var(--all);font-weight:600} .down{color:var(--warn);font-weight:600}
+figure{margin:0;display:flex;flex-direction:column;gap:8px} figcaption{font-size:13.5px;color:var(--muted);max-width:none}
+svg text{font-family:var(--sans)}
+.c-fg{fill:var(--fg)} .c-mu{fill:var(--muted)} .c-ls{fill:var(--ls)} .c-lq{fill:var(--lq)} .c-all{fill:var(--all)} .c-ac{fill:var(--accent)} .c-ref{fill:var(--ref)} .c-warn{fill:var(--warn)}
+.c-soft{fill:var(--soft)} .c-bg{fill:var(--bg)} .c-tint{fill:var(--tint)} .c-lsbg{fill:var(--ls-bg)} .c-lqbg{fill:var(--lq-bg)}
+.s-line{stroke:var(--line)} .s-mu{stroke:var(--muted)} .s-fg{stroke:var(--fg)} .s-ac{stroke:var(--accent)} .s-warn{stroke:var(--warn)} .s-all{stroke:var(--all)}
+.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+.steps div{border:1px solid var(--line);border-radius:10px;padding:12px 14px;min-width:0;display:flex;flex-direction:column;gap:4px}
+.steps b{font-size:15px} .steps span{font-size:14px;color:var(--muted)}
+.foot{font-size:13px;color:var(--muted);border-top:1px solid var(--line);padding-top:16px}
+@media (prefers-reduced-motion:reduce){*{scroll-behavior:auto}}
+</style>
+<main>
+<header>
+  <div class="eyebrow">재난 파일럿 · pilotA 대 DisasterNet · 2026-11-02</div>
+  <h1>pilotA 공헌점</h1>
+  <p class="lede">위성 영상을 쓰는 최신 모델인 DisasterNet(KDD 2023)을 우리 데이터로 재현해서 pilotA와 비교했습니다. 두 방법 모두 같은 5개 지진의 같은 200개 시정촌을 같은 정답으로 채점했습니다. DisasterNet은 원 논문에 있는 장치(USGS 불확실도로 불가능한 곳 끄기, 경사로 만든 끄기 지도 등)를 넣어 250 m 칸 단위로 학습시킨 설정 중 가장 좋은 결과를 썼고, pilotA는 예측할 지진을 학습에서 완전히 뺀 상태의 결과를 썼습니다. 다만 pilotA는 학습에 쓴 다른 지진들의 산사태 정답을 활용하고, DisasterNet은 정답을 전혀 쓰지 않는다는 차이가 있습니다.</p>
+</header>
+
+<section>
+  <h2><span class="n">1</span>위성 영상 없이도 더 정확하고 훨씬 가볍습니다</h2>
+  <p>전체 AUC는 pilotA가 0.855, DisasterNet이 0.808이고, 산사태(0.872 대 0.790)와 액상화(0.850 대 0.813) 모두 pilotA가 높았습니다. 평가한 지진은 5개이고, 지진마다 산사태와 액상화를 따로 채점하면 모두 7개 조합이 됩니다 (산사태 3개 지진 + 액상화 4개 지진. 피해 있음 또는 없음만 있는 조합은 AUC를 낼 수 없어 빼습니다). 이 7개 중 6개에서 pilotA가 앞섰고, 노토 액상화만 DisasterNet이 높았습니다. 특히 산사태는 USGS 확률을 그대로 쓴 기준선(0.729)보다도 크게 높습니다.</p>
+  <p>그런데 DisasterNet은 이 결과를 얻기 위해 40 m 위성 영상을 처리하고 칸마다 경사 · USGS · 토지이용 값을 붙인 뒤, 지진마다 수만~수십만 개의 칸을 학습해야 했습니다. 설정 하나를 한 번 돌리는 데 연구실 PC로 약 1시간 25분이 걸리고, 결과가 seed마다 달라 다섯 번씩 돌렸습니다. 반면 pilotA는 시정촌 418줄짜리 표 하나로 몇 분이면 끝납니다.</p>
+  <div class="tw"><table>
+    <tr><th>AUC</th><th class="num">전체</th><th class="num">산사태</th><th class="num">액상화</th></tr>
+    <tr class="hi"><td><b>pilotA</b></td><td class="num"><b>0.855</b></td><td class="num"><b>0.872</b></td><td class="num">0.850</td></tr>
+    <tr><td>DisasterNet (칸 단위 최고 설정)</td><td class="num">0.808</td><td class="num">0.790</td><td class="num">0.813</td></tr>
+    <tr class="ref"><td>USGS 확률 그대로 (기준선)</td><td class="num">0.854</td><td class="num">0.729</td><td class="num">0.895</td></tr>
+  </table></div>
+</section>
+
+<section>
+  <h2><span class="n">2</span>정답 없이 새 지진에 맞출 수 있습니다</h2>
+  <p>지진은 규모와 지역에 따라 전체 피해 수준이 다르기 때문에, 지난 지진들에서 배운 값을 새 지진에 그대로 쓰면 수준이 맞지 않습니다. pilotA는 9개 지진을 함께 학습해서 지진과 상관없이 통하는 관계를 배웁니다. 흔들림과 목조 건물 비율이 피해를 얼마나 만드는지, 산사태와 액상화가 피해를 얼마나 더 늘리는지 같은 것들입니다. 그리고 새 지진이 오면 그 지진의 피해 통계만 가지고 "이 지진의 전체 피해 수준" 하나만 다시 맞춥니다. 이 과정에서 새 지진의 정답은 전혀 쓰지 않습니다.</p>
+  <p>이 값을 어떻게 정하느냐에 따라 결과가 크게 달라졌습니다. 기준 지진과 같다고 두면 산사태는 잘 맞지만(0.879) 액상화가 떨어지고(0.824), 지난 지진들의 평균으로 두면 액상화는 잘 맞지만(0.850) 산사태가 떨어집니다(0.828). 피해 통계로 맞추는 방식은 산사태 0.872, 액상화 0.850으로 두 재해 모두에서 최선에 가까웠습니다. 반면 DisasterNet은 지진마다 정답 없이 처음부터 새로 학습하기 때문에 지난 지진의 경험을 쓰지 못하고, seed에 따라 가장 좋은 설정도 바뀝니다.</p>
+  <div class="tw"><table>
+    <tr><th>새 지진의 전체 피해 수준을</th><th class="num">산사태</th><th class="num">액상화</th></tr>
+    <tr><td>기준 지진과 같다고 둠</td><td class="num">0.879</td><td class="num">0.824</td></tr>
+    <tr><td>지난 지진들의 평균으로 둠</td><td class="num">0.828</td><td class="num">0.850</td></tr>
+    <tr class="hi"><td><b>그 지진의 피해 통계로 맞춤</b></td><td class="num"><b>0.872</b></td><td class="num"><b>0.850</b></td></tr>
+  </table></div>
+</section>
+
+<section>
+  <h2><span class="n">3</span>앞으로 보강할 것</h2>
+  <p>논문으로 내기 전에는 pilotA도 seed 다섯 개로 돌려 결과가 얼마나 흔들리는지 확인하고, 두 방법 차이의 신뢰구간을 계산하고(산사태는 피해 없는 시정촌이 9곳뿐이라 특히 필요합니다), pilotA 실행 시간을 실제로 재서 보강할 계획입니다.</p>
+</section>
+</main>
