@@ -99,7 +99,7 @@ svg text{font-family:var(--sans)}
     <tr><th></th><th>DisasterNet</th><th>pilotA</th></tr>
     <tr><td>입력</td><td>40 m 해상도 SAR 영상, 칸별 경사 · USGS · 토지이용</td><td>시정촌 표 (USGS · 피해 통계 · 정답, 418줄)</td></tr>
     <tr><td>학습 단위</td><td>지진마다 칸 4.5만~32만 개</td><td>시정촌 418개</td></tr>
-    <tr><td>계산 시간</td><td>설정 하나 · seed 하나에 약 1시간 25분 (PC)</td><td>약 4분 (지진 5개 회차 합계, 회차당 약 40~70초. 4코어 클라우드 컴퓨터, seed 하나)</td></tr>
+    <tr><td>계산 시간</td><td>지진 5개 합쳐 약 1시간 25분 (seed 하나)</td><td>지진 5개 합쳐 약 4분 (seed 하나)</td></tr>
   </table></div>
   <div class="box warn"><span class="t">라벨 사용 차이에 대한 근거</span><ul>
     <li>산사태 성능 대부분은 학습 없는 사전확률에서 나옴: USGS 평균 0.729, 시정촌 크기 항 추가 0.783, 판독 범위 보정 추가 <b>0.864</b> (학습 파라미터 없음, 정답 값 미사용)</li>
