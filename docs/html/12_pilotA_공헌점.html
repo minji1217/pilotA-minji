@@ -97,7 +97,7 @@ svg text{font-family:var(--sans)}
   </ul>
   <div class="tw"><table>
     <tr><th></th><th>DisasterNet</th><th>pilotA</th></tr>
-    <tr><td>입력</td><td>40 m 해상도 SAR 영상, 칸별 경사 · USGS · 토지이용</td><td>시정촌 표 (USGS · 피해 통계 · 정답, 418줄)</td></tr>
+    <tr><td>입력</td><td>위성 SAR 변화지도(40 m 화소를 250 m 칸으로 평균), 칸별 경사 · USGS · 토지이용</td><td>시정촌 표 (USGS · 피해 통계 · 정답, 418줄)</td></tr>
     <tr><td>학습 단위</td><td>지진마다 칸 4.5만~32만 개</td><td>시정촌 418개</td></tr>
     <tr><td>계산 시간</td><td>지진 5개 합쳐 약 1시간 25분 (seed 하나)</td><td>지진 5개 합쳐 약 4분 (seed 하나)</td></tr>
   </table></div>
@@ -108,20 +108,17 @@ svg text{font-family:var(--sans)}
 </section>
 
 <section>
-  <h2><span class="n">2</span>예측 지진의 정답 없이 그 지진에 맞춤</h2>
-  <ul>
-    <li><b>문제</b>: 지진마다 전체 피해 수준이 달라, 지난 지진으로 배운 값을 그대로 쓰면 수준이 안 맞음</li>
-    <li><b>방법</b>: 9개 지진을 함께 학습해 공통 관계(흔들림 · 목조 비율 · 산사태 · 액상화가 피해를 늘리는 정도) 학습. 새 지진은 그 지진의 피해 통계로 "지진 전체 피해 수준" α_e 하나만 맞춤 (정답 미사용)</li>
-  </ul>
+  <h2><span class="n">2</span>지난 지진에서 배운 것을 새 지진으로 옮김</h2>
   <div class="tw"><table>
-    <tr><th>새 지진의 α_e를</th><th class="num">산사태</th><th class="num">액상화</th></tr>
-    <tr><td>기준 지진과 같다고 둠</td><td class="num">0.879</td><td class="num">0.824</td></tr>
-    <tr><td>지난 지진 평균으로 둠</td><td class="num">0.828</td><td class="num">0.850</td></tr>
-    <tr class="hi"><td><b>피해 통계로 맞춤</b></td><td class="num"><b>0.872</b></td><td class="num"><b>0.850</b></td></tr>
+    <tr><th></th><th>DisasterNet</th><th>pilotA</th></tr>
+    <tr><td>새 지진이 오면</td><td>그 지진 위성 자료로 처음부터 학습</td><td>지난 지진에서 배운 관계를 그대로 가져와 씀</td></tr>
+    <tr><td>지진끼리 공유</td><td>없음</td><td>흔들림 · 목조 비율 · 산사태 · 액상화가 피해를 늘리는 정도, 사전확률 계수</td></tr>
+    <tr><td>새 지진에서 다시 맞추는 것</td><td>전부</td><td>지진 전체 피해 수준(α_e) 하나</td></tr>
   </table></div>
   <ul>
-    <li>고정값은 산사태에서만, 평균은 액상화에서만 좋음. <b>피해 통계로 맞추면 두 재해 모두 최선에 가까움</b> (최선과 차이: 산사태 −0.007, 액상화 0)</li>
-    <li>DisasterNet은 지진끼리 공유하는 파라미터 없이 지진마다 처음부터 학습. seed마다 최고 설정이 바뀜 (최고 설정도 0.795~0.827)</li>
+    <li><b>방법</b>: 9개 지진을 함께 학습해 공통 관계를 배우고, 새 지진은 그 지진의 피해 통계로 α_e 하나만 맞춤 (그 지진의 정답은 미사용)</li>
+    <li><b>결과</b>: 예측할 지진을 학습에서 통째로 빼고 예측해도 전체 0.855 (산사태 0.872, 액상화 0.850). 처음 보는 지진에서의 성능</li>
+    <li><b>DisasterNet</b>: 지진마다 새로 학습하고 seed에 따라 가장 좋은 설정이 바뀜 (최고 설정도 seed마다 0.795~0.827)</li>
   </ul>
 </section>
 
@@ -131,6 +128,7 @@ svg text{font-family:var(--sans)}
     <li>pilotA seed 5개 실행: 흔들림을 DisasterNet과 같은 기준으로 비교</li>
     <li>pilotA 대 DisasterNet 차이의 신뢰구간 (산사태 피해 없음 시정촌 9곳)</li>
     <li>pilotA 라벨 없이 실행 (<code>--no-labels</code>): 라벨 효과 분리</li>
+    <li>지진 간 전이 효과를 직접 보이는 비교 (지진별로 따로 학습한 pilotA 대비)</li>
   </ul>
 </section>
 </main>
