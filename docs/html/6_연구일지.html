@@ -537,4 +537,116 @@ body{background:#fff}
     </ul></div></div>
   </div>
 </article>
+
+<article class="entry">
+  <div class="date"><span class="d">10.23</span><span class="w">금</span></div>
+  <div class="body">
+    <h2>노토 액상화 0.35 원인 확인 · 후배 인수인계 문서</h2>
+    <span class="status done">완료</span>
+    <div class="row"><b>노토 0.35</b><div>
+      <p>칸 SOFTU_분산만 seed 0의 노토 액상화 AUC 0.35 (다른 seed 0.76~0.81). 직접 확인한 원인 두 가지:</p>
+      <div class="tw"><table>
+        <tr><th>seed</th><th class="num">0.99 이상인 시정촌 (64곳 중)</th><th class="num">피해 있음 중앙값</th><th class="num">피해 없음 중앙값</th><th class="num">AUC</th></tr>
+        <tr><td>0</td><td class="num">42곳</td><td class="num">0.992</td><td class="num">0.995</td><td class="num">0.350</td></tr>
+        <tr><td>1~4</td><td class="num">0~13곳</td><td class="num">0.53~0.67</td><td class="num">0.38~0.48</td><td class="num">0.76~0.81</td></tr>
+      </table></div>
+      <ul>
+        <li>① 확률이 1에 붙음: 대부분 0.99대라 소수점 셋째 자리 차이로 순서가 정해져 사실상 무작위</li>
+        <li>② 끄기가 없음: 불확실도 0 · 999뿐인 노토 피해 없음 11곳이 SOFTU에서는 0으로 고정되는데, 분산만에서는 0.996으로 맨 위권. 이 11곳만 0으로 두면 seed 0이 0.350에서 0.664로, 다른 seed도 약 0.77에서 0.88로 오름 (노토 액상화에서 끄기만으로 약 +0.1)</li>
+      </ul>
+    </div></div>
+    <div class="row"><b>인수인계</b><div><ul>
+      <li>후배용 문서 2편: <a href="https://claude.ai/artifact/UpGVai4nNwqVRKoLB6wPnu">1편 시정촌 단위</a> · <a href="https://claude.ai/artifact/ABVNTp3TEo7D7jB8xfU721">2편 칸(픽셀) 단위</a>. 저장소 <code>docs/html/10_인수인계_1_시정촌단위.html</code> · <code>11_인수인계_2_칸단위.html</code></li>
+      <li>중간 시도는 빼고 "무엇을 · 어떻게 · 어떻게 나왔나" 순서로. 시정촌 결과는 <code>compare_latest.py</code>를 다시 돌려 숫자 확인 (DN 0.614 · SOFT 0.710 · DNU 0.675 · SOFTU 0.738 · DNU_끄기만 0.638 · DNU_분산만 0.681 · SOFTU_끄기만 0.722 · SOFTU_분산만 0.751, 같은 분산 0.001 · 0.01은 0.616 · 0.657)</li>
+      <li>코드: 저장소 <code>minji1217/pilotA-minji</code> 브랜치 <code>claude/dazzling-babbage-8c6yd4</code> (main에는 없음). <code>raw/</code> · <code>outputs/</code>는 따로 전달</li>
+    </ul></div></div>
+  </div>
+</article>
+
+<article class="entry">
+  <div class="date"><span class="d">10.28</span><span class="w">수</span></div>
+  <div class="body">
+    <h2>칸 단위에서 자료 크기 맞춘 방법 정리</h2>
+    <span class="status done">완료</span>
+    <div class="row"><b>정리</b><div>
+      <div class="tw"><table>
+        <tr><th>자료</th><th>원래 크기</th><th>250 m 칸에 맞춘 방법</th></tr>
+        <tr><td>경사</td><td>250 m</td><td>그대로 (공통 칸 = 경사의 1/4 지역 메시)</td></tr>
+        <tr><td>DPM</td><td>40 m 화소</td><td>화소 중심이 든 칸에 배정 후 평균 (칸당 중앙값 41개), 리샘플링 없음</td></tr>
+        <tr><td>USGS 확률 · 불확실도</td><td>약 230 × 170~195 m (산사태), 약 460 × 340~390 m (액상화)</td><td>겹친 넓이 비율로 평균</td></tr>
+        <tr><td>토지이용</td><td>100 m</td><td>중심이 든 100 m 칸으로 물 칸 판정</td></tr>
+      </table></div>
+    </div></div>
+    <div class="row"><b>고찰</b><div><ul>
+      <li>40 m로 쪼개지 않은 이유 (돌려 보지는 않음): 경사가 250 m라 쪼개도 한 칸 안 41개 화소가 같은 경사를 받아 끄기가 정확해지지 않음, 계산량 약 40배 (지진마다 약 185만~1,300만 줄), 40 m 화소 하나의 DPM은 잡음이 큼</li>
+      <li>40 m로 가려면 10 m DEM으로 경사를 다시 계산하고 GPU가 필요</li>
+    </ul></div></div>
+  </div>
+</article>
+
+<article class="entry">
+  <div class="date"><span class="d">10.30</span><span class="w">금</span></div>
+  <div class="body">
+    <h2>pilotA 비교 설정 확인 · 지형 처리 다시 점검</h2>
+    <span class="status done">완료</span>
+    <div class="row"><b>pilotA (E3 · J)</b><div><ul>
+      <li>pilotA 저장소 <code>followup4-lq-J-labels</code> (A1) / <code>-nolabels</code> (A2) 브랜치. 9개 지진 418줄, DPM 있는 5개 지진을 하나씩 통째로 빼고 나머지 8개로 학습 후 예측</li>
+      <li>산사태 prior (E3 모델): z = log p̄ + log k + log cov + κ · 산지비율 (κ만 학습, 거의 0). 액상화 prior (조건 J): z = log p̄ + b + (log k − 학습 행 평균), b만 학습 → 순서는 log p̄ + log k와 같음</li>
+      <li>E3 = 뺀 지진의 지진 상수 α_e를 그 지진 피해 통계로 맞춤 (E1 = 0, E2 = 학습 지진 평균). λ_γ = λ_κ = 10</li>
+      <li>라벨: 학습 지진의 산사태 정답은 사용. 액상화 정답까지 쓰면 A1 (0.847), 안 쓰면 A2 (0.855, 우리 비교값). 뺀 지진의 정답은 어느 쪽도 안 씀</li>
+    </ul></div></div>
+    <div class="row"><b>지형 처리</b><div><ul>
+      <li>시정촌 soft의 5~10° 칸: 비탈 비율(10° 이상) · 평지 비율(5° 미만) 어디에도 안 들어가 두 비율을 함께 줄임. 중간 칸 비율 중앙값 13.5%, 최대 64% (三春町). 칸 단위(5~10° 칸은 둘 다 그대로)와 기준이 다름 → 시정촌도 "산사태 = 5° 이상, 액상화 = 10° 미만"으로 맞춰 다시 돌려 볼 수 있음 (아직 안 함)</li>
+      <li>DN에는 USGS 불확실도가 없음. 원 코드처럼 불확실도로 끄기 · 분포 폭을 쓰는 것이 U (DNU, SOFTU 계열, LOCALU). 원 코드에 가장 가까운 것은 칸 LOCALU (BD만 없음)</li>
+      <li>DPM 프레임 겹침: 시정촌(v8)과 같은 규칙. 궤도는 시정촌마다 하나만, 같은 궤도 프레임이 겹치면 프레임별로 (칸 평균 − 프레임 중앙값)을 구한 뒤 화소 수로 가중평균. 시정촌과 칸이 달라진 것은 USGS 값 (시정촌 = 중심점 기준 넓이 가중 없음, 칸 = 넓이 가중)</li>
+      <li>칸 soft와 끄기 지도의 차이: soft는 사전확률을 1/100로 낮춰 출발(DPM이 크면 다시 오를 수 있음), 끄기 지도는 0으로 고정. 나머지 칸은 USGS 값 그대로 출발. U가 같은 SOFTU 0.785와 LOCALU 0.808의 차이가 곧 soft와 끄기 지도의 차이</li>
+      <li>DisasterNet은 시정촌 · 칸 모두 지진마다 따로 학습하고 지진끼리 공유하는 파라미터가 없음 (원 논문도 사건마다 따로)</li>
+    </ul></div></div>
+    <div class="row"><b>문서</b><div><ul>
+      <li>인수인계 1편에 pilotA 설정 상자, 2편에 자료 크기 맞추기 · 40 m로 안 한 이유 · 프레임 겹침 그림 · soft와 끄기 지도의 "그대로" 그림 추가</li>
+    </ul></div></div>
+  </div>
+</article>
+
+<article class="entry">
+  <div class="date"><span class="d">11.02</span><span class="w">월</span></div>
+  <div class="body">
+    <h2>pilotA 공헌점 정리 (DisasterNet 칸 단위 대비)</h2>
+    <span class="status done">완료 · 교수님께 공유 예정</span>
+    <div class="row"><b>비교</b><div>
+      <div class="tw"><table>
+        <tr><th>AUC</th><th class="num">전체</th><th class="num">산사태</th><th class="num">액상화</th></tr>
+        <tr><td><b>pilotA (A2)</b></td><td class="num"><b>0.855</b></td><td class="num"><b>0.872</b></td><td class="num">0.850</td></tr>
+        <tr><td>DisasterNet 칸 LOCALU</td><td class="num">0.808</td><td class="num">0.790</td><td class="num">0.813</td></tr>
+        <tr><td class="muted">USGS 기준선</td><td class="num">0.854</td><td class="num">0.729</td><td class="num">0.895</td></tr>
+      </table></div>
+      <p class="meta">지진 × 재해 7개 조합(5개 지진, 산사태 3 + 액상화 4) 중 6개에서 pilotA가 높음. 예외 노토 액상화 (DisasterNet 0.907, pilotA 0.768, USGS 0.887).</p>
+    </div></div>
+    <div class="row"><b>pilotA 단계별</b><div>
+      <div class="tw"><table>
+        <tr><th>단계 (A2, 지진 분리)</th><th class="num">산사태</th><th class="num">액상화</th></tr>
+        <tr><td>USGS 시정촌 평균</td><td class="num">0.729</td><td class="num">0.796</td></tr>
+        <tr><td>+ 면적 항 log k</td><td class="num">0.783</td><td class="num">0.811</td></tr>
+        <tr><td>+ 판독 범위 log cov</td><td class="num">0.864</td><td class="num">–</td></tr>
+        <tr><td>+ 산지 κ (prior 끝)</td><td class="num">0.879</td><td class="num">0.811</td></tr>
+        <tr><td>사후, α_e = 0</td><td class="num">0.879</td><td class="num">0.824</td></tr>
+        <tr><td>사후, α_e = 학습 지진 평균</td><td class="num">0.828</td><td class="num">0.850</td></tr>
+        <tr><td>사후, α_e 피해 통계로 맞춤 (E3)</td><td class="num">0.872</td><td class="num">0.850</td></tr>
+      </table></div>
+      <p class="meta">산사태 이득은 사전확률(특히 판독 범위 보정 +0.081)에서, 액상화 이득은 피해 통계 사후에서 나옴.</p>
+    </div></div>
+    <div class="row"><b>공헌</b><div><ul>
+      <li><b>위성 없이, 가볍게, 더 정확하게</b>: 0.855 대 0.808. DisasterNet은 SAR 처리 · 칸 수십만 개 · 설정 하나 seed 하나에 약 1시간 25분, pilotA는 418줄 표로 몇 분</li>
+      <li><b>정답 없이 새 지진에 맞추기</b>: 9개 지진을 함께 학습해 공통 관계를 배우고 새 지진은 피해 통계로 α_e 하나만 맞춤. 고정값은 산사태에서만, 평균은 액상화에서만 좋고, 맞추면 두 재해 모두 최선에 가까움. DisasterNet은 지진끼리 공유하는 파라미터 없이 매번 처음부터</li>
+      <li>받은 pilotA 입력 3개(LS_LF 데이터자료, 시정촌별 USGS, 시정촌별 통계데이터)가 저장소 파일과 내용 같음. pilotA 결과 파일의 USGS 값과 정답이 이 파일과 차이 0으로 일치 → 비교한 0.855가 이 입력으로 돌린 결과임을 확인</li>
+      <li>정리 페이지: <a href="https://claude.ai/artifact/SwaAyVd9acpFFPcWH3RDVa">pilotA 공헌점</a></li>
+    </ul></div></div>
+    <div class="row"><b>다음</b><div><ul>
+      <li>pilotA seed 0~4로 돌려 흔들림 확인 (DisasterNet과 같은 기준)</li>
+      <li>pilotA 대 DisasterNet 차이의 신뢰구간 (산사태 피해 없음 9곳뿐)</li>
+      <li>pilotA 실행 시간 실측</li>
+      <li>(선택) 시정촌 soft를 칸과 같은 5~10° 기준으로 다시 돌려 비교</li>
+    </ul></div></div>
+  </div>
+</article>
 </main>
