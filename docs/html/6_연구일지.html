@@ -637,15 +637,43 @@ body{background:#fff}
     </div></div>
     <div class="row"><b>공헌</b><div><ul>
       <li><b>위성 없이, 가볍게, 더 정확하게</b>: 0.855 대 0.808. DisasterNet은 SAR 처리 · 칸 수십만 개 · 설정 하나 seed 하나에 약 1시간 25분, pilotA는 418줄 표로 몇 분</li>
-      <li><b>정답 없이 새 지진에 맞추기</b>: 9개 지진을 함께 학습해 공통 관계를 배우고 새 지진은 피해 통계로 α_e 하나만 맞춤. 고정값은 산사태에서만, 평균은 액상화에서만 좋고, 맞추면 두 재해 모두 최선에 가까움. DisasterNet은 지진끼리 공유하는 파라미터 없이 매번 처음부터</li>
+      <li><b>지난 지진에서 배운 것을 새 지진으로 옮김</b>: 9개 지진을 함께 학습해 공통 관계(흔들림 · 목조 비율 · 산사태 · 액상화가 피해를 늘리는 정도, 사전확률 계수)를 배우고, 새 지진은 피해 통계로 α_e 하나만 맞춤. DisasterNet은 지진끼리 공유하는 파라미터 없이 매번 처음부터. ("정답 없이"는 DisasterNet도 정답을 안 써서 차별점이 아니라 뺌. α_e 세 가지 비교표는 질문 대비용)</li>
+      <li>pilotA 실행 시간 실측: 지진 5개 합쳐 약 4분 (seed 하나). 같은 입력으로 다시 돌린 결과가 비교값과 5개 회차 모두 소수점 넷째 자리까지 같음 (면적 파일은 USGS 표의 area_km2로 만듦)</li>
       <li>받은 pilotA 입력 3개(LS_LF 데이터자료, 시정촌별 USGS, 시정촌별 통계데이터)가 저장소 파일과 내용 같음. pilotA 결과 파일의 USGS 값과 정답이 이 파일과 차이 0으로 일치 → 비교한 0.855가 이 입력으로 돌린 결과임을 확인</li>
       <li>정리 페이지: <a href="https://claude.ai/artifact/SwaAyVd9acpFFPcWH3RDVa">pilotA 공헌점</a></li>
     </ul></div></div>
     <div class="row"><b>다음</b><div><ul>
       <li>pilotA seed 0~4로 돌려 흔들림 확인 (DisasterNet과 같은 기준)</li>
       <li>pilotA 대 DisasterNet 차이의 신뢰구간 (산사태 피해 없음 9곳뿐)</li>
-      <li>pilotA 실행 시간 실측</li>
+      <li>pilotA 라벨 없이 실행 (<code>--no-labels</code>)으로 라벨 효과 분리</li>
+      <li>지진 간 전이 효과를 직접 보이는 비교 (지진별로 따로 학습한 pilotA 대비)</li>
       <li>(선택) 시정촌 soft를 칸과 같은 5~10° 기준으로 다시 돌려 비교</li>
+    </ul></div></div>
+  </div>
+</article>
+
+<article class="entry">
+  <div class="date"><span class="d">11.04</span><span class="w">수</span></div>
+  <div class="body">
+    <h2>soft 설명 정정 · 사후확률이 나오는 지점 확인</h2>
+    <span class="status done">완료</span>
+    <div class="row"><b>정정</b><div>
+      <div class="tw"><table>
+        <tr><th></th><th>전에 설명한 것 (틀림)</th><th>코드 확인 결과 (<code>disasternet/model.py</code>)</th></tr>
+        <tr><td>soft가 들어가는 곳</td><td>출발점 μ를 낮춘다</td><td><b>사전분포 항</b>(손실의 KL 부분)에만 들어감. P(재해 = 1) = sigmoid(w0 + w_a × USGS 확률 + log 비율)</td></tr>
+        <tr><td>−4.6의 크기</td><td>학습된 a배만큼 반영</td><td><b>고정값으로 그대로</b> 더해짐 (학습 안 함)</td></tr>
+        <tr><td>출발점 μ</td><td>soft가 반영된 사전확률에서 출발</td><td>μ = 6 · tanh((Linear(USGS 확률) + 칸 보정값) / 6). <b>USGS 확률만</b> 들어감</td></tr>
+      </table></div>
+      <ul>
+        <li>그래서 soft는 "출발을 낮게"가 아니라 <b>"사후확률이 끌려가는 기준(사전분포)을 1/100로 낮추는 것"</b>. DPM이 아주 크면 기준을 벗어나 올라갈 수 있음</li>
+        <li>끄기 지도(LOCAL)는 그대로 맞음: 사후확률에 0을 곱해 고정하고, 사전분포 항과 관측식에서도 빠짐</li>
+        <li><b>−4.6 = ln 0.01</b> (자연로그). soft는 로짓에 ln(비율)을 더하는데 비율이 1%보다 작으면 1%로 바닥을 둠. 칸은 비율이 0 아니면 1이라, 0인 칸(평지 칸 산사태 · 비탈 칸 액상화)은 ln 0.01 = −4.6, 1인 칸은 ln 1 = 0. 로짓에 −4.6을 더하면 오즈가 e<sup>−4.6</sup> = 0.01배 (확률이 작으면 거의 1/100)</li>
+        <li>인수인계 2편 soft 그림의 "모델 출발점"을 "사전확률"로 고침</li>
+      </ul>
+    </div></div>
+    <div class="row"><b>사후확률</b><div><ul>
+      <li>재해마다 따로: 출발 분포 N(μ, 분산)에서 샘플 → planar flow 4층 → sigmoid → 샘플 평균 (학습 8개, 마지막 256개) → 꺼진 칸은 0. 이 값이 q_산사태 · q_액상화 (시정촌 최댓값으로 채점한 값)</li>
+      <li>두 재해가 합쳐지는 곳은 관측식뿐: log(DPM + 2) ≈ w0 + w_산사태 × q_산사태 + w_액상화 × q_액상화. 최종 사후확률은 합치기 전 값이지만, 학습 중 DPM을 나눠 설명하면서 서로 영향을 받아 정해짐</li>
     </ul></div></div>
   </div>
 </article>
