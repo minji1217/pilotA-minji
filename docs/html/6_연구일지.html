@@ -704,8 +704,8 @@ body{background:#fff}
     <div class="row"><b>추가 실험</b><div>
       <div class="tw"><table>
         <tr><th>DPM 있는 5개 지진 평가 (pilotA는 하나씩 빼고 학습)</th><th class="num">학습 지진</th><th class="num">전체</th><th class="num">산사태</th><th class="num">액상화</th></tr>
-        <tr><td>pilotA 지금 비교값</td><td class="num">뺀 지진 외 8개 (DPM 없는 4개 포함)</td><td class="num">0.855</td><td class="num">0.872</td><td class="num">0.850</td></tr>
-        <tr><td><b>pilotA DPM 있는 지진만</b></td><td class="num">뺀 지진 외 4개</td><td class="num"><b>0.862</b></td><td class="num"><b>0.887</b></td><td class="num"><b>0.854</b></td></tr>
+        <tr><td>① pilotA 지금 비교값</td><td class="num">뺀 지진 외 8개 (DPM 없는 4개 포함)</td><td class="num">0.855</td><td class="num">0.872</td><td class="num">0.850</td></tr>
+        <tr><td><b>② pilotA DPM 있는 지진만</b></td><td class="num">뺀 지진 외 4개</td><td class="num"><b>0.862</b></td><td class="num"><b>0.887</b></td><td class="num"><b>0.854</b></td></tr>
         <tr><td class="muted">DisasterNet LOCALU</td><td class="num">예측할 지진 자신 (분리 아님)</td><td class="num">0.808</td><td class="num">0.790</td><td class="num">0.813</td></tr>
       </table></div>
       <ul>
@@ -716,11 +716,23 @@ body{background:#fff}
         <li><b>seed 0~4로 돌려도 두 설정 모두 결과가 완전히 같음 (폭 0)</b>. pilotA는 무작위 요소가 없음: 숨은 상태 4가지를 샘플링 없이 정확히 합하고, 파라미터 초기값도 고정. 그래서 seed 흔들림 비교는 "pilotA는 seed에 영향 없음, DisasterNet은 최고 설정도 0.795~0.827"로 정리</li>
       </ul>
     </div></div>
+    <div class="row"><b>세 실험 한눈에</b><div>
+      <div class="tw"><table>
+        <tr><th>pilotA 실험 (모두 분리)</th><th>학습에 쓴 지진</th><th>평가한 지진</th><th class="num">전체</th><th class="num">산사태</th><th class="num">액상화</th></tr>
+        <tr><td>① 지금 비교값</td><td>뺀 지진 외 8개 (DPM 없는 4개 포함)</td><td>DPM 있는 5개</td><td class="num">0.855</td><td class="num">0.872</td><td class="num">0.850</td></tr>
+        <tr><td>② DPM 지진만 학습</td><td>뺀 지진 외 4개 (DPM 있는 것만)</td><td>DPM 있는 5개</td><td class="num">0.862</td><td class="num">0.887</td><td class="num">0.854</td></tr>
+        <tr><td>③ 9개 전체 평가</td><td>뺀 지진 외 8개 (DPM 없는 4개 포함)</td><td>9개 모두</td><td class="num">0.836</td><td class="num">0.905</td><td class="num">0.804</td></tr>
+      </table></div>
+      <ul>
+        <li>①과 ②: 평가 지진은 같고 학습 지진만 다름</li>
+        <li>①과 ③: 학습 방식은 같고 평가 지진만 다름</li>
+      </ul>
+    </div></div>
     <div class="row"><b>9개 지진 분리</b><div>
       <p>pilotA는 DPM이 필요 없어서 9개 지진 모두 하나씩 빼고 학습(나머지 8개) · 예측 가능. 같은 A2 설정, 시정촌 수 가중평균. 정답이 한쪽뿐인 조합은 제외 (산사태: 후쿠시마 · 노토 · 니가타 2007 · 이와테미야기, 액상화: 오사카 · 니가타 2007 · 이와테미야기).</p>
       <div class="tw"><table>
         <tr><th>평가 지진</th><th class="num">채점 수 (산사태 + 액상화)</th><th class="num">pilotA 전체</th><th class="num">산사태</th><th class="num">액상화</th><th class="num">USGS 기준선 전체</th><th class="num">산사태</th><th class="num">액상화</th></tr>
-        <tr><td>DPM 있는 5개</td><td class="num">200 (49 + 151)</td><td class="num">0.855</td><td class="num">0.872</td><td class="num">0.850</td><td class="num">0.854</td><td class="num">0.729</td><td class="num">0.895</td></tr>
+        <tr><td>DPM 있는 5개 (추가 실험 표의 ①과 같은 결과)</td><td class="num">200 (49 + 151)</td><td class="num">0.855</td><td class="num">0.872</td><td class="num">0.850</td><td class="num">0.854</td><td class="num">0.729</td><td class="num">0.895</td></tr>
         <tr><td><b>9개 전체</b></td><td class="num">265 (83 + 182)</td><td class="num"><b>0.836</b></td><td class="num"><b>0.905</b></td><td class="num">0.804</td><td class="num">0.825</td><td class="num">0.797</td><td class="num">0.837</td></tr>
       </table></div>
       <ul>
