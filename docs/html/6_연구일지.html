@@ -719,11 +719,12 @@ body{background:#fff}
     <div class="row"><b>9개 지진 분리</b><div>
       <p>pilotA는 DPM이 필요 없어서 9개 지진 모두 하나씩 빼고 학습(나머지 8개) · 예측 가능. 같은 A2 설정, 시정촌 수 가중평균. 정답이 한쪽뿐인 조합은 제외 (산사태: 후쿠시마 · 노토 · 니가타 2007 · 이와테미야기, 액상화: 오사카 · 니가타 2007 · 이와테미야기).</p>
       <div class="tw"><table>
-        <tr><th>평가 지진</th><th class="num">시정촌</th><th class="num">pilotA 전체</th><th class="num">산사태</th><th class="num">액상화</th><th class="num">USGS 기준선 전체</th><th class="num">산사태</th><th class="num">액상화</th></tr>
-        <tr><td>DPM 있는 5개</td><td class="num">200</td><td class="num">0.855</td><td class="num">0.872</td><td class="num">0.850</td><td class="num">0.854</td><td class="num">0.729</td><td class="num">0.895</td></tr>
-        <tr><td><b>9개 전체</b></td><td class="num">265</td><td class="num"><b>0.836</b></td><td class="num"><b>0.905</b></td><td class="num">0.804</td><td class="num">0.825</td><td class="num">0.797</td><td class="num">0.837</td></tr>
+        <tr><th>평가 지진</th><th class="num">채점 수 (산사태 + 액상화)</th><th class="num">pilotA 전체</th><th class="num">산사태</th><th class="num">액상화</th><th class="num">USGS 기준선 전체</th><th class="num">산사태</th><th class="num">액상화</th></tr>
+        <tr><td>DPM 있는 5개</td><td class="num">200 (49 + 151)</td><td class="num">0.855</td><td class="num">0.872</td><td class="num">0.850</td><td class="num">0.854</td><td class="num">0.729</td><td class="num">0.895</td></tr>
+        <tr><td><b>9개 전체</b></td><td class="num">265 (83 + 182)</td><td class="num"><b>0.836</b></td><td class="num"><b>0.905</b></td><td class="num">0.804</td><td class="num">0.825</td><td class="num">0.797</td><td class="num">0.837</td></tr>
       </table></div>
       <ul>
+        <li>채점 수는 모델 418행과 다름. 418행은 모델에 들어가는 (지진, 시정촌) 행 전부이고, 채점은 그중 정답이 있는 행만 재해별로 셈. 정답 있는 행: 산사태 125, 액상화 229 (둘 중 하나라도 있는 행 278, 둘 다 없는 행 140). 여기서 정답이 한쪽뿐인 조합을 빼면 산사태 83 (125 빼기 42), 액상화 182 (229 빼기 47)</li>
         <li>추가된 지진: 산사태 돗토리 0.933 (USGS 0.904) · 니가타 2004 1.000 (0.875), 액상화 돗토리 0.857 (0.571) · 니가타 2004 0.483 (0.550)</li>
         <li>9개로 넓혀도 산사태는 USGS보다 크게 높고(0.905 대 0.797), 액상화는 여전히 낮음(0.804 대 0.837). 니가타 2004 액상화(23곳)가 0.483으로 낮아 액상화 평균을 끌어내림</li>
         <li>DisasterNet은 DPM이 없어 이 4개 지진을 평가할 수 없음 → pilotA는 위성 자료 없는 지진에도 적용 가능</li>
