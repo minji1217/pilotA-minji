@@ -251,7 +251,7 @@ def main(argv=None):
     else:
         jobs = [(a.input, a.dpm_col, a.obs_offset, s, a.epochs, not a.no_bd, out_dir, a.terrain, a.terrain_mode, a.off_thresh, a.lq_prior_col) for s in a.seeds]
         if a.jobs > 1:
-            with get_context("fork").Pool(a.jobs) as pool:
+            with get_context("spawn" if os.name == "nt" else "fork").Pool(a.jobs) as pool:
                 res = pool.map(_fit_one, jobs)
         else:
             res = [_fit_one(j) for j in jobs]

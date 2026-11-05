@@ -12,6 +12,7 @@ D′에서 가져오는 것 (시정촌 단위로 줄여서)
     python -m disasternet.run_muni_unc --terrain raw/terrain_fractions.csv --out-dir outputs/disasternet/input_v5_muni_unc_soft --jobs 5
 """
 import argparse
+import os
 from multiprocessing import get_context
 from pathlib import Path
 
@@ -107,7 +108,7 @@ def main(argv=None):
           f" · 지형 비율 {'있음 (soft)' if a.terrain else '없음'}", flush=True)
     jobs = [(df, a.dpm_col, a.obs_offset, s, a.epochs, a.out_dir, a.lq_prior_col, a.unc, not a.no_bd, a.const_var) for s in a.seeds]
     if a.jobs > 1:
-        with get_context("fork").Pool(a.jobs) as pool:
+        with get_context("spawn" if os.name == "nt" else "fork").Pool(a.jobs) as pool:
             pool.map(_fit_one, jobs)
     else:
         for j in jobs:
