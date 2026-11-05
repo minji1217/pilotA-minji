@@ -12,7 +12,7 @@ REM   outputs\disasternet\rerun_cells\<실험>\ params_<지진>_seed<s>.csv, row
 REM 중간에 꺼져도 다시 실행하면 끝난 것은 건너뛴다 (칸 단위는 학습 중이던 것도 5분마다 저장된 지점부터 이어서).
 REM 실험이 끝날 때마다 예전 결과와 비교한 표(rerun_compare.csv)를 만들고,
 REM C:\work\pilotA-minji-git 이 있으면 작은 파일을 GitHub pc-results 브랜치(pc_rerun 폴더)에 올리고,
-REM Google Drive for desktop(G: 드라이브)이 있으면 결과 전체를 G:\내 드라이브\pilotA_rerun 으로 복사한다.
+REM Google Drive for desktop(G: 드라이브)이 있으면 G:\내 드라이브\pilotA_rerun 으로 복사한다 (칸마다의 파라미터와 칸 예측은 커서 PC에만).
 
 set O=outputs\disasternet
 set M=%O%\rerun_muni
@@ -105,13 +105,14 @@ type %N%\rerun_compare.txt >> "%LOG%"
 exit /b 0
 
 :drive
-REM Google Drive for desktop이 있으면(G:\내 드라이브 또는 G:\My Drive) 결과 전체(칸 파라미터 포함)를 pilotA_rerun 폴더로 복사한다.
+REM Google Drive for desktop이 있으면(G:\내 드라이브 또는 G:\My Drive) pilotA_rerun 폴더로 복사한다. Drive 용량(5GB)이 작아서
+REM 칸마다의 파라미터(rowparams_*.csv.gz, 약 6GB)와 칸 예측(cells_*.csv.gz)은 빼고 PC에만 둔다. 시정촌 결과는 전부, 칸은 params · loss · 시정촌 예측.
 set D=
 if exist "G:\내 드라이브" set D=G:\내 드라이브\pilotA_rerun
 if exist "G:\My Drive" set D=G:\My Drive\pilotA_rerun
 if "%D%"=="" exit /b 0
 robocopy "%CD%\%M%" "%D%\muni" /E /XF ckpt_*.pt *.tmp /NFL /NDL /NJH /NJS /NP >nul
-robocopy "%CD%\%N%" "%D%\cells" /E /XF ckpt_*.pt *.tmp /NFL /NDL /NJH /NJS /NP >nul
+robocopy "%CD%\%N%" "%D%\cells" /E /XF ckpt_*.pt *.tmp rowparams_*.csv.gz cells_*.csv.gz /NFL /NDL /NJH /NJS /NP >nul
 copy /y "%LOG%" "%D%\" >nul 2>&1
 call :stamp "  Google Drive에 복사: %D%"
 exit /b 0
