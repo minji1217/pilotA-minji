@@ -716,7 +716,7 @@ body{background:#fff}
       </ul>
     </div></div>
     <div class="row"><b>다음</b><div><ul>
-      <li>DisasterNet 논문에서 사건별 학습인지 다시 확인</li>
+      <li>(완료) DisasterNet 논문 확인: 사건별 학습이 맞음. 논문은 세 지진(아이티 2021 · 푸에르토리코 2020 · 홋카이도 2018)을 각각 따로 평가하고 flow 층 수도 지진마다 다르게 고름 (K = 3 · 4 · 8). 정답 없이 그 지진의 위성 관측만으로 학습 ("maximizing the marginal likelihood of sensing observations"). 공식 코드도 한 지진(아이티) 래스터를 읽고 <code>batch_size = 8109</code>(그 지진 화소 수)에 맞춘 위치별 파라미터라 여러 지진을 섞을 수 없는 구조. 우리도 논문 방식을 따름</li>
       <li>PC에서 <code>run_time_compare.bat</code> 실행해 시간 표를 PC 기준으로 교체</li>
       <li>pilotA 대 DisasterNet 차이의 신뢰구간 (seed 대신 시정촌 부트스트랩)</li>
     </ul></div></div>
