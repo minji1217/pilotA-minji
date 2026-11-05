@@ -13,6 +13,7 @@ REM   muni_ / cells_ ...             예측값 (예전과 같은 형식)
 REM 중간에 꺼져도 다시 실행하면 끝난 것은 건너뛰고, 학습 중이던 것은 5분마다 저장된 지점부터 이어서 한다.
 REM seed 하나가 끝날 때마다 예전 결과와 비교한 표(rerun_compare.csv)를 만들고,
 REM C:\work\pilotA-minji-git 이 있으면 작은 파일(loss, params, 비교표, 기록)을 GitHub pc-results 브랜치에 올린다.
+REM Google Drive for desktop(G: 드라이브)이 있으면 칸 파라미터까지 전부 G:\내 드라이브\pilotA_rerun_cells 로 복사한다.
 
 set JOBS=5
 set THREADS=2
@@ -37,6 +38,7 @@ for %%S in (0 1 2 3 4) do (
   py -3.10 -m disasternet.run_cells_max %L% --seeds %%S --soft --soft-mid --unc --unc-mode var --out-dir %N%\SOFTU_var >> "%LOG%" 2>&1
   call :compare
   call :push
+  call :drive
   call :stamp "===== seed %%S 끝"
 )
 echo ALL DONE %date% %time%
@@ -58,6 +60,16 @@ py -3.10 -m disasternet.rerun_compare --level cells --out %N%\rerun_compare.csv 
   --pair SOFTU_분산만 %O%\cells_max_softunc_var_paper_aw_mid %N%\SOFTU_var > %N%\rerun_compare.txt 2>&1
 type %N%\rerun_compare.txt
 type %N%\rerun_compare.txt >> "%LOG%"
+exit /b 0
+
+:drive
+REM Google Drive for desktop이 있으면(G:\내 드라이브 또는 G:\My Drive) 결과 폴더 전체(칸 파라미터 포함)를 pilotA_rerun_cells 폴더로 복사한다.
+set D=
+if exist "G:\내 드라이브" set D=G:\내 드라이브\pilotA_rerun_cells
+if exist "G:\My Drive" set D=G:\My Drive\pilotA_rerun_cells
+if "%D%"=="" exit /b 0
+robocopy "%CD%\%N%" "%D%" /E /XF ckpt_*.pt *.tmp /NFL /NDL /NJH /NJS /NP >nul
+call :stamp "  Google Drive에 복사: %D%"
 exit /b 0
 
 :push
