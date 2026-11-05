@@ -715,6 +715,19 @@ body{background:#fff}
         <li><b>seed 0~4로 돌려도 두 설정 모두 결과가 완전히 같음 (폭 0)</b>. pilotA는 무작위 요소가 없음: 숨은 상태 4가지를 샘플링 없이 정확히 합하고, 파라미터 초기값도 고정. 그래서 seed 흔들림 비교는 "pilotA는 seed에 영향 없음, DisasterNet은 최고 설정도 0.795~0.827"로 정리</li>
       </ul>
     </div></div>
+    <div class="row"><b>9개 지진 분리</b><div>
+      <p>pilotA는 DPM이 필요 없어서 9개 지진 모두 하나씩 빼고 학습(나머지 8개) · 예측 가능. 같은 A2 설정, 시정촌 수 가중평균. 정답이 한쪽뿐인 조합은 제외 (산사태: 후쿠시마 · 노토 · 니가타 2007 · 이와테미야기, 액상화: 오사카 · 니가타 2007 · 이와테미야기).</p>
+      <div class="tw"><table>
+        <tr><th>평가 지진</th><th class="num">시정촌</th><th class="num">pilotA 전체</th><th class="num">산사태</th><th class="num">액상화</th><th class="num">USGS 기준선 전체</th><th class="num">산사태</th><th class="num">액상화</th></tr>
+        <tr><td>DPM 있는 5개</td><td class="num">200</td><td class="num">0.855</td><td class="num">0.872</td><td class="num">0.850</td><td class="num">0.854</td><td class="num">0.729</td><td class="num">0.895</td></tr>
+        <tr><td><b>9개 전체</b></td><td class="num">265</td><td class="num"><b>0.836</b></td><td class="num"><b>0.905</b></td><td class="num">0.804</td><td class="num">0.825</td><td class="num">0.797</td><td class="num">0.837</td></tr>
+      </table></div>
+      <ul>
+        <li>추가된 지진: 산사태 돗토리 0.933 (USGS 0.904) · 니가타 2004 1.000 (0.875), 액상화 돗토리 0.857 (0.571) · 니가타 2004 0.483 (0.550)</li>
+        <li>9개로 넓혀도 산사태는 USGS보다 크게 높고(0.905 대 0.797), 액상화는 여전히 낮음(0.804 대 0.837). 니가타 2004 액상화(23곳)가 0.483으로 낮아 액상화 평균을 끌어내림</li>
+        <li>DisasterNet은 DPM이 없어 이 4개 지진을 평가할 수 없음 → pilotA는 위성 자료 없는 지진에도 적용 가능</li>
+      </ul>
+    </div></div>
     <div class="row"><b>다음</b><div><ul>
       <li>(완료) DisasterNet 논문 확인: 사건별 학습이 맞음. 논문은 세 지진(아이티 2021 · 푸에르토리코 2020 · 홋카이도 2018)을 각각 따로 평가하고 flow 층 수도 지진마다 다르게 고름 (K = 3 · 4 · 8). 정답 없이 그 지진의 위성 관측만으로 학습 ("maximizing the marginal likelihood of sensing observations"). 공식 코드도 한 지진(아이티) 래스터를 읽고 <code>batch_size = 8109</code>(그 지진 화소 수)에 맞춘 위치별 파라미터라 여러 지진을 섞을 수 없는 구조. 우리도 논문 방식을 따름</li>
       <li>PC에서 <code>run_time_compare.bat</code> 실행해 시간 표를 PC 기준으로 교체</li>
