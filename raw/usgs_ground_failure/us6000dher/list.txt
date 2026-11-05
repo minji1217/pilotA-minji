@@ -1,0 +1,4 @@
+jessee_2018_beta_sigma.tif https://earthquake.usgs.gov/product/ground-failure/6000dher/us/1619198357233/jessee_2018_beta_sigma.tif 12543205
+zhu_2017_general_beta_sigma.tif https://earthquake.usgs.gov/product/ground-failure/6000dher/us/1619198357233/zhu_2017_general_beta_sigma.tif 1801757
+zhu_2017_general_model.tif https://earthquake.usgs.gov/product/ground-failure/6000dher/us/1619198357233/zhu_2017_general_model.tif 636564
+jessee_2018_model.tif https://earthquake.usgs.gov/product/ground-failure/6000dher/us/1619198357233/jessee_2018_model.tif 10997764

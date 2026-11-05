@@ -1,0 +1,4 @@
+zhu_2017_general_std.tif https://earthquake.usgs.gov/product/ground-failure/20005iis/us/1597451794387/zhu_2017_general_std.tif 1373485
+jessee_2017_std.tif https://earthquake.usgs.gov/product/ground-failure/20005iis/us/1597451794387/jessee_2017_std.tif 11165056
+jessee_2017_model.tif https://earthquake.usgs.gov/product/ground-failure/20005iis/us/1597451794387/jessee_2017_model.tif 9795840
+zhu_2017_general_model.tif https://earthquake.usgs.gov/product/ground-failure/20005iis/us/1597451794387/zhu_2017_general_model.tif 429885
