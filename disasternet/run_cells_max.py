@@ -131,6 +131,11 @@ def fit_cells(rows, *, epochs, seed, lr=0.01, n_samples=8, num_flows=4, lam_trip
                         "epoch": epoch}, tmp)
             tmp.replace(ckpt)
 
+    if ckpt is not None:   # 학습이 끝난 파라미터도 저장 (끝나면 run_one이 model_*.pt로 이름을 바꿔 남긴다)
+        Path(ckpt).parent.mkdir(parents=True, exist_ok=True)
+        torch.save({"model": model.state_dict(), "opt": opt.state_dict(), "rng": torch.get_rng_state(),
+                    "epoch": epochs - 1}, ckpt)
+
     # 최종 사후확률: 샘플 final_samples개 평균. 칸이 많아 chunk씩 나눠 계산한다 (flow·μ는 행마다 독립).
     out = {k: torch.empty(rows.n, dtype=DTYPE) for k in model.nodes}
     with torch.no_grad():
@@ -197,7 +202,8 @@ def _job_inner(args):
     m.to_csv(out / f"muni_{tag}_seed{seed}.csv", index=False, encoding="utf-8-sig")
     c[["event_idx", "muni_code", "mesh250", "us_ls", "us_lq", "DPM_배경차", "p_ls", "p_lq"]].to_csv(
         out / f"cells_{tag}_seed{seed}.csv.gz", index=False, compression="gzip")
-    ckpt.unlink(missing_ok=True)
+    if ckpt.exists():   # 학습된 파라미터를 지우지 않고 남긴다 (나중에 추론만 다시 하거나 파라미터를 볼 수 있게)
+        ckpt.replace(out / f"model_{tag}_seed{seed}.pt")
     print(f"완료 {ev} seed {seed}  w_x {w}", flush=True)
 
 
