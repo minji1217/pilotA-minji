@@ -45,7 +45,7 @@ from loader import _normalize_municipality_code
 from schema import DTYPE, EVENT_TO_INDEX
 
 from .data import DPMRows
-from .model import fit_disasternet
+from .model import fit_disasternet, save_fit_tables
 
 SHEET = "입력"
 DOMAINS = {  # 도메인: (정답 컬럼, prior 컬럼)
@@ -110,6 +110,7 @@ def _fit_one(job):
         df = attach_terrain(df, terrain)
     fit = fit_disasternet(to_rows(df, dpm_col, mode, thresh, lq_col), seed=seed, epochs=epochs, use_bd=use_bd,
                           obs_offset=offset, verbose=False)
+    save_fit_tables(fit, out_dir, seed)   # 파라미터 · loss CSV (예측 파일보다 먼저 저장)
     p = fit.predictions[["event_idx", "muni_code", "p_ls", "p_lq", "p_bd"]].copy()
     p.insert(0, "seed", seed)
     Path(out_dir).mkdir(parents=True, exist_ok=True)

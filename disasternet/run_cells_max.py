@@ -26,7 +26,7 @@ import torch
 from schema import DTYPE
 
 from .data import DPMRows
-from .model import DisasterNet, prepare_inputs, triplet_penalty
+from .model import DisasterNet, model_param_tables, prepare_inputs, triplet_penalty
 from .run_input_v5 import EVENT_TO_INDEX
 
 EVS = ["2016 구마모토", "2018 오사카", "2018 훗카이도", "2021 후쿠시마", "2024 노토반도"]
@@ -102,12 +102,14 @@ def fit_cells(rows, *, epochs, seed, lr=0.01, n_samples=8, num_flows=4, lam_trip
     model = DisasterNet(rows.n, num_flows=num_flows, r0_var=1.0, use_bd=False)
     opt = torch.optim.Adam(model.parameters(), lr=lr)
     start = 0
+    hist = []   # epoch마다 loss (중간 저장에도 같이 넣어 이어서 학습해도 처음부터 남는다)
     if ckpt is not None and Path(ckpt).exists():
         st = torch.load(ckpt, weights_only=False)
         model.load_state_dict(st["model"])
         opt.load_state_dict(st["opt"])
         torch.set_rng_state(st["rng"])
         start = st["epoch"] + 1
+        hist = st.get("hist", [])
         print(f"  [{tag}] 중간 저장에서 이어서: epoch {start}", flush=True)
     t0 = last_save = time.time()
     for epoch in range(start, epochs):
@@ -117,10 +119,14 @@ def fit_cells(rows, *, epochs, seed, lr=0.01, n_samples=8, num_flows=4, lam_trip
         rec = model.log_p_x(log_x, q)
         log_q = sum(post["log_q"][k].mean(1) * keep[k] for k in model.nodes)
         kl = log_q - model.log_p_z(q, a, rows.log_frac, keep if rows.off is not None else None)
-        loss = (-rec + beta * kl).sum() + lam_triplet * triplet_penalty(q, a, margin)
+        trip_t = triplet_penalty(q, a, margin)
+        loss = (-rec + beta * kl).sum() + lam_triplet * trip_t
         opt.zero_grad()
         loss.backward()
         opt.step()
+        trip = float(trip_t.detach())
+        hist.append({"epoch": epoch, "loss": float(loss.detach()), "neg_elbo": float((-rec + kl).sum().detach()),
+                     "triplet": trip, "beta": beta})
         if log_every and epoch % log_every == 0:
             print(f"  [{tag}] {epoch:5d}  -ELBO/칸 {float((-rec + kl).detach().mean()):.4f}  {time.time() - t0:.0f}s", flush=True)
         if ckpt is not None and time.time() - last_save > ckpt_secs and epoch + 1 < epochs:
@@ -128,13 +134,8 @@ def fit_cells(rows, *, epochs, seed, lr=0.01, n_samples=8, num_flows=4, lam_trip
             Path(ckpt).parent.mkdir(parents=True, exist_ok=True)
             tmp = Path(str(ckpt) + ".tmp")
             torch.save({"model": model.state_dict(), "opt": opt.state_dict(), "rng": torch.get_rng_state(),
-                        "epoch": epoch}, tmp)
+                        "epoch": epoch, "hist": hist}, tmp)
             tmp.replace(ckpt)
-
-    if ckpt is not None:   # 학습이 끝난 파라미터도 저장 (끝나면 run_one이 model_*.pt로 이름을 바꿔 남긴다)
-        Path(ckpt).parent.mkdir(parents=True, exist_ok=True)
-        torch.save({"model": model.state_dict(), "opt": opt.state_dict(), "rng": torch.get_rng_state(),
-                    "epoch": epochs - 1}, ckpt)
 
     # 최종 사후확률: 샘플 final_samples개 평균. 칸이 많아 chunk씩 나눠 계산한다 (flow·μ는 행마다 독립).
     out = {k: torch.empty(rows.n, dtype=DTYPE) for k in model.nodes}
@@ -145,7 +146,7 @@ def fit_cells(rows, *, epochs, seed, lr=0.01, n_samples=8, num_flows=4, lam_trip
             for k in model.nodes:
                 out[k][s:e] = sub[k]
     w = {k: round(float(v.detach()), 4) for k, v in model.w_x.items() if k in model.nodes}
-    return out, w
+    return out, w, model, hist
 
 
 def _slice_model_posteriors(model, a, s, e, n_samples, rows=None):
@@ -192,9 +193,16 @@ def _job_inner(args):
     c = c[c["이벤트"] == ev].reset_index(drop=True)
     rows = to_rows(c, a.dpm_col, soft=a.soft, soft_mid=a.soft_mid, unc=a.unc, unc_mode=a.unc_mode, const_var=a.const_var, local_off=a.local_off)
     ckpt = out / f"ckpt_{tag}_seed{seed}.pt"
-    q, w = fit_cells(rows, epochs=a.epochs, seed=seed, tag=f"{ev} s{seed} {rows.n}칸", ckpt=ckpt)
+    q, w, model, hist = fit_cells(rows, epochs=a.epochs, seed=seed, tag=f"{ev} s{seed} {rows.n}칸", ckpt=ckpt)
     c = c.assign(p_ls=q["LS"].numpy(), p_lq=q["LQ"].numpy())
     out.mkdir(parents=True, exist_ok=True)   # 학습 도중 폴더가 사라졌어도(동기화 프로그램 등) 저장되게
+    # 학습된 파라미터와 epoch마다의 loss (시정촌 결과 파일보다 먼저 저장: 시정촌 파일이 있으면 끝난 것으로 본다)
+    rowp, raw = model_param_tables(model, c[["event_idx", "muni_code", "mesh250"]], ev)
+    pd.DataFrame(raw)[["group", "param", "index", "value"]].to_csv(
+        out / f"params_{tag}_seed{seed}.csv", index=False, encoding="utf-8-sig")
+    rowp.to_csv(out / f"rowparams_{tag}_seed{seed}.csv.gz", index=False, compression="gzip")
+    pd.DataFrame(hist).assign(group=ev)[["group", "epoch", "loss", "neg_elbo", "triplet", "beta"]].to_csv(
+        out / f"loss_{tag}_seed{seed}.csv", index=False, encoding="utf-8-sig")
     g = c.groupby(["event_idx", "muni_code"])
     m = g.agg(n_cells=("mesh250", "size"), p_ls=("p_ls", "max"), p_lq=("p_lq", "max"),
               p_ls_mean=("p_ls", "mean"), p_lq_mean=("p_lq", "mean")).reset_index()
@@ -202,8 +210,7 @@ def _job_inner(args):
     m.to_csv(out / f"muni_{tag}_seed{seed}.csv", index=False, encoding="utf-8-sig")
     c[["event_idx", "muni_code", "mesh250", "us_ls", "us_lq", "DPM_배경차", "p_ls", "p_lq"]].to_csv(
         out / f"cells_{tag}_seed{seed}.csv.gz", index=False, compression="gzip")
-    if ckpt.exists():   # 학습된 파라미터를 지우지 않고 남긴다 (나중에 추론만 다시 하거나 파라미터를 볼 수 있게)
-        ckpt.replace(out / f"model_{tag}_seed{seed}.pt")
+    ckpt.unlink(missing_ok=True)   # 중간 저장 파일 (파라미터는 위 CSV에 남음)
     print(f"완료 {ev} seed {seed}  w_x {w}", flush=True)
 
 

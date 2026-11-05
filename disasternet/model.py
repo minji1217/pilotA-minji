@@ -57,6 +57,7 @@ normalizing flow로 만드는 변분분포 (식 2-6)
    KL 항 β warm-up(0.01→1)은 공식 코드를 따랐다.
 """
 import math
+from pathlib import Path
 from dataclasses import dataclass
 
 import pandas as pd
@@ -285,6 +286,31 @@ class FitResult:
     predictions: pd.DataFrame   # event_idx / muni_code / model_row_idx / dpm / p_ls / p_lq / p_bd
     params: pd.DataFrame
     history: pd.DataFrame
+    raw_params: pd.DataFrame | None = None   # 학습된 파라미터 전부 중 행마다 있는 것 말고 (group / param / index / value)
+    row_params: pd.DataFrame | None = None   # 행(시정촌·칸)마다 하나씩 있는 파라미터 (μ 보정값, flow 보정값)
+
+
+def model_param_tables(model, ids: pd.DataFrame, group: str):
+    """학습된 파라미터를 표 두 개로 바꾼다 (CSV 저장용, 값은 float64 그대로).
+    ids: 행 순서대로의 식별 열 (event_idx, muni_code, 칸이면 mesh250).
+    돌려주는 것: (행마다 하나씩 있는 파라미터 표, 그 밖의 파라미터 목록). 쓰지 않는 노드(BD 등)의 행별 값은 뺀다."""
+    rowp = ids.reset_index(drop=True).copy()
+    rowp.insert(0, "group", group)
+    glob = []
+    n = len(rowp)
+    for name, v in model.state_dict().items():
+        a = v.detach().cpu().numpy()
+        if name.endswith(("mu_local", "flow_local")):
+            node = name.split(".")[1]
+            if node not in model.nodes:
+                continue
+            a = a.reshape(n, -1)
+            cols = {name if a.shape[1] == 1 else f"{name}[{j}]": a[:, j] for j in range(a.shape[1])}
+            rowp = pd.concat([rowp, pd.DataFrame(cols)], axis=1)
+        else:
+            for j, x in enumerate(a.reshape(-1)):
+                glob.append({"group": group, "param": name, "index": j, "value": float(x)})
+    return rowp, glob
 
 
 def _fit_group(rows: DPMRows, name, *, epochs, lr, seed, n_samples, num_flows,
@@ -335,7 +361,8 @@ def _fit_group(rows: DPMRows, name, *, epochs, lr, seed, n_samples, num_flows,
         "dpm": rows.y.numpy(),
         "p_ls": q["LS"].numpy(), "p_lq": q["LQ"].numpy(), "p_bd": q["BD"].numpy(),
     })
-    return pred, model.param_rows(name), hist
+    rowp, raw = model_param_tables(model, pred[["event_idx", "muni_code"]], name)
+    return pred, model.param_rows(name), hist, raw, rowp
 
 
 def fit_disasternet(rows: DPMRows, *, pooled=False, epochs=3000, lr=0.01, seed=0,
@@ -349,16 +376,33 @@ def fit_disasternet(rows: DPMRows, *, pooled=False, epochs=3000, lr=0.01, seed=0
         groups = [(INDEX_TO_EVENT[e], rows.subset(rows.event_idx == e))
                   for e in sorted(rows.event_idx.unique().tolist())]
 
-    preds, params, hist = [], [], []
+    preds, params, hist, raws, rowps = [], [], [], [], []
     for name, g in groups:
         if verbose:
             print(f"[DisasterNet] {name}: {g.n}행 / flow K={num_flows} / triplet λ={lam_triplet}")
-        p, prm, h = _fit_group(g, name, epochs=epochs, lr=lr, seed=seed, n_samples=n_samples,
+        p, prm, h, raw, rowp = _fit_group(g, name, epochs=epochs, lr=lr, seed=seed, n_samples=n_samples,
                                num_flows=num_flows, lam_triplet=lam_triplet, margin=margin,
                                anneal=anneal, r0_var=r0_var, use_bd=use_bd, obs_offset=obs_offset,
                                bd_var_learn=bd_var_learn, loss_mode=loss_mode,
                                verbose=verbose)
-        preds.append(p); params.extend(prm); hist.extend(h)
+        preds.append(p); params.extend(prm); hist.extend(h); raws.extend(raw); rowps.append(rowp)
 
     pred = pd.concat(preds, ignore_index=True).sort_values(["event_idx", "muni_code"])
-    return FitResult(pred.reset_index(drop=True), pd.DataFrame(params), pd.DataFrame(hist))
+    return FitResult(pred.reset_index(drop=True), pd.DataFrame(params), pd.DataFrame(hist),
+                     pd.DataFrame(raws), pd.concat(rowps, ignore_index=True))
+
+
+def save_fit_tables(fit: FitResult, out_dir, seed: int):
+    """학습된 파라미터와 epoch마다의 loss를 CSV로 남긴다 (predictions_seed*.csv 옆).
+    params_seed{s}.csv    : 노드 가중치 등 (group / param / index / value), 양수로 바꾼 값(w_a, w_x)은 derived 표시
+    rowparams_seed{s}.csv : 시정촌마다의 μ 보정값 · flow 보정값
+    loss_seed{s}.csv      : group(지진) / epoch / loss / neg_elbo / triplet / beta"""
+    out = Path(out_dir)
+    out.mkdir(parents=True, exist_ok=True)
+    raw = fit.raw_params.assign(kind="raw") if fit.raw_params is not None else pd.DataFrame()
+    der = fit.params.assign(index=0, kind="derived")
+    pd.concat([raw, der], ignore_index=True)[["group", "kind", "param", "index", "value"]].to_csv(
+        out / f"params_seed{seed}.csv", index=False, encoding="utf-8-sig")
+    if fit.row_params is not None:
+        fit.row_params.to_csv(out / f"rowparams_seed{seed}.csv", index=False, encoding="utf-8-sig")
+    fit.history.to_csv(out / f"loss_seed{seed}.csv", index=False, encoding="utf-8-sig")

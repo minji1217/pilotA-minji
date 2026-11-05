@@ -20,7 +20,7 @@ import torch
 
 from schema import DTYPE
 
-from .model import fit_disasternet
+from .model import fit_disasternet, save_fit_tables
 from .run_input_v5 import attach_terrain, load_table, to_rows
 from .usgs_cells import usgs_off
 
@@ -61,6 +61,7 @@ def _fit_one(job):
     torch.set_num_threads(1)
     fit = fit_disasternet(build_rows(df, dpm_col, lq_col, unc, const_var), seed=seed, epochs=epochs, obs_offset=offset,
                           verbose=False, bd_var_learn=True, use_bd=use_bd)
+    save_fit_tables(fit, out_dir, seed)   # 파라미터 · loss CSV (예측 파일보다 먼저 저장)
     p = fit.predictions[["event_idx", "muni_code", "p_ls", "p_lq", "p_bd"]].copy()
     p.insert(0, "seed", seed)
     Path(out_dir).mkdir(parents=True, exist_ok=True)
