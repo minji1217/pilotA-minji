@@ -706,9 +706,10 @@ body{background:#fff}
         <tr><th>pilotA (A2 설정)</th><th class="num">학습 지진</th><th class="num">전체</th><th class="num">산사태</th><th class="num">액상화</th></tr>
         <tr><td>지금 비교값</td><td class="num">8개 (DPM 없는 4개 포함)</td><td class="num">0.855</td><td class="num">0.872</td><td class="num">0.850</td></tr>
         <tr><td><b>DPM 있는 지진만</b></td><td class="num">4개</td><td class="num"><b>0.862</b></td><td class="num"><b>0.887</b></td><td class="num"><b>0.854</b></td></tr>
-        <tr><td class="muted">DisasterNet LOCALU</td><td class="num">예측 지진 1개</td><td class="num">0.808</td><td class="num">0.790</td><td class="num">0.813</td></tr>
+        <tr><td class="muted">DisasterNet LOCALU</td><td class="num">예측할 지진 자신 (분리 아님)</td><td class="num">0.808</td><td class="num">0.790</td><td class="num">0.813</td></tr>
       </table></div>
       <ul>
+        <li>DisasterNet 행은 분리 실험이 아님. 지진마다 그 지진의 DPM · USGS로 따로 학습하고 같은 지진을 예측 (정답은 안 씀, 논문 방식 그대로). 그래서 "학습 지진"이 예측할 지진 자신 1개. pilotA는 예측할 지진을 학습에서 완전히 빼고(분리) 예측</li>
         <li>DisasterNet과 같은 5개 지진만 써도 pilotA가 높음 (0.862 대 0.808) → 공헌 1이 더 공정한 조건에서도 성립</li>
         <li>DPM 없는 4개 지진을 더해도 성능은 오르지 않음 (0.862에서 0.855). "행정 자료만으로 학습 가능"은 성능이 아니라 적용 범위의 장점으로 말해야 함. 오래된 지진(2000~2008)의 피해 양상이 달라서일 수 있음 (추정)</li>
         <li>지진별 (8개 / 4개): 산사태 구마모토 0.846 / 0.859, 훗카이도 0.861 / 0.889, 액상화 구마모토 0.949 / 0.957, 훗카이도 0.913 / 0.918, 노토 0.768 / 0.770, 오사카 산사태 · 후쿠시마 액상화는 같음</li>
