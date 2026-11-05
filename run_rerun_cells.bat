@@ -1,6 +1,7 @@
 @echo off
 chcp 65001 >nul
 set PYTHONIOENCODING=utf-8
+cd /d "%~dp0"
 REM 칸 단위 DisasterNet 실험 5개(PPT 1022_8: DN, SOFTU, SOFTU_끄기만, SOFTU_분산만, LOCALU)를 seed 0~4로 다시 돌린다.
 REM 예전과 같은 설정(지진 5개 동시, 스레드 2)이라 예측값이 예전과 똑같이 나오고, 이번에는 파라미터와 loss를 CSV로 남긴다.
 REM 실험 폴더(C:\work\pilotA-minji-claude-dazzling-babbage-8c6yd4)에서 실행. 전부 약 35시간.
