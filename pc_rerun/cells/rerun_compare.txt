@@ -1,0 +1,2 @@
+비교 25건: 같음 25 / 다름 0 / 아직 없음 100 / 예전 파일 없음 0
+저장: outputs\disasternet\rerun_cells\rerun_compare.csv
