@@ -693,10 +693,13 @@ body{background:#fff}
     <div class="row"><b>시간</b><div>
       <div class="tw"><table>
         <tr><th>같은 컴퓨터, 지진 5개, seed 하나</th><th class="num">학습</th><th class="num">추론</th></tr>
-        <tr><td>DisasterNet 칸 LOCALU</td><td class="num">약 137분</td><td class="num">약 48초</td></tr>
+        <tr><td>DisasterNet 칸 LOCALU (AUC 0.808)</td><td class="num">약 137분 (예상치)</td><td class="num">약 48초</td></tr>
+        <tr><td>DisasterNet 시정촌 SOFTU_분산만 (AUC 0.751)</td><td class="num">약 2분 (실측)</td><td class="num">0.1초 미만</td></tr>
         <tr><td>pilotA A2 (지진 분리 5번, 실측)</td><td class="num">약 2분</td><td class="num">1초 미만</td></tr>
       </table></div>
       <ul>
+        <li>칸 학습은 30에폭을 잰 뒤 100배 한 예상치 (에폭당 시간이 거의 일정). 시정촌은 3000에폭 끝까지 실측: 지진마다 학습 22~24초, 추론 3~5ms (교수님 요청)</li>
+        <li>시정촌 버전과 pilotA는 시간이 거의 같음. 계산 시간 장점은 칸 버전 대비에만 해당. 시정촌 버전 대비 pilotA의 장점은 정확도(0.855 대 0.751)와 새 지진에서 다시 학습하지 않는 점(크로스 이벤트)</li>
         <li>DisasterNet은 지진마다 그 지진으로 학습하고 같은 지진을 추론. 새 지진에는 매번 6~43분 학습이 필요. pilotA는 미리 학습해 두면 새 지진에 1초 미만</li>
         <li>PC 기준으로 다시 재는 파일: 실험 폴더에서 <code>run_time_compare.bat</code> (<code>disasternet/time_compare.py</code>). 결과는 <code>outputs/time_compare.txt</code>. 아직 PC에서 안 돌림</li>
       </ul>

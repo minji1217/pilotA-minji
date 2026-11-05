@@ -8,16 +8,21 @@ N=$O/rerun_muni
 T=raw/terrain_fractions.csv
 U="--usgs-muni raw/muni_usgs_pixel.csv"
 J="--jobs ${JOBS:-4}"
-python3 -m disasternet.run_input_v5 --no-bd $J --out-dir $N/DN
-python3 -m disasternet.run_input_v5 --no-bd --terrain $T $J --out-dir $N/SOFT
-python3 -m disasternet.run_muni_unc $U --no-bd $J --out-dir $N/DNU
-python3 -m disasternet.run_muni_unc $U --no-bd --unc off $J --out-dir $N/DNU_끄기만
-python3 -m disasternet.run_muni_unc $U --no-bd --unc var $J --out-dir $N/DNU_분산만
-python3 -m disasternet.run_muni_unc $U --no-bd --terrain $T $J --out-dir $N/SOFTU
-python3 -m disasternet.run_muni_unc $U --no-bd --unc off --terrain $T $J --out-dir $N/SOFTU_끄기만
-python3 -m disasternet.run_muni_unc $U --no-bd --unc var --terrain $T $J --out-dir $N/SOFTU_분산만
-python3 -m disasternet.run_muni_unc --no-bd --unc none --const-var 0.01 $J --out-dir $N/DN_같은분산0.01
-python3 -m disasternet.run_muni_unc --no-bd --unc none --const-var 0.001 $J --out-dir $N/DN_같은분산0.001
+run() {  # run <실험 폴더 이름> <모듈과 옵션...>: seed 4 결과가 있으면 끝난 것으로 보고 건너뛴다
+  local n=$1; shift
+  [ -f "$N/$n/predictions_seed4.csv" ] && { echo "이미 있음 $n"; return; }
+  python3 -m "$@" --out-dir "$N/$n"
+}
+run DN disasternet.run_input_v5 --no-bd $J
+run SOFT disasternet.run_input_v5 --no-bd --terrain $T $J
+run DNU disasternet.run_muni_unc $U --no-bd $J
+run DNU_끄기만 disasternet.run_muni_unc $U --no-bd --unc off $J
+run DNU_분산만 disasternet.run_muni_unc $U --no-bd --unc var $J
+run SOFTU disasternet.run_muni_unc $U --no-bd --terrain $T $J
+run SOFTU_끄기만 disasternet.run_muni_unc $U --no-bd --unc off --terrain $T $J
+run SOFTU_분산만 disasternet.run_muni_unc $U --no-bd --unc var --terrain $T $J
+run DN_같은분산0.01 disasternet.run_muni_unc --no-bd --unc none --const-var 0.01 $J
+run DN_같은분산0.001 disasternet.run_muni_unc --no-bd --unc none --const-var 0.001 $J
 python3 -m disasternet.rerun_compare --level muni \
   --pair DN $O/nobd_DN $N/DN --pair SOFT $O/nobd_SOFT $N/SOFT \
   --pair DNU $O/px_DNU $N/DNU --pair DNU_끄기만 $O/px_DNU_off $N/DNU_끄기만 --pair DNU_분산만 $O/px_DNU_var $N/DNU_분산만 \
