@@ -62,22 +62,23 @@ sup { color: var(--accent); font-weight: 600; }
   <header>
     <span class="kicker">DisasterNet · pilotA 비교</span>
     <h1>학습·추론 시간 측정</h1>
-    <span class="meta">측정일 2026-11-05 · 같은 컴퓨터 · 지진 5개 합계 · seed 0 · 3000에폭</span>
+    <span class="meta">측정일 2026-11-07 · 같은 컴퓨터 · 지진 5개 합계 · seed 0 · 3000에폭</span>
   </header>
 
   <section>
     <h2>결과</h2>
     <div class="tw"><table>
       <tr><th>모델</th><th class="num">학습</th><th class="num">추론</th><th class="num">전체 AUC</th></tr>
-      <tr><td>DisasterNet 칸(픽셀) LOCALU</td><td class="num">8,025.7초 <small>(133.8분)</small></td><td class="num">47.14초</td><td class="num">0.808</td></tr>
-      <tr><td>DisasterNet 시정촌 SOFTU_분산만</td><td class="num">113.4초 <small>(1.9분)</small></td><td class="num">0.018초</td><td class="num">0.751</td></tr>
-      <tr class="hi"><td>pilotA A2<sup>*</sup></td><td class="num">117.0초 <small>(1.9분)</small></td><td class="num">1.32초</td><td class="num">0.855</td></tr>
+      <tr><td>DisasterNet 칸(픽셀) LOCALU</td><td class="num">5,405.8초 <small>(90.1분)</small></td><td class="num">40.13초</td><td class="num">0.808</td></tr>
+      <tr><td>DisasterNet 시정촌 SOFTU_분산만</td><td class="num">61.0초 <small>(1.0분)</small></td><td class="num">0.013초</td><td class="num">0.751</td></tr>
+      <tr class="hi"><td>pilotA A2, 8개 지진으로 학습<sup>*</sup></td><td class="num">67.9초 <small>(1.1분)</small></td><td class="num">0.29초</td><td class="num">0.855</td></tr>
+      <tr class="hi"><td>pilotA A2, DPM 있는 5개 지진만 학습<sup>*</sup></td><td class="num">59.8초 <small>(1.0분)</small></td><td class="num">0.31초</td><td class="num">0.862</td></tr>
     </table></div>
     <ul class="note">
-      <li>지진 5개: 구마모토, 오사카, 훗카이도, 후쿠시마, 노토</li>
+      <li>지진 5개: 구마모토, 오사카, 훗카이도, 후쿠시마, 노토. AUC는 이 5개 지진, seed 0~4 평균(DisasterNet) 기준</li>
       <li>학습: 3000에폭 학습 루프 전체. 추론: 학습 뒤 사후확률 계산 (DisasterNet은 샘플 256개 평균, pilotA는 지진별 α_e 맞춤 포함). 자료 읽는 시간은 제외</li>
-      <li>다른 작업 없이 지진 하나씩 차례로 실행</li>
-      <li><sup>*</sup> pilotA는 평가할 지진 5개를 하나씩 학습에서 빼고, 나머지 8개 지진으로 학습한 뒤 뺀 지진을 예측합니다. 표의 시간은 이 5번(지진마다 1번)을 합한 값입니다. DisasterNet은 지진마다 그 지진으로 학습하고 같은 지진을 예측합니다</li>
+      <li>네 모델 모두 같은 컴퓨터에서 다른 작업 없이 하나씩 차례로 실행</li>
+      <li><sup>*</sup> pilotA는 평가할 지진 5개를 하나씩 학습에서 빼고 학습한 뒤 뺀 지진을 예측합니다. 표의 시간은 이 5번(지진마다 1번)을 합한 값입니다. "8개 지진으로 학습"은 뺀 지진을 뺀 나머지 8개(DPM 없는 지진 4개 포함), "5개 지진만 학습"은 DPM 있는 나머지 4개로 학습합니다. DisasterNet은 지진마다 그 지진으로 학습하고 같은 지진을 예측합니다</li>
     </ul>
   </section>
 
@@ -85,7 +86,7 @@ sup { color: var(--accent); font-weight: 600; }
     <h2>컴퓨팅 환경</h2>
     <div class="tw"><table class="env">
       <tr><td>컴퓨터</td><td>클라우드 가상 컴퓨터 (Claude 실행 환경)</td></tr>
-      <tr><td>CPU</td><td>Intel Xeon Processor @ 2.80GHz, 4코어 (코어당 1스레드)</td></tr>
+      <tr><td>CPU</td><td>Intel Xeon Processor @ 2.10GHz, 4코어 (코어당 1스레드)</td></tr>
       <tr><td>GPU</td><td>없음 (CPU만 사용)</td></tr>
       <tr><td>메모리</td><td>15GB</td></tr>
       <tr><td>OS</td><td>Ubuntu 24.04.5 LTS</td></tr>

@@ -692,26 +692,28 @@ body{background:#fff}
     </ul></div></div>
     <div class="row"><b>시간</b><div>
       <div class="tw"><table>
-        <tr><th>같은 컴퓨터, 지진 5개 합계, seed 0, 모두 3000에폭 실측</th><th class="num">학습</th><th class="num">추론</th><th class="num">전체 AUC</th></tr>
-        <tr><td>DisasterNet 칸 LOCALU</td><td class="num">8,025.7초 (133.8분)</td><td class="num">47.14초</td><td class="num">0.808</td></tr>
-        <tr><td>DisasterNet 시정촌 SOFTU_분산만</td><td class="num">113.4초 (1.9분)</td><td class="num">0.018초</td><td class="num">0.751</td></tr>
-        <tr><td>pilotA A2 (지진 분리 5번)</td><td class="num">117.0초 (1.9분)</td><td class="num">1.32초</td><td class="num">0.855</td></tr>
+        <tr><th>같은 컴퓨터, 지진 5개 합계, seed 0, 모두 3000에폭 실측 (11.07 재측정)</th><th class="num">학습</th><th class="num">추론</th><th class="num">전체 AUC</th></tr>
+        <tr><td>DisasterNet 칸 LOCALU</td><td class="num">5,405.8초 (90.1분)</td><td class="num">40.13초</td><td class="num">0.808</td></tr>
+        <tr><td>DisasterNet 시정촌 SOFTU_분산만</td><td class="num">61.0초 (1.0분)</td><td class="num">0.013초</td><td class="num">0.751</td></tr>
+        <tr><td>pilotA A2, 8개 지진으로 학습</td><td class="num">67.9초 (1.1분)</td><td class="num">0.29초</td><td class="num">0.855</td></tr>
+        <tr><td>pilotA A2, DPM 있는 5개 지진만 학습</td><td class="num">59.8초 (1.0분)</td><td class="num">0.31초</td><td class="num">0.862</td></tr>
       </table></div>
       <div class="tw"><table>
-        <tr><th>지진별 (초)</th><th class="num">칸 수</th><th class="num">칸 LOCALU 학습</th><th class="num">추론</th><th class="num">시정촌 학습</th><th class="num">추론</th><th class="num">pilotA 학습</th><th class="num">추론</th></tr>
-        <tr><td>구마모토</td><td class="num">96,404</td><td class="num">732.4</td><td class="num">5.87</td><td class="num">22.8</td><td class="num">0.003</td><td class="num">26.8</td><td class="num">1.06</td></tr>
-        <tr><td>오사카</td><td class="num">44,811</td><td class="num">375.8</td><td class="num">2.36</td><td class="num">22.4</td><td class="num">0.003</td><td class="num">22.4</td><td class="num">0.06</td></tr>
-        <tr><td>훗카이도</td><td class="num">294,110</td><td class="num">2,411.4</td><td class="num">12.29</td><td class="num">22.7</td><td class="num">0.003</td><td class="num">24.0</td><td class="num">0.08</td></tr>
-        <tr><td>후쿠시마</td><td class="num">269,604</td><td class="num">2,061.1</td><td class="num">11.31</td><td class="num">23.7</td><td class="num">0.005</td><td class="num">21.6</td><td class="num">0.06</td></tr>
-        <tr><td>노토</td><td class="num">320,110</td><td class="num">2,445.0</td><td class="num">15.31</td><td class="num">21.8</td><td class="num">0.005</td><td class="num">22.1</td><td class="num">0.07</td></tr>
+        <tr><th>지진별 (초)</th><th class="num">칸 수</th><th class="num">칸 학습</th><th class="num">칸 추론</th><th class="num">시정촌 학습</th><th class="num">시정촌 추론</th><th class="num">pilotA 8개 학습</th><th class="num">추론</th><th class="num">pilotA 5개만 학습</th><th class="num">추론</th></tr>
+        <tr><td>구마모토</td><td class="num">96,404</td><td class="num">521.0</td><td class="num">5.06</td><td class="num">12.0</td><td class="num">0.002</td><td class="num">14.8</td><td class="num">0.07</td><td class="num">12.7</td><td class="num">0.07</td></tr>
+        <tr><td>오사카</td><td class="num">44,811</td><td class="num">263.1</td><td class="num">2.12</td><td class="num">12.1</td><td class="num">0.002</td><td class="num">13.6</td><td class="num">0.05</td><td class="num">12.0</td><td class="num">0.08</td></tr>
+        <tr><td>훗카이도</td><td class="num">294,110</td><td class="num">1,560.4</td><td class="num">9.06</td><td class="num">11.7</td><td class="num">0.002</td><td class="num">13.4</td><td class="num">0.06</td><td class="num">11.9</td><td class="num">0.06</td></tr>
+        <tr><td>후쿠시마</td><td class="num">269,604</td><td class="num">1,331.4</td><td class="num">10.97</td><td class="num">12.9</td><td class="num">0.004</td><td class="num">12.7</td><td class="num">0.04</td><td class="num">11.3</td><td class="num">0.06</td></tr>
+        <tr><td>노토</td><td class="num">320,110</td><td class="num">1,729.9</td><td class="num">12.92</td><td class="num">12.3</td><td class="num">0.004</td><td class="num">13.3</td><td class="num">0.06</td><td class="num">11.9</td><td class="num">0.04</td></tr>
       </table></div>
       <ul>
-        <li>교수님 요청(11.05): 예상치 말고 실제로 돌린 실측치, 초 · 분 단위, 컴퓨팅 환경 함께. 예전의 "약 137분"은 30에폭 × 100 예상치였고, 실측은 133.8분</li>
-        <li>측정 환경: Anthropic 클라우드 가상 컴퓨터. CPU Intel Xeon Processor @ 2.80GHz 4코어(코어당 1스레드), GPU 없음(CPU만), 메모리 15GB, Ubuntu 24.04.5 LTS (Linux 6.18), Python 3.13.16, PyTorch 2.14.1, NumPy 2.5.3, pandas 3.0.5, 계산 스레드 4</li>
-        <li>측정 방법: 다른 작업 없이 지진 하나씩 차례로. 학습 = 3000에폭 학습 루프, 추론 = 학습 뒤 사후확률 계산(DisasterNet은 샘플 256개 평균, pilotA는 지진 α_e 맞춤 포함). 자료 읽기 시간은 뺌. 칸은 2026-11-05 12:41~14:57 UTC</li>
-        <li>pilotA 학습은 회차마다 뺀 지진 외 8개 지진의 시정촌 행으로 학습. 구마모토 추론 1.06초는 첫 실행이라 준비 시간이 포함됨</li>
-        <li>시정촌 버전과 pilotA는 시간이 거의 같음. 계산 시간 장점은 칸 버전 대비에만 해당. 시정촌 버전 대비 pilotA의 장점은 정확도(0.855 대 0.751)와 새 지진에서 다시 학습하지 않는 점(크로스 이벤트)</li>
-        <li>코드: <code>disasternet/time_measure/</code> (칸 · 시정촌 · pilotA), 결과: <code>outputs/disasternet/time_measured_20261105.csv</code></li>
+        <li>교수님 요청(11.05): 실제로 돌린 실측치, 초 · 분 단위, 컴퓨팅 환경 함께</li>
+        <li>11.07 재측정 이유: 클라우드 컴퓨터가 바뀜(CPU 2.80GHz에서 2.10GHz). 다른 컴퓨터 값을 섞지 않으려고 네 모델 모두 새 컴퓨터에서 다시 잼. 11.05 값(칸 8,025.7초, 시정촌 113.4초, pilotA 117.0초)은 이전 컴퓨터 값으로 <code>outputs/disasternet/time_localu_full_machine1/</code>에 보관</li>
+        <li>측정 환경: Anthropic 클라우드 가상 컴퓨터. CPU Intel Xeon Processor @ 2.10GHz 4코어(코어당 1스레드), GPU 없음(CPU만), 메모리 15GB, Ubuntu 24.04.5 LTS (Linux 6.18), Python 3.13.16, PyTorch 2.14.1, NumPy 2.5.3, pandas 3.0.5, 계산 스레드 4</li>
+        <li>측정 방법: 다른 작업 없이 하나씩 차례로. 학습 = 3000에폭 학습 루프, 추론 = 학습 뒤 사후확률 계산(DisasterNet은 샘플 256개 평균, pilotA는 지진 α_e 맞춤 포함). 자료 읽기 시간은 뺌</li>
+        <li>pilotA 두 설정: 평가 지진을 하나씩 빼고 나머지 8개(DPM 없는 4개 포함) 또는 DPM 있는 나머지 4개로 학습. 학습 행이 반쯤(약 200행 대 370행)이어도 시간 차이는 작음 (3000에폭 반복 수가 같음)</li>
+        <li>칸 버전 대비 pilotA(8개 학습)는 학습 약 80배, 추론 약 138배 빠름. 시정촌 버전과 pilotA는 비슷함. 시정촌 버전 대비 pilotA의 장점은 정확도(0.855 · 0.862 대 0.751)와 크로스 이벤트</li>
+        <li>코드: <code>disasternet/time_measure/</code> (칸 · 시정촌 · pilotA), 결과: <code>outputs/disasternet/time_measured_20261107.csv</code></li>
       </ul>
     </div></div>
     <div class="row"><b>추가 실험</b><div>

@@ -1,0 +1,8 @@
+측정 환경 (2026-11-07 KST, Anthropic 클라우드 가상 컴퓨터)
+CPU: Intel(R) Xeon(R) Processor @ 2.10GHz, 4 cores (1 thread per core), 1 socket
+GPU: 없음 (CPU만 사용)
+메모리: 15 GiB
+OS: Ubuntu 24.04.5 LTS, Linux 6.18.44
+Python 3.13.16 / PyTorch 2.14.1 / NumPy 2.5.3 / pandas 3.0.5
+torch.set_num_threads(4), 다른 작업 없이 하나씩 차례로, seed 0, 3000 epoch
+합계: 칸 LOCALU 학습 5405.8초 추론 40.13초 / 시정촌 SOFTU_분산만 61.0초 0.013초 / pilotA 8개 67.9초 0.29초 / pilotA 5개만 59.8초 0.31초
