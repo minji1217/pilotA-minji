@@ -1,0 +1,40 @@
+rows 267 {'LQ': 190, 'LS': 77} NaN 0
+
+== base 기준 None : 남은 행(양성) {'LQ': (190, 74), 'LS': (77, 68)}
+  USGS                   ALL 0.854 LS 0.729 LQ 0.895
+  DPM만                   ALL 0.596 LS 0.689 LQ 0.566
+  pilotA                 ALL 0.855 LS 0.872 LQ 0.850
+  DN시정촌 SOFTU_분산만        ALL 0.751 LS 0.792 LQ 0.738
+  DN칸 LOCALU             ALL 0.808 LS 0.790 LQ 0.813
+
+== base 기준 0.3 : 남은 행(양성) {'LQ': (141, 54), 'LS': (68, 61)}
+  USGS                   ALL 0.840 LS 0.733 LQ 0.885
+  DPM만                   ALL 0.589 LS 0.651 LQ 0.563
+  pilotA                 ALL 0.869 LS 0.853 LQ 0.876
+  DN시정촌 SOFTU_분산만        ALL 0.773 LS 0.878 LQ 0.728
+  DN칸 LOCALU             ALL 0.807 LS 0.809 LQ 0.806
+
+== base 기준 0.4 : 남은 행(양성) {'LQ': (103, 37), 'LS': (47, 41)}
+  USGS                   ALL 0.831 LS 0.694 LQ 0.894
+  DPM만                   ALL 0.593 LS 0.721 LQ 0.533
+  pilotA                 ALL 0.900 LS 0.869 LQ 0.915
+  DN시정촌 SOFTU_분산만        ALL 0.798 LS 0.857 LQ 0.770
+  DN칸 LOCALU             ALL 0.838 LS 0.827 LQ 0.843
+
+평가 행 중 base<0.4 비율 {'LQ': 0.458, 'LS': 0.39}  <0.3 {'LQ': 0.258, 'LS': 0.117}
+
+LS 지진별 (전체 행)
+  2016 구마모토 n=29 양성=26 base중앙 0.666 USGS 0.641 DPM만 0.731 pilotA 0.846 DN시정촌 SOFTU_분산만 0.838 DN칸 LOCALU 0.803
+  2018 오사카 n=7 양성=5 base중앙 0.593 USGS 1.000 DPM만 0.400 pilotA 1.000 DN시정촌 SOFTU_분산만 0.980 DN칸 LOCALU 0.980
+  2018 훗카이도 n=13 양성=9 base중앙 0.305 USGS 0.778 DPM만 0.750 pilotA 0.861 DN시정촌 SOFTU_분산만 0.589 DN칸 LOCALU 0.661
+LQ 지진별
+  2016 구마모토 n=40 양성=18 base중앙 0.667 USGS 0.947 DPM만 0.601 pilotA 0.949 DN시정촌 SOFTU_분산만 0.823 DN칸 LOCALU 0.918
+  2018 훗카이도 n=40 양성=17 base중앙 0.306 USGS 0.926 DPM만 0.468 pilotA 0.913 DN시정촌 SOFTU_분산만 0.716 DN칸 LOCALU 0.608
+  2021 후쿠시마 n=7 양성=6 base중앙 0.633 USGS 0.500 DPM만 0.667 pilotA 0.667 DN시정촌 SOFTU_분산만 0.767 DN칸 LOCALU 0.533
+  2024 노토반도 n=64 양성=33 base중앙 0.307 USGS 0.887 DPM만 0.594 pilotA 0.768 DN시정촌 SOFTU_분산만 0.695 DN칸 LOCALU 0.907
+LS DPM-base 상관(스피어만) 0.681  양성 중 base<0.4 비율 0.397  음성 중 0.333
+LQ DPM-base 상관(스피어만) 0.366  양성 중 base<0.4 비율 0.5  음성 중 0.431
+
+None LQ 구마모토 40(18+) | LS 구마모토 29(26+) | LS 오사카 7(5+) | LQ 훗카이도 40(17+) | LS 훗카이도 13(9+) | LQ 후쿠시마 7(6+) | LQ 노토반도 64(33+)
+0.3 LQ 구마모토 40(18+) | LS 구마모토 29(26+) | LS 오사카 7(5+) | LQ 훗카이도 23(10+) | LS 훗카이도 8(6+) | LQ 후쿠시마 7(6+) | LQ 노토반도 33(20+)
+0.4 LQ 구마모토 40(18+) | LS 구마모토 29(26+) | LS 오사카 5(3+) | LQ 훗카이도 8(2+) | LQ 후쿠시마 7(6+) | LQ 노토반도 18(11+)
