@@ -10,12 +10,10 @@ pilotA 코드: minji1217/pilotA 브랜치 followup4-lq-J-nolabels (A2 기본값)
 
 설정 (기본: 전부)
   full          TRACE 그대로 (A2: 평가 지진 외 8개로 학습, 산사태 라벨 사용)
-  uniform_prior 입력: 사전확률을 모든 시정촌에 같은 값으로 (평균). 산사태는 USGS 확률·시정촌 크기·판독 범위를
-                학습 행 평균 상수로, 산지 비율은 0으로 (산사태 사전확률 = 고정 상수 하나).
-                액상화는 USGS 확률·시정촌 크기를 상수로 (액상화 사전확률 = 학습되는 b 하나)
-  uniform_learned 입력: 사전확률을 같은 값으로 (학습). 위와 같고, 산사태에도 학습되는 상수를 더해
-                두 재해 모두 "같은 값 하나"를 자료에서 맞춘다
-  uniform_half  입력: 사전확률을 모든 시정촌에서 0.5로 고정 (두 재해 모두, 학습 없음)
+  uniform_prior   입력: 사전확률을 모든 시정촌에 같은 값으로 (평균). 재해마다, 학습 시정촌의 원래 사전확률
+                  (κ = 0, b = 0일 때)을 평균한 값 하나로 고정. 산사태 · 액상화 똑같이
+  uniform_learned 입력: 위 평균값에서 출발해 재해마다 같은 값 하나를 학습
+  uniform_half    입력: 두 재해 모두 0.5로 고정
   no_pgv        입력: 피해 회귀식의 흔들림 항 β·log PGV 제거 (PGV = 1로 두어 log PGV = 0)
   poisson       구조: 음이항분포 대신 포아송분포 (과분산 없음)
   no_exposure   구조: 노출 offset 제거 (μ = E·λ 에서 E = 1)
@@ -52,24 +50,33 @@ TRAIN_KW = dict(seed=0, epochs=3000, lr=0.02, lam_gamma=10, area_mode="fixed-cov
                 mtn_standardize="train", use_labels=True, lq_labels=False, lq_b_only=True)
 
 
-class PriorLearnedConst(T.AreaPrior):
-    """산사태 사전확률 로짓에 학습되는 상수 하나를 더한다 (균등 prior의 수준을 자료에서 맞춤)."""
+class PriorUniform(T.AreaPrior):
+    """균등 prior: 모든 시정촌에 같은 로짓. 산사태 · 액상화를 똑같이 처리한다.
+    MODE = "mean"   : 학습 행의 원래 사전확률(κ = 0, b = 0일 때)을 평균한 값으로 고정
+           "learned": 위 값에서 출발해, 재해마다 상수 하나를 학습
+           "half"   : 0.5 (로짓 0) 고정
+    C = (c_LS, c_LQ): "mean" · "learned"의 출발 로짓. 실행 때마다 학습 행으로 정한다."""
+    MODE = "mean"
+    C = (0.0, 0.0)
 
     def __init__(self, *a, **k):
         super().__init__(*a, **k)
-        self.b_ls_const = torch.nn.Parameter(torch.zeros((), dtype=torch.float64))
+        self.u_shift = torch.nn.Parameter(torch.zeros(2, dtype=torch.float64), requires_grad=self.MODE == "learned")
 
-    def z(self, *args, **kw):
-        z_ls, z_lq = super().z(*args, **kw)
-        return z_ls + self.b_ls_const, z_lq
+    def z(self, pi_ls, *args, **kw):
+        zero = torch.zeros_like(pi_ls)
+        if self.MODE == "half":
+            return zero, zero
+        return zero + self.C[0] + self.u_shift[0], zero + self.C[1] + self.u_shift[1]
 
 
-class PriorHalf(T.AreaPrior):
-    """두 재해 모두 사전확률 0.5 (로짓 0) 고정."""
-
-    def z(self, *args, **kw):
-        z_ls, z_lq = super().z(*args, **kw)
-        return torch.zeros_like(z_ls), torch.zeros_like(z_lq)
+def uniform_const(batch, t):
+    """학습 행의 원래 사전확률(κ = 0, b = 0일 때)의 평균을 로짓으로. 모델과 같은 식(log p̄를 EPS로 자름)."""
+    from schema import EPS
+    z_ls = torch.log(batch.pi_ls.clamp_min(EPS)) + batch.log_k_ls + batch.log_cov_ls
+    z_lq = torch.log(batch.pi_lq.clamp_min(EPS)) + (batch.log_k_lq - batch.log_k_lq[t].mean())
+    p_ls, p_lq = torch.sigmoid(z_ls[t]).mean(), torch.sigmoid(z_lq[t]).mean()
+    return float(torch.logit(p_ls)), float(torch.logit(p_lq)), float(p_ls), float(p_lq)
 
 
 class PoissonLikelihood(DamageLikelihood):
@@ -88,17 +95,6 @@ def const_like(x, ref):
 
 
 def make_batch(setting, batch, train_mask):
-    if setting in ("uniform_prior", "uniform_learned", "uniform_half"):
-        t = train_mask
-        lp_ls, lp_lq = torch.log(batch.pi_ls), torch.log(batch.pi_lq)
-        return dataclasses.replace(
-            batch,
-            pi_ls=torch.exp(const_like(lp_ls, lp_ls[t])), pi_lq=torch.exp(const_like(lp_lq, lp_lq[t])),
-            log_k_ls=const_like(batch.log_k_ls, batch.log_k_ls[t]),
-            log_k_lq=const_like(batch.log_k_lq, batch.log_k_lq[t]),
-            log_cov_ls=const_like(batch.log_cov_ls, batch.log_cov_ls[t]),
-            z_mtn=torch.zeros_like(batch.z_mtn),
-        )
     if setting == "no_pgv":
         return dataclasses.replace(batch, pgv=torch.ones_like(batch.pgv))
     if setting == "no_exposure":
@@ -119,7 +115,9 @@ def main():
     orig_like, orig_prior = T.DamageLikelihood, T.AreaPrior
     for s in SETTINGS:
         T.DamageLikelihood = PoissonLikelihood if s == "poisson" else orig_like
-        T.AreaPrior = {"uniform_learned": PriorLearnedConst, "uniform_half": PriorHalf}.get(s, orig_prior)
+        uni = {"uniform_prior": "mean", "uniform_learned": "learned", "uniform_half": "half"}.get(s)
+        T.AreaPrior = PriorUniform if uni else orig_prior
+        PriorUniform.MODE = uni or "mean"
         for ev in events:
             ho = EVENT_TO_INDEX[ev]
             if s == "per_event":
@@ -130,8 +128,11 @@ def main():
                 train_mask = base.event_idx != ho
             batch = make_batch(s, base, train_mask)
             kw = dict(TRAIN_KW)
-            if s in ("uniform_prior", "uniform_learned", "uniform_half"):
-                kw["mtn_standardize"] = "all"   # 산지 비율을 0으로 둬서 학습 행 표준화(표준편차 0)를 건너뜀
+            note = ""
+            if uni:
+                c_ls, c_lq, p_ls0, p_lq0 = uniform_const(batch, train_mask)
+                PriorUniform.C = (c_ls, c_lq)
+                note = f"  균등 출발값 산사태 {p_ls0:.3f} 액상화 {p_lq0:.3f}" if uni != "half" else "  균등 0.5"
             if s == "per_event":
                 kw["use_labels"] = False        # 예측할 지진의 정답은 학습에 쓸 수 없음
             t0 = time.time()
@@ -143,7 +144,7 @@ def main():
                     lj, lp = T.marginalize(T.prior_log_w(pri, batch), out_l.log_L)
                     p_ls, p_lq = T.infer(lj, lp)
                 T.report_holdout(batch, reg, like, pri, p_ls, p_lq, ev, f"_{prefix}-{s}_holdout-{ev.replace(' ', '')}")
-            print(f"{s:14s} {ev}  학습행 {int(train_mask.sum())}  {time.time() - t0:.1f}s", flush=True)
+            print(f"{s:14s} {ev}  학습행 {int(train_mask.sum())}  {time.time() - t0:.1f}s{note}", flush=True)
     T.DamageLikelihood, T.AreaPrior = orig_like, orig_prior
 
 
