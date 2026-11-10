@@ -778,7 +778,7 @@ body{background:#fff}
     <div class="row"><b>설정</b><div>
       <div class="tw"><table>
         <tr><th>층위</th><th>설정</th><th>바꾼 것</th></tr>
-        <tr><td>입력</td><td>prior 균등 (평균 · 학습 · 0.5)</td><td>사전확률을 모든 시정촌에 같은 값으로. 산사태는 USGS 확률 · 시정촌 크기 · 판독 범위를 학습 행 평균 상수로, 산지 비율 0 (상수 하나). 액상화는 USGS 확률 · 크기를 상수로 (학습되는 b 하나)</td></tr>
+        <tr><td>입력</td><td>prior 균등 (평균 · 학습 · 0.5)</td><td>재해마다 사전확률을 모든 시정촌에 같은 값 하나로 (산사태 · 액상화 똑같이). 값은 평균 · 학습 · 0.5 세 방식</td></tr>
         <tr><td>입력</td><td>흔들림 항 제거</td><td>피해 회귀식의 β · log PGV 항 제거 (PGV = 1)</td></tr>
         <tr><td>구조</td><td>포아송</td><td>음이항 대신 포아송 (과분산 없음)</td></tr>
         <tr><td>구조</td><td>노출 offset 제거</td><td>기대 피해 = 노출 × 비율에서 노출(인명 3채널은 인구, 주택 3채널은 일반세대 수)을 1로</td></tr>
@@ -790,8 +790,8 @@ body{background:#fff}
       <div class="tw"><table>
         <tr><th>설정</th><th class="num">8개 학습: 전체</th><th class="num">산사태</th><th class="num">액상화</th><th class="num">차이</th><th class="num">5개만 학습: 전체</th><th class="num">산사태</th><th class="num">액상화</th><th class="num">차이</th><th class="num">9개 평가 전체</th></tr>
         <tr><td><b>TRACE (전체)</b></td><td class="num"><b>0.855</b></td><td class="num">0.872</td><td class="num">0.850</td><td class="num">기준</td><td class="num"><b>0.862</b></td><td class="num">0.887</td><td class="num">0.854</td><td class="num">기준</td><td class="num">0.836</td></tr>
-        <tr><td>prior 균등 (평균)</td><td class="num">0.602</td><td class="num">0.672</td><td class="num">0.580</td><td class="num">−0.253</td><td class="num">0.658</td><td class="num">0.754</td><td class="num">0.627</td><td class="num">−0.204</td><td class="num">0.579</td></tr>
-        <tr><td>prior 균등 (학습)</td><td class="num">0.593</td><td class="num">0.702</td><td class="num">0.557</td><td class="num">−0.263</td><td class="num">0.639</td><td class="num">0.688</td><td class="num">0.623</td><td class="num">−0.223</td><td class="num">0.575</td></tr>
+        <tr><td>prior 균등 (평균)</td><td class="num">0.629</td><td class="num">0.718</td><td class="num">0.600</td><td class="num">−0.227</td><td class="num">0.666</td><td class="num">0.725</td><td class="num">0.647</td><td class="num">−0.196</td><td class="num">0.602</td></tr>
+        <tr><td>prior 균등 (학습)</td><td class="num">0.591</td><td class="num">0.702</td><td class="num">0.555</td><td class="num">−0.264</td><td class="num">0.638</td><td class="num">0.688</td><td class="num">0.622</td><td class="num">−0.224</td><td class="num">0.576</td></tr>
         <tr><td>prior 균등 (0.5)</td><td class="num">0.602</td><td class="num">0.725</td><td class="num">0.562</td><td class="num">−0.253</td><td class="num">0.666</td><td class="num">0.762</td><td class="num">0.634</td><td class="num">−0.197</td><td class="num">0.580</td></tr>
         <tr><td>흔들림 항 제거</td><td class="num">0.862</td><td class="num">0.836</td><td class="num">0.871</td><td class="num">+0.007</td><td class="num">0.863</td><td class="num">0.864</td><td class="num">0.863</td><td class="num">+0.001</td><td class="num">0.855</td></tr>
         <tr><td>포아송</td><td class="num">0.524</td><td class="num">0.608</td><td class="num">0.498</td><td class="num">−0.331</td><td class="num">0.604</td><td class="num">0.432</td><td class="num">0.659</td><td class="num">−0.259</td><td class="num">0.538</td></tr>
@@ -799,7 +799,8 @@ body{background:#fff}
         <tr><td>이벤트별 단독 학습</td><td class="num">0.841</td><td class="num">0.880</td><td class="num">0.829</td><td class="num">−0.014</td><td class="num">0.841</td><td class="num">0.880</td><td class="num">0.829</td><td class="num">−0.021</td><td class="num">0.822</td></tr>
       </table></div>
       <ul>
-        <li>prior 균등은 값을 정하는 방식 세 가지 모두 비슷하게 크게 떨어짐 (8개 학습 −0.25 ~ −0.26, 5개만 학습 −0.20 ~ −0.22). 평균 = 산사태는 학습 시정촌 평균 상수 고정, 액상화는 학습되는 b 하나 / 학습 = 두 재해 모두 학습되는 상수 하나 / 0.5 = 두 재해 모두 0.5 고정</li>
+        <li>prior 균등은 값을 정하는 방식 세 가지 모두 크게 떨어짐 (8개 학습 −0.23 ~ −0.26, 5개만 학습 −0.20 ~ −0.22). 세 방식 모두 산사태 · 액상화를 똑같이 처리: 평균 = 학습 시정촌의 원래 사전확률(κ = 0, b = 0일 때)을 평균한 값으로 고정 (예: 훗카이도를 뺀 회차 산사태 0.673, 액상화 0.042) / 학습 = 그 값에서 출발해 값 하나 학습 / 0.5 = 0.5 고정</li>
+        <li>정정: 처음 돌린 "평균"은 USGS 확률 0인 시정촌(산사태 18곳) 때문에 로그 평균이 0이 되어 산사태 사전확률이 모두 거의 0으로 잘못 들어갔음 (그때 0.602). 고쳐서 다시 돌린 값이 위 표</li>
         <li>두 기준 모두 같은 그림: prior · 음이항이 크게 기여, 노출 offset · 크로스이벤트는 작게 기여, 흔들림 항은 정확도 기여 없음. 5개만 학습 기준에서는 노출 offset(−0.004)과 흔들림 항(+0.001)의 차이가 더 작음</li>
         <li>이벤트별 단독 학습은 예측 지진 하나로만 학습하므로 두 기준에서 같은 값(0.841). 차이는 기준값이 달라서 생김</li>
         <li>크게 기여: prior와 음이항. 피해 건수만으로는 산사태 · 액상화를 가르지 못하고(C1), 과분산을 무시하면 큰 시정촌 피해에 끌려가 순위가 무너짐(C2)</li>
