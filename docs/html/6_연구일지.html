@@ -764,4 +764,48 @@ body{background:#fff}
     </ul></div></div>
   </div>
 </article>
+
+<article class="entry">
+  <div class="date"><span class="d">11.10</span><span class="w">화</span></div>
+  <div class="body">
+    <h2>RQ4 Ablation: TRACE의 각 층위 설계가 정확도에 얼마나 기여하나</h2>
+    <span class="status done">완료</span>
+    <div class="row"><b>방법</b><div><ul>
+      <li>TRACE(pilotA A2: 평가 지진 외 8개로 학습, 산사태 라벨 사용, λ_γ 10)에서 한 번에 하나만 바꿈. 모델 코드는 그대로 두고 입력 · 부품만 바꿔 끼움</li>
+      <li>평가: 지진 하나씩 빼고 학습(LOEO), 9개 지진 모두 돌림. 지진 · 재해별 AUC를 채점 시정촌 수로 가중평균. pilotA는 seed 영향이 없어 한 번씩</li>
+      <li>같은 스크립트로 TRACE 그대로 돌린 값이 기존과 똑같음 (5개 0.855, 9개 0.836)</li>
+    </ul></div></div>
+    <div class="row"><b>설정</b><div>
+      <div class="tw"><table>
+        <tr><th>층위</th><th>설정</th><th>바꾼 것</th></tr>
+        <tr><td>입력</td><td>prior 균등</td><td>사전확률을 모든 시정촌에 같은 값으로. 산사태는 USGS 확률 · 시정촌 크기 · 판독 범위를 학습 행 평균 상수로, 산지 비율 0 (상수 하나). 액상화는 USGS 확률 · 크기를 상수로 (학습되는 b 하나)</td></tr>
+        <tr><td>입력</td><td>흔들림 항 제거</td><td>피해 회귀식의 β · log PGV 항 제거 (PGV = 1)</td></tr>
+        <tr><td>구조</td><td>포아송</td><td>음이항 대신 포아송 (과분산 없음)</td></tr>
+        <tr><td>구조</td><td>노출 offset 제거</td><td>기대 피해 = 노출 × 비율에서 노출(인명 3채널은 인구, 주택 3채널은 일반세대 수)을 1로</td></tr>
+        <tr><td>학습</td><td>이벤트별 단독 학습</td><td>예측할 지진 하나로만 학습. 그 지진 정답은 쓸 수 없어 라벨 없이 피해 건수만</td></tr>
+      </table></div>
+    </div></div>
+    <div class="row"><b>결과</b><div>
+      <div class="tw"><table>
+        <tr><th>설정</th><th class="num">5개 전체</th><th class="num">산사태</th><th class="num">액상화</th><th class="num">차이</th><th class="num">9개 전체</th><th class="num">산사태</th><th class="num">액상화</th><th class="num">차이</th></tr>
+        <tr><td><b>TRACE (전체)</b></td><td class="num"><b>0.855</b></td><td class="num">0.872</td><td class="num">0.850</td><td class="num">기준</td><td class="num"><b>0.836</b></td><td class="num">0.905</td><td class="num">0.804</td><td class="num">기준</td></tr>
+        <tr><td>prior 균등</td><td class="num">0.602</td><td class="num">0.672</td><td class="num">0.580</td><td class="num">−0.253</td><td class="num">0.579</td><td class="num">0.609</td><td class="num">0.565</td><td class="num">−0.257</td></tr>
+        <tr><td>흔들림 항 제거</td><td class="num">0.862</td><td class="num">0.836</td><td class="num">0.871</td><td class="num">+0.007</td><td class="num">0.855</td><td class="num">0.884</td><td class="num">0.842</td><td class="num">+0.020</td></tr>
+        <tr><td>포아송</td><td class="num">0.524</td><td class="num">0.608</td><td class="num">0.498</td><td class="num">−0.331</td><td class="num">0.538</td><td class="num">0.619</td><td class="num">0.501</td><td class="num">−0.298</td></tr>
+        <tr><td>노출 offset 제거</td><td class="num">0.834</td><td class="num">0.903</td><td class="num">0.811</td><td class="num">−0.022</td><td class="num">0.820</td><td class="num">0.922</td><td class="num">0.774</td><td class="num">−0.015</td></tr>
+        <tr><td>이벤트별 단독 학습</td><td class="num">0.841</td><td class="num">0.880</td><td class="num">0.829</td><td class="num">−0.014</td><td class="num">0.822</td><td class="num">0.914</td><td class="num">0.780</td><td class="num">−0.014</td></tr>
+      </table></div>
+      <ul>
+        <li>크게 기여: prior(−0.25)와 음이항(−0.30 ~ −0.33). 피해 건수만으로는 산사태 · 액상화를 가르지 못하고(C1), 과분산을 무시하면 큰 시정촌 피해에 끌려가 순위가 무너짐(C2)</li>
+        <li>작게 기여: 노출 offset(−0.015 ~ −0.022), 크로스이벤트 학습(−0.014). 이벤트별 단독 학습도 prior는 그대로라 성능 대부분이 유지됨. 산사태는 오히려 조금 오름</li>
+        <li>흔들림 항은 빼면 오히려 오름(+0.007 ~ +0.020). 산사태는 내려가고(0.872 대 0.836) 액상화가 오름(0.850 대 0.871). 정확도 기여는 확인되지 않음. 흔들림 항의 역할을 정확도가 아니라 피해 기여 분리(RQ3 γ 해석)로 설명할지 정해야 함</li>
+        <li>채점 수가 작은 조합은 크게 흔들림 (예: 후쿠시마 액상화 7곳이 노출 offset 제거에서 0.000)</li>
+      </ul>
+    </div></div>
+    <div class="row"><b>파일</b><div><ul>
+      <li>스크립트: <code>pilota_ablation/run_ablation.py</code>, <code>score_ablation.py</code> (pilotA 브랜치 followup4-lq-J-nolabels 폴더를 인자로)</li>
+      <li>결과: <code>pilota_ablation/ablation_result.csv</code>, <code>ablation_result_지진별.csv</code></li>
+    </ul></div></div>
+  </div>
+</article>
 </main>
