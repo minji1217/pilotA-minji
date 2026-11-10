@@ -3,13 +3,19 @@
 pilotA 모델 코드는 고치지 않는다. 입력(batch)이나 부품(likelihood)만 바꿔 끼운다.
 pilotA 코드: minji1217/pilotA 브랜치 followup4-lq-J-nolabels (A2 기본값). 그 폴더를 첫 인자로 준다.
 
-    python run_ablation.py <pilotA 폴더> [설정 ...]
+    python run_ablation.py <pilotA 폴더> [--dpm5] [설정 ...]
+
+--dpm5: 기준 학습을 "DPM 있는 5개 지진만"으로 (평가 지진을 빼고 나머지 4개로 학습, 평가는 그 5개 지진만).
+        없으면 A2 기본 (평가 지진을 빼고 나머지 8개로 학습, 9개 지진 모두 평가).
 
 설정 (기본: 전부)
   full          TRACE 그대로 (A2: 평가 지진 외 8개로 학습, 산사태 라벨 사용)
-  uniform_prior 입력: 사전확률을 모든 시정촌에 같은 값으로. 산사태는 USGS 확률·시정촌 크기·판독 범위를
-                학습 행 평균 상수로, 산지 비율은 0으로 (산사태 사전확률 = 상수 하나).
+  uniform_prior 입력: 사전확률을 모든 시정촌에 같은 값으로 (평균). 산사태는 USGS 확률·시정촌 크기·판독 범위를
+                학습 행 평균 상수로, 산지 비율은 0으로 (산사태 사전확률 = 고정 상수 하나).
                 액상화는 USGS 확률·시정촌 크기를 상수로 (액상화 사전확률 = 학습되는 b 하나)
+  uniform_learned 입력: 사전확률을 같은 값으로 (학습). 위와 같고, 산사태에도 학습되는 상수를 더해
+                두 재해 모두 "같은 값 하나"를 자료에서 맞춘다
+  uniform_half  입력: 사전확률을 모든 시정촌에서 0.5로 고정 (두 재해 모두, 학습 없음)
   no_pgv        입력: 피해 회귀식의 흔들림 항 β·log PGV 제거 (PGV = 1로 두어 log PGV = 0)
   poisson       구조: 음이항분포 대신 포아송분포 (과분산 없음)
   no_exposure   구조: 노출 offset 제거 (μ = E·λ 에서 E = 1)
@@ -37,10 +43,33 @@ from loader import attach_ls_labels, load_eval_ground_truth, load_pilot_a_batch,
 from schema import EVENT_TO_INDEX, EVENTS  # noqa: E402
 
 torch.set_num_threads(4)
-ALL = ["full", "uniform_prior", "no_pgv", "poisson", "no_exposure", "per_event"]
-SETTINGS = sys.argv[2:] or ALL
+ALL = ["full", "uniform_prior", "uniform_learned", "uniform_half", "no_pgv", "poisson", "no_exposure", "per_event"]
+ARGS = sys.argv[2:]
+DPM5_ONLY = "--dpm5" in ARGS
+SETTINGS = [a for a in ARGS if a != "--dpm5"] or ALL
+DPM5 = ["2016 구마모토", "2018 오사카", "2018 훗카이도", "2021 후쿠시마", "2024 노토반도"]
 TRAIN_KW = dict(seed=0, epochs=3000, lr=0.02, lam_gamma=10, area_mode="fixed-cov-mtn", lam_kappa=10,
                 mtn_standardize="train", use_labels=True, lq_labels=False, lq_b_only=True)
+
+
+class PriorLearnedConst(T.AreaPrior):
+    """산사태 사전확률 로짓에 학습되는 상수 하나를 더한다 (균등 prior의 수준을 자료에서 맞춤)."""
+
+    def __init__(self, *a, **k):
+        super().__init__(*a, **k)
+        self.b_ls_const = torch.nn.Parameter(torch.zeros((), dtype=torch.float64))
+
+    def z(self, *args, **kw):
+        z_ls, z_lq = super().z(*args, **kw)
+        return z_ls + self.b_ls_const, z_lq
+
+
+class PriorHalf(T.AreaPrior):
+    """두 재해 모두 사전확률 0.5 (로짓 0) 고정."""
+
+    def z(self, *args, **kw):
+        z_ls, z_lq = super().z(*args, **kw)
+        return torch.zeros_like(z_ls), torch.zeros_like(z_lq)
 
 
 class PoissonLikelihood(DamageLikelihood):
@@ -59,7 +88,7 @@ def const_like(x, ref):
 
 
 def make_batch(setting, batch, train_mask):
-    if setting == "uniform_prior":
+    if setting in ("uniform_prior", "uniform_learned", "uniform_half"):
         t = train_mask
         lp_ls, lp_lq = torch.log(batch.pi_ls), torch.log(batch.pi_lq)
         return dataclasses.replace(
@@ -83,15 +112,25 @@ def main():
     events = list(EVENTS)
     present = set(base.event_idx.tolist())
     events = [e for e in events if EVENT_TO_INDEX[e] in present]
-    orig_like = T.DamageLikelihood
+    if DPM5_ONLY:
+        events = [e for e in events if e in DPM5]
+    dpm_idx = torch.tensor([EVENT_TO_INDEX[e] for e in DPM5])
+    prefix = "abl-dpm5" if DPM5_ONLY else "abl"
+    orig_like, orig_prior = T.DamageLikelihood, T.AreaPrior
     for s in SETTINGS:
         T.DamageLikelihood = PoissonLikelihood if s == "poisson" else orig_like
+        T.AreaPrior = {"uniform_learned": PriorLearnedConst, "uniform_half": PriorHalf}.get(s, orig_prior)
         for ev in events:
             ho = EVENT_TO_INDEX[ev]
-            train_mask = (base.event_idx == ho) if s == "per_event" else (base.event_idx != ho)
+            if s == "per_event":
+                train_mask = base.event_idx == ho
+            elif DPM5_ONLY:
+                train_mask = torch.isin(base.event_idx, dpm_idx) & (base.event_idx != ho)
+            else:
+                train_mask = base.event_idx != ho
             batch = make_batch(s, base, train_mask)
             kw = dict(TRAIN_KW)
-            if s == "uniform_prior":
+            if s in ("uniform_prior", "uniform_learned", "uniform_half"):
                 kw["mtn_standardize"] = "all"   # 산지 비율을 0으로 둬서 학습 행 표준화(표준편차 0)를 건너뜀
             if s == "per_event":
                 kw["use_labels"] = False        # 예측할 지진의 정답은 학습에 쓸 수 없음
@@ -103,9 +142,9 @@ def main():
                     out_l = like(batch, out_r.mu)
                     lj, lp = T.marginalize(T.prior_log_w(pri, batch), out_l.log_L)
                     p_ls, p_lq = T.infer(lj, lp)
-                T.report_holdout(batch, reg, like, pri, p_ls, p_lq, ev, f"_abl-{s}_holdout-{ev.replace(' ', '')}")
+                T.report_holdout(batch, reg, like, pri, p_ls, p_lq, ev, f"_{prefix}-{s}_holdout-{ev.replace(' ', '')}")
             print(f"{s:14s} {ev}  학습행 {int(train_mask.sum())}  {time.time() - t0:.1f}s", flush=True)
-    T.DamageLikelihood = orig_like
+    T.DamageLikelihood, T.AreaPrior = orig_like, orig_prior
 
 
 if __name__ == "__main__":
