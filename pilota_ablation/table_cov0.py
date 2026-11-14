@@ -2,7 +2,8 @@
 AdminDER(cov 있음), AdminDER(평가 지진 cov = 1). 산사태만. 정답이 한쪽뿐인 지진은 뺀다.
 ① 9개 LOEO (8개 학습): run_cov0.py 와 run_cov0.py --extra 결과.  ② DPM 5개 LOEO (4개 학습): run_cov0.py --dpm5 결과.
 
-    python table_cov0.py <pilotA 폴더> [결과.csv]
+    python table_cov0.py <pilotA 폴더> [결과.csv] [--dpm5eval]
+--dpm5eval: ①도 DPM 있는 5개 지진만 평가 (DisasterNet 비교 기준).
 """
 import os
 import sys
@@ -11,8 +12,10 @@ import numpy as np
 import pandas as pd
 from sklearn.metrics import roc_auc_score
 
-W = sys.argv[1]
-OUT = sys.argv[2] if len(sys.argv) > 2 else None
+ARGS = [a for a in sys.argv[1:] if a != "--dpm5eval"]
+DPM5_EVAL = "--dpm5eval" in sys.argv
+W = ARGS[0]
+OUT = ARGS[1] if len(ARGS) > 1 else None
 DPM5 = {"2016 구마모토", "2018 오사카", "2018 훗카이도", "2021 후쿠시마", "2024 노토반도"}
 ORDER = ["2000 돗토리", "2004 니가타현주에쓰", "2007 니가타현주에쓰오키", "2008 이와테미야기",
          "2016 구마모토", "2018 오사카", "2018 훗카이도", "2021 후쿠시마", "2024 노토반도"]
@@ -25,13 +28,13 @@ def load(mode, sfx):
 
 
 rows = []
-for setname, sfx in [("① 9개 LOEO (8개 학습)", ""), ("② DPM 5개 LOEO (4개 학습)", "-dpm5")]:
+for setname, sfx in [("① DPM 5개 평가 (8개 학습)" if DPM5_EVAL else "① 9개 LOEO (8개 학습)", ""), ("② DPM 5개 LOEO (4개 학습)", "-dpm5")]:
     b, z = load("base", sfx), load("0", sfx)
     z = z.set_index(["event", "muni_code"])
     evs = []
     for ev in ORDER:
         g = b[b.event == ev]
-        if len(g) == 0 or g.ls_true.nunique() < 2:
+        if len(g) == 0 or g.ls_true.nunique() < 2 or (DPM5_EVAL and ev not in DPM5):
             continue
         g0 = z.loc[ev].loc[g.muni_code]
         y = g.ls_true.values
@@ -43,7 +46,7 @@ for setname, sfx in [("① 9개 LOEO (8개 학습)", ""), ("② DPM 5개 LOEO (4
         rows.append(r)
         evs.append(r)
     scopes = [("가중평균", lambda e: True)]
-    if sfx == "":
+    if sfx == "" and not DPM5_EVAL:
         scopes.append(("가중평균 (DPM 5개 지진만)", lambda e: e in DPM5))
     for name, keep in scopes:
         sel = [r for r in evs if keep(r["지진"])]
