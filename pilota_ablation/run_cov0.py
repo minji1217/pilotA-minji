@@ -9,8 +9,9 @@ cov 텀을 0으로 둔 상태에서 정확도 확인."
     cov0 : 테스트 지진 행의 log cov만 0으로 (cov = 1, 판독 범위 보정 없음). 학습 지진 값은 건드리지 않는다
   α_e 맞춤(피해 건수로 LBFGS)과 사후확률 계산은 각 경우의 사전확률로 다시 한다.
 - 기준 학습 두 가지: 8개(뺀 지진 외 8개) / --dpm5 4개(뺀 지진 외 DPM 있는 4개). 평가는 DPM 있는 5개 지진.
+- --extra: 8개 학습 기준에서 DPM 없는 지진(9개 LOEO의 나머지 4개)만 돌린다. 9개 LOEO 표를 채울 때 쓴다.
 
-    python run_cov0.py <pilotA 폴더 (followup4-lq-J-nolabels)> [--dpm5]
+    python run_cov0.py <pilotA 폴더 (followup4-lq-J-nolabels)> [--dpm5 | --extra]
 결과: <pilotA 폴더>/outputs/holdout_{summary,detail,detail_lq}_cov{base|0}{-dpm5}_holdout-<지진>.csv
 """
 import contextlib
@@ -28,7 +29,7 @@ import torch  # noqa: E402
 
 import train as T  # noqa: E402
 from loader import attach_ls_labels, load_eval_ground_truth, load_pilot_a_batch, subset_batch  # noqa: E402
-from schema import EVENT_TO_INDEX  # noqa: E402
+from schema import EVENT_TO_INDEX, EVENTS  # noqa: E402
 
 torch.set_num_threads(4)
 DPM5 = ["2016 구마모토", "2018 오사카", "2018 훗카이도", "2021 후쿠시마", "2024 노토반도"]
@@ -51,7 +52,8 @@ def main():
     base = attach_ls_labels(T.GT_PATH, base, load_eval_ground_truth(T.GT_PATH, base))
     dpm_idx = torch.tensor([EVENT_TO_INDEX[e] for e in DPM5])
     sfx = "-dpm5" if DPM5_ONLY else ""
-    for ev in DPM5:
+    events = [e for e in EVENTS if e not in DPM5] if "--extra" in sys.argv and not DPM5_ONLY else DPM5
+    for ev in events:
         ho = EVENT_TO_INDEX[ev]
         train_mask = (torch.isin(base.event_idx, dpm_idx) if DPM5_ONLY else torch.ones_like(base.event_idx, dtype=torch.bool)) \
             & (base.event_idx != ho)

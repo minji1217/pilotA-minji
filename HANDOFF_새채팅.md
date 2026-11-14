@@ -263,6 +263,7 @@
 | 전체 (200) | 0.855 | 0.833 | 0.862 | 0.837 |
 
 - 해석: cov를 빼면 산사태 0.784로 베이스라인 ② 0.783과 거의 같음. 산사태 정확도 오름(0.783에서 0.872 · 0.887)은 거의 다 평가 지진의 cov에서 나옴. 떨어짐은 훗카이도에 몰림(0.86 · 0.89에서 0.53). κ가 거의 0이라 cov 0일 때 사전확률 순위가 ②와 같음. 액상화는 거의 그대로.
+- 보고 표(11/14): `table_cov0.py <pilotA 폴더> cov0_table.csv`로 지진별 평가 시정촌 · 양성 · 음성, USGS 평균집계, 변환 prior, AdminDER(cov 있음 / 평가 지진 cov = 1)를 ① 9개 LOEO (8개 학습), ② DPM 5개 LOEO (4개 학습) 순으로 냄. 그림 `pilota_ablation/cov0_table.png`. 8개 학습은 `run_cov0.py --extra`로 DPM 없는 4개 지진도 돌림 (산사태 채점되는 건 돗토리 24 · 니가타현주에쓰 10). ① 9개 가중평균: USGS 0.797, 변환 prior 0.840, cov 있음 0.905, cov = 1 0.853. 돗토리 · 니가타현주에쓰는 cov를 빼도 그대로 (돗토리는 cov < 1 행 없음, 니가타는 9행 있지만 AUC 1.000 그대로).
 - 실행 환경 메모: 새 클라우드 컴퓨터에 torch가 없어 PyPI에서 torch 2.14.1(+cu130, CPU로 실행)을 깔았음 (download.pytorch.org는 막힘). sklearn · openpyxl · matplotlib · scipy도 새로 깔았음. `raw/시정촌_면적.csv`는 `disasternet/time_compare.py`의 `make_area()`로 만듦.
 
 ## 6. 파라미터 · loss 다시 돌리기 (11/05~11/07, 완료)

@@ -11,6 +11,7 @@ from sklearn.metrics import roc_auc_score
 
 W = sys.argv[1]
 OUT = sys.argv[2] if len(sys.argv) > 2 else None
+DPM5 = {"2016 구마모토", "2018 오사카", "2018 훗카이도", "2021 후쿠시마", "2024 노토반도"}
 rows = []
 for setting, sfx in [("8개로 학습", ""), ("4개로 학습", "-dpm5")]:
     for mode in ["base", "0"]:
@@ -20,6 +21,7 @@ for setting, sfx in [("8개로 학습", ""), ("4개로 학습", "-dpm5")]:
             if not fs:
                 continue
             d = pd.concat([pd.read_csv(f, dtype={"muni_code": str}) for f in fs])
+            d = d[d.event.isin(DPM5)]        # 이 채점은 DPM 있는 5개 지진만 (9개 LOEO 표는 table_cov0.py)
             for what, col in cols.items():
                 tot = n = 0
                 for ev, g in d.groupby("event"):
