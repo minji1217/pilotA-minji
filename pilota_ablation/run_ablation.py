@@ -3,10 +3,14 @@
 pilotA 모델 코드는 고치지 않는다. 입력(batch)이나 부품(likelihood)만 바꿔 끼운다.
 pilotA 코드: minji1217/pilotA 브랜치 followup4-lq-J-nolabels (A2 기본값). 그 폴더를 첫 인자로 준다.
 
-    python run_ablation.py <pilotA 폴더> [--dpm5] [설정 ...]
+    python run_ablation.py <pilotA 폴더> [--dpm5] [--lq-labels] [설정 ...]
 
 --dpm5: 기준 학습을 "DPM 있는 5개 지진만"으로 (평가 지진을 빼고 나머지 4개로 학습, 평가는 그 5개 지진만).
         없으면 A2 기본 (평가 지진을 빼고 나머지 8개로 학습, 9개 지진 모두 평가).
+
+--lq-labels: "AdminDER + 액상화 라벨 학습" 판. 학습 지진의 액상화 라벨도 학습에 쓴다 (lq_labels=True).
+        평가 지진의 라벨은 쓰지 않는다. per_event는 평가 지진만으로 학습하므로 라벨을 쓸 수 없어 결과가 같다.
+        결과 태그에 -lqlab이 붙는다 (abl-lqlab-<설정>, abl-dpm5-lqlab-<설정>).
 
 설정 (기본: 전부)
   full          TRACE 그대로 (A2: 평가 지진 외 8개로 학습, 산사태 라벨 사용)
@@ -44,10 +48,11 @@ torch.set_num_threads(4)
 ALL = ["full", "uniform_prior", "uniform_learned", "uniform_half", "no_pgv", "poisson", "no_exposure", "per_event"]
 ARGS = sys.argv[2:]
 DPM5_ONLY = "--dpm5" in ARGS
-SETTINGS = [a for a in ARGS if a != "--dpm5"] or ALL
+LQ_LABELS = "--lq-labels" in ARGS
+SETTINGS = [a for a in ARGS if a not in ("--dpm5", "--lq-labels")] or ALL
 DPM5 = ["2016 구마모토", "2018 오사카", "2018 훗카이도", "2021 후쿠시마", "2024 노토반도"]
 TRAIN_KW = dict(seed=0, epochs=3000, lr=0.02, lam_gamma=10, area_mode="fixed-cov-mtn", lam_kappa=10,
-                mtn_standardize="train", use_labels=True, lq_labels=False, lq_b_only=True)
+                mtn_standardize="train", use_labels=True, lq_labels=LQ_LABELS, lq_b_only=True)
 
 
 class PriorUniform(T.AreaPrior):
@@ -111,7 +116,7 @@ def main():
     if DPM5_ONLY:
         events = [e for e in events if e in DPM5]
     dpm_idx = torch.tensor([EVENT_TO_INDEX[e] for e in DPM5])
-    prefix = "abl-dpm5" if DPM5_ONLY else "abl"
+    prefix = ("abl-dpm5" if DPM5_ONLY else "abl") + ("-lqlab" if LQ_LABELS else "")
     orig_like, orig_prior = T.DamageLikelihood, T.AreaPrior
     for s in SETTINGS:
         T.DamageLikelihood = PoissonLikelihood if s == "poisson" else orig_like

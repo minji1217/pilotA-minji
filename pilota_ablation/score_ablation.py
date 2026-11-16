@@ -1,7 +1,7 @@
 """RQ4 ablation 채점: 지진 · 재해별 AUC를 채점 시정촌 수로 가중평균 (정답이 한쪽뿐인 조합은 제외).
 DPM 있는 5개 지진 평가와 9개 지진 평가를 함께 낸다.
 
-    python score_ablation.py <pilotA 폴더> [결과 CSV 경로] [--dpm5]
+    python score_ablation.py <pilotA 폴더> [결과 CSV 경로] [--dpm5] [--lq-labels]
 """
 import glob
 import os
@@ -11,8 +11,8 @@ import numpy as np
 import pandas as pd
 from sklearn.metrics import roc_auc_score
 
-ARGS = [a for a in sys.argv[1:] if a != "--dpm5"]
-PREFIX = "abl-dpm5" if "--dpm5" in sys.argv else "abl"
+ARGS = [a for a in sys.argv[1:] if a not in ("--dpm5", "--lq-labels")]
+PREFIX = ("abl-dpm5" if "--dpm5" in sys.argv else "abl") + ("-lqlab" if "--lq-labels" in sys.argv else "")
 W = ARGS[0]
 OUT = ARGS[1] if len(ARGS) > 1 else None
 DPM5 = {"2016 구마모토", "2018 오사카", "2018 훗카이도", "2021 후쿠시마", "2024 노토반도"}
@@ -53,7 +53,7 @@ for s in ORDER:
         rows.append(r)
 
 t = pd.DataFrame(rows)
-for scope in (["DPM 있는 5개"] if PREFIX == "abl-dpm5" else ["DPM 있는 5개", "9개 전체"]):
+for scope in (["DPM 있는 5개"] if PREFIX.startswith("abl-dpm5") else ["DPM 있는 5개", "9개 전체"]):
     x = t[t["평가"] == scope].drop(columns="평가").reset_index(drop=True)
     if len(x):
         x["전체 차이"] = (x["전체"] - x.loc[x["설정"] == NAME["full"], "전체"].iloc[0]).round(4)
