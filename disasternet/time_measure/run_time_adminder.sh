@@ -2,12 +2,13 @@
 # AdminDER(pilotA A2) 학습 · 추론 시간 4가지를 한 컴퓨터에서 차례로 잰다.
 #   ① 8개 학습 라벨 미사용(대조) → ② 4개 학습 라벨 미사용(대조) → ① 8개 학습 액상화 라벨 사용 → ② 4개 학습 액상화 라벨 사용
 # 11/07 측정과 같은 조건: Xeon 2.10GHz 4코어, Python 3.13.16, PyTorch 2.14.1, 4스레드, seed 0, 3000에폭, 하나씩 차례로.
+# 둘째 인자로 grid를 주면 α_e를 격자 탐색으로 맞춘 추론 시간을 잰다 (원고 각주와 같은 방식).
 # 사용: bash run_time_adminder.sh <pilotA 폴더(followup4-lq-J-nolabels ad44fa2, raw · validation에 xlsx 3개)>
 #   pilotA-minji 저장소 안에서 실행. 결과: outputs/disasternet/time_adminder_<날짜>/
 set -euo pipefail
-PA=$(realpath "$1")
+PA=$(realpath "$1"); G=${2:-}
 ROOT=$(cd "$(dirname "$0")/../.." && pwd); cd "$ROOT"
-OUT=outputs/disasternet/time_adminder_$(date +%Y%m%d); mkdir -p "$OUT"
+OUT=outputs/disasternet/time_adminder_$(date +%Y%m%d)${G:+_$G}; mkdir -p "$OUT"
 lscpu | grep "Model name" | tee "$OUT/env.txt"
 grep -q "2.10GHz" "$OUT/env.txt" || { echo "2.10GHz 컴퓨터가 아님. 측정 안 함"; exit 1; }
 # PATH 앞쪽의 예전 uv(~/.local/bin)는 3.13.16을 모르므로, pip로 새로 깐 uv를 직접 부른다
@@ -23,6 +24,6 @@ PY=/root/venv31316/bin/python
 [ -f "$PA/raw/시정촌_면적.csv" ] || (cd disasternet && $PY -c "import sys; sys.argv=['x']; sys.path.insert(0,'.'); from time_compare import make_area; make_area('$PA')")
 for a in "all8" "dpm4" "all8 lqlab" "dpm4 lqlab"; do
   f="$OUT/adminder_${a// /_}.log"; echo "== AdminDER $a" | tee "$f"
-  $PY disasternet/time_measure/time_pilota.py "$PA" $a 2>&1 | grep -v "Warning\|detach\|b_lq" | tee -a "$f"
+  $PY disasternet/time_measure/time_pilota.py "$PA" $a $G 2>&1 | grep -v "Warning\|detach\|b_lq" | tee -a "$f"
 done
 echo "끝. 결과: $OUT"
