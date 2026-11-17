@@ -10,10 +10,13 @@ ROOT=$(cd "$(dirname "$0")/../.." && pwd); cd "$ROOT"
 OUT=outputs/disasternet/time_adminder_$(date +%Y%m%d); mkdir -p "$OUT"
 lscpu | grep "Model name" | tee "$OUT/env.txt"
 grep -q "2.10GHz" "$OUT/env.txt" || { echo "2.10GHz 컴퓨터가 아님. 측정 안 함"; exit 1; }
+# PATH 앞쪽의 예전 uv(~/.local/bin)는 3.13.16을 모르므로, pip로 새로 깐 uv를 직접 부른다
 pip install -q -U uv
-uv python install 3.13.16
-[ -x /root/venv31316/bin/python ] || uv venv -p 3.13.16 /root/venv31316
-VIRTUAL_ENV=/root/venv31316 uv pip install -q torch==2.14.1 numpy==2.5.3 pandas==3.0.5 scikit-learn openpyxl matplotlib scipy "setuptools>=77.0.3"
+UV=$(python3 -c "import uv; print(uv.find_uv_bin())")
+"$UV" --version
+"$UV" python install 3.13.16
+[ -x /root/venv31316/bin/python ] || "$UV" venv -p 3.13.16 /root/venv31316
+VIRTUAL_ENV=/root/venv31316 "$UV" pip install -q torch==2.14.1 numpy==2.5.3 pandas==3.0.5 scikit-learn openpyxl matplotlib scipy "setuptools>=77.0.3"
 PY=/root/venv31316/bin/python
 { echo "CPU 수 $(nproc)"; free -g | sed -n 2p; . /etc/os-release; echo "$PRETTY_NAME"; echo "pilotA $(git -C "$PA" log --oneline -1)"
   $PY -c "import sys,torch,numpy,pandas;print('Python',sys.version.split()[0],'torch',torch.__version__,'numpy',numpy.__version__,'pandas',pandas.__version__,'threads',4)"; } | tee -a "$OUT/env.txt"
